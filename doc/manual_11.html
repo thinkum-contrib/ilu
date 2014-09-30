@@ -1,0 +1,712 @@
+<!-- This HTML file has been created by timdif2html 1.11
+     from manual.dif on 20 September 1999 -->
+
+<TITLE>ILU Reference Manual - Using ILU with Microsoft Windows</TITLE>
+<BODY TEXT=#000000 BGCOLOR=#ffffff>
+<P>Go to the <A HREF="manual_10.html">previous</A>, <A HREF="manual_12.html">next</A> section.<P>
+<H1><A NAME="SEC434" HREF="manual_toc.html#SEC434">Using ILU with Microsoft Windows</A></H1>
+<P>
+Note:  In this document, when you see a reference to Windows, it applies to Windows 95,
+Windows NT 3.5 and Windows NT 4.0.  Windows 3.1 is no longer supported, since ILU makes
+assumptions about the size of items that can be copied via certain system/library calls (segment
+sizes are an issue).  For this reason, ILU under Windows 3.1 will only work reliably in all 
+situations with other Windows 3.1 systems running ILU.
+<P>
+<H2><A NAME="SEC435" HREF="manual_toc.html#SEC435">Prerequisites for using ILU with Microsoft Windows</A></H2>
+<P>
+<H3><A NAME="SEC436" HREF="manual_toc.html#SEC436">Using ILU applications on Windows NT and Windows 95</A></H3>
+<P>
+Windows must be set up to use <CODE>TCP/IP</CODE>. Use the <CODE>Network Configuration
+and Control</CODE> Applet under the Windows NT control panel to install and configure your 
+<CODE>TCP/IP</CODE> setup.  For Windows 95, use the <CODE>Network</CODE> applet. 
+(See your Windows documentation for further details.) Try all the usual <CODE>TCP/IP</CODE> 
+applications (e.g. <CODE>ping</CODE>, <CODE>ftp</CODE>, <CODE>telnet</CODE>) to ensure your <CODE>TCP/IP</CODE> 
+is working properly.
+ 
+You will also need the redistributable Microsoft C Runtime dynamic link
+library for NT (for example, <TT>`MSVCRT20.DLL'</TT> if using Visual C++ 2.0 or <TT>`MSVCRT40.DLL'</TT> if using
+Visual C++ 4.0) on the system, etc..  The Visual C++ redistributable files are located in a
+<TT>`REDIST'</TT> directory on the Visual C++ CD-ROM disc.  Note that versions of Visual C++ later than 4.0 
+actually have additional DLLs (<TT>`MSVCRT.DLL'</TT>) that contain the "real" runtime library.  If you've 
+installed Visual C++, then most likely you have the necessary DLLS installed. [Note - you can 
+determine what dlls a dll or exe imports by using the dumpbin utility that comes with Visual C++.]
+<P>
+<STRONG>Be careful to use the right Visual C++ runtime DLL.  In particular,
+Windows 95 ships with one version of the DLL in the <TT>`\WINDOWS\SYSTEM'</TT> directory,
+since many of the Windows 95 system applets are written with Visual C++.</STRONG>
+<P>
+<H3><A NAME="SEC437" HREF="manual_toc.html#SEC437">Prerequisite software to use AND develop ILU applications on Windows NT and 95.</A></H3>
+	
+This release of ILU for Windows NT was originally developed with Microsoft Visual 
+C++ Version 2.0, on Windows NT 3.5, and we now build
+ on Windows NT 4.0 under Visual C++ 6.0.  We have not tried with any other 
+compiler.	The ILU runtime DLLs for NT are 32 bit, and
+a 32 bit compiler is needed to develop applications that use them. If
+you succeed in building ILU or ILU applications for NT with a compiler other 
+than Microsoft Visual C++, please report your findings.  We simply haven't had
+time to test ILU with other C or C++ compilers with Windows.
+<P>
+Typically, we move to the latest version of Visual C++ as soon as it has been shipped to
+us.  There is nothing known in ILU that should prevent it from being built with earlier versions of
+Visual C++.
+<P>
+<H2><A NAME="SEC438" HREF="manual_toc.html#SEC438">Installation</A></H2>
+<P>
+ILU comes prebuilt for Windows NT. For the current release of ILU,
+a single <TT>`.ZIP'</TT> file is the prebuilt version.  The <TT>`.ZIP'</TT>
+file is created with Nico Mak Computing's <CODE>WINZIP</CODE>, which allows long file names and is available for all versions
+of Windows.  However, if you only have <CODE>PKZIP</CODE>, you should be able to extract the files from the
+<TT>`.ZIP'</TT> with no problems.  Just make sure you use the <B>-d</B> when unzipping so that <CODE>PKZIP</CODE> will preserve
+the directory structure contained within the <TT>`.ZIP'</TT> file.  You should also be aware that we use long filenames
+for some of the stubbers, so older versions of PKZIP might truncate the filenames as the files are extracted.
+<P>
+Determine where you wish to install ILU, e.g. <TT>`C:\ILUWIN'</TT>.  Set the environment variable 
+<VAR>ILUHOME</VAR> to this directory (<VAR>ILUHOME</VAR> is needed for building the examples).  
+Unpack the distribution into your installation directory using 
+<CODE>pkzip -d iluwin.zip</CODE> (or, if using <CODE>WINZIP</CODE>, just open the <TT>`.ZIP'</TT> archive and 
+press the "Extract" button). You should now have subdirectories in <VAR>ILUHOME</VAR> called <TT>`bin'</TT>, 
+<TT>`examples'</TT>, <TT>`include'</TT>, <TT>`interfaces'</TT> and <TT>`lib'</TT>. 
+<P>
+If you'll be developing ILU apps, or building the examples, set the environment 
+variable <VAR>ILUPATH</VAR> to include <TT>`<VAR>ILUHOME</VAR>\interfaces'</TT> 
+<VAR>ILUPATH</VAR> is the path of directories where interface (<TT>`.isl'</TT>) files can be found.  For example,
+setting <VAR>ILUPATH</VAR> to <TT>`.;C:\ILUWIN\INTERFACES'</TT> will cause ILU stubbers to look for interfaces
+first in the current directory, then in <TT>`C:\ILUWIN\INTERFACES'</TT>.
+  
+Add the <TT>`<VAR>ILUHOME</VAR>\bin'</TT> directory to your <VAR>PATH</VAR> environment variable.
+<P>
+Determine what common directory share will be used for your applications to publish
+information about ILU objects.  This will commonly be a directory that is exported from 
+a file server and shared by all the systems.  Set the environment variable 
+<VAR>ILU_BINDING_DIRECTORY</VAR> to this directory e.g. <CODE><VAR>ILU_BINDING_DIRECTORY</VAR>=f:\iluwin\bindings</CODE>.  
+If you do not set this, ILU will default to whatever value is specified in the file <TT>`iluwin.h'</TT>.
+<P>
+<H2><A NAME="SEC439" HREF="manual_toc.html#SEC439">Building ILU</A></H2>
+<P>
+(For those who just *must* have and build the source! :-)
+<P>
+If you wish to build the ILU system from source, begin by obtaining the source distribution 
+(<TT>`ilu.tar.gz'</TT>).  There is no separate source tree for the Windows version; the same source code
+is used for both Unix and Windows.  Set <VAR>ILUHOME</VAR> to where you will
+want ILU to be installed.
+Determine where you wish to install the ILU source, and set the environment 
+variable <VAR>ILUSRC</VAR> to that directory e.g. <TT>`<VAR>ILUHOME</VAR>\src'</TT>. Unpack the
+distribution into that
+directory.  Change to the <VAR>ILUSRC</VAR> directory.  Having previously installed Visual
+C++, perform 
+<P>
+<PRE>
+&#62; <STRONG>nmake -f iluwin32.mak</STRONG>
+</PRE>
+To subsequently install into <VAR>ILUHOME</VAR>, perform 
+<P>
+<PRE>
+&#62; <STRONG>nmake -f iluwin32.mak install</STRONG>
+</PRE>
+Note that the default is to build a 'release' version.  If you wish to build a 
+'debug' version perform 
+<P>
+<PRE>
+&#62; <STRONG>nmake -f iluwin32.mak CFG="Win32 Debug"</STRONG>
+</PRE>
+To clean up after installation perform 
+<P>
+<PRE>
+&#62; <STRONG>nmake -f iluwin32.mak clean</STRONG>
+</PRE>
+<P>
+Various #defines that determine how ILU is built can be found in the file <TT>`ILUSRC/runtime/kernel/iluwin.h'</TT>.
+<P>
+When bulding the debug versions of the c, c++, and kernel runtimes, the values of the environment variables,
+<VAR>ILU_DEBUG_CFLAGS</VAR> and <VAR>ILU_DEBUG_CPPFLAGS</VAR> are passed to the c and c++ compiler command 
+lines respectively.  This allows the builder to do things like creating source browser files, e.g. 
+set ILU_DEBUG_CFLAGS=/FR"/ilu/browsefiles/", set ILU_DEBUG_CPPFLAGS=/FR"/ilu/browsefiles/".
+<P>
+<STRONG>Note: "make clean" does not work across all versions of Windows.  In particular, it will not work on
+systems other than Windows NT.  If you are using Windows 95, just remove all occurrences of
+the <TT>`WinDebug'</TT>, <TT>`WinDebugW'</TT>, <TT>`WinRel'</TT>, and <TT>`WinRelW'</TT> directories in the source tree and examples
+directories. You can also safely delete any .map, .ilk, .exp, and .pdb files you might see.</STRONG>
+<P>
+Note that it is normal to see a number of compiler warnings during the ILU build process.
+It's also been reported that linking in the build can fail if the full Visual C++
+has not been installed.  This is because the makefiles used were originally generated by the
+MSVC Development Environment, which by default adds a whole slew of libraries to the link
+command, e.g. odbc32.lib (even though ilu doesn't need them, apparently the link
+fails because they cannot be found).  The workaround is to fully install Visual C++, or
+go modify the makefiles to take out those references.
+<P>
+<H3><A NAME="SEC440" HREF="manual_toc.html#SEC440">Lisp</A></H3>
+<P>
+If you would like to use Allegro Lisp for Windows with ILU, you will have
+uncomment the appropriate lines in the <TT>`<VAR>ILUSRC</VAR>/stubbers/lisp/iluwin32.mak'</TT> and 
+<TT>`<VAR>ILUSRC</VAR>/runtime/lisp/iluwin32.mak'</TT> makefiles, as these components are not built by default.  
+Note that the Allegro Lisp for Windows support was graciously contributed by Joachim Achtzehnter
+and has not been tested at PARC. For more information, see <A HREF="http://vanbc.wimsey.com/~joachim/ilu.html"><TT>http://vanbc.wimsey.com/~joachim/ilu.html</TT></A>.
+<P>
+<H3><A NAME="SEC441" HREF="manual_toc.html#SEC441">Java</A></H3>
+<P>
+ILU's supports Java on Windows using either Javasoft's JDK 1.1 
+<A HREF="http://www.javasoft.com/products/jdk/1.1/index.html"><TT>http://www.javasoft.com/products/jdk/1.1/index.html</TT></A> or JDK 1.2 <A HREF="http://www.javasoft.com/products/jdk/1.2/index.html"><TT>http://www.javasoft.com/products/jdk/1.2/index.html</TT></A>, or Microsoft's SDK for Java 3.2 Release (Visual J++ 6 compatible)
+<A HREF="http://www.microsoft.com/java/download.htm"><TT>http://www.microsoft.com/java/download.htm</TT></A> .  If you're using the Javasoft JDK,
+you should define the environment variable <VAR>JAVASDK</VAR> to Javasoft.  If you're using 
+Microsoft's SDK for Java , you should define the environment variable <VAR>JAVASDK</VAR> 
+to Microsoft.  In both cases, the environment variable <VAR>JAVA_HOME</VAR> should be set to 
+wherever the Java development software was installed, e.g. set JAVA_HOME=e:\jdk1.1.6, or
+set JAVA_HOME=e:\SDK-Java.32. Be sure your <VAR>CLASSPATH</VAR> environment variable includes the 
+<VAR>ILUHOME</VAR>/lib/classes directory.  e.g. set CLASSPATH=.:.\classes:e:\iluwin\lib\classes.
+<P>
+<STRONG>NOTE: In the Microsoft's SDK for Java 2.0 Beta 2 Release, you must modify the file 
+<VAR>JAVA_HOME</VAR>\include\native.h to correctly reflect the fact that the function RNIGetCompatibleVersion
+is something exported from a dll to Java.   i.e.: </STRONG>
+<P>
+<PRE>
+
+#pragma message( "NOTE: ILU mod to native.h - Defining RNIGetCompatibleVersion as dllexport" )
+/* originally  DWORD __cdecl RNIGetCompatibleVersion(); */
+__declspec(dllexport) DWORD __cdecl RNIGetCompatibleVersion();
+
+
+NOTE: An ilu build upon Javasoft's JDK 1.1.6 can be also be used from
+applications within JBuilder 2, or, Visual Cafe 2.5.
+
+
+ILU's support for Javasoft's JDK 1.2 needs a few environment variables set
+accordingly:  You need to set the environment variable <VAR>JAVA_HOME</VAR> to the jre directory and the
+<VAR>JDK_HOME</VAR> to the jdk directory.  Furthermore the mak file requires the environment variable <VAR>JAVAUSE12</VAR> to be set.   
+
+ILU's also used to support Java using Javasoft's JDK 1.2beta2 or JDK 1.2beta4 pre-release, but the build may be more tricky and no more recommended because
+our testing does not include outdated beta releases.   
+
+
+
+NOTE: Build a jar file and the javadoc files manually.
+
+
+NOTE: It is possible to manually create a release directories containing all
+Javasoft's JDK 1.1.6 support, JDK 1.2 support and Microsoft's SDK support in a friendly
+co-existing way.  To do this with the current make files: build and install for
+Microsoft first.  Then in a new shell (setup to build for Javasoft's JDK) you
+can cd into the src\runtime\java directory and re-build just the java runtime.
+Go back to the top and re-install ALL of ilu.  (Do it in this order, so that
+the "better" files are installed later.  The three builds use non-conflicting
+names for the one otherwise incompatible dll file; all other files are
+compatible as long as you are not trying to single step or debug ilu itself).  The
+build is not quite perfect: If building a further ilu system fails because existing files from the first
+build interact badly, clean ilu (having set the environment variables for the later system) and build
+ilu system again.  The clean step will leave the important file from the first build alone.
+
+
+</PRE>
+<P>
+<H3><A NAME="SEC442" HREF="manual_toc.html#SEC442">Python</A></H3>
+<P>
+By default, the Python Language Specific Runtime is only built if
+the environment variable PYTHONSRC is set to point to your Python
+Source directory which contains the Python Include directory, the
+Python PC directory, and (for
+ Python 1.4, the Python vc40 directory containing
+python14.lib) (for Python 1.5.2, the PCBuild directory
+containing python15.lib).
+<P>
+If you need these files, please retrieve the Python source from
+http://www.python.org, as python1.4.tar.gz for Python 1.4, and pyth152.tgz for
+Python 1.5.2.  They are NOT distributed with ILU.
+<P>
+Python 1.5.2 build is the default ILU Python
+runtime on Win32.
+<P>
+You will need to put ILUHOME/lib on your PYTHONPATH before using ILU
+with Python.
+<P>
+If you're going to build ILU from the source tree, and you want to use
+Python, build Python yourself first!
+<P>
+For Python 1.5.2, Ensure that you build the Python
+'Release' Configuration as this is set up to use the Multithreaded C Runtime
+DLL.  If you really want to build the 'Debug' version of Python, you
+must adjust the project to use the Multithreaded C Runtime DLL, NOT the Debug
+Multithreaded C Runtime DLL.  Failure to do this will cause strange problems as
+ILU always uses Multithreaded C Runtime DLL.  Also, if building the
+'Debug' version of Python, you should adjust all references to
+python15.lib in the iluPr15.mak file to reflect its true location.
+<P>
+Also, if you're trying to build a debug version of ILU, you'll find
+that the python runtime build gets a link error complaining about python15_d.lib.
+This is because the PYTHONSRC\PC\config.h file is set up to force the use
+of python15_d.lib if _DEBUG is defined.  You can get around this by editing
+the config.h file as follows:
+<P>
+<PRE>
+#ifndef USE_DL_EXPORT
+/* So nobody needs to specify the .lib in their Makefile any more */
+//#ifdef _DEBUG
+//#pragma comment(lib,"python15_d.lib")
+//#else
+#pragma comment(lib,"python15.lib")
+//#endif
+#endif /* USE_DL_EXPORT */
+</PRE>
+<P>
+For Python 1.4, Edit the file in the PC directory called
+python_nt.def, so as to also export the following symbols: start_new_thread
+init_thread get_thread_ident exit_thread (and for compatibility with pythonwin,
+PyArg_ParseTupleAndKeywords).  Then follow the instructions in the
+PC/readme.txt file to build Python.  Next change the line for 'ALL'
+in $(ILUSRC)\runtime\python\iluwin32.mak to ALL : PMAKE14 before building
+ILU's Python runtime.  NOTE: You *must* build
+Python itself.  ILU requires several symbols to be exported
+from the python.dll that are normally not normally exported. Before building
+Python, in the Python source tree, edit the file in the
+PC directory called python_nt.def, so as to also export the following symbols:
+start_new_thread init_thread get_thread_ident exit_thread (and for
+compatibility with pythonwin, PyArg_ParseTupleAndKeywords).  Then follow the
+instructions in the PC/readme.txt file to build Python.  In addition
+to exporting these additional symbols, building Python yourself
+ensures that Python is using the same C runtime library as
+ILU. Different C runtime libraries in use at the same time will result
+in bizarre, hard-to-track-down behavior.
+<P>
+<H2><A NAME="SEC443" HREF="manual_toc.html#SEC443">Building the examples</A></H2>
+<P>
+To build the examples, cd to <TT>`<VAR>ILUHOME</VAR>\examples'</TT>.  Ensure that you have set <VAR>ILUPATH</VAR>
+as previously discussed. 
+<P>
+For Windows examples, perform 
+<P>
+<PRE>
+&#62; <STRONG>nmake -f iluwin32.mak</STRONG>
+</PRE>
+<P>
+If you wish to build a 'debug' version perform 
+<P>
+<PRE>
+&#62; <STRONG>nmake -f iluwin32.mak CFG="Win32 Debug"</STRONG>
+</PRE>
+<P>
+This will create the example executables
+in subdirectories of the <TT>`example'</TT> subdirectories, called <TT>`WinRel'</TT> and <TT>`WinRelW'</TT> (or
+<TT>`WinDebug'</TT> and <TT>`WinDebugW'</TT> if you built a debug release) which correspond to the non-Windows and
+Windows versions of the examples.
+<P>
+Note that it is normal to see a number of compiler warnings during the examples
+build process.
+<P>
+<H2><A NAME="SEC444" HREF="manual_toc.html#SEC444">Running the examples</A></H2>
+<P>
+Ensure that you have set <VAR>ILU_BINDING_DIRECTORY</VAR> as previously discussed.
+The non-Windows NT examples operate just like their
+Unix counterparts.  The Windows examples are simple Windows versions of the same programs.
+To execute them, launch the executables (from the Windows File Manager, a command prompt (if you
+are running Windows NT or 95, or
+whatever), and choose the 'Run' entry from the 'Action' menu.
+<P>
+<H2><A NAME="SEC445" HREF="manual_toc.html#SEC445">Developing Windows Applications with ILU</A></H2>
+<P>
+The basic process for using ILU in a Windows application is simple.  You either write a new
+interface description or use an existing one.  You run the stubbers against the interface description
+to generate stub code.  You write calls to the methods exported from the interface in your application,
+or implement the object type in your application, depending on whether you're using the module,
+or providing it.  Finally, you link your application code together with the generated stub code
+and the ILU libraries.
+<P>
+ 
+<P>
+<H3><A NAME="SEC446" HREF="manual_toc.html#SEC446">All Applications</A></H3>
+<P>
+Ensure that <VAR>WIN32</VAR> is defined to the preprocessor when building a 32 bit ILU application.
+This is normally set by default by Visual C++, but you should verify.
+<P>
+You need to link with the language specific runtime, the kernel runtime, and the winsock library.
+<P>
+Set the Visual C++ code generation compiler option to use the Multithreaded using DLL C 
+runtime on Windows NT. This is <EM>very</EM> important.  If you don't do this, then you'll run into
+a similar problem that was described above for the Python runtime.  Essentially, if you create
+an application that doesn't use the Mutithreaded DLL runtime library, then the ILU kernel will
+be using one copy of the runtime library, and your application will be using a completely different one.
+This will cause all sorts of bizarre behavior.  If you are debugging your application and you get all sorts
+of ASSERTs about memory allocation arenas, you've made this mistake.
+<P>
+There is NO need to call <CODE>ilu_StartWinsock</CODE> for a Windows NT ILU app.  (It is taken care of for
+you internally in the runtime DLL process attach code). 
+<P>
+<H3><A NAME="SEC447" HREF="manual_toc.html#SEC447">Windows (non-console) Applications</A></H3>
+<P>
+We suggest you review and understand the test1 examples before you try to build a windowed ILU application.
+This section tries to highlight some of the  <EM>important</EM> points.  Admittedly, the Windows examples 
+are simple and crude as Windows apps go, but they illustrate what you need to do in an application.
+<P>
+In C++ ILU apps, you'll be including <TT>`Windows.h'</TT>.  However, <TT>`Windows.h'</TT> 
+includes <TT>`winspool.h'</TT> and this file #defines <CODE>AddPort</CODE> as <CODE>AddPortA</CODE>.  This interferes with 
+<CODE>iluServer::AddPort()</CODE>, so you have to undefine it (temporarily at least).  See the <TT>`examples\test1\cppsrvrw.cpp'</TT>
+file for an example.
+<P>
+<H3><A NAME="SEC448" HREF="manual_toc.html#SEC448">Message Loop</A></H3>
+<P>
+See the windowed test1 server examples for a simplistic timer based means of using ILU
+in the presence of a Windows message loop. (<TT>`msgalarm.c'</TT>).  You'll want to do something
+about the message loop since otherwise your Windows app won't service the GUI - it'll
+just be blocked in an internal call to <CODE>select()</CODE> waiting to deal with ILU activity.
+This simple timer approach makes use of the ability to associate an 'alarm' function
+with the ILU mainloop.  When the alarm goes off (the example uses every 500 milliseconds),
+the alarm function processes any Windows messages that are waiting, then sets the
+alarm for another period.
+  
+Note that the test1 examples were developed with Microsoft's <CODE>TCP/IP</CODE> for Windows for 
+Workgroups.  Some of the behavior may be different under a different winsock implementation
+(especially with respect to message dispatch during <CODE>select()</CODE> calls). If so, please let us
+know.
+<P>
+<H2><A NAME="SEC449" HREF="manual_toc.html#SEC449">Windows and the ILU_DEBUG settings</A></H2>
+<P>
+The "Debugging" chapter of this manual describes the facilities available to ILU developers
+for tracking down problems in their applications.  One of these facilities is the <VAR>ILU_DEBUG</VAR>
+variable.  When set to a value, it causes the ILU kernel and runtime to output various
+debugging messages.  
+<P>
+For applications running under the Unix operating system, all output is sent to the stderr
+file handle, which can be redirected via the normal shell redirection operators.  However, under
+Windows, this same flexibility is missing, since the Windows "shell" (<TT>`CMD.EXE'</TT> or
+<TT>`COMMAND.COM'</TT>, depending on which version of Windows you are running) doesn't have
+the same flexbility.  Programs that aren't console applications have an additional problem:  they don't
+have any place for the output to go, since so-called "Windowed-API" applications detach themselves
+from consoles if they are executed from a command line.
+<P>
+The debug module in ILU has special code to handle this situation under Windows. 
+Whether or not ILU outputs any messages depends on the "Debug Level" setting.  This can
+be set two ways:  either using the <VAR>ILU_DEBUG</VAR> environment variable, or via the ilu_SetDebugLevel()
+function (see <TT>`debug.c'</TT> for the whole story).
+<P>
+Normally, when the ILU kernel loads, it checks to see if <VAR>ILU_DEBUG</VAR> is set.  If it is,
+it sets the appropriate debug level in the kernel, and then provides an internal error handler who's only
+job is to take the messages sent out by the kernel and write them to stderr.  Of course, there is a function
+available to let you specify your own error handler.  Just keep in mind that if you don't provide an error
+handler, and the kernel outputs a message because of <VAR>ILU_DEBUG</VAR> or ilu_SetDebugLevel() being called,
+then (by default), the debug messages will be sent to stderr.
+<P>
+If you are working with a console-based application under Windows, then this is not a problem.
+The messages will appear in the console that your application owns.  Unfortunately, you can't redirect
+them to a file via the command line, since the Windows shell won't let you redirect arbitrary
+file handles.  You can use <VAR>ILU_DEBUG_FILE</VAR> to redirect debug messages to a named file.
+<P>
+But, if you are working with a "real" Windows program, there is no console, and sending anything
+to stderr causes no output (since Windows equates stderr to the bit-bucket for Windowed-API applications).
+If you don't take any actions, then the kernel will handle this for you.  If the debug level gets set
+(under Windows), the kernel attempts to figure out if your application is Windows-based or
+console-based.  If it's console-based, then the normal debug-output functions are used.
+<P>
+However, if it appears that you are running a Windows-based application, and you have not provided an
+debug-handler of your own, then the kernel will create "Debug Console" and send all the debug output
+there for you.
+<P>
+This means that if you would like to set ILU_DEBUG, and your application is not console-based, then you
+don't have to do anything special to see the debug output.  It's handled for you.
+<P>
+There are several things to keep in mind about this.  The kernel has a very narrow-minded view of how
+to handle this.  If you create your own debug handler, and you want to have the debug messages sent to you,
+*don't* set <VAR>ILU_DEBUG</VAR>.  Instead, have your application set the debug level *after* you have
+installed your debug handler.  If a debug handler other than the default gets installed, the code in
+<TT>`debug.c'</TT> will assume that you are going to handle it automatically, and it won't set up a debug console.
+<P>
+The way to determine if your application is console-based or Windows-based is to attempt to
+create a console (if you know a better way to determin this, please pass it on).  
+This is what the kernel does; if the call to the WIN32 API call AllocConsole() succeeds, the
+kernel assumes (rightly) that your application doesn't have a console, and thus is a Windowed-API application.
+But, if your app is a Windowed-API application, and you create your own console before the kernel does, then
+AllocConsole() will fail, and the kernel will use *your* console (which may not be what you want).
+<P>
+So, just keep this is mind:  If your application is a Windows app, then setting ILU_DEBUG will work for you.
+Just remember that if you want to capture the debug output yourself, you have to make sure and set up your
+handler *before* the debug level gets set in the kernel.  See the code in <TT>`debug.c'</TT> for the whole
+story
+<P>
+<H3><A NAME="SEC450" HREF="manual_toc.html#SEC450">WINIO</A></H3>
+<P>
+Note: ILU no longer needs WINIO. If the kernel or a runtime needs to output a message:
+if the application is a console app, output will go to that console; else the application
+must be a Windows app, and ILU will create a console window to which output
+will be sent.
+<P>
+WINIO is no longer distributed with ILU.
+<P>
+<H2><A NAME="SEC451" HREF="manual_toc.html#SEC451">Misc.</A></H2>
+<P>
+This section contains a 'hodge-podge' of information - with little attention paid to formatting.
+<P>
+<H3><A NAME="SEC452" HREF="manual_toc.html#SEC452">Python 1.4 support - details</A></H3>
+<P>
+This release of ILU supports both Python 1.4 Python 1.5.2 (the default) for
+Windows.  If you want to use Python 1.4, building it as described in the
+previous Python section of this chapter is a bit involved.  Specifically,
+here's what you need to do:
+<P>
+Assuming we don't have Python at all on the machine.
+<P>
+1. Retrieve the python source from http://www.python.org, as python1.4.tar.gz.  
+<P>
+2. Edit the file in the PC directory called python_nt.def, so as to also export the 
+following symbols: start_new_thread init_thread get_thread_ident exit_thread
+and for compatibility with pythonwin, PyArg_ParseTupleAndKeywords).
+<P>
+3. Then follow the instructions in the PC/readme.txt file to build python.  (Ensure that
+the resulting python14.dll is the dll that gets used by python.)
+<P>
+4. Go to ILUSRC\runtime\python and comment out the line in the
+iluwin32.mak makefile to allow the build of the runtime.
+<P>
+5. Set the PYTHONSRC environment variable appropriately, e.g. set PYTHONSRC=E:\Python-1.4src
+<P>
+6. If you DON'T want thread support in Python, remove or comment out the line  
+#define ILU_PYTHON_THREADS 1
+from  the file ILUSRC\runtime\python\pythonversion.win
+<P>
+8. Make ILU - you should now have the file iluPr.pyd in the appropriate
+build subdirectory of ILUSRC\runtime\python.  
+<P>
+9. Make Install ilu - This will copy the *.py files
+in ILUSRC\runtime\python to ILUHOME\lib.  Be sure to put \ILUHOME\lib on your
+on your PYTHONPATH.
+<P>
+10. Enjoy.
+<P>
+You can run several of the Python examples from ILU (the Python versions of 
+Test1 and Bank work; Reconnect needs one change to work; change "import socket" 
+to "import _socket").
+<P>
+<H3><A NAME="SEC453" HREF="manual_toc.html#SEC453">Alternative Binding Service</A></H3>
+<P>
+The ilu binding service (in ILUSRC/etc/sbserver) is not built under Windows.
+Basically, the steps to build it are:
+<P>
+Step 1:  Modify the makefile for the ILU kernel to include sbilu.obj
+instead of sbfile.obj.  If you are building the kernel from scratch and
+don't care about dependencies, just replace "sbfile" with "sbilu"
+everywhere you see it in ilu32.mak.
+<P>
+Step 2:  Modify the iluwin.h configuration header file to set the
+necessary parameters for the service.  Specifically, these are the lines
+you need to worry about:
+<P>
+/* Define this to be the value of the ILU simple binding directory, if
+using shared files for simple binding */
+#if !defined(ILU_BINDING_DIRECTORY)
+#define ILU_BINDING_DIRECTORY "\\project\\rpc\\current\\lib\\binding"
+#endif
+<P>
+Make sure that ILU_BINDING_DIRECTORY is *not* set to a value anywhere in
+the system.  As you can see from the text, it gets automatically set if
+you haven't assigned a value.  Comment out these lines so that it
+doesn't get set.  The system decides what type of binding to use based
+on ILU_BINDING_DIRECTORY having a value or not.
+<P>
+/* Define this to be the domain of the simple binding server, if using
+ILU service for simple binding */
+/* #undef ILU_BINDING_REALM */
+<P>
+/* Define this to be the host ip addr of the simple binding server, if
+using ILU service for simple binding */
+/* #undef ILU_BINDING_HOST */
+<P>
+/* Define this to be the network port on the binding host, if using ILU
+service for simple binding */
+/* #undef ILU_BINDING_PORT */
+<P>
+You'll need to uncomment these #defines and give them the appropriate
+values.  See iluconf.h for more information about these variables.
+<P>
+Once you've done all this, you can make the kernel and it will have the
+simple binding service enabled and working.
+<P>
+The /ilu/etc directory contains directories called sbfile and sbserver. 
+Between the two of them, you can build the simple binding server for
+Windows.
+<P>
+<H3><A NAME="SEC454" HREF="manual_toc.html#SEC454">Borland C</A></H3>
+<P>
+ILU source does not build with Borland C, but some successful 
+attempts have been reported.  Here are some of the hints that have been passed
+back.
+<P>
+Borland doesn't prepend an underscore on Unix-based lib functions - 
+all the various calls in "runtime/kernel/os/win.h
+<P>
+Header files - doesn't like declarations of partially typed variables. e.g. just saying
+extern struct _ilu_DefaultAlarm_struct.  This forces the definition of the entity
+in the header file, requiring it to be removed from the source file where it is
+currently fully defined.
+<P>
+.def files need to have the VERSION keyword removed, and .def files that reference 
+functions need to be changed to reference those functions without underscores.  
+Microsoft uses underscores, Borland doesn't.
+<P>
+Whatever method you use for building ILU, make sure and set the "Max errors
+and warnings" to 0 (don't stop).  ILU generates a number of
+warnings when build with Borland, and not setting this will cause the build
+to fail with a "too many warnings" error.
+<P>
+Don't enable CodeGuard (Borland's C/C++ memory check library; it looks for
+leaks and other nasties and logs them).  It will have a field day with ILU
+since some parts of the system leak on purpose, like the stubbers.
+<P>
+<H2><A NAME="SEC455" HREF="manual_toc.html#SEC455">Files in the distribution</A></H2>
+<P>
+Note:  this list is in the process of being updated, and may contain some errors.
+<P>
+bin directory
+<P>
+<UL>
+<LI><TT>`c++-stubber.exe'</TT> -- console C++ stubber
+<LI><TT>`c-stubber.exe'</TT> -- console C stubber
+<LI><TT>`ilu32.dll'</TT> -- kernel runtime DLL
+<LI><TT>`iluc32.dll'</TT> -- C runtime DLL
+<LI><TT>`ilucpp32.dll'</TT> -- C++ runtime DLL
+<LI><TT>`islscan.exe'</TT> -- console ISL scanner
+<LI><TT>`idl2isl.exe'</TT> -- IDL to ISL converter
+<LI><TT>`parser32.dll'</TT> -- parser DLL for stubbers
+<LI><TT>`python-stubber.exe'</TT> -- console python stubber
+</UL>
+<P>
+lib directory
+<P>
+(Note unlabeled entries are the import libraries for their 
+counterparts in the bin directory)
+<P>
+<UL>
+<LI><TT>`ilu.py'</TT> -- python runtime file
+<LI><TT>`ilu32.lib'</TT>
+<LI><TT>`iluPr.pyd'</TT> -- a dll used by the python runtime
+<LI><TT>`iluRt.py'</TT> -- python runtime file
+<LI><TT>`ilu_tk.py'</TT> -- python tk file
+<LI><TT>`iluc32.lib'</TT>
+<LI><TT>`ilucpp32.lib'</TT>
+<LI><TT>`parser32.lib'</TT>
+</UL>
+<P>
+include directory  (header files need for building ILU apps)
+<P>
+<UL>
+<LI><TT>`ilu.hh'</TT> -- main c++ runtime header file
+<LI><TT>`ilubasic.h'</TT>
+<LI><TT>`iluchdrs.h'</TT> -- main c runtime header file
+<LI><TT>`iluconf.h'</TT>
+<LI><TT>`ilucstub.h'</TT>
+<LI><TT>`iludebug.h'</TT>
+<LI><TT>`iluerror.h'</TT>
+<LI><TT>`iluerrs.h'</TT>
+<LI><TT>`iluhash.h'</TT>
+<LI><TT>`iluntrnl.h'</TT>
+<LI><TT>`iluptype.h'</TT>
+<LI><TT>`ilutypes.h'</TT>
+<LI><TT>`iluxport.h'</TT> -- kernel exports header file
+<LI><TT>`iluprotocol.h'</TT>
+<LI><TT>`ilutransport.h'</TT>
+</UL>
+<P>
+interfaces directory
+<P>
+<UL>
+<LI><TT>`ilu.isl'</TT>
+<LI><TT>`http.isl'</TT>
+</UL>
+<P>
+examples directory
+<P>
+<UL>
+<LI><TT>`iluwin32.mak'</TT>
+</UL>
+<P>
+examples/httest
+<P>
+<UL>
+<LI><TT>`htclient.c'</TT>
+<LI><TT>`htclient.mak'</TT>
+<LI><TT>`htserver.c'</TT>
+<LI><TT>`htserver.mak'</TT>
+<LI><TT>`httest.isl'</TT>
+<LI><TT>`iluwin32.mak'</TT>
+<LI><TT>`README'</TT>
+<LI><TT>`webserver.c'</TT>
+<LI><TT>`webserver.mak'</TT>
+</UL>
+<P>
+examples/iioptest1
+<P>
+<UL>
+<LI><TT>`client.c'</TT>
+<LI><TT>`client.mak'</TT>
+<LI><TT>`iioptest1.isl'</TT>
+<LI><TT>`iluwin32.mak'</TT>
+<LI><TT>`server.c'</TT>
+<LI><TT>`server.mak'</TT>
+<LI><TT>`test1.idl'</TT>
+</UL>
+<P>
+examples/test1
+<P>
+<UL>
+<LI><TT>`clnconsl.ico'</TT>
+<LI><TT>`clnt.c'</TT>
+<LI><TT>`clnt.h'</TT>
+<LI><TT>`clnt.mak'</TT>
+<LI><TT>`clntu.c'</TT>
+<LI><TT>`clntw.c'</TT>
+<LI><TT>`clntw.ico'</TT>
+<LI><TT>`clntw.mak'</TT>
+<LI><TT>`clntw.rc'</TT>
+<LI><TT>`cppclnt.cc'</TT>
+<LI><TT>`cppclnt.cpp'</TT>
+<LI><TT>`cppclnt.mak'</TT>
+<LI><TT>`cppclntw.cpp'</TT>
+<LI><TT>`cppclntw.mak'</TT>
+<LI><TT>`cppsrvr.cc'</TT>
+<LI><TT>`cppsrvr.cpp'</TT>
+<LI><TT>`cppsrvr.mak'</TT>
+<LI><TT>`cppsrvrw.cpp'</TT>
+<LI><TT>`cppsrvrw.mak'</TT>
+<LI><TT>`iluwin32.mak'</TT>
+<LI><TT>`msgalarm.c'</TT>
+<LI><TT>`pyClient.py'</TT>
+<LI><TT>`pyServer.py'</TT>
+<LI><TT>`README'</TT>
+<LI><TT>`resource.h'</TT>
+<LI><TT>`srvr.c'</TT>
+<LI><TT>`srvr.h'</TT>
+<LI><TT>`srvr.mak'</TT>
+<LI><TT>`srvru.c'</TT>
+<LI><TT>`srvrw.c'</TT>
+<LI><TT>`srvrw.ico'</TT>
+<LI><TT>`srvrw.mak'</TT>
+<LI><TT>`srvrw.rc'</TT>
+<LI><TT>`svrconsl.ico'</TT>
+<LI><TT>`Test1.isl'</TT>
+<LI><TT>`Test2.isl'</TT>
+<LI><TT>`Test3.isl'</TT>
+</UL>
+<P>
+examples/test2
+<P>
+<UL>
+<LI><TT>`Batcher.isl'</TT>
+<LI><TT>`bclient.mak'</TT>
+<LI><TT>`bclnt.c'</TT>
+<LI><TT>`bserver.mak'</TT>
+<LI><TT>`bsvr.c'</TT>
+<LI><TT>`Fibber.isl'</TT>
+<LI><TT>`fibber.mak'</TT>
+<LI><TT>`fprog.c'</TT>
+<LI><TT>`iluwin32.mak'</TT>
+<LI><TT>`README'</TT>
+</UL>
+<P>
+examples/timeit 
+<P>
+<UL>
+<LI><TT>`client.c'</TT>
+<LI><TT>`client.mak'</TT>
+<LI><TT>`iluwin32.mak'</TT>
+<LI><TT>`prebuiltISL'</TT>
+<LI><TT>`README'</TT>
+<LI><TT>`server.c'</TT>
+<LI><TT>`server.mak'</TT>
+</UL>
+<P>
+<P>Go to the <A HREF="manual_10.html">previous</A>, <A HREF="manual_12.html">next</A> section.<P>

@@ -1,0 +1,1086 @@
+<!-- This HTML file has been created by timdif2html 1.11
+     from manual.dif on 20 September 1999 -->
+
+<TITLE>ILU Reference Manual - The ILU Common Lisp Lightweight Process System</TITLE>
+<BODY TEXT=#000000 BGCOLOR=#ffffff>
+<P>Go to the <A HREF="manual_23.html">previous</A>, <A HREF="manual_25.html">next</A> section.<P>
+<H1><A NAME="SEC627" HREF="manual_toc.html#SEC627">The ILU Common Lisp Lightweight Process System</A></H1>
+<P>
+<H2><A NAME="SEC628" HREF="manual_toc.html#SEC628">Introduction</A></H2>
+<P>
+Although it is not required by the specification, most Common Lisp 
+implementations include a facility for multiple, independent <I>threads</I> 
+of control (often called <I>lightweight processes</I>) within a single Lisp 
+environment.  Unfortunately, this facility is not standardized across the 
+various implementations.  Although the capabilities provided are very similar 
+across implementations, the details of lightweight processes and the interface 
+to them differ significantly.  This situation makes it difficult to write 
+programs that use lightweight processes and yet are portable across Common 
+Lisp implementations. 
+<P>
+Common Lisp ILU does not requires lightweight processes in 
+order to function, but they are useful.  In particular, servers typically make 
+heavy use of lightweight process facilities.  The purpose of the 
+ILU CL Process Interface is to provide a standardized, portable 
+interface to lightweight processes for use within the ILU 
+environment.  This interface isolates ILU users from the 
+differences in the various lightweight process implementations and allows them 
+to write programs that are portable across all implementations to which the 
+ILU CL Process Interface has been ported.  At present, these 
+implementations include Franz Allegro CL 4.1, and Lucid Common Lisp 3.0 
+(a.k.a., Sun Common Lisp).
+<P>
+This chapter explains how the ILU CL Process Interface works 
+for ILU users.  It begins with an overview that describes the 
+ILU CL Process model, followed by a listing of some functional 
+capabilities of this model.  After brief discussions of the implementation 
+architecture and general limitations of the ILU CL Process 
+Interface, the chapter presents an example of how to use the interface to 
+define a simple shared FIFO queue.  Next, it lists all of the functions and 
+macros necessary to use lightweight processes in the ILU 
+environment.  The chapter concludes with a brief list of references. 
+<P>
+To use the information in this chapter, you should be familiar with Common 
+Lisp and with the notion of processes and threads in an operating system. 
+Familiarity with the UNIX process model would also be helpful.  (See 
+the References section for recommendations on further reading.) 
+<P>
+<H2><A NAME="SEC629" HREF="manual_toc.html#SEC629">Overview Of The ILU CL Process Model</A></H2>
+<P>
+The ILU CL Process Interface features an interface to 
+lightweight processes similar to that on the Symbolics Lisp machine.  In 
+particular, within a single Lisp environment (which on stock hardware runs as 
+a single heavyweight UNIX process) there are multiple threads of control that 
+can be scheduled independently.  These threads are called <I>lightweight 
+processes</I> (or sometimes just <I>processes</I>).  Each lightweight process 
+contains its own run-time control and binding stack, but it shares the global 
+data and program address space with all other processes in the Lisp 
+environment.  Note that this arrangement differs from that of the UNIX 
+heavyweight process facility, where each process has its own address space as 
+well as its own run-time stack. 
+<P>
+<H3><A NAME="SEC630" HREF="manual_toc.html#SEC630">The Scheduler Process</A></H3>
+<P>
+Each lightweight process represents an independent thread of control.  The 
+multiple threads within the Lisp environment are managed by a special 
+<I>scheduler</I> process.  The ILU CL Process Interface 
+makes no assumptions about the nature of this scheduler process.  However, 
+most implementations use a time-slice, priority-based scheduler.  In such a 
+scheduler, an interrupt occurs once every so often (called the scheduler's 
+<I>quantum</I>).  When the interrupt occurs, the process that is currently 
+running is stopped and its state is saved.  The scheduler then examines all 
+processes that are runnable (that is, waiting to run) and restarts the process 
+that has the highest priority.  This process runs until the next interrupt or 
+until it gives up control to the scheduler, whichever comes first.  At any 
+given time, the one process that is "currently" running is known as the 
+<I>current process</I>. 
+<P>
+<H3><A NAME="SEC631" HREF="manual_toc.html#SEC631">States Of Processes</A></H3>
+<P>
+In the ILU CL Process model, each lightweight process is 
+represented by a single Lisp object that maintains the information about that 
+process.  Also, each process is always in one of three states: 
+<I>active</I>, <I>inactive</I>, or <I>killed</I>.  A process 
+maintains two lists of objects called, respectively, the <I>run reasons</I> 
+and the <I>arrest reasons</I> for the process.  For a process to be active, 
+it must have at least one run reason and no arrest reasons. A process with no 
+run reasons or at least one arrest reason is considered inactive.  The 
+ILU CL Process Interface provides functions for adding and 
+removing run and arrest reasons for a process. Thus, the user (or a program) 
+can move a process between the active and inactive states. 
+<P>
+The scheduler runs only active processes.  Until an inactive process is 
+reactivated, it cannot run.  A killed process is one that has been explicitly 
+killed (using the <CODE>ilu-process:process-kill</CODE> function).  A killed 
+process can never be run again (that is, it can never be made active). 
+<P>
+An active process can in turn be in one of two substates: <I>runnable</I> 
+and <I>waiting</I>.  A runnable process is ready to be restarted by the 
+scheduler, which determines whether and when a process will actually be 
+restarted based on its status (that is, priority) and the status of the other 
+runnable processes.  A waiting process is a process that has a <I>wait 
+function</I> and a list of <I>wait arguments</I>. These two items are supplied 
+to the process using the <CODE>ilu-process:process-wait</CODE> function. 
+ Periodically, the scheduler will <CODE>apply</CODE> the process's wait 
+function to its wait arguments (in the context of the scheduler).  If the 
+result is a non-<CODE>nil</CODE> value, the wait function and wait arguments are 
+removed from the process, and the process thereby becomes runnable.  Usually, 
+the scheduler evaluates the wait functions for all waiting processes every 
+time around the scheduler loop.  Therefore, it is important that wait 
+functions be fast and very efficient. 
+<P>
+<H3><A NAME="SEC632" HREF="manual_toc.html#SEC632">Removing Or Killing Processes</A></H3>
+<P>
+You can reversably remove a process from a runnable state either by entering a 
+wait or by making it inactive.  In general, it is more efficient to make a 
+process inactive because this removes it from the scheduler's active process 
+list.  Thus, the scheduler does not incur the cost of periodically evaluating 
+its wait function.  However, an inactive process cannot make itself active. 
+ It must depend on some other process to recognize when it is ready to run 
+again and to reactivate it at that time.  Although a waiting process is 
+initially more costly than an inactive one, it is automatically returned to a 
+runnable state by the scheduler whenever its wait function returns 
+non-<CODE>nil</CODE>.  Hence, no second process is needed to <EM>restart</EM> 
+a waiting function.  Thus, the choice between waiting a process and rendering 
+it inactive depends on the architecture of the application being written. 
+<P>
+When a process is first started, it is given a Lisp function and a set of 
+arguments to this function.  These are known as the process's 
+<I>initial-function</I> and <I>inital-arguments</I>, respectively.  A 
+newly created process, <CODE>apply</CODE>s its initial-function to its 
+inital-arguments.  When the initial-function returns, the process is 
+automatically killed.  Once killed it can never be restarted.  You can also 
+kill the process before the inital-function returns using the 
+<CODE>ilu-process:process-kill</CODE> function, which causes the process to 
+execute a <CODE>throw</CODE> in its current context.  This <CODE>throw</CODE> 
+causes the stack to unwind (executing unwind-protect forms along the way) and 
+the initial-function to return, thereby killing the process. 
+<P>
+<H3><A NAME="SEC633" HREF="manual_toc.html#SEC633">Properties Of Processes</A></H3>
+<P>
+Every process has a number of properties.  Specifically, a process has an 
+arbitrary <I>process name</I> that identifies it in displays and in certain 
+operations.  Process names need not be unique.  A process also has a 
+<I>priority</I> that the scheduler uses optionally to determine when to 
+schedule the process.  Priorities are small integers and default to zero (0). 
+ In most implementations, processes with higher priorities are given 
+scheduling preference.  Negatives are used to indicate that a process should 
+run as a background task when nothing else is running.  Finally, a process has 
+a <I>quantum</I>, which is the amount of time (measured in seconds) that 
+the process wishes to run each time before it is interrupted. In some 
+implementations, the scheduler uses a process's quantum to help determine the 
+actual length of the time-slice given to the process.  Many implementations 
+ignore the quantum altogether. 
+<P>
+<H3><A NAME="SEC634" HREF="manual_toc.html#SEC634">Process Locks</A></H3>
+<P>
+The ILU CL Process Interface also includes a facility called 
+<I>process locks</I> that supports exclusion-based sharing of a common 
+resource (that is, a common object or data structure) or a critical region of 
+code by two or more concurrent processes.  A process lock is an object that a 
+process can <I>lock</I> in order to claim exclusive access to the shared 
+resource corresponding to the lock.  Process locks are essentially a semaphore 
+mechanism specialized for use with the ILU CL Process 
+interface. 
+<P>
+Each process lock has a name and a locker.  A lock's name is for display 
+purposes only.  Processes can ask to gain or relinquish exclusive rights to 
+the lock (called <I>locking</I> and <I>unlocking</I> the lock, 
+respectively).  While a process has rights to the lock, the lock's locker is 
+(generally) the process object for that process.  When a process asks to lock 
+a lock that is already locked, the asking process blocks and "waits" until 
+the lock is free.  Waiting does not necessarily use the standard wait 
+mechanism.  Some implementations use process deactivation to implement the 
+"wait" in this case.  Some implementations may also maintain a queue of 
+processes waiting for a lock to be freed, thereby ensuring fair access to the 
+lock.  Other implementations may not maintain such a queue, and therefore fair 
+access to the lock is not guaranteed. 
+<P>
+Process locks are contractual in nature.  The various processes sharing a 
+resource (or critical section of code) must all agree not to access the common 
+resource while the process lock corresponding to that resource is held by 
+another process.  Furthermore, they must agree to lock the process lock 
+whenever they need exclusive access to the resource, thereby notifying the 
+other processes of their intent. Moreover, the correspondence between a 
+process lock and the shared resource is a matter of agreement between the 
+cooperating processes. The system does not provide any direct support for this 
+correspondence (although it may be added on at a higher level built on top of 
+the basic process lock mechanism). 
+<P>
+Process locks provide a code-centered "sharing" mechanism where the access 
+control is built into the programs that access the shared resource.  Process 
+locks are suited for closed, or non-extensible, applications where the shared 
+resource is a standard Lisp data structure (that is, not a CLOS 
+object) and where efficiency is a major concern.  For applications not meeting 
+these criteria, a mechanism in which a CLOS object itself 
+controls simultaneous access to its internal data structures may be more 
+appropriate. 
+<P>
+<H2><A NAME="SEC635" HREF="manual_toc.html#SEC635">Functional Overview</A></H2>
+<P>
+The ILU CL Process Interface provides all of the functions and 
+macros necessary to use lightweight processes in the ILU 
+environment.  The functionality provided by these functions and macros 
+includes:
+<P>
+<UL>
+<LI>
+Starting new processes and killing processes
+<P>
+<LI>
+Displaying status information, such as the current 
+process, all active processes, or all known processes
+<P>
+<LI>
+Accessing and modifying the properties of a process 
+(for example, its name or priority)
+<P>
+<LI>
+Adding/Removing arrest and run reasons for a process
+<P>
+<LI>
+Allowing a process to give up control to the scheduler 
+or enter into a wait state
+<P>
+<LI>
+Temporarily turning off the scheduler so that the 
+current process cannot be interrupted
+<P>
+<LI>
+Creating, locking, unlocking, and modifying process 
+locks
+<P>
+</UL>
+<P>
+<H2><A NAME="SEC636" HREF="manual_toc.html#SEC636">Implementation Architecture</A></H2>
+<P>
+The ILU CL Process Interface is implemented as a veneer over 
+the existing process interfaces for a number of Common Lisp implementations 
+(currently Franz Allegro CL and Lucid Common Lisp).
+In many cases, the implementation's functions are simply imported 
+and then exported from the <CODE>ilu-process</CODE> package.
+In other cases, a new function is wrapped around the 
+implementation's native function to change the name, arguments, or semantics 
+of the function so that they match those required by the ILU CL 
+Process Interface specification.  In a few cases, whole new functions have 
+been written to achieve functionality not provided by the original 
+implementation. 
+<P>
+The nature of the process object in the ILU CL Process 
+Interface is not specified.  The process object is inherited from the 
+underlying implementation and may therefore be a list, a structure, a flavor 
+object, or even a CLOS object.  Because of this lack of 
+specification, process objects cannot be specialized.  Moreover, they cannot 
+be accessed or modified in any way other than through the functional interface 
+described in this chapter. 
+<P>
+<H2><A NAME="SEC637" HREF="manual_toc.html#SEC637">General Limitations</A></H2>
+<P>
+The ILU CL Process Interface assumes that the scheduler is 
+loaded and running in the ILU environment.  Procedures for 
+starting the scheduler are not included in the ILU CL Process 
+Interface.  Some implementations, however, may require you to actually load 
+and start up the scheduler.  For example, in Franz Allegro CL, you need to 
+evaluate <CODE>(mp:start-scheduler)</CODE> either at the top-level or in your 
+<TT>`.clinit.cl'</TT> file in order to load and start up the scheduler. 
+<P>
+The ILU CL Process Interface is subject to all of the 
+limitations of its underlying implementations.  In particular, one problem 
+with most Common Lisp implementations on stock hardware is that the smallest 
+scheduler quantum possible is one second.  This means that each process gets 
+to run for one second uninterrupted.  For applications that involve real-time 
+response, waiting for one second before an event can be handled is 
+problematic.  In practice, this problem can be lessened if all processes 
+release control to the scheduler at regular, short intervals (that is, each 
+few times around a tight inner loop), thereby making the effective quantum 
+significantly less than one second.  Note that this practice effectively 
+reduces the scheduler to a prioritized, cooperative scheduler rather than the 
+preemptive scheduler intended.
+<P>
+Most Common Lisp implementations build their process mechanism on top of a 
+very powerful mechanism called <I>stack groups</I>.  Stack groups provide 
+for alternative run-time stacks in the Lisp environment that can be used for 
+various purposes beyond implementing processes.  For example, stack groups are 
+an ideal substrate for implementing co-routines. Unfortunately, not all 
+implementations provide an interface to stack groups (if indeed they have 
+stack groups).  Hence, an interface to stack groups is not a part of the 
+ILU CL Process Interface. 
+<P>
+<H2><A NAME="SEC638" HREF="manual_toc.html#SEC638">How To Use The ILU CL Process Interface</A></H2>
+<P>
+The ILU CL Process Interface is intended as a programmer's 
+interface; the functions and macros provided should be used to implement 
+programs that run in the ILU environment.  Although you can use 
+any of the functions and macros directly from a Lisp listener, the interface 
+is not designed particularly well for interactive use.  The two exceptions to 
+this rule are the functions <CODE>ilu-process:show-process</CODE> and 
+<CODE>ilu-process:show-all-processes</CODE>, both of which are designed to 
+print out status information in the Lisp listener window.  Because it is a 
+user-oriented function, <CODE>ilu-process:show-process</CODE> accepts either 
+the process name or a process object to identify the process whose status is 
+to be displayed. 
+<P>
+Most implementations include an interactive interface to multiple processes 
+and the scheduler.  For example, Franz Allegro CL has a special top-level 
+command language that is operative in every Lisp listener. This command 
+language includes the following commands that deal specifically with 
+lightweight processes (see Chapter 4 of <CITE>[Franz-92]</CITE> for more 
+information):
+<P>
+<UL>
+<P>
+<LI>
+<CODE>:processes</CODE> 
+<P>
+Lists all processes (see <CODE>ilu-process:all-processes</CODE>)
+<P>
+<LI>
+<CODE>:kill</CODE> 
+<P>
+Kills a process (see <CODE>ilu-process:process-kill</CODE>)
+<P>
+<LI>
+<CODE>:arrest</CODE> 
+<P>
+Adds an arrest reason to a process (see 
+<CODE>ilu-process:add-arrest-reason</CODE>)
+<P>
+<LI>
+<CODE>:unarrest</CODE> 
+<P>
+Removes any arrest reason that was added to a process by <CODE>:arrest</CODE> 
+(see <CODE>ilu-process:process-revoke-arrest-reason</CODE>)
+<P>
+<LI>
+<CODE>:focus</CODE> 
+<P>
+Performs an <CODE>:arrest</CODE> on a process and arranges for all user keyboard 
+input to be sent to the arrested process (usually to the debugger).
+<P>
+</UL>
+<P>
+<H2><A NAME="SEC639" HREF="manual_toc.html#SEC639">How To Program The ILU CL Process Interface</A></H2>
+<P>
+The following example illustrates how to use the ILU CL Process 
+Interface to define a shared FIFO queue.  Two processes will utilize this 
+queue.  A producer process will read input items from the user and place them 
+on the shared queue. A consumer process will wake up every five seconds and 
+read items from the shared queue, printing them on the standard output stream 
+as they are taken off the queue.  Access to the shared queue will be 
+controlled using a process lock associated with the queue. 
+<P>
+<PRE>
+;;;________________________________________________
+;;; the shared queue, its process-lock, and its accessors/mutators
+;;;
+
+(defvar queue (list t) "The shared queue")
+
+(defvar queue-lock (ilu-process:make-process-lock :name "queue lock")
+  "process lock for queue")
+
+(defun queue-pop (queue)
+  "Pop an item off of the shared FIFO queue.
+   Use ilu-process:with-process-lock to prevent collisions between processes.
+  "
+  (ilu-process:with-process-lock (queue-lock)
+    (prog1
+	(cadr queue)
+      (rplacd queue (cddr queue)))
+    ))
+
+(defun queue-push (queue item)
+  "Push an item onto the shared FIFO queue.
+   Use ilu-process:with-process-lock to prevent collisions between processes.
+  "
+  (ilu-process:with-process-lock (queue-lock)
+    (nconc queue (list item))
+    ))
+
+(defun queue-empty-p (queue)
+  "Is queue empty?
+   Use ilu-process:with-process-lock to prevent collisions between processes.
+  "
+  (ilu-process:with-process-lock (queue-lock) (null (cdr queue)) ))
+
+;;;________________________________________________
+;;;  The producer function
+;;;
+
+(defun produce ()
+  "Loop reading an item from the user and pushing it onto the shared queue."
+  (let (Item)
+    (loop
+      ;; Wait until there is something on the input stream.
+      (ilu-process:process-wait "Waiting for input" #'listen *standard-input*)
+
+      ;; Read the input.
+      (setq Item (read *standard-input*))
+
+      ;; Check to see if it is the EOF marker and exit if so.
+      (when (eq Item :EOF) (return nil))
+
+      ;; Push the item onto the queue.
+      (queue-push queue Item)
+      )))
+
+;;;________________________________________________
+;;; The consumer function
+;;;
+
+(defun consume ()
+  "Wake up every five seconds and see if there is something on the shared
+   queue.  If there is, pop it off and print it on standard output.
+   If the queue is empty and the producer process is not alive, terminate.
+  "
+  (loop
+    ;; Check to see if there is anything on the queue.
+    (if (not (queue-empty-p queue))
+	;; There is an item on the queue; pop and print all items.
+	(do ()((queue-empty-p queue))
+	  (fresh-line t)
+	  (princ "Output: ")
+	  (prin1 (queue-pop queue))
+	  (fresh-line t)
+	  (finish-output t))
+
+      ;; Queue is empty; check to see if the producer is still alive.
+      (if (null (ilu-process:find-process "Producer Process"))
+
+	  ;; Producer not alive; terminate.
+	  (return nil)))
+
+    ;; Sleep for five seconds; this gives up control immediately
+    ;; so some other process can run.
+    (sleep 5)
+    ))
+
+;;;________________________________________________
+;;;   Main function; starts consumer and producer processes
+;;;
+
+(defun test-queue ()
+  "Start consumer and producer processes. Wait in an idle loop until
+   both the producer and the consumer processes die.  This function is
+   meant to be evaluated in the Lisp listener.  Waiting until both
+   processes die ensures that the Lisp listener does not interfere
+   with user input to the producer.
+  "
+  (let (Producer Consumer)
+    ;; Start the producer first; the consumer needs the producer to run.
+    (setq Producer (ilu-process:fork-process "Producer Process" #'produce))
+    ;; Start the consumer.
+    (setq Consumer (ilu-process:fork-process "Consumer Process" #'consume))
+    ;; Show processes on the standard ouput.
+    (ilu-process:show-all-processes)
+    ;; Wait until both consumer and producer are dead.
+    (ilu-process:process-wait "Waiting for godot"
+	#'(lambda (P1 P2)
+	    (not
+	     (or (ilu-process:process-alive-p P1)
+		 (ilu-process:process-alive-p P2))))
+	Consumer Producer)
+    ))
+</PRE>
+<P>
+The following is a transcript of this test program in operation: 
+<P>
+<PRE>
+;;;________________________________________________
+#73: (test-queue)
+-------------Data on all processes follows---------
+Process: "Consumer Process"
+  Process-alive-p: T
+  Process-active-p: T
+  Process-quantum: 2
+  Process-priority: 0
+  Process-run-reasons: (:START :START)
+Process: "Producer Process"
+  Process-alive-p: T
+  Process-active-p: T
+  Process-quantum: 2
+  Process-priority: 0
+  Process-run-reasons: (:START :START)
+Process: "Initial Lisp Listener"
+  Process-alive-p: T
+  Process-active-p: T
+  Process-quantum: 2
+  Process-priority: 0
+  Process-run-reasons: (:ENABLE)
+123
+Output: 123
+456
+789
+Output: 456
+Output: 789
+444
+555
+666
+Output: 444
+Output: 555
+Output: 666
+:eof
+NIL
+#74:
+</PRE>
+<P>
+<H2><A NAME="SEC640" HREF="manual_toc.html#SEC640">The ILU CL Process Interface</A></H2>
+<P>
+The following sections detail the functions and macros that make up the 
+ILU CL Process Interface.  All are assumed to be in the <CODE>ilu-process</CODE>
+package unless otherwise specified.  Arguments are shown with their type,
+if they have any restrictions on their type.  Return types are shown
+if the function returns a value.  Optional arguments are shown with their
+type and their default value.
+<P>
+<H3><A NAME="SEC641" HREF="manual_toc.html#SEC641">The Process Object</A></H3>
+<P>
+The following listings describe the object that is used to represent each 
+lightweight process. 
+<P>
+<A NAME="IDX844"></A>
+<U>Type:</U> <B>ilu-process:process</B><P>
+<P>
+A Lisp object representing a single process.  This object is to be used only 
+as a handle for the process.  To alter the state or characteristics of a 
+process, use the external function interface defined below.  The exact nature 
+of the process object differs between implementations. In particular, it may 
+or may not be a flavor or a CLOS object.  Hence, it is not safe to specialize 
+processes. 
+<P>
+<A NAME="IDX845"></A>
+<U>Function:</U> <B>find-process</B> <I>(NAME <CODE>string</CODE>) => <CODE>process</CODE></I><P>
+<P>
+Returns the process object whose name is <VAR>NAME</VAR>.  Only 
+<CODE>ilu-process:process-alive-p</CODE> processes (that is, processes on the 
+list returned from <CODE>ilu-process:all-processes</CODE>) are searched.  This 
+function returns <CODE>nil</CODE> if there is no matching process.
+<P>
+<A NAME="IDX846"></A>
+<U>Function:</U> <B>processp</B> <I>OBJECT => <CODE>boolean</CODE></I><P>
+<P>
+Returns non-<CODE>nil</CODE> if <VAR>OBJECT</VAR> is an object of type 
+<CODE>process</CODE> for this implementation.  This function returns 
+<CODE>nil</CODE> otherwise.
+<P>
+<H3><A NAME="SEC642" HREF="manual_toc.html#SEC642">Querying The Status Of The Scheduler And All Processes</A></H3>
+<P>
+The following functions and macros provide status information about the 
+general state of processes and the scheduler in the Lisp environment. 
+<P>
+<A NAME="IDX847"></A>
+<U>Macro:</U> <B>active-processes</B> <I>=> <CODE>list</CODE></I><P>
+<P>
+Returns a list of all active processes; that is, processes that have at least 
+one run reason and no arrest reasons.  Note, however, that these processes are 
+not necessarily runnable because they may be in a process-wait.
+<P>
+<A NAME="IDX848"></A>
+<U>Macro:</U> <B>all-processes</B> <I>=> <CODE>list</CODE></I><P>
+<P>
+Returns a list of all processes currently known by the scheduler, including 
+active and inactive processes but not processes that have been killed.
+<P>
+<A NAME="IDX849"></A>
+<U>Macro:</U> <B>current-process</B> <I>=> <CODE>process</CODE></I><P>
+<P>
+Returns the process object for the current thread of control.
+<P>
+<A NAME="IDX850"></A>
+<U>Function:</U> <B>show-all-processes</B> <I>&optional (STREAM <CODE>streamp</CODE> <CODE>cl:*standard-output*</CODE>) (VERBOSE <CODE>boolean</CODE> <CODE>nil</CODE>)</I><P>
+<P>
+Displays information about all processes known by the scheduler (that is, the 
+processes returned by <CODE>ilu-process:all-processes</CODE>). Output is to 
+<VAR>STREAM</VAR>, which defaults to the value of <CODE>cl:*standard-output*</CODE>. 
+This function shows only non-<CODE>nil</CODE> fields unless <VAR>VERBOSE</VAR> is 
+non-<CODE>nil</CODE>; the default is <CODE>nil</CODE>.
+<P>
+<H3><A NAME="SEC643" HREF="manual_toc.html#SEC643">Starting And Killing Processes</A></H3>
+<P>
+<A NAME="IDX851"></A>
+<U>Function:</U> <B>fork-process</B> <I>(NAME-OR-KEY-LIST <CODE>(or string proplist)</CODE> (FUNCTION <CODE>function</CODE>) &rest ARGS => <CODE>process</CODE></I><P>
+<P>
+Creates a new process and returns the <CODE>process</CODE> object for this 
+process.  In this process, <VAR>FUNCTION</VAR> is <CODE>apply</CODE>ed to 
+<VAR>ARGS</VAR>.  If <VAR>FUNCTION</VAR> ever returns, the process is 
+automatically killed.  The <VAR>FUNCTION</VAR> is known as the initial-function 
+of the process (see <CODE>ilu-process:process-initial-form</CODE>). 
+<P>
+The new process is activated by default, although you can create it in a 
+deactivated state by giving it a run reasons list with a value of 
+<CODE>nil</CODE> or by giving it one or more arrest reasons as detailed below. 
+<P>
+<VAR>NAME-OR-KEY-LIST</VAR> is either a string, in which case it serves as the 
+name of the process, or it is a property list with one or more of the 
+following property-value pairs:
+<P>
+<UL>
+<P>
+<LI>
+<CODE>:name</CODE> (<CODE>string</CODE>)
+<P>
+A string to be used as the name of the process.
+<P>
+<LI>
+<CODE>:priority</CODE> (<CODE>integer</CODE>)
+<P>
+Sets the priority of the process to the given value (see 
+<CODE>ilu-process:process-priority</CODE>).
+<P>
+<LI>
+<CODE>:quantum</CODE> (<CODE>(or numberp nil)</CODE>)
+<P>
+Sets the quantum of the process to the given value (see 
+<CODE>ilu-process:process-quantum</CODE>).  Defaults to <CODE>1</CODE>.
+<P>
+<LI>
+<CODE>:stack-size</CODE> (<CODE>fixnum</CODE>)
+<P>
+Sets the stack-size of the process (if possible in this implementation).
+<P>
+<LI>
+<CODE>:run-reasons</CODE> (<CODE>list</CODE>)
+<P>
+Sets the run reasons of this process to the given list. Unless run-reasons is 
+non-<CODE>nil</CODE>, the forked process does not run until a 
+<CODE>ilu-process:process-add-run-reason</CODE> is done.  This property 
+defaults to <CODE>(quote (:start))</CODE>.
+<P>
+<LI>
+<CODE>:arrest-reasons</CODE> (<CODE>list</CODE>)
+<P>
+Sets the arrest reasons of this process to the given list.  If arrest-reasons 
+is non-<CODE>nil</CODE>, the forked process does not run until a 
+<CODE>ilu-process:process-revoke-arrest-reason</CODE> is done.  This property 
+defaults to <CODE>nil</CODE>.
+<P>
+<LI>
+<CODE>:bindings</CODE> (<CODE>list</CODE>)
+<P>
+A list of bindings (as in let) that are done in the context of the forked 
+process before the function is run.  This property defaults to 
+<CODE>ilu-process:*default-process-bindings*</CODE>.
+<P>
+</UL>
+<P>
+<A NAME="IDX852"></A>
+<U>Function:</U> <B>process-kill</B> <I>(PROCESS <CODE>process</CODE>)</I><P>
+<P>
+Terminates <VAR>PROCESS</VAR> and removes it from the scheduler's consideration 
+altogether.  It is an error if <VAR>PROCESS</VAR> is not 
+<CODE>ilu-process:processp</CODE> and 
+<CODE>ilu-process:process-alive-p</CODE>.
+<P>
+A process may not terminate immediately.  In particular, the process is first 
+activated and scheduled.  It is then forced to <CODE>throw</CODE> out of its 
+initial-function, thereby properly unwinding and executing any unwind forms. 
+<P>
+A killed process cannot be reactivated.
+<P>
+<H3><A NAME="SEC644" HREF="manual_toc.html#SEC644">Waiting A Process</A></H3>
+<P>
+<A NAME="IDX853"></A>
+<U>Function:</U> <B>process-wait</B> <I>(WHOSTATE <CODE>string</CODE>) (FUNCTION <CODE>function</CODE>) &rest ARGS</I><P>
+<P>
+The current process is suspended until <VAR>FUNCTION</VAR> applied to 
+<VAR>ARGS</VAR> returns non-<CODE>nil</CODE>.  During this time, the process's 
+whostate (see <CODE>ilu-process:process-whostate</CODE>) is set to 
+<VAR>WHOSTATE</VAR>. 
+<P>
+Note that the current process is not deactivated.  It is simply not scheduled 
+to run until its wait-function returns non-<CODE>nil</CODE>.  The scheduler 
+re-evaluates the wait-function periodically.  In general, the re-evaluation 
+occurs whenever the waited process would be scheduled to run if it were not 
+suspended. However, in some implementations it is run during every scheduler 
+break.
+<P>
+<H3><A NAME="SEC645" HREF="manual_toc.html#SEC645">Activating And Deactivating Processes</A></H3>
+<P>
+<A NAME="IDX854"></A>
+<U>Function:</U> <B>process-add-arrest-reason</B> <I>(PROCESS <CODE>process</CODE>) OBJECT</I><P>
+<P>
+Adds <VAR>OBJECT</VAR> to the list of arrest reasons for <VAR>PROCESS</VAR>. 
+The <VAR>OBJECT</VAR> argument can be any Lisp object.  It is an error if 
+<VAR>PROCESS</VAR> is not <CODE>ilu-process:processp</CODE>. 
+<P>
+Adding an arrest reason may cause a process to become deactivated.  In 
+particular, if this is the first arrest reason, then the process  becomes 
+deactivated (if it was previously activated).
+<P>
+<A NAME="IDX855"></A>
+<U>Function:</U> <B>process-add-run-reason</B> <I>(PROCESS <CODE>process</CODE>) OBJECT</I><P>
+<P>
+Adds <VAR>OBJECT</VAR> to the list of run reasons for <VAR>PROCESS</VAR>.  The 
+<VAR>OBJECT</VAR> argument can be any Lisp object.  It is an error if 
+<VAR>PROCESS</VAR> is not <CODE>ilu-process:processp</CODE>. 
+<P>
+Adding a run reason may cause a process to become activated.  In particular, 
+if there are no arrest reasons and the added run reason is first, the process 
+goes from a deactivated state to an activated state.
+<P>
+<A NAME="IDX856"></A>
+<U>Function:</U> <B>process-arrest-reasons</B> <I>(PROCESS <CODE>process</CODE>) => <CODE>list</CODE></I><P>
+<P>
+Returns the list of arrest reasons for <VAR>PROCESS</VAR>.  It is an error if
+<VAR>PROCESS</VAR> is not <CODE>ilu-process:processp</CODE>.
+<P>
+<A NAME="IDX857"></A>
+<U>Function:</U> <B>process-disable</B> <I>(PROCESS <CODE>process</CODE>)</I><P>
+<P>
+Causes <VAR>PROCESS</VAR> to become inactive by removing all of its arrest 
+reasons and all of its run reasons.  It is an error if <VAR>PROCESS</VAR> is 
+not <CODE>ilu-process:processp</CODE>.
+<P>
+<A NAME="IDX858"></A>
+<U>Function:</U> <B>process-enable</B> <I>(PROCESS <CODE>process</CODE>)</I><P>
+<P>
+Causes <VAR>PROCESS</VAR> to become active by removing all of its arrest 
+reasons and all of its run reasons and then giving it a single run reason 
+(usually <CODE>:enable</CODE>).  It is an error if <VAR>PROCESS</VAR> is not 
+<CODE>ilu-process:processp</CODE>.
+<P>
+<A NAME="IDX859"></A>
+<U>Function:</U> <B>process-revoke-arrest-reason</B> <I>(PROCESS <CODE>process</CODE>) OBJECT</I><P>
+<P>
+Removes <VAR>OBJECT</VAR> from the list of arrest reasons for 
+<VAR>PROCESS</VAR>.  It is an error if <VAR>PROCESS</VAR> is not 
+<CODE>ilu-process:processp</CODE>.  <VAR>OBJECT</VAR> is compared to the 
+existing arrest reasons using an <CODE>eq</CODE> test. 
+<P>
+Revoking an arrest reason may cause a process to become activated.  In 
+particular, when the last arrest reason for a process is removed, the process 
+is (re-)activated if it has at least one run reason.
+<P>
+<A NAME="IDX860"></A>
+<U>Function:</U> <B>process-revoke-run-reason</B> <I>(PROCESS <CODE>process</CODE>) OBJECT</I><P>
+<P>
+Removes <VAR>OBJECT</VAR> from the list of run reasons for <VAR>PROCESS</VAR>. 
+It is an error if <VAR>PROCESS</VAR> is not <CODE>ilu-process:processp</CODE>. 
+The <VAR>OBJECT</VAR> argument is compared to the existing run reasons using an 
+<CODE>eq</CODE> test. 
+<P>
+Revoking a run reason may cause a process to become inactive.  In particular, 
+when the last run reason for a process is removed, the process is made 
+inactive (if it was previously activate).
+<P>
+<A NAME="IDX861"></A>
+<U>Function:</U> <B>process-run-reasons</B> <I>(PROCESS <CODE>process</CODE>)</I><P>
+<P>
+Returns the list of run reasons for <VAR>PROCESS</VAR>.  It is an error if 
+<VAR>PROCESS</VAR> is not <CODE>ilu-process:processp</CODE>.
+<P>
+<H3><A NAME="SEC646" HREF="manual_toc.html#SEC646">Accessing And Modifying The Properties Of A Process</A></H3>
+<P>
+<A NAME="IDX862"></A>
+<U>Function:</U> <B>process-active-p</B> <I>(PROCESS <CODE>process</CODE>) => <CODE>boolean</CODE></I><P>
+<P>
+Returns non-<CODE>nil</CODE> if <VAR>PROCESS</VAR> is an active process object; 
+that is, a process with no arrest reasons and at least one run reason. 
+Otherwise, this function returns <CODE>nil</CODE>.  It is an error if 
+<VAR>PROCESS</VAR> is not <CODE>ilu-process:processp</CODE>.
+<P>
+<A NAME="IDX863"></A>
+<U>Function:</U> <B>process-alive-p</B> <I>(PROCESS <CODE>process</CODE>) => <CODE>boolean</CODE></I><P>
+<P>
+Returns non-<CODE>nil</CODE> if <VAR>PROCESS</VAR> is alive (that is, has been 
+created but has not been killed).  Essentially, a process is alive if it is on 
+the list returned by <CODE>ilu-process:all-processes</CODE>.  It is an error if 
+<VAR>PROCESS</VAR> is not <CODE>ilu-process:processp</CODE>.
+<P>
+<A NAME="IDX864"></A>
+<U>Function:</U> <B>process-initial-form</B> <I>(PROCESS <CODE>process</CODE>) => <CODE>consp</CODE></I><P>
+<P>
+Returns the initial-form of the <CODE>process</CODE> object <VAR>PROCESS</VAR>. It 
+is an error if <VAR>PROCESS</VAR> is not <CODE>ilu-process:processp</CODE>. 
+ Note that the returned value is not an <CODE>eval</CODE>able form.  It is 
+merely the <CODE>cons</CODE> of the process's intial function onto a list of 
+the initial arguments passed to the function.  (See 
+<CODE>ilu-process:fork-process</CODE>.)
+<P>
+<A NAME="IDX865"></A>
+<U>Function:</U> <B>process-name</B> <I>(PROCESS <CODE>process</CODE>) => <CODE>string</CODE></I><P>
+<P>
+Returns the name of the <CODE>process</CODE> object <VAR>PROCESS</VAR>.  It is an 
+error if <VAR>PROCESS</VAR> is not <CODE>ilu-process:processp</CODE>. The 
+<CODE>ilu-process:process-active-p</CODE> function can be used with 
+<CODE>setf</CODE> to change the name of a process.
+<P>
+<A NAME="IDX866"></A>
+<U>Function:</U> <B>process-priority</B> <I>(PROCESS <CODE>process</CODE>) => <CODE>integer</CODE></I><P>
+<P>
+Returns the scheduling priority for the <CODE>process</CODE> object 
+<VAR>PROCESS</VAR>.  It is an error if <VAR>PROCESS</VAR> is not 
+<CODE>ilu-process:processp</CODE>. The 
+<CODE>ilu-process:process-priority</CODE> function can be used with 
+<CODE>setf</CODE> to change the priority of a process. 
+<P>
+When the priorities are set, a small integer is generally used.  Process 
+priorities default to zero (0).  Processes with higher priorities are given 
+scheduling preference.  Priorities can be negative if a process should run as 
+a background task when nothing else is running. 
+<P>
+Note that an implementation is free to ignore process priorities. Setting a 
+process's priority is merely advisory.  For this reason, the value returned by 
+<CODE>ilu-process:process-priority</CODE> may not match the most recent 
+<CODE>setf</CODE> on <CODE>ilu-process:process-priority</CODE>.
+<P>
+<A NAME="IDX867"></A>
+<U>Function:</U> <B>process-quantum</B> <I>(PROCESS <CODE>process</CODE>) => <CODE>(or numberp nil)</CODE></I><P>
+<P>
+Returns the quantum, which is the amount of time the scheduler allows a 
+process to run each time its is rescheduled, for the <CODE>process</CODE> object 
+<VAR>PROCESS</VAR>.  It is an error if <VAR>PROCESS</VAR> is not 
+<CODE>ilu-process:processp</CODE>.  The 
+<CODE>ilu-process:process-quantum</CODE> function can be used with 
+<CODE>setf</CODE> to change the quantum of a process. 
+<P>
+The quantum is measured in seconds (not necessarily integral). 
+<P>
+Note that an implementation is free to ignore process quantums.  Setting a 
+quantum is merely advisory.  For this reason, the value returned by 
+<CODE>ilu-process:process-quantum</CODE> may not match the most recent 
+<CODE>setf</CODE> on <CODE>ilu-process:process-quantum</CODE>. 
+<P>
+The default process quantum is 1.
+<P>
+<A NAME="IDX868"></A>
+<U>Function:</U> <B>process-wait-args</B> <I>(PROCESS <CODE>process</CODE>) => <CODE>list</CODE></I><P>
+<P>
+Returns a list of the arguments being passed to the wait-function of the 
+<CODE>process</CODE> object <VAR>PROCESS</VAR>. It is an error if <VAR>PROCESS</VAR> 
+is not <CODE>ilu-process:processp</CODE>.  (See 
+<CODE>ilu-process:process-wait</CODE>.)
+<P>
+<A NAME="IDX869"></A>
+<U>Function:</U> <B>process-wait-function</B> <I>(PROCESS <CODE>process</CODE>) => <CODE>(or functionp nil)</CODE></I><P>
+<P>
+Returns the wait-function of the <CODE>process</CODE> object <VAR>PROCESS</VAR>. 
+It is an error if <VAR>PROCESS</VAR> is not <CODE>ilu-process:processp</CODE>. 
+ (See <CODE>ilu-process:process-wait</CODE>.)
+<P>
+<A NAME="IDX870"></A>
+<U>Function:</U> <B>process-whostate</B> <I>(PROCESS <CODE>process</CODE>) => <CODE>string</CODE></I><P>
+<P>
+Returns the whostate of the <CODE>process</CODE> object <VAR>PROCESS</VAR>.  It is 
+an error if <VAR>PROCESS</VAR> is not <CODE>ilu-process:processp</CODE>.  The 
+<CODE>ilu-process:process-whostate</CODE> function can be used with 
+<CODE>setf</CODE> to change the whostate of a process. (See also 
+<CODE>ilu-process:fork-process</CODE> and 
+<CODE>ilu-process:process-wait</CODE>.)
+<P>
+<A NAME="IDX871"></A>
+<U>Function:</U> <B>show-process</B> <I>&optional (PROCESS <CODE>process</CODE>) (STREAM <CODE>streamp</CODE> <CODE>cl:*standard-output*</CODE>) (VERBOSE <CODE>boolean</CODE> <CODE>nil</CODE>)</I><P>
+<P>
+Displays information about process <VAR>PROCESS</VAR>, which may be a 
+<CODE>process</CODE> object or the name of a process known to the scheduler. If 
+<VAR>PROCESS</VAR> is a symbol, it is downcased and converted to a string. 
+ <VAR>PROCESS</VAR> defaults to the current process.  Output is is to 
+<VAR>STREAM</VAR>, which defaults to the value of <CODE>cl:*standard-output*</CODE>. 
+ If <VAR>VERBOSE</VAR> is <CODE>nil</CODE> (defaults to non-<CODE>nil</CODE>), then 
+only non-<CODE>nil</CODE> fields are displayed and the process's initial-form is 
+not shown.
+<P>
+<H3><A NAME="SEC647" HREF="manual_toc.html#SEC647">Miscellaneous Process/Scheduler Functions And Macros</A></H3>
+<P>
+<A NAME="IDX872"></A>
+<U>Function:</U> <B>process-allow-schedule</B><P>
+<P>
+Suspends the current process and returns to the scheduler.  All other 
+processes of equal or higher priority have a chance to run before control 
+returns to the current process.
+<P>
+<A NAME="IDX873"></A>
+<U>Function:</U> <B>process-interrupt</B> <I>(PROCESS <CODE>process</CODE>) (FUNCTION <CODE>function</CODE>) &rest ARGS</I><P>
+<P>
+Forces <VAR>PROCESS</VAR> to apply <VAR>FUNCTION</VAR> to <VAR>ARGS</VAR> when it 
+is next scheduled.  When <VAR>FUNCTION</VAR> returns, <VAR>PROCESS</VAR> resumes 
+execution where it was interrupted. 
+<P>
+In general, <CODE>ilu-process:process-interrupt</CODE> is run immediately 
+(that is, when <VAR>PROCESS</VAR> is next scheduled) if <VAR>PROCESS</VAR> is 
+active, even if <VAR>PROCESS</VAR> is a process-wait.  If <VAR>PROCESS</VAR> is 
+not active, <CODE>ilu-process:process-interrupt</CODE> may wait until 
+<VAR>PROCESS</VAR> is reactivated before <VAR>FUNCTION</VAR> is executed.
+<P>
+<A NAME="IDX874"></A>
+<U>Macro:</U> <B>without-scheduling</B> <I>&body BODY</I><P>
+<P>
+Evaluates the forms in <VAR>BODY</VAR> with scheduling turned off.  While the 
+current-process is within the scope of 
+<CODE>ilu-process:without-scheduling</CODE>, no other process will run. 
+ However, scheduling may be resumed if a <CODE>ilu-process:process-wait</CODE> 
+or <CODE>ilu-process:process-allow-schedule</CODE> is executed within the 
+scope of <CODE>ilu-process:without-scheduling</CODE>.  Most Common Lisp I/O 
+functions as well as the function <CODE>sleep</CODE> usually call some form 
+of <CODE>ilu-process:process-allow-scheduling</CODE> and hence will resume 
+scheduling if called within the scope of a <CODE>ilu-process:without-scheduling</CODE>.
+<P>
+<H3><A NAME="SEC648" HREF="manual_toc.html#SEC648">Process Locks Interface</A></H3>
+<P>
+<A NAME="IDX875"></A>
+<U>Type:</U> <B>ilu-process:process-lock</B><P>
+<P>
+The process lock object.  You should access fields of this lock using only the 
+functional interface listed in this section. 
+<P>
+<A NAME="IDX876"></A>
+<U>Function:</U> <B>make-process-lock</B> <I>&key (NAME <CODE>(or nil string)</CODE> <CODE>nil</CODE>) => <CODE>process-lock</CODE></I><P>
+<P>
+Creates and returns a <CODE>process-lock</CODE> object with <VAR>NAME</VAR> as the 
+name of the lock.
+<P>
+<A NAME="IDX877"></A>
+<U>Function:</U> <B>process-lock</B> <I>(LOCK <CODE>ilu-process:process-lock</CODE>) &optional (LOCK-VALUE <CODE>process</CODE> <CODE>(ilu-process:current-process)</CODE>) (WHOSTATE <CODE>(or nil string)</CODE> <CODE><undefined></CODE>)</I><P>
+<P>
+Grabs <VAR>LOCK</VAR>, entering <VAR>LOCK-VALUE</VAR> as the lock's locker. 
+<VAR>LOCK-VALUE</VAR> defaults to the current process.  It is an error if 
+<VAR>LOCK</VAR> is not <CODE>ilu-process:process-lock-p</CODE>. 
+<P>
+If <VAR>LOCK</VAR> is already locked, then the current process waits until it 
+is unlocked.  The waiting is done using 
+<CODE>ilu-process:process-wait</CODE>. The <VAR>WHOSTATE</VAR> argument is a 
+string that is used as the whostate of the process if the process is forced to 
+wait; defaults to an implementation-dependent string.
+<P>
+<A NAME="IDX878"></A>
+<U>Function:</U> <B>process-lock-locker</B> <I>(LOCK <CODE>ilu-process:process-lock</CODE>) => <CODE>t</CODE></I><P>
+<P>
+Returns the current locker of <VAR>LOCK</VAR>.  It is an error if <VAR>LOCK</VAR> 
+is not <CODE>ilu-process:process-lock-p</CODE>.  This function returns 
+<CODE>nil</CODE> if <VAR>LOCK</VAR> is currently unlocked, that is, has no 
+locker.  This value is <EM>not</EM> setfable.  You should use 
+<CODE>ilu-process:process-lock</CODE> to set the locker.
+<P>
+<A NAME="IDX879"></A>
+<U>Setf-able Function:</U> <B>process-lock-name</B> <I>(LOCK <CODE>ilu-process:process-lock</CODE>) => <CODE>(or nil string)</CODE></I><P>
+<P>
+Returns the name associated with <VAR>LOCK</VAR>.  It is an error if 
+<VAR>LOCK</VAR> is not <CODE>ilu-process:process-lock-p</CODE>.  The 
+<CODE>ilu-process:process-lock-locker</CODE> function can be used with 
+<CODE>setf</CODE> to change the name of a process lock.
+<P>
+<A NAME="IDX880"></A>
+<U>Function:</U> <B>process-lock-p</B> <I>OBJECT => <CODE>boolean</CODE></I><P>
+<P>
+Returns non-<CODE>nil</CODE> if <VAR>OBJECT</VAR> is a 
+<CODE>ilu-process:process-lock</CODE>. Otherwise, this function returns 
+<CODE>nil</CODE>.
+<P>
+<A NAME="IDX881"></A>
+<U>Function:</U> <B>process-unlock</B> <I>(LOCK <CODE>ilu-process:process-lock</CODE>) &optional (LOCK-VALUE <CODE>t</CODE> <CODE>(ilu-process:current-process)</CODE>) (ERROR-P <CODE>boolean</CODE> <CODE>nil</CODE>)</I><P>
+<P>
+Releases <VAR>LOCK</VAR>.  It is an error if <VAR>LOCK</VAR> is not 
+<CODE>ilu-process:process-lock-p</CODE>. 
+<P>
+If <VAR>LOCK</VAR>'s locker is not <CODE>eq</CODE> to <VAR>LOCK-VALUE</VAR>, 
+which defaults to the current process, then an error is signalled unless 
+<VAR>ERROR-P</VAR> is <CODE>nil</CODE> (it defaults to <CODE>t</CODE>).
+<P>
+<A NAME="IDX882"></A>
+<U>Macro:</U> <B>with-process-lock</B> <I>(LOCK <CODE>ilu-process:process-lock</CODE>) &key (NORECURSIVE <CODE>boolean</CODE> <CODE>nil</CODE>) &body BODY</I><P>
+<P>
+Locks <VAR>LOCK</VAR> for the current process and evaluates the forms in 
+<VAR>BODY</VAR>.  It is an error if <VAR>LOCK</VAR> is not 
+<CODE>ilu-process:process-lock-p</CODE>. 
+<P>
+If <VAR>NORECURSIVE</VAR> is <CODE>t</CODE> (the default), and if the current 
+process already owns the lock (determined dynamically), then no action is 
+taken.  If <VAR>NORECURSIVE</VAR> is non-<CODE>nil</CODE>, then an error is 
+signalled if the current process already owns <VAR>LOCK</VAR>. 
+<P>
+If <VAR>LOCK</VAR> is held by another process, then the current process waits 
+as in <CODE>ilu-process:process-lock</CODE>, which is described earlier in this 
+section.
+<P>
+<H2><A NAME="SEC649" HREF="manual_toc.html#SEC649">Handling Errors</A></H2>
+<P>
+Errors in most of the process functions will cause a break.  There are no 
+special tricks to handling these errors.
+<P>
+The <CODE>:focus</CODE> command is an important tool for using the Allegro CL 
+debugger in a multiple-process environment.  In particular, in Allegro CL a 
+new process by default shares its standard input/output (I/O) stream with the 
+Lisp listener.  Generally, this is not a problem because the process runs in 
+the background and does no I/O.  However, if the process enters a break, the 
+debugger needs to use the process's standard I/O stream to interact with the 
+user.  This could lead to a problem because the debugger I/O from the broken 
+process will be interleaved with the Lisp listener's normal I/O. Specifically, 
+the system will not be able to determine to which process user input is 
+directed. 
+<P>
+To avoid this situation, Allegro CL has the notion of a <I>focus 
+process</I>. Input coming from the shared Lisp listener I/O stream is always sent 
+to the focused process.  Usually this is the Lisp listener process.  However, 
+if a background process breaks, you can use the <CODE>:focus</CODE> command to 
+focus on the broken process and allow you to send input to the debugger 
+running in that process.  When the debugging is complete, <CODE>:focus</CODE> is 
+automatically returned to the Lisp listener process. 
+<P>
+The following transcript illustrates the use of the <CODE>:focus</CODE> command 
+in Allegro CL: 
+<P>
+<PRE>
+;;;_______________________________________________________________________
+;;; Start out focused on the Lisp listener process. List all processes.
+&#60;cl 71&#62; :processes
+"Initial Lisp Listener" is active.
+;;;_______________________________________________________________________
+;;; Second, start a test process that will enter a break immediately.
+&#60;cl 72&#62; (ilu-process:fork-process "test" #'error "test break")
+#&#60;process test  #x13e92b1&#62;
+&#60;cl 73&#62;
+;;;________________________________________________
+;;; Process test enters a break.
+
+Error: test break
+
+;;; Still speaking to the Lisp listener process, list the processes.
+[1] &#60;cl 1&#62; :processes
+"test" is waiting for terminal input.
+"Initial Lisp Listener" is active.
+&#60;cl 74&#62;
+;;;________________________________________________
+;;; Now refocus on the test process.
+&#60;cl 74&#62; :focus "test"
+Focus is now on the "test" process.
+;;;  Look at stack of test process.
+&#60;cl 75&#62; :zoom
+Evaluation stack of process "test":
+ -&#62;(EXCL::STM-SY-READ-CHAR #&#60;synonym stream for *TERMINAL-IO*  #x13e9619&#62;)
+   (PEEK-CHAR NIL #&#60;synonym stream for *TERMINAL-IO*  #x13e9619&#62; NIL :EOF NIL)
+   (ERROR "test break")
+   (ILU-PROCESS::PROCESS-INITIALIZATION-FUNCTION NIL
+      #&#60;Function ERROR  #x219ab9&#62; ("test break"))
+;;;________________________________________________
+;;; Kill the test process (which is the current process).
+&#60;cl 76&#62; :kill
+Do you really want to kill process "test" [n]? y
+
+;;; Automatic refocus to Lisp listener. Ask listener to list all processes.
+Focus is now on the "listener" process.
+&#60;cl 77&#62; :processes
+"Initial Lisp Listener" is active.
+</PRE>
+<P>
+For more information on the Lisp listener interface and the Lisp debugger, see 
+the manual for the implementation of Common Lisp that you are using. For 
+Allegro CL, refer to chapters 4 and 5 of <CITE>[Franz-92]</CITE>. 
+<P>
+<H2><A NAME="SEC650" HREF="manual_toc.html#SEC650">Notes</A></H2>
+<P>
+It is possible for a process to do a non-blocking attempt to lock a process 
+lock using the following idiom: 
+<P>
+<PRE>
+ (ilu-process:without-scheduling    ; Make sure this is not interrupted.
+  (if (ilu-process:process-lock-locker LOCK) ; Is lock free?
+      (ilu-process:process-lock LOCK)))      ; Lock is free, grab it.
+ (if (eq                            ; Did we get the lock for this process?
+      (ilu-process:process-lock-locker LOCK)
+      (ilu-process:current-process))
+     (prog1                         ; Yes, do A, releasing lock on way out.
+       ...A...
+       (ilu-process:process-unlock LOCK))
+   ...B...                          ; No, do B, which does not depend on lock.
+   )
+</PRE>
+<P>
+<H2><A NAME="SEC651" HREF="manual_toc.html#SEC651">References</A></H2>
+<P>
+<CITE>[Franz-92]</CITE>:  <B>Allegro Common Lisp User Guide</B>. Release 4.1. Berkeley, CA: Franz 
+Incorporated, March 1992.
+<P>
+<I>Bach, M.J.</I>, <B>The Design of the UNIX Operating System</B>. Englewood 
+Cliffs, NJ: Prentice-Hall, 1986.  Especially read Chapters 6, 7, and 8. 
+<P>
+<I>Deitel, H.M.</I> <B>An Introduction to Operating Systems</B>. Reading, MA: 
+Addison-Wesley, 1984.  Especially read Part 2. 
+<P>
+<I>Kernighan, B.W. and R. Pike.</I>, <B>The UNIX Programming Environment</B>. 
+Englewood Cliffs, NJ: Prentice-Hall, 1984.  Especially read Sections 1.4 and 
+7.4. 
+<P>
+<I>Tanenbaum, A.S.</I> <B>Operating Systems: Design and Implementation</B>. 
+Englewood Cliffs, NJ: Prentice-Hall, 1987.  Especially read Chapter 2.
+<P>
+<P>Go to the <A HREF="manual_23.html">previous</A>, <A HREF="manual_25.html">next</A> section.<P>

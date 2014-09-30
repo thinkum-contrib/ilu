@@ -1,0 +1,199 @@
+/*
+Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+Unlimited use, reproduction, modification, and distribution of this
+software and modified versions thereof is permitted.  Permission is
+granted to make derivative works from this software or a modified
+version thereof.  Any copy of this software, a modified version
+thereof, or a derivative work must include both the above copyright
+notice of Xerox Corporation and this paragraph.  Any distribution of
+this software, a modified version thereof, or a derivative work must
+comply with all applicable United States export control laws.  This
+software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+OF THE POSSIBILITY OF SUCH DAMAGES.
+*/ 
+/* Chris Jacobi, February 5, 1999 10:54 am PST */
+
+/* $Id: Imakefile,v 1.31 1999/08/03 01:56:23 janssen Exp $ */
+
+ILUCINCLUDES = -I../../runtime/c -I../../runtime/kernel $(BUILD_SECURITY_INCLUDES) $(BUILD_BIGNUM_INCLUDES)
+ILUCLIBS = ../../runtime/c/libilu-c.a ../../runtime/kernel/libilu.a $(BUILD_GSS_LIBS) $(ILU_ZLIB_LIBRARY)
+C_STUBBER = ../../stubbers/c/c-stubber
+
+NormalObjectRule()
+
+ILUHEADERFILES=../../runtime/kernel/iluxport.h ../../runtime/kernel/ilubasic.h ../../runtime/kernel/iludebug.h ../../runtime/kernel/iluconf.h ../../runtime/kernel/iluerror.h ../../runtime/kernel/iluerrs.h ../../runtime/kernel/iluhash.h
+
+ILUCTargetWithOptions(CosNaming.h CosNaming-true.c CosNaming-surrogate.c CosNaming-common.c, CosNaming.idl, -I ../../stubbers/parser -nodefaulttrueclassfor CosNaming.NamingContextExt)
+
+CleanTarget(CosNaming.h CosNaming-surrogate.c CosNaming-common.c CosNaming-true.c)
+
+ObjectTarget(CosNaming-common.o)
+ObjectTarget(CosNaming-surrogate.o)
+ObjectTarget(CosNaming-true.o)
+
+ObjectTarget(NamingImpl.o)
+NamingImpl.o : CosNaming.h NamingImpl.c ${ILUHEADERFILES}
+
+ILUCProgramTarget(ILUCosNaming, NamingImpl.o CosNaming-true.o CosNaming-common.o,,)
+InstallProgram(ILUCosNaming, $(DESTDIR)/bin)
+InstallRO(CosNaming.idl, $(DESTDIR)/interfaces)
+InstallRO(ILUCosNaming.1, $(DESTDIR)/man/man1)
+
+#ifdef ADD_C_LANGUAGE
+/*************************************************************************
+/*************************************************************************
+/*************************************************************************
+/******  C
+/******
+/******/
+
+LibraryTarget(libCosNaming-c.a, CosNaming-surrogate.o CosNaming-common.o)
+
+InstallLibrary(libCosNaming-c.a, $(DESTDIR)/lib)
+InstallRO(CosNaming.h, $(DESTDIR)/include)
+#endif
+
+#ifdef ADD_PYTHON_LANGUAGE
+/*************************************************************************
+/*************************************************************************
+/*************************************************************************
+/******  Python
+/******
+/******/
+
+ILUPythonTargetWithOptions(CosNaming.py, CosNaming.idl, -I ../../stubbers/parser)
+
+InstallRO(CosNaming.py, $(DESTDIR)/lib)
+CleanTarget(CosNaming.py CosNaming__skel.py)
+#endif
+
+#ifdef ADD_COMMONLISP_LANGUAGE
+/*************************************************************************
+/*************************************************************************
+/*************************************************************************
+/******  Common Lisp
+/******
+/******/
+
+cos-naming-basics.lisp cos-naming-server-procs.lisp cos-naming-sysdcl.lisp : CosNaming.idl
+	ILUPATH=../../stubbers/parser:. ; export ILUPATH ; ../../stubbers/lisp/lisp-stubber ./CosNaming.idl
+
+InstallRO(cos-naming-sysdcl.lisp cos-naming-basics.lisp, $(DESTDIR)/lisp)
+CleanTarget(cos-naming-basics.lisp cos-naming-server-procs.lisp cos-naming-sysdcl.lisp)
+#endif
+
+
+#ifdef ADD_JAVA_LANGUAGE
+/*************************************************************************
+/******  java
+/******
+/******/
+
+JAVA_CLASS_DIR = ./classes
+JAVA_STUB_DIR = ./javastubs
+
+#ifdef ILUJAVA_M_COSNAMING_STANDARD
+/* standard, but can't replace core classes in jdk1.2 */ 
+JAVA_STUB_SWITCHES = -prefix org.omg
+MYPREFIX = /org/omg
+#else
+/* non-standard package prefix, but works in jdk1.2 */ 
+JAVA_STUB_SWITCHES = -prefix xorg.omg
+MYPREFIX = /xorg/omg
+#endif
+
+#ifdef ILUJAVA_M_NEEDSOURCEPATH
+SOURCE_PATH_SWITCH = -sourcepath .:../../runtime/java/jsrc
+#else
+SOURCE_PATH_SWITCH = 
+#endif
+
+SYSTEM_CLASSES = $(ILUJAVA_M_CORECLASSES)
+
+#ifdef NEVER_435534
+BOOT_CLASSES_SWITCH = -bootclasspath  $(ILUJAVA_M_CORECLASSES)
+#else
+BOOT_CLASSES_SWITCH = 
+#endif
+
+
+/* Note that this makefile is special in the sense that it runs at ilu-build
+ * time, before the ilu runtime has been installed
+ */
+
+#ifdef SpecialILUJavaCompTarget
+#undef SpecialILUJavaCompTarget
+#endif
+
+
+#define SpecialILUJavaCompTarget(touchtarget,allsources,fewsources,extrapendencies)	@@\
+all:: touchtarget 								@@\
+										@@\
+touchtarget: fewsources extrapendencies					@@\
+	$(JAVAC) -d "$(ILUJAVA_M_CLASSESDIR)"  $(SOURCE_PATH_SWITCH)  $(BOOT_CLASSES_SWITCH)  -classpath "$(JAVA_CLASS_DIR):$(ILUJAVA_M_ILUCLASSES):$(SYSTEM_CLASSES)" allsources @@\
+	touch touchtarget							@@\
+										@@\
+clean::									@@\
+	-rm -f touchtarget							@@\
+	-rm -rf $(JAVA_CLASS_DIR)*.class
+
+
+#ifdef SpecialILUJavaStubTarget
+#undef SpecialILUJavaStubTarget
+#endif
+
+
+#define SpecialILUJavaStubTarget(touchtarget,islfiles,fewjavafiles)	@@\
+										@@\
+all:: touchtarget								@@\
+										@@\
+fewjavafiles touchtarget: islfiles $(JAVA_STUBBER)			@@\
+	ILUPATH=.:../../stubbers/parser $(JAVA_STUBBER) $(JAVA_STUB_SWITCHES) islfiles	@@\
+	touch touchtarget							@@\
+										@@\
+clean::									@@\
+	-rm -f touchtarget
+
+
+BuildDir($(JAVA_CLASS_DIR))
+BuildDir($(JAVA_STUB_DIR))
+
+ALL_JAVA_FILES = *java
+ALL_STUB_SOURCES = \
+	$(JAVA_STUB_DIR)$(MYPREFIX)/CosNaming/$(ALL_JAVA_FILES) \
+	$(JAVA_STUB_DIR)$(MYPREFIX)/CosNaming/NamingContextPackage/$(ALL_JAVA_FILES) \
+	$(JAVA_STUB_DIR)$(MYPREFIX)/CosNaming/NamingContextExtPackage/$(ALL_JAVA_FILES)
+FEW_STUB_SOURCES = \
+	$(JAVA_STUB_DIR)$(MYPREFIX)/CosNaming/NamingContext.java \
+	$(JAVA_STUB_DIR)$(MYPREFIX)/CosNaming/Name.java \
+	$(JAVA_STUB_DIR)$(MYPREFIX)/CosNaming/Binding.java
+
+SpecialILUJavaStubTarget(make.java_has_been_stubbed, CosNaming.idl, $(FEW_STUB_SOURCES))
+
+SpecialILUJavaCompTarget(make.java_stubs_compiled, $(ALL_STUB_SOURCES), $(FEW_STUB_SOURCES),  make.java_has_been_stubbed)
+
+
+/*
+ * make a java jar file...
+ */
+
+CleanTarget(CosNaming.jar)
+
+all:: CosNaming.jar
+
+CosNaming.jar:
+	cd $(JAVA_CLASS_DIR); $(JAVAJAR) -0cf ../CosNaming.jar *
+
+InstallRO(CosNaming.jar, $(DESTDIR)/lib)
+
+CleanTarget(make.java_has_been_stubbed make.java_stubs_compiled CosNaming.jar)
+#endif
+
+

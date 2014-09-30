@@ -1,0 +1,14 @@
+
+
+<!-- tests ANY and EMPTY content -->
+<!doctype entity1 
+[  
+<!element entity1 ANY> 
+<!element entity2 ANY>
+<!element entity3 EMPTY> ]>
+<!element entity4 (entity5 | entity6)*>
+
+<entity1> This is an entity <entity2>
+<entity3 /> <entity3> </entity3>
+<entity4/>
+<And another one </entity2> </entity1>

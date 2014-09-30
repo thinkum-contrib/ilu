@@ -1,0 +1,204 @@
+// ilunative.in
+// June 27, 1997 12:03:59 pm PDT
+// Chris Jacobi, November 12, 1998 3:53 pm PST
+//
+// BeginILUCopyright
+// 
+// Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+// 
+// Unlimited use, reproduction, modification, and distribution of this
+// software and modified versions thereof is permitted.  Permission is
+// granted to make derivative works from this software or a modified
+// version thereof.  Any copy of this software, a modified version
+// thereof, or a derivative work must include both the above copyright
+// notice of Xerox Corporation and this paragraph.  Any distribution of
+// this software, a modified version thereof, or a derivative work must
+// comply with all applicable United States export control laws.  This
+// software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+// WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+// PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+// LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+// EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+// NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+// OF THE POSSIBILITY OF SUCH DAMAGES.
+// 
+// EndILUCopyright
+
+// $Id: ilunative.in,v 1.30 1999/08/03 01:54:28 janssen Exp $
+
+// added cast fiels to end of lines for easy determination of cast in RNI - 
+// this is somewhat redundant info as this could presumably be obtained from the
+// preceeding field - something to do on a rainy day.
+
+
+class java_lang_Thread
+method    toString	()Ljava/lang/String;
+
+class xerox_ilu_IluWPBase
+field    ywpx	0JGC_WP_TYPE(JIluWPBase) JGC_WP_TYPE(JIluWPBase)
+
+class xerox_ilu_IluForkTech
+method forkRequest (IIII)V
+method givePermanentObject ()Ljava/lang/Object;
+
+class xerox_ilu_IluAlarmTech
+method    createAlarm ()Lxerox/ilu/IluAlarmTech;
+method    setAlarm (IIIIII)V
+method    unsetAlarm ()V
+method    destroyAlarm ()V
+
+class xerox_ilu_IluCall
+field    yCall        	0ilu_Call  ilu_Call
+field    yCallSurrConn	0ilu_Connection ilu_Connection
+field    jjMethodRep	Lxerox/ilu/IluMethodRep; JIluMethodRep
+field    needFinish  	I  Jint
+field    jNeedsSizing	Z  Jboolean
+field    jMustFork   	Z  Jboolean
+field    jjClassRep   	Lxerox/ilu/IluClassRep; JIluClassRep
+field    selfCheck		I  Jint
+
+class xerox_ilu_IluClassRep
+field    yIluClass	0ilu_Class ilu_Class
+field    jjMethods	[Lxerox/ilu/IluMethodRep; JArrayOfObject
+field    jjIluSuperClasses	[Lxerox/ilu/IluClassRep; JArrayOfObject
+field    jjIfBrand	Ljava/lang/String; JString
+field    jjuid    	Ljava/lang/String; JString
+field    jjsingleton	Ljava/lang/String; JString
+field    jjIluClassName	Ljava/lang/String; JString
+field    jjIfName	Ljava/lang/String; JString
+field    jjbrand	Ljava/lang/String; JString
+field    docString	Ljava/lang/String; JString
+field    method_count	I Jint
+field    optional	Z Jboolean
+field    collectible	Z Jboolean
+
+class xerox_ilu_IluDebug
+method dynamicCaptureStackTrace ()Ljava/lang/String;
+method dynamicGetIntProp (Ljava/lang/String;I)I
+
+class xerox_ilu_IluDebugHooks
+method reportDebugHook (Ljava/lang/String;II)V
+method reportAssertionFailure (Ljava/lang/String;I)V
+method reportCheckFailure (Ljava/lang/String;I)V
+
+class xerox_ilu_IluExceptionRep
+field    yIluException	0ilu_Exception ilu_Exception
+field    i       	Ljava/lang/String; JString
+field    e       	Ljava/lang/String; JString
+field    jtuuid	Ljava/lang/String; JString
+
+class xerox_ilu_IluMethodRep
+field    yIluMethod  	0ilu_Method ilu_Method
+field    jjClassRep   	Lxerox/ilu/IluClassRep; JIluClassRep
+field    jjExceptions   	[Lxerox/ilu/IluExceptionRep; JArrayOfObject
+field    jjRetValUid   	Ljava/lang/String; JString
+field    jjIluMethodName  	Ljava/lang/String; JString
+field    argCnt   	I Jint
+field    id     	I Jint
+field    jjArgs   	[Lxerox/ilu/IluMethodArgRep; JArrayOfObject
+field    cacheable   	Z Jboolean
+field    asynchronous   	Z Jboolean
+field    methodIdx   	I Jint
+field    skeleton   	Lxerox/ilu/IluSkeleton; JIluSkeleton
+
+class xerox_ilu_IluMethodArgRep
+field    argName     	Ljava/lang/String; JString
+field    sibling   	Z Jboolean
+field    argDirection   	I Jint
+field    typeUid   		Ljava/lang/String; JString
+
+class xerox_ilu_IluObjectTable
+field    jjServer	Lxerox/ilu/IluServer; JIluServer
+method    doCreateTrueObject	(Ljava/lang/String;)Lxerox/ilu/IluOInt;
+method    doObjectTableFreed	()V
+
+class xerox_ilu_IluOInt
+field    ywpxIluOInt	0JGC_WP_TYPE(JIluOInt) JGC_WP_TYPE(JIluOInt)
+field    yIluKernelObject	0ilu_Object ilu_Object
+field    yOwnerKey 	0char* char*
+field    yServer      	0ilu_Server ilu_Server
+field    jjClassRep      	Lxerox/ilu/IluClassRep; JIluClassRep
+field    veryInterest      	Z Jboolean
+field    retained      	Z Jboolean
+field    ghost        	Z Jboolean
+field    destroyed        	Z Jboolean
+method    allocateOI	()Lxerox/ilu/IluOInt;
+method    showInterest	()V
+method    removeInterest	()V
+method    throwThisException	(ILjava/lang/String;Ljava/lang/String;)V
+
+
+class xerox_ilu_IluPassport
+field    yIluPassport	0ilu_Passport ilu_Passport
+
+class xerox_ilu_IluPipeline
+field    yIluPipeline	0ilu_Pipeline ilu_Pipeline
+
+class xerox_ilu_IluSerializationContext
+field    ySerializationContext	0ilu_Serializer ilu_Serializer
+field    ykServer	0ilu_Server ilu_Server
+field    yClass	0ilu_Class ilu_Class
+
+class xerox_ilu_IluPort
+field    yPort	0ilu_Port ilu_Port
+field    yConn	0ilu_Connection ilu_Connection
+field    jjServer	Lxerox/ilu/IluServer; JIluServer
+field    jjProtocolInfo	Ljava/lang/String; JString
+field    jjTransportInfo	Lxerox/ilu/IluTransportInfo; JIluTransportInfo
+field    jjPassport	Lxerox/ilu/IluPassport; JIluPassport
+field    pstate	I Jint
+
+class xerox_ilu_IluSBH
+field    jjih	Ljava/lang/String; JString
+field    jjsid	Ljava/lang/String; JString
+field    jjmstid	Ljava/lang/String; JString
+field    jjcinfo	Ljava/lang/String; JString
+
+class xerox_ilu_IluServer
+field    yIluServer	0ilu_Server ilu_Server
+field    yPtr   	0char* char*
+field    jjObjTab   	Lxerox/ilu/IluObjectTable; JIluObjectTable
+field    jjRelocatonInfo   	Lxerox/ilu/IluServerRelocationInfo; JIluServerRelocationInfo
+method    mustCheckRelocate	()Lxerox/ilu/IluServerRelocationInfo;
+
+class xerox_ilu_IluServerConnection
+field    yConn	0ilu_Connection ilu_Connection
+
+class xerox_ilu_IluSurrogateConnection
+method	dynamicForkSC	(J)V
+field	ySurrConn	0ilu_Connection		ilu_Connection
+
+class xerox_ilu_IluTransportInfo
+field	yIluTransportInfo	0ilu_TransportInfo	ilu_TransportInfo
+
+class xerox_ilu_IluTypeRep
+field	yIluType	0ilu_Type		ilu_Type
+
+class xerox_ilu_IluPickle
+field	ypickleptr	0ilu_Pickle*	ilu_Pickle*
+field	yuuid		0ilu_string		ilu_string
+
+class xerox_ilu_IluTypeCode
+field	yuuid	0ilu_string			ilu_string
+field	jjuid  	Ljava/lang/String;	JString
+
+class xerox_ilu_IluIdentity
+field	yIluIdentity	0ilu_IdentityInfo			ilu_IdentityInfo
+
+class xerox_ilu_IluIdentityType
+field	yIluIdentityType	0ilu_IdentityType			ilu_IdentityType
+
+class xerox_ilu_IluServerRelocationInfo
+field	jjSaveProtocolInfo	Ljava/lang/String;			JString
+field	jjSaveTransportInfo	Lxerox/ilu/IluTransportInfo;	JIluTransportInfo
+
+class xerox_ilu_IluGssCred
+field	yIluGssCred	0gss_cred_id_t			gss_cred_id_t
+
+class xerox_ilu_IluGssOid
+field	yIluGssOid	0gss_OID			gss_OID
+
+class xerox_ilu_IluBatcher
+field	yBatcher	0ilu_Batcher			ilu_Batcher
+

@@ -1,0 +1,323 @@
+/** $Id: Imakefile,v 1.152 1999/09/15 00:24:51 janssen Exp $
+ BeginILUCopyright
+ 
+ Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+ 
+ Unlimited use, reproduction, modification, and distribution of this
+ software and modified versions thereof is permitted.  Permission is
+ granted to make derivative works from this software or a modified
+ version thereof.  Any copy of this software, a modified version
+ thereof, or a derivative work must include both the above copyright
+ notice of Xerox Corporation and this paragraph.  Any distribution of
+ this software, a modified version thereof, or a derivative work must
+ comply with all applicable United States export control laws.  This
+ software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+ WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+ LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+ EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+ NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+ OF THE POSSIBILITY OF SUCH DAMAGES.
+ 
+ EndILUCopyright
+*/
+
+/*
+  Note that "ilutpcod.{c,h}" are automatically generated files created
+  by doing "make dist" in ILUSRC/stubbers/parser/.
+*/
+
+#define IHaveSubdirs
+
+SUBDIRS = os
+
+CC_LINK =
+
+NormalObjectRule()
+ILUCINCLUDES=-I../../common/patchlevel
+
+#ifdef XEROX_FIREWALL_HANDLING
+
+ILUCINCLUDES=-I../../common/patchlevel -DXEROX_FIREWALL_HANDLING
+
+xerox_firewall.c:
+	co -u /project/rpc/RCS-tree/runtime/kernel/xerox_firewall.c,v
+
+newtcp.c : xerox_firewall.c
+
+#endif
+
+BASEOBJS = \
+  alarmux.o \
+  call.o \
+  connect.o \
+  crc32.o \
+  debug.o \
+  error.o \
+  gc.o \
+  hash.o \
+  identity.o \
+  ilubufxp.o \
+  inmem.o \
+  locks.o \
+  mainloop.o \
+  memory.o \
+  method.o \
+  object.o \
+  port.o \
+  iluprotocol.o \
+  server.o \
+  ilutransport.o \
+  type.o \
+  iluvector.o
+
+/* Note:  ilutpcod.{c,h} is produced by "make dist" in ../../stubbers/parser/ */
+
+GENOBJS = ilutpcod.o
+
+O1 =
+#ifdef ADD_SUNRPC_PROTOCOL
+O1 = sunrpc.o
+#endif /* ADD_SUNRPC_PROTOCOL */
+
+O2 =
+#ifdef ADD_COURIER_PROTOCOL
+O2=courier.o
+#endif /* ADD_COURIER_PROTOCOL */
+
+O3 =
+#ifdef ADD_IIOP_PROTOCOL
+O3 = iiop.o
+#endif /* ADD_IIOP_PROTOCOL */
+
+O4 =
+#ifdef ADD_W3NG_PROTOCOL
+O4 = w3ng.o
+#endif /* ADD_W3NG_PROTOCOL */
+
+O5 =
+#ifdef ADD_TCPSOCKET_TRANSPORT
+O5 = newtcp.o
+#endif /* ADD_TCPSOCKET_TRANSPORT */
+
+O6 =
+#ifdef ADD_UDPSOCKET_TRANSPORT
+O6 = udp.o
+#endif /* ADD_UDPSOCKET_TRANSPORT */
+
+O7 =
+#ifdef ADD_W3MUX_TRANSPORT
+O7 = w3mux.o
+#endif /* ADD_W3MUX_TRANSPORT */
+
+O8 =
+#ifdef _IS_BSD
+O8 = bsdutils.o bsdmnlp.o
+
+#ifdef ILU_USING_GLIBC
+bsdmnlp.o : bsdmnlp.c
+	$(ANSI_C_COMPILER) -D_BSD_SOURCE -c $(CFLAGS) $(ILUCINCLUDES) $*.c
+#endif /* ILU_USING_GLIBC */
+
+#endif /* _IS_BSD */
+
+O9 =
+I1 =
+#if (defined(ILU_BINDING_DIRECTORY))
+O9 = sbfile.o
+#else
+#if (defined(ILU_BINDING_HOST))
+O9 = sbilu.o
+#else
+#if (defined(ILU_BINDING_MCASTADDR))
+O9 = sbmcast.o
+I1 = $(MULTICAST_INCLUDES)
+#else
+all::
+	echo "ILU cannot be built without some form of simple binding."
+	exit 3
+#endif
+#endif
+#endif
+
+O10 =
+#if       (defined(ADD_SUNRPCRM_TRANSPORT) || defined(ADD_SUNRPC_PROTOCOL))
+O10 = sunrpcrm.o
+#endif /* (defined(ADD_SUNRPCRM_TRANSPORT) || defined(ADD_SUNRPC_PROTOCOL)) */
+
+O11 =
+I2 =
+#ifdef    ADD_SECURE_TRANSPORT
+O11 = gss.o
+#ifdef USING_ILUGSS
+I2 = -I../../GSS/kernel
+#else
+I2 = $(GSS_INCLUDES)
+#endif
+#endif /* ADD_SECURE_TRANSPORT */
+
+THREADS_OBJ =
+#if (defined(ILU_SOLARIS2_THREADS) || defined(ILU_POSIX_THREADS) || defined(ILU_WIN32_THREADS) || defined(ILU_DCE_THREADS))
+THREADS_OBJ = threads.o
+#endif
+
+O13 =
+#ifdef ADD_HTTP_PROTOCOL
+O13 = http.o
+#endif /* ADD_HTTP_PROTOCOL */
+
+O14 =
+#ifdef ADD_VARIANT_SUPPORT
+#ifdef ADD_PICKLE2_SUPPORT
+PICKLE2SUPPORT = pickle2.o
+#endif
+#ifdef ADD_PICKLE3_SUPPORT
+PICKLE3SUPPORT = pickle3.o
+#endif
+O14 = pickle.o ${PICKLE3SUPPORT} ${PICKLE2SUPPORT}
+#endif /* ADD_VARIANT_SUPPORT */
+
+O15 =
+#ifdef ADD_JAVARMI_PROTOCOL
+O15 = javarmi.o
+#endif /* ADD_JAVARMI_PROTOCOL */
+
+O16 =
+#ifdef ILU_ZLIB_TRANSPORT
+O16 = zlib.o
+I4 = -I$(ILU_ZLIB_INCLUDE_DIR)
+#endif /* ILU_ZLIB_TRANSPORT */
+
+O17 =
+#ifdef ADD_TYPE_REGISTRATION_SUPPORT
+O17 = types.o
+#endif /* ADD_TYPE_REGISTRATION_SUPPORT */
+
+O18 =
+#ifdef ILU_FIXED_POINT_SUPPORT
+O18 = ../../common/bignum/bignum.o
+I3 = -I../../common/bignum
+BIGNUMPUBIFC=../../common/bignum/ilubignm.h
+#endif /* ILU_FIXED_POINT_SUPPORT */
+
+OTHEROBJS = ${O1} ${O2} ${O3} ${O4} ${O5} ${O6} ${O7} ${O8} ${O9} ${O10} ${O11} ${O13} ${O14} ${O15} ${O16} ${O17} ${O18}
+
+LOCALINCLUDES = ${I1} ${I2} ${I3} ${I4}
+
+OBJS = ${BASEOBJS} ${GENOBJS} ${OTHEROBJS}
+
+BASEPUBIFC = iluconf.h ilubasic.h iluxport.h iluerror.h iluerrs.h ilutypes.h ilutransport.h iluprotocol.h iluntrnl.h iludebug.h iluhash.h iluvector.h
+PUBIFC = $(BASEPUBIFC) ilutpcod.h
+PVTIFC = $(PUBIFC) ${BIGNUMPUBIFC}
+MF = Makefile
+
+alarmux.o: alarmux.c $(PVTIFC)
+call.o : call.c $(PVTIFC) connect.h port.h call.h object.h method.h server.h type.h
+connect.o : connect.c $(PVTIFC) object.h server.h connect.h
+debug.o : debug.c $(PVTIFC) oscalls.h
+error.o : error.c $(PVTIFC) ilulgt32.h
+gc.o : gc.c $(PVTIFC) object.h call.h server.h type.h
+hash.o : hash.c iluhash.h
+identity.o : identity.c $(PVTIFC)
+ilubufxp.o : ilubufxp.c $(PVTIFC)
+ilutpcod.o : ilutpcod.h $(PVTIFC)
+inmem.o : inmem.c $(PVTIFC) mooring.h
+locks.o : locks.c $(PVTIFC)
+mainloop.o : mainloop.c $(PVTIFC) oscalls.h ilusock.h
+memory.o: memory.c $(PVTIFC) oscalls.h
+method.o : method.c $(PVTIFC) method.h type.h
+object.o : object.c $(PVTIFC) object.h server.h type.h port.h version.h
+pickle.o: pickle.c $(PVTIFC) call.h connect.h
+port.o : port.c $(PVTIFC) port.h mooring.h object.h server.h
+iluprotocol.o : iluprotocol.c $(PVTIFC) call.h type.h
+server.o : server.c $(PVTIFC) server.h object.h type.h connect.h port.h
+ilutransport.o : ilutransport.c $(PVTIFC)
+type.o : type.c $(PVTIFC) object.h server.h type.h ilutpcod.h
+iluvector.o : iluvector.c $(PVTIFC)
+
+courier.o : courier.c $(PVTIFC) call.h connect.h port.h object.h type.h method.h mooring.h
+dcerpc.o : dcerpc.c $(PVTIFC) packet.h dcerpc.h call.h connect.h pipe.h port.h object.h type.h method.h mooring.h
+iiop.o : iiop.c $(PVTIFC) iiop.h call.h connect.h port.h object.h type.h method.h mooring.h server.h
+w3ng.o : w3ng.c $(PVTIFC) w3ng.h call.h connect.h port.h object.h type.h method.h mooring.h server.h
+sunrpc.o : sunrpc.c $(PVTIFC) sunrpc.h call.h connect.h port.h object.h type.h method.h mooring.h
+text.o : text.c $(PVTIFC) object.h call.h connect.h text.h method.h mooring.h port.h bffrlist.h Imakefile
+http.o: http.c http.h $(PVTIFC) call.h connect.h object.h method.h server.h type.h
+javarmi.o: javarmi.c $(PVTIFC) call.h connect.h object.h method.h server.h type.h
+pickle2.o: pickle2.c $(PVTIFC) call.h connect.h type.h
+pickle3.o: pickle3.c $(PVTIFC) call.h connect.h type.h
+
+newtcp.o : newtcp.c $(PVTIFC) mooring.h ilusock.h oscalls.h
+gss.o : gss.c $(PVTIFC) mooring.h oscalls.h ../../GSS/kernel/gssapi.h
+sunrpcrm.o : sunrpcrm.c $(PVTIFC) mooring.h oscalls.h
+w3mux.o : w3mux.c $(PVTIFC) mooring.h oscalls.h
+zlib.o : zlib.c $(PVTIFC) mooring.h oscalls.h $(ILU_ZLIB_INCLUDE_DIR)/zlib.h
+udp.o : udp.c $(PVTIFC) mooring.h ilusock.h oscalls.h
+
+bsdmnlp.o : bsdmnlp.c $(PVTIFC) oscalls.h
+bsdutils.o : bsdutils.c $(PVTIFC) oscalls.h ilusock.h
+sbfile.o : sbfile.c $(PVTIFC) object.h oscalls.h
+sbilu.o : sbilu.c $(PVTIFC) object.h
+sbmcast.o : sbmcast.c $(PVTIFC) object.h ilusock.h
+
+threads.o : threads.c threads.h $(PVTIFC)
+
+types.o : $(PVTIFC) ilutypes.h types.c
+opaqval.o : $(PVTIFC) ilutypes.h opaqval.c
+
+genminors.o: genminors.c $(BASEPUBIFC)
+genlgt32.o: genlgt32.c $(BASEPUBIFC)
+
+libilu.a : $(MF)
+
+LibraryTarget(libilu.a, $(OBJS) $(THREADS_OBJ))
+InstallLibrary(libilu.a, $(DESTDIR)/lib)
+
+#ifdef ADD_KERNEL_SHARED_LIBRARY
+SharedLibrary(libilu, $(OBJS) $(THREADS_OBJ),,)
+#if (defined(ADD_PYTHON_LANGUAGE) && (! defined(ILU_PYTHON_HAS_THREADS)) && (defined(ILU_SOLARIS2_THREADS) || defined(ILU_POSIX_THREADS) || defined(ILU_WIN32_THREADS) || defined(ILU_DCE_THREADS)))
+SharedLibrary(libilu-nothread, $(OBJS),,)
+#endif /* defined(...) */
+#endif /* def ADD_KERNEL_SHARED_LIBRARY */
+
+InstallRO($(PUBIFC), $(DESTDIR)/include)
+
+#ifdef ILU_BINDING_DIRECTORY
+MkdirTarget(${SIMPLE_BIND_DIRECTORY})
+#endif
+
+TestProgramTarget(testit, testskeleton.o, libilu.a,)
+
+CProgramTarget(genminors, genminors.o,,)
+
+CProgramTarget(genlgt32, genlgt32.o,,)
+
+/* ilulgt32.h and no_memory_minors.txt don't really vary, and including the
+   dependency below would cause inconvenient recomputations for the Windows
+   build.  So we exclude the dependency, invoke genlgt32 once, and check the
+   outputs into our source tree.
+
+ilulgt32.h no_memory_minors.txt: genlgt32
+	$(RM) ilulgt32.h no_memory_minors.txt
+	./genlgt32
+
+*/
+
+InstallRO(no_memory_minors.txt, $(DESTDIR)/doc)
+
+minors-main.tim: genminors
+	$(RM) minors-main.tim
+	./genminors > minors-main.tim
+
+minors.tim: minors-prefix.tim minors-main.tim minors-suffix.tim
+	$(RM) minors.tim
+	cat minors-prefix.tim minors-main.tim minors-suffix.tim > minors.tim
+
+dist::
+	rm -f version.h
+	( echo "#define ILU_VERSION $(RELNUM)" ; echo "#define ILU_VERSION_STRING \"$(RELNUM)\"" ) >version.h
+	( echo "#define ILU_MAJOR_VERSION $(RELNUM)" | sed -e 's/\([0-9]*\)\..*/\1/' ) >>version.h 
+	( echo "#define ILU_MINOR_VERSION $(RELNUM)" | sed -e 's/\([0-9]*\)\.\([0-9]*\).*/\2/' ) >>version.h 
+	chmod 444 version.h
+
+dist:: minors.tim

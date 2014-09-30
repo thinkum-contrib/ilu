@@ -1,0 +1,126 @@
+README for the "javaobv" directory.
+[$Id: README,v 1.2 1999/08/03 01:56:19 janssen Exp $
+ BeginILUCopyright
+
+ Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+ Unlimited use, reproduction, modification, and distribution of this
+ software and modified versions thereof is permitted.  Permission is
+ granted to make derivative works from this software or a modified
+ version thereof.  Any copy of this software, a modified version
+ thereof, or a derivative work must include both the above copyright
+ notice of Xerox Corporation and this paragraph.  Any distribution of
+ this software, a modified version thereof, or a derivative work must
+ comply with all applicable United States export control laws.  This
+ software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+ WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+ LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+ EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+ NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+ OF THE POSSIBILITY OF SUCH DAMAGES.
+
+ EndILUCopyright ]
+
+
+This directory contains a utility package to use "java objects by value" and 
+"marshalled java objects" .
+
+(This is also an example which shows how to use "custom mapping", "custom surrogates" and 
+"custom records" in Java.)
+
+This does not work in JDK1.0, it needs JDK1.1 or newer
+
+The directory contains multiple class loaders.  The "java objects by value" and 
+"marshalled java objects" can specify how classes are loaded.  We provide
+one class loader which accesses an URL and another class loader which
+transmitts the actual bytes over the ilu connection.  (One of them however
+only works with JDK1.2 or newer)
+
+
+stubbing (included in Imakefile)
+java-stubber ilujava.isl
+
+compile all generated stubs available for both client and server (included in Imakefile)
+javac -d classes `cat jstubber.files` 
+
+compile system level code available for both client and server (included in Imakefile)
+javac -d classes IluOBVSetter.java IluOBVClassLoaderGetter.java IluOBVClassLoaderSetter.java IluOBV.java Holder.java  IluOBVWireClassLoader.java ClassAccessorImplFromJar.java 
+
+if you are using jdk1.2
+javac -d classes IluOBVURLClassLoader.java
+
+================================================================
+About custom mapping
+
+Full custom mapping is the ability to externally specify how an isl type
+shall be mapped to java.  
+
+It is similar to custom records and custom objects, however there is no
+requirement for the custom mapped type to be a subtype of the regular
+mapping.  
+
+There is the restriction that custom mapping works
+only for java object types; that means, the regular mapping of the ilu 
+type needs to map into a java object type, as well as the custom
+mapped type must be a java object type.  
+
+
+Full custom mapping is used solely in one
+address space; communication ilu processes might not know about whether
+or how an ilu type is mapped in the other address space.
+
+All stubs in one address space however must agree on the mapping of
+any ilu type.
+
+Custom mapping is implemented using stubber options, however there
+needs to be runtime code which handles the conversion from and to
+the regular mapped object.
+
+
+Stubbing requirements
+
+When stubbing the custom mapping needs to be specified with a
+DOCUMENTATION option or a stubber commandline option.
+commandline option
+	-custom description-file-name
+DOCUMENTATION option
+	DOCUMENTATION "JAVA-CUSTOMFILE" "description-file-name";
+
+We are using a file to describe the custom mapping because the actual  
+description too cumberson for command line options and must be 
+set identical for all stubs accessing a custom mapped type.  
+
+The description file is a list of lines. Each line is either
+a comment, or, a custom mapping description for one type.
+Custom mapping description have five fields separated with white space.
+  
+  1) The name of the isl interface (which contains the isl type)
+  2) The name of the isl type to be custom mapped
+  3) The java class used to map the isl type into
+  4) The java class which is used for holders  
+  5) If present:  The name of a java class which will be loaded by the stub; this is the class which is expected to implement the transformations between wire type and custom type.
+
+Runtime features
+
+Tha java interface xerox.ilu.IluCustomMapping describes the functions
+necessary to implement the custom mapping.  
+
+An  xerox.ilu.IluCustomMapping object must be registered with the helper class
+for the regularly mapped type using the static  "_registerCustomMapping"   
+method.
+
+
+Custom mapped type and subclassing do interact whith each other:
+Custom mapping works with what ilu calls static types.
+  -When you receive a subclass of the static ilu-type; that subclass info gets lost
+  -Because of syntax checking you can not transmit a subclass of the static ilu-type, 
+     unless it also is a subclass  of the java class.  However
+     in that case that case subclass'ness gets lost.
+  -when the static class of an argument is a superclass of something with custom mapping
+     -when receiveit: customness is lost and you receive the super class
+     -when transmit:  syntax checking will not allow this unless 
+     custom class is also subclass of static class.  (That case is already defined above:  subclass'ness gets lost)
+
+

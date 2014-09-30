@@ -1,0 +1,85 @@
+
+typedef octet           MyByte;
+typedef boolean         MyBool;
+typedef unsigned short  MyShortCard;
+typedef unsigned long   MyCard;
+typedef short           MyShortInt;
+typedef long            MyInt; 
+typedef float           MyShortReal;
+typedef double          MyReal;
+typedef char            MyShortCh;
+typedef long            DefaultSwitch;
+
+typedef MyByte       ArrOfByte[6];
+typedef MyBool       ArrOfBool[10][11][12];
+typedef MyShortCard  ArrOfShortCard[6];
+typedef MyCard       ArrOfCard[8][9];  
+typedef MyShortInt   ArrOfShortInt[10][11][12];
+typedef MyInt        ArrOfInt[8][9];
+typedef MyShortCh    ArrOfShortCh[10][11][12];
+typedef MyShortCh    VecOfShortCh[10];
+typedef any       ArrOfany[20][13][10][5]; 
+
+typedef sequence <MyByte>        SeqOfByte;           
+typedef sequence <MyByte,5>      SeqOfByteLim;    
+typedef sequence <MyInt,5>       SeqOfIntLim; 
+typedef sequence <MyBool>        SeqOfBool;
+typedef sequence <MyShortCard>   SeqOfShortCard;
+typedef sequence <MyCard,100>    SeqOfCardLim;
+typedef sequence <MyShortInt>    SeqOfShortInt;
+typedef sequence <MyShortCh,1000> SeqOfShortChLim;
+typedef sequence <MyShortCh>     SeqOfShortCh;
+typedef sequence <any,10>     SeqOfanyLim;
+
+struct RecOfBI {
+  MyBool        MbrBool;
+  MyShortCard   MbrShortCard;
+  MyShortInt    MbrShortInt;
+  MyShortReal   MbrShortReal;
+  MyShortCh     MbrShortCh;
+  MyCard        MbrCard; 
+  MyReal        MbrReal;
+  any        Mbrany;
+ };
+
+union UnionOfBI switch(DefaultSwitch) {
+  case 1: MyBool      ArmBool;
+  case 2: MyShortCard ArmShortCard;
+  case 3: MyShortInt  ArmShortInt;
+  case 4: MyShortReal ArmShortReal;
+  case 5: MyShortCh   ArmShortCh;
+  case 7: MyCard      ArmCard; 
+  case 9: MyReal      ArmReal;
+};
+
+typedef sequence<ArrOfInt>      SeqOfArrOfInt;
+typedef sequence<SeqOfShortCh>  SeqOfSeqOfShortCh;
+typedef sequence<RecOfBI>       SeqOfRecOfBI;
+typedef sequence<UnionOfBI>     SeqOfUnionOfBI;
+
+union UnionOfST switch(DefaultSwitch) {
+   case 1: RecOfBI      ArmRecOfBI ; 
+   case 2: ArrOfInt     ArmArrOfInt ;
+   case 3: SeqOfShortCh ArmSeqOfShortCh ;
+   case 4: UnionOfBI    ArmUnionOfBI ; 
+};
+
+struct RecOfST {
+   RecOfBI       MbrRecOfBI;
+   ArrOfInt      MbrArrOfInt;
+   SeqOfShortCh  MbrSeqOfShortCh;
+   UnionOfBI     MbrUnionOfBI; 
+   UnionOfST     MbrUnionOfST;
+};
+
+typedef sequence <RecOfST> SeqOfRecOfST;
+
+typedef UnionOfST      ArrOfUnionOfST[3][4];
+typedef SeqOfRecOfST   ArrOfSeqOfRec[3][4];
+typedef SeqOfShortCh   ArrOfSeqOfShortCh[3][4];
+typedef RecOfST        ArrOfRecOfST[3][4]; 
+typedef ArrOfRecOfST   ArrOfArrOfRec[3][4]; 
+
+struct RecOfArray {
+       ArrOfRecOfST    MbrArrOfRecOfSt;
+};

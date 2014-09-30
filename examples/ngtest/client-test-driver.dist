@@ -1,0 +1,216 @@
+#!PYTHON_EXECUTABLE
+
+import sys
+sys.path = ["ILUHOME_DIR/lib"] + sys.path
+
+from test_schema import nt_test_descriptions, non_nt_test_descriptions
+import ilu, os, test_server, time
+
+LogfileDirectory = "/opt/local/http-ng/tests"
+ServerDaemonDirectory = "/opt/local/ilu/examples/ngtest"
+TcpdumpOptions = "host ngsun2 and (port 2718 or port 2719 or port 8080)"
+
+def do_exit_function (fn, next_fn):
+	fn()
+	if next_fn:
+		next_fn()
+
+def add_exit_function (fn):
+	if sys.__dict__.has_key('exitfunc'):
+		oldexit = sys.exitfunc
+	else:
+		oldexit = None
+	sys.exitfunc = lambda x=oldexit, y=fn: do_exit_function(y,x)
+
+def figure_pathname (stamp, test_name, client_or_server_or_tcpdump):
+	dir1 = LogfileDirectory + "/" + stamp
+	if not os.path.isdir(dir1):
+		os.mkdir(dir1)
+	dir2 = dir1 + "/" + test_name
+	if not os.path.isdir(dir2):
+		os.mkdir(dir2)
+	filepath = dir2 + "/" + client_or_server_or_tcpdump + ".log"
+	if os.path.isfile(filepath):
+		os.unlink(filepath)
+	return filepath
+
+class Logfile:
+
+	def __init__ (self, stamp, test_name, client_or_server):
+
+		self.filepath = figure_pathname(stamp, test_name, client_or_server)
+		fp = open(self.filepath, 'w')
+		fp.close();
+
+	def write(self, data):
+		fp = open(self.filepath, 'a')
+		fp.write(data)
+		fp.close()
+
+	def __str__(self):
+		return '<Logfile %s>' % self.filepath
+
+	__repr__ = __str__
+
+
+def locate_test_server (machine_name, stamp):
+	sid = "http-ng-testbed-server-server--" + stamp + "--" + machine_name
+	ih = "t"
+	s = ilu.LookupObject(sid, ih, test_server.factory)
+	if not s:
+		sys.stdout.write("Starting test server daemon on " + machine_name + "...");
+		sys.stdout.flush()
+		# os.system() uses sh, but we assume that csh is the login shell of the remote user
+		command = 'rsh ' + machine_name + ' "( ' + ServerDaemonDirectory + '/test-server-daemon ' + machine_name + ' ' + stamp + ' & ) < /dev/null >& /dev/null" < /dev/null > /dev/null 2>&1 &'
+		os.system(command)
+		sys.stdout.write(" waiting...");
+		sys.stdout.flush()
+		time.sleep(20)
+	else:
+		return s
+	s = ilu.LookupObject(sid, ih, test_server.factory)
+	if not s:
+		raise "can't start server", command
+	sys.stdout.write(" started.\n");	
+	return s
+
+def locate_tcpdump_daemon (machine_name):
+	sid = "http-ng-testbed-tcpdump-daemon--" + machine_name
+	ih = "t"
+	s = ilu.LookupObject(sid, ih, test_server.factory)
+	if not s:
+		raise "can't find tcpdump daemon", command
+	return s
+
+def run_client (logfile, command):
+	if logfile:
+		full_command = command + " >> " + logfile.filepath + " 2>&1"
+	else:
+		full_command = command + " > /dev/null 2>&1"
+	os.system(full_command)
+
+def do_test (server_factory, tcpdump_daemon, stamp, test):
+
+	sys.stdout.write("doing test " + test[0] + "...\n");
+	server = server_factory.start_server(stamp, test[2])
+	if tcpdump_daemon:
+		tcpdump = tcpdump_daemon.start_server(stamp, TcpdumpOptions)
+	else:
+		tcpdump = None
+	run_client(None, test[1])
+	client_log = Logfile(stamp, test[0], "client")
+	for i in range(0,10):
+		run_client(client_log, test[1])
+	server.kill()	# does SIGINT, waits 10 seconds, then does SIGKILL
+	server_log = Logfile(stamp, test[0], "server")
+	server_output = server.get_output()
+	server_log.write(server_output)
+	server.close()
+	if tcpdump:
+		tcpdump.kill()
+		tcpdump_log = open(figure_pathname(stamp, test[0], "tcpdump"), "w");
+		tcpdump_data = tcpdump.get_tcpdump()
+		tcpdump_log.write(tcpdump_data)
+		tcpdump_log.close()
+		tcpdump.close()
+	sys.stdout.write ("finished with " + test[0] + ".\n");
+
+def usage(pname):
+	sys.stderr.write("Usage:  " + pname + " [-stamp STAMP] [-server-machine MACHINENAME] [-server-daemon-dir DIR] [-logfile-dir DIR]\n");
+	sys.exit(1)
+
+def finish(x):
+	import sys
+	sys.stdout.write("shutting down test server daemon\n")
+	sys.stdout.flush()
+	x.finish()
+
+def throw_exit(signum, sframe):
+	import sys
+	sys.exit(1)
+
+def main (argv):
+
+  server = "ngsun2"
+  stamp = os.environ.has_key("NG_STAMP") and os.environ["NG_STAMP"]
+  tests = []
+  global ServerDaemonDirectory, LogfileDirectory, TcpdumpOptions
+  tcpdump_machine = None
+  no_tcpdump = 0
+
+  i = 1;
+  while (i < len(argv)):
+	  if (argv[i] == '-stamp'):
+  		  i = i + 1
+		  if (i >= len(argv)):
+			  usage(argv[0])
+		  stamp = argv[i]
+		  i = i + 1
+	  elif (argv[i] == '-server-machine'):
+		  i = i + 1
+		  if (i >= len(argv)):
+			  usage(argv[0])
+		  server = argv[i]
+		  i = i + 1
+	  elif (argv[i] == '-server-daemon-dir'):
+		  i = i + 1
+		  if (i >= len(argv)):
+			  usage(argv[0])
+		  ServerDaemonDirectory = argv[i]
+		  i = i + 1
+	  elif (argv[i] == '-logfile-dir'):
+		  i = i + 1
+		  if (i >= len(argv)):
+			  usage(argv[0])
+		  LogfileDirectory = argv[i]
+		  i = i + 1
+	  elif (argv[i] == '-test'):
+		  i = i + 1
+		  if (i >= len(argv)):
+			  usage(argv[0])
+		  tests.append(argv[i])
+		  i = i + 1
+	  elif (argv[i] == '-tcpdump-machine'):
+		  i = i + 1
+		  if (i >= len(argv)):
+			  usage(argv[0])
+		  tcpdump_machine = argv[i]
+		  i = i + 1
+	  elif (argv[i] == '-tcpdump-filter'):
+		  i = i + 1
+		  if (i >= len(argv)):
+			  usage(argv[0])
+		  TcpdumpOptions = argv[i]
+		  i = i + 1
+	  elif (argv[i] == '-no-tcpdump'):
+		  no_tcpdump = 1
+		  i = i + 1
+	  else:
+		  usage(argv[0])
+
+  if os.environ.has_key("HTTP_PROXY"):
+	  del os.environ["HTTP_PROXY"]
+
+  if not stamp:
+	  sys.stderr.write("Error:  stamp must be specified either with -stamp command-line switch, or via environment variable NG_STAMP\n")
+	  sys.exit(1)
+
+  sys.stdout.write("Server machine is " + server + ", stamp is " + stamp + "\n");
+
+  import signal
+  signal.signal(signal.SIGTERM, throw_exit)
+  signal.signal(signal.SIGINT, throw_exit)
+
+  server_factory = locate_test_server(server, stamp)
+  if not no_tcpdump:
+	  tcpdump_daemon = locate_tcpdump_daemon(tcpdump_machine)
+  else:
+	  tcpdump_daemon = None
+  add_exit_function(lambda x=server_factory: finish(x))
+  for test in non_nt_test_descriptions:
+	  if (not tests) or (test[0] in tests):
+		  do_test(server_factory, tcpdump_daemon, stamp, test)
+  sys.exit(0)
+
+if __name__ == "__main__":
+	main(sys.argv)

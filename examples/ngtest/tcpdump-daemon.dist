@@ -1,0 +1,242 @@
+#!PYTHON_EXECUTABLE
+
+import sys
+sys.path = ["ILUHOME_DIR/lib"] + sys.path
+
+import ilu, os, test_server, test_server__skel, string, time, tempfile
+
+Servers = []
+Loopvar = None
+
+def do_exit_function (fn, next_fn):
+	fn()
+	if next_fn:
+		next_fn()
+
+def add_exit_function (fn):
+	if sys.__dict__.has_key('exitfunc'):
+		oldexit = sys.exitfunc
+	else:
+		oldexit = None
+	sys.exitfunc = lambda x=oldexit, y=fn: do_exit_function(y,x)
+
+def killproc(pid):
+	import os
+	try:
+		os.kill(pid, 9)
+	except:
+		pass
+
+def delfile(fname):
+	import os
+	try:
+		os.unlink(fname)
+	except:
+		pass
+
+def find_executable (program_name, opt_path=None):
+
+	def is_executable (path):
+		import os
+		mode = os.stat(path)[0]
+		return ((mode & 0111) != 0)
+
+	pname = os.path.expanduser(os.path.expandvars(program_name))
+	if pname[0] == '.' or pname[0] == '/':
+		return program_name
+	path = opt_path or os.environ["PATH"]
+	dirs = string.split(path, os.pathsep)
+	for dir in dirs:
+		test_path = os.path.join(dir, pname)
+		if os.path.exists(test_path) and os.path.isfile(test_path) and is_executable(test_path):
+			return test_path
+	return None
+
+# Logfile class to keep output in
+
+class Logfile:
+	def __init__ (self, name=None):
+		import tempfile
+		if not name:
+			self.filename = tempfile.mktemp()
+		else:
+			self.filename = name
+		add_exit_function(lambda x=self.filename: delfile(x))
+
+	def display (self, banner=None):
+		if banner:
+			print banner
+		f = open(self.filename,'r')
+		line = f.readline()
+		while line:
+			sys.stdout.write(line)
+			line = f.readline()
+		f.close()
+
+	def exists(self):
+		return os.path.exists(self.filename)
+
+	def open(self, mode='r'):
+		return open(self.filename, mode)
+
+	def delete (self):
+		import os
+		if os.path.exists(self.filename):
+			os.unlink(self.filename)
+		
+	zero = delete
+
+	def __str__(self):
+		return '<Logfile %s>' % self.filename
+
+	__repr__ = __str__
+
+class Process:
+	def __init__ (self, command, env, logfile=None):
+		import tempfile
+		import os
+		self.logfile = logfile
+		args = string.split(command)
+		self.executable = find_executable(args[0])
+		self.args = tuple(args[1:])
+		self.exitstatus = None
+		self.running = 0
+		# sys.stderr.write("executable is " + self.executable + ", args are " + str(self.args) + "\n");
+		self.pid = os.fork()
+		if self.pid == 0:	# child process
+			tempfile.template = None
+			if logfile:
+				fd = os.open(logfile.filename, os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0664)
+				os.close(1)
+				os.dup2(fd, 1)
+				os.close(2)
+				os.dup2(fd, 2)
+			for key in env.keys():
+				os.environ[key] = env[key]
+			os.execve(self.executable, (self.executable,) + self.args, os.environ)
+		else:
+			self.running = 1
+			add_exit_function(lambda x=self.pid: killproc(x))
+
+	def active(self):
+		import os
+		if not self.running:
+			return 0
+		status = os.waitpid (self.pid, os.WNOHANG)
+		if (status[0] == 0):
+			# process still running
+			return 1
+		else:
+			self.exitstatus = status[1]/256
+			self.running = 0
+			return 0
+
+	def finish (self):
+		import os
+		if self.running:
+			status = os.waitpid (self.pid, 0)
+			self.exitstatus = status[1]/256
+			self.running = 0
+			return status[1]%256
+		else:
+			return 0
+
+	def kill (self, signal=9):
+		import posix
+		if self.running:
+			posix.kill(self.pid, signal)
+			return self.finish()
+		else:
+			return 0
+		
+class server (test_server__skel.tcpdump_server):
+
+	def __init__(self, s, ih, command):
+		self.IluServer = s
+		self.IluInstHandle = ih
+		self.output_file = tempfile.mktemp()
+		self.real_command = '/usr/local/bin/tcpdump -i eth0 -w ' + self.output_file + ' ' + command
+		self.logfile = Logfile()
+		self.process = Process(self.real_command, os.environ, self.logfile)
+		time.sleep(10)
+
+	def get_output (self):
+		if not self.logfile.exists():
+			raise NoLogfile, self.logfile.pathname
+		p = self.logfile.open()
+		output = p.readlines()
+		p.close()
+		return string.join(output)
+
+	def get_tcpdump (self):
+		if not os.path.exists(self.output_file):
+			raise NoLogfile, self.output_file
+		p = open(self.output_file)
+		output = p.readlines()
+		p.close()
+		return string.join(output, '')
+
+	def kill (self):
+		import signal
+		self.process.kill(signal.SIGTERM)
+		time.sleep(10)
+		self.process.kill(signal.SIGKILL)
+
+	def close (self):
+		self.process.kill()
+		self.logfile.delete()
+		os.unlink(sys.output_file)
+		Servers.remove(self)
+
+class factory(test_server__skel.factory):
+
+	def __init__(self, s, ih):
+		self.IluServer = s
+		self.IluInstHandle = ih
+
+	def start_server (self, stamp, command):
+		s = server(self.IluServer, None, command)
+		Servers.append(s)
+		return s
+
+	def finish(self):
+		global Loopvar
+		ilu.ExitMainLoop(Loopvar)
+
+def withdraw(obj):
+	import iluPr
+	iluPr.WithdrawObject(obj)
+
+def throw_exit(signum, sframe):
+	import sys
+	sys.exit(1)
+
+def main (argv):
+
+	global Loopvar
+
+	if (len(argv) < 2):
+		return 1
+	machine_name = argv[1]
+
+	sid = "http-ng-testbed-tcpdump-daemon--" + machine_name
+	ih = "t"
+
+	import signal
+	signal.signal(signal.SIGTERM, throw_exit)
+	signal.signal(signal.SIGINT, throw_exit)
+
+	s = ilu.CreateServer(sid)
+	uc = factory(s, ih)
+
+	uc.IluPublish()
+
+	add_exit_function(lambda x=uc: withdraw(x))
+
+	Loopvar = ilu.CreateLoopHandle();
+	ilu.RunMainLoop(Loopvar)
+	sys.exit(0)
+
+
+if __name__ == "__main__":
+	main(sys.argv)

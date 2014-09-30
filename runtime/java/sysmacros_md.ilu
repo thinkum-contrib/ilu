@@ -1,0 +1,95 @@
+/* sysmacros_md.ilu <--> sysmacros_md.h */
+/* Chris Jacobi, April 17, 1997 1:56 pm PDT */
+
+/*
+ BeginILUCopyright
+ 
+ Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+ 
+ Unlimited use, reproduction, modification, and distribution of this
+ software and modified versions thereof is permitted.  Permission is
+ granted to make derivative works from this software or a modified
+ version thereof.  Any copy of this software, a modified version
+ thereof, or a derivative work must include both the above copyright
+ notice of Xerox Corporation and this paragraph.  Any distribution of
+ this software, a modified version thereof, or a derivative work must
+ comply with all applicable United States export control laws.  This
+ software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+ WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+ LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+ EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+ NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+ OF THE POSSIBILITY OF SUCH DAMAGES.
+ 
+ EndILUCopyright
+*/
+
+/* $Id: sysmacros_md.ilu,v 1.6 1999/08/03 01:54:26 janssen Exp $ */
+
+
+/* The files sysmacros_md.ilu and sysmacros_md.h are
+ * equal. We store both so that users can delete 
+ * sysmacros_md.h if they desire so and restore it
+ * from sysmacros_md.ilu if switching back.
+ *
+ * Some time in the future we will only store the 
+ * sysmacros_md.ilu version and get rid of the 
+ * sysmacros_md.h version; the difference is only
+ * that the default setup is for the systems where
+ * this file is no more necessary, and the manual
+ * setup will be required with the older systems.
+ */
+
+/*
+ * THIS BUG IN A VARIETY OF RELEASES
+ *
+ * JDK 1.0.2:  The file ...runtime/java/sysmacros_md.h is 
+ *    explicitely aimed at the JDK 1.0.2 release. 
+ *
+ * JDK 1.1beta2:  The file ...runtime/java/sysmacros_md file must 
+ *    be removed.  However the java includes are still not
+ *    accessible, because they are in the wrong directory.  This 
+ *    must be compensated copying Sun's version of sysmacros_md.h 
+ *    into the ...runtime/java directory and editing its includes 
+ *    here.  We can not do this automatically in the ILU setup  
+ *    because of copyright reasons.
+ *
+ * JDK 1.1_Final:  Heureka; this file is no more necessary as the
+ *    file in the release will do the job completely.  More
+ *    precise:  The file ...runtime/java/sysmacros_md.h MUST
+ *    be removed before issuing make.
+ *
+ * JDK 1.1.1:  Good news.  This file is not necessary.  More
+ *    precise:  The file ...runtime/java/sysmacros_md.h MUST
+ *    be removed before issuing make. 
+ *
+ *
+ * WHAT THIS IS/WAS ABOUT
+ * 
+ *  sys_api.h as we got it here at Xerox, in
+ *  /project/java/jdk-1.0.2/include/sys_api.h
+ *  has a bug:  It imports sysmacros_md.h
+ *  which is not available.  We have made a
+ *  a private version of sysmacros_md (This file)
+ *  to fix that java bug.  Here at Xerox we do  
+ *  not use Sun's version which might be available  
+ *  in a source release.
+ *
+ *  You might notice that this version of sysmacros_md.h
+ *  does not contain a single line from Sun microsystem
+ *  so we can distribute it with the ILU copyright.
+ *  On July 11, 1996 I have checked that this substitution 
+ *  did not cause any compile time error with JDK 1.0.2
+ *  and it seems to work at runtime.
+ *
+ *  If you happen to have legal access to the real 
+ *  sysmacros_md.h from Sun, we recommend using
+ *  the real version instead.  You might have to edit it
+ *  but that might be better then relying on the fact
+ *  that this version has never been caught causing an 
+ *  error.
+ *
+ */
+

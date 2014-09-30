@@ -1,0 +1,393 @@
+#! -*- Python -*-
+#
+# This test script works off a file of configuration setups.  For each configuration,
+# it will create the ILU source tree from scratch (using either copy-ilu-tree or from
+# a tar file, as per the config info), configure it as per the configuration info,
+# build it, install it, then run "make Ptest" on the installed `examples' subdir.
+#
+# The configuration file has the following structure:
+#   a variable `configs' containing zero or more instances of TestingConfiguration.
+#
+
+import sys, os, time, traceback, tempfile, string
+sys.path.append("ILUHOME/lib")
+from ILUTestingMachinery import *
+
+ConfigErr = "error configuring sources"
+UnpackErr = "error unpacking sources"
+MakeErr = "error building and installing ILU"
+MakeMakefilesErr = "error making Makefiles in examples directory"
+TestErr = "error running make Ptest in examples directory"
+
+#define the function which actually does the test
+
+def mktempdir(root):
+	try:
+		import tempfile, string
+		tempdir = tempfile.mktemp()
+		dirs = string.split(tempdir[1:], '/')
+		topdir = root
+		for dir in dirs:
+			topdir = topdir + '/' + dir
+			if not os.path.isdir(topdir):
+				os.mkdir(topdir)
+			if not os.path.isdir(topdir):
+				raise "couldn't make directory", topdir
+		return topdir
+	except:
+		import traceback
+		traceback.print_exc()
+		return None
+
+def run(command, args, env, exception):
+	lf = Logfile()
+	p = Process(command, args, env, lf)
+	stat = p.finish()
+	if p.exitstatus != 0:
+		raise exception, lf
+	lf.delete()
+
+def set_up_dir (testing_config):
+
+	source_dir = os.path.join(testing_config.directory, "src")
+	os.mkdir(source_dir)
+	os.chdir(source_dir)
+	if testing_config.source_type == ST_copy_ilu_tree:
+		if testing_config.source_arg:
+			run("/project/rpc/tools/copy-ilu-tree",
+			    ("-noconfirm", testing_config.source_arg),
+			    testing_config.environment, UnpackErr);
+		else:
+			run("/project/rpc/tools/copy-ilu-tree",
+			    ("-noconfirm",),
+			    testing_config.environment, UnpackErr);
+	elif testing_config.source_type == ST_tarfile:
+		if testing_config.source_gzipped:
+			run("/bin/csh", ("-c",
+					 "gunzip < " + testing_config.source_arg + " | tar xvfBp -"),
+			    testing_config.environment, UnpackErr);
+					 
+		else:
+			run("/bin/csh", ("-c",
+					 "tar xvfBp - < " + testing_config.source_arg),
+			    testing_config.environment, UnpackErr);
+		if testing_config.patchfile:
+			run("/bin/csh", ("-c",
+					 "patch -p0 -l < " + testing_config.patchfile),
+			    testing_config.environment, UnpackErr);
+
+def remove_dir (testing_config):
+
+	os.chdir("/");
+	if testing_config.directory_temp:
+		os.system("rm -rf " + testing_config.directory);
+
+def do_configure (testing_config):
+
+	os.chdir(os.path.join(os.path.join(testing_config.directory, "src"), "imake"))
+	# build a config script
+	config_script_name = tempfile.mktemp()
+	f = open(config_script_name, 'w')
+	f.write("#!/bin/csh\n\n");
+	f.write("rm -rf config.cache\n");
+	for enable in testing_config.enables:
+		f.write("enable " + enable + "\n")
+	f.write("./configure --prefix=" + testing_config.directory + " \\\n")
+	for config_switch in testing_config.config_switches:
+		f.write(" " + config_switch + " \\\n")
+	f.write("\n")
+	f.close()
+	os.chmod(config_script_name, 0555)
+	# execute the script
+	try:
+		run(config_script_name, (), testing_config.environment, ConfigErr)
+	finally:
+		# delete the script
+		sys.stdout.write("deleting config script file " + config_script_name + "...\n");
+		sys.stdout.flush()
+		os.unlink(config_script_name)
+
+def do_make (testing_config):
+	
+	os.chdir(os.path.join(testing_config.directory, "src"))
+	run("make", ("Install",), testing_config.environment, MakeErr)
+
+def set_env_cond (env, varname, varvalue):
+	if not env.has_key(varname):
+		env[varname] = varvalue
+
+def do_tests (testing_config):
+
+	os.chdir(os.path.join(testing_config.directory, "examples"))
+	ilumkmf = os.path.join(os.path.join(testing_config.directory, "bin"), "ilumkmf")
+	run(ilumkmf, (), testing_config.environment, MakeMakefilesErr)
+	run("make", ("Makefiles",), testing_config.environment, MakeMakefilesErr)
+	set_env_cond(testing_config.environment, "ILU_ASSERTION_FAILURE_ACTION", "3");
+	set_env_cond(testing_config.environment, "ILU_MEMORY_FAILURE_ACTION", "3");
+	set_env_cond(testing_config.environment, "ILU_CHECK_FAILURE_ACTION", "-2");
+	run("make", ("Ptest",), testing_config.environment, TestErr)
+
+def build_and_test (testing_config, verbose, leave_build_dir):
+
+	if (verbose):
+		sys.stdout.write("+++ Configuration '" + testing_config.name + "'\n")
+		sys.stdout.write("Starting at " + time.asctime(time.localtime(time.time())) + "\n")
+		sys.stdout.write("Unpacking sources into " + testing_config.directory + "...\n")
+		if testing_config.source_type == ST_copy_ilu_tree:
+			if testing_config.source_arg:
+				command = "copy-ilu-tree -noconfirm " + testing_config.source_arg
+			else:
+				command = "copy-ilu-tree -noconfirm"
+		else:
+			if testing_config.source_gzipped:
+				command = "gunzip < " + testing_config.source_arg + " | tar xvfBp -"
+			else:
+				command = "tar xvfBp - < " + testing_config.source_arg
+		sys.stdout.write("Using '" + command + "' to unpack...\n")
+		if testing_config.source_type == ST_tarfile and testing_config.patchfile:
+			sys.stdout.write("Then patching with 'patch -p0 -l < " + testing_config.patchfile + "'...\n");
+		sys.stdout.flush()
+	set_up_dir(testing_config)
+	if (verbose):
+		enables = ""
+		configs = ""
+		for enable in testing_config.enables:
+			enables = enables + " " + enable
+		for conf in testing_config.config_switches:
+			configs = configs + " " + conf
+		if enables:
+			sys.stdout.write("Enabling" + enables + "...\n")
+		sys.stdout.write("Configuring")
+		if configs:
+			sys.stdout.write(" with" + configs)
+		sys.stdout.write("...\n")
+		sys.stdout.flush()
+	do_configure(testing_config)
+	if (verbose):
+		sys.stdout.write("Doing make Install...\n")
+		sys.stdout.flush()
+	do_make(testing_config)
+	if (verbose):
+		sys.stdout.write("Doing make Ptest in examples subdirectory...\n")
+		sys.stdout.flush()
+	do_tests(testing_config)
+	if not leave_build_dir:
+		remove_dir(testing_config)
+	if (verbose):
+		sys.stdout.write("Done at " + time.asctime(time.localtime(time.time())) + ".\n")
+		sys.stdout.flush()
+
+def display_err (testname, excn, lf, tb, exitp):
+	sys.stdout.write("Configuration '" + testname + "' raised exception '" + excn + "':\n")
+	traceback.print_tb(tb)
+	sys.stdout.write("Logfile contains:\n")
+	lf.display()
+	lf.delete()
+	if exitp:
+		sys.exit(1)
+
+allowed_keys = ("name", "copy-ilu-tree", "tarfile", "enables", "config-switches", "environment", "directory", "patchfile")
+
+def read_config_file (fname):
+	f = open(fname, "r")
+	lines = string.join(f.readlines())
+	f.close()
+	data = eval(lines)
+	if (type(data) != types.TupleType):
+		raise "Bad data in configuration file", fname
+	count = 1
+	configs = []
+	for entry in data:
+		if (type(entry) != types.DictType):
+			raise "Bad entry " + str(count) + " in configuration file", entry
+		for key in entry.keys():
+			if not key in allowed_keys:
+				raise "Entry " + str(count) + " contains bad key", key
+		if not entry.has_key("name"):
+			raise "Entry " + str(count) + " has no 'name' key"
+		# OK, looks like good data
+		directory = None
+		tarfile = None
+		copy_ilu_tree = None
+		enables = None
+		config_switches = None
+		environment = None
+		patchfile = None
+		name = entry["name"]
+		if entry.has_key("tarfile"):
+			tarfile = entry["tarfile"]
+			if entry.has_key("patchfile"):
+				patchfile = entry["patchfile"]
+		elif entry.has_key("copy-ilu-tree"):
+			copy_ilu_tree = entry["copy-ilu-tree"]
+			if entry.has_key("patchfile"):
+				raise "'patchfile' may not be specified in conjunction with copy-ilu-tree"
+		if entry.has_key("enables"):
+			enables = entry["enables"]
+		if entry.has_key("directory"):
+			directory = entry["directory"]
+		if entry.has_key("config-switches"):
+			config_switches = entry["config-switches"]
+		if entry.has_key("environment"):
+			environment = entry["environment"]
+		configs.append(TestingConfiguration(name,
+						    copy_ilu_tree=copy_ilu_tree,
+						    tarfile=tarfile,
+						    enables=enables,
+						    config_switches=config_switches,
+						    directory=directory,
+						    patchfile=patchfile,
+						    environment=environment))
+		count = count + 1
+	return configs
+
+def usage(pname):
+	sys.stderr.write("Usage:  %s [-dir DIRECTORY] [-temproot DIRECTORY] [-tarfile TARFILE] [-patchfile PATCHFILE] [-copy-ilu-tree VERSION] [-configsfile FILENAME] [-config TEST-NAME] [-doall] [-noremove] [-verbose]\n" % pname)
+	sys.exit(1)
+
+def main(argv):
+
+	directory = None
+	tarfile = None
+	copy_ilu_tree = None
+	testfile = None
+	temproot = None
+	patchfile = None
+	verbose = 0
+	doall = 0
+	noremove = 0
+	configs = []
+	tests = []
+
+	i = 1;
+	while (i < len(argv)):
+		if (argv[i] == '-dir'):
+			if (i + 1 < len(argv)):
+				i = i + 1
+			else:
+				usage(argv[0])
+			directory = argv[i]
+			i = i + 1
+		elif (argv[i] == '-verbose'):
+			i = i + 1
+			verbose = 1
+		elif (argv[i] == '-doall'):
+			i = i + 1
+			doall = 1
+		elif (argv[i] == '-noremove'):
+			i = i + 1
+			noremove = 1
+		elif (argv[i] == '-tarfile'):
+			if (i + 1 < len(argv)):
+				i = i + 1
+			else:
+				usage(argv[0])
+			tarfile = argv[i]
+			i = i + 1
+		elif (argv[i] == '-copy-ilu-tree'):
+			if (i + 1 < len(argv)):
+				i = i + 1
+			else:
+				usage(argv[0])
+			copy_ilu_tree = argv[i]
+			i = i + 1
+		elif (argv[i] == '-configsfile'):
+			if (i + 1 < len(argv)):
+				i = i + 1
+			else:
+				usage(argv[0])
+			testfile = argv[i]
+			i = i + 1
+		elif (argv[i] == '-patchfile'):
+			if (i + 1 < len(argv)):
+				i = i + 1
+			else:
+				usage(argv[0])
+			patchfile = argv[i]
+			i = i + 1
+		elif (argv[i] == '-temproot'):
+			if (i + 1 < len(argv)):
+				i = i + 1
+			else:
+				usage(argv[0])
+			temproot = argv[i]
+			i = i + 1
+		elif (argv[i] == '-config'):
+			if (i + 1 < len(argv)):
+				i = i + 1
+			else:
+				usage(argv[0])
+			tests.append(argv[i])
+			i = i + 1
+		else:
+			usage(argv[0])
+
+	if tarfile and copy_ilu_tree:
+		raise "Both tarfile and copy-ilu-tree arguments specified; only one or the other is allowed"
+
+	if patchfile and copy_ilu_tree:
+		raise "Patchfile argument may not be used with copy-ilu-tree argument"
+
+	if testfile:
+		if verbose:
+			sys.stdout.write("Reading configuration file " + testfile + "\n")
+		configs = read_config_file (testfile)
+	else:
+		configs = [TestingConfiguration("standard (no parameters)", environment=os.environ, directory=directory, tarfile=tarfile, copy_ilu_tree=copy_ilu_tree, patchfile=patchfile)]
+
+	error_cases = 0
+	for config in configs:
+		if tests and not config.name in tests:
+			continue
+		try:
+			if directory:
+				config.directory = directory
+				config.directory_temp = 0
+			elif config.directory:
+				pass
+			elif config.temproot or temproot:
+				tr = config.temproot or temproot
+				config.directory = mktempdir(tr)
+				if not config.directory:
+					raise "Can't create temporary directory under " + tr
+				config.directory_temp = 1
+			elif os.path.isdir("/project/ilutest"):
+				config.directory = mktempdir("/project/ilutest");
+				if not config.directory:
+					raise "Can't create temporary directory under /project/ilutest"
+				config.directory_temp = 1
+			else:
+				config.directory = mktempdir("/")
+				if not config.directory:
+					raise "Can't create temporary directory"
+				config.directory_temp = 1
+			if tarfile:
+				config.set_tarfile(tarfile, patchfile)
+			if copy_ilu_tree:
+				config.set_copy_ilu_tree(copy_ilu_tree)
+			build_and_test(config, verbose, noremove)
+		except ConfigErr, lf:
+			display_err (config.name, ConfigErr, lf, sys.exc_traceback, not doall)
+			error_cases = error_cases + 1
+		except UnpackErr, lf:
+			display_err (config.name, UnpackErr, lf, sys.exc_traceback, not doall)
+			error_cases = error_cases + 1
+		except MakeErr, lf:
+			display_err (config.name, MakeErr, lf, sys.exc_traceback, not doall)
+			error_cases = error_cases + 1
+		except MakeMakefilesErr, lf:
+			display_err (config.name, MakeMakefilesErr, lf, sys.exc_traceback, not doall)
+			error_cases = error_cases + 1
+		except TestErr, lf:
+			display_err (config.name, TestErr, lf, sys.exc_traceback, not doall)
+			error_cases = error_cases + 1
+		except:
+			traceback.print_exc()
+			error_cases = error_cases + 1
+	if error_cases > 0:
+		sys.exit(1)
+	else:
+		sys.exit(0)
+
+if __name__ == "__main__":
+	main(sys.argv)

@@ -1,0 +1,68 @@
+/** 
+ BeginILUCopyright
+
+ Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+ Unlimited use, reproduction, modification, and distribution of this
+ software and modified versions thereof is permitted.  Permission is
+ granted to make derivative works from this software or a modified
+ version thereof.  Any copy of this software, a modified version
+ thereof, or a derivative work must include both the above copyright
+ notice of Xerox Corporation and this paragraph.  Any distribution of
+ this software, a modified version thereof, or a derivative work must
+ comply with all applicable United States export control laws.  This
+ software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+ WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+ LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+ EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+ NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+ OF THE POSSIBILITY OF SUCH DAMAGES.
+  
+ EndILUCopyright
+*/
+
+/* 
+  $Id: Imakefile,v 1.12 1999/08/03 01:50:32 janssen Exp $
+ */
+ 
+pythonversion.h: ../../imake/ilu.defs.new
+	$(RM) pythonversion.h
+	echo "#define ILUPYTHON_MAJOR_VERSION " PYTHON_MAJOR_VERSION >pythonversion.h
+	echo "#define ILUPYTHON_MINOR_VERSION " PYTHON_MINOR_VERSION >>pythonversion.h
+
+CleanTarget(pythonversion.h)
+
+LOCALINCLUDES = -I../parser
+ILUCINCLUDES =
+
+HEADERFILES = manifest.h name.h util.h genstub.h genskel.h prttree.h ../parser/iluptype.h ../parser/iluconf.h
+
+OBJS = \
+	isl2python.o \
+	genskel.o \
+	genstub.o \
+	io.o \
+	manifest.o \
+	name.o \
+	prttree.o \
+	util.o \
+	package.o
+
+NormalObjectRule()
+
+isl2python.o : isl2python.c $(HEADERFILES) package.h
+genskel.o : genskel.c $(HEADERFILES)
+genstub.o : genstub.c $(HEADERFILES) pythonversion.h
+io.o : io.c $(HEADERFILES)
+manifest.o : manifest.c $(HEADERFILES)
+name.o : name.c $(HEADERFILES)
+prttree.o : prttree.c $(HEADERFILES)
+util.o : util.c $(HEADERFILES)
+package.o : package.c package.h $(HEADERFILES)
+
+ProgramTarget(python-stubber, $(OBJS), $(ILU_STUBBER_LIBRARIES),)
+
+InstallProgram(python-stubber, $(DESTDIR)/bin)
+InstallRO(python-stubber.1, $(DESTDIR)/man/man1)

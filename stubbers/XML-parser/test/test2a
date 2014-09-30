@@ -1,0 +1,10 @@
+
+
+
+<entity1 id = "e1"> This is an entity <entity2>
+ And another one </entity2>
+ <?pitarget do this now?>
+ <!-- and parse this comment -->
+ Followed by some cdata
+ </entity1>
+

@@ -1,0 +1,147 @@
+
+3652
+630
+1600
+114
+930
+289
+1108
+2397
+2662
+1489
+1258
+3776
+3440
+1766
+3153
+2311
+371
+1021
+1734
+3858
+3567
+2747
+1331
+2323
+289
+2153
+2466
+680
+3373
+1998
+2570
+1123
+514
+544
+1901
+parse_completed
+
+Element:  type = unit
+   attribute name = id             value = e1
+   Data: This is unit chardata
+    
+   Element:  type = unit2
+      attribute name = cdata          value = e3
+      attribute name = id             value = What
+   Element:  type = unit2
+      attribute name = cdata          value = e3
+      attribute name = id             value = is
+   Element:  type = unit2
+      attribute name = cdata          value = e3
+      attribute name = id             value = the
+   Element:  type = unit2
+      attribute name = cdata          value = e3
+      attribute name = id             value = relation
+   Element:  type = unit2
+      attribute name = cdata          value = e3
+      attribute name = id             value = between
+   Element:  type = unit2
+      attribute name = cdata          value = e3
+      attribute name = id             value = distance
+   Element:  type = unit2
+      attribute name = cdata          value = e3
+      attribute name = id             value = and
+   Element:  type = unit2
+      attribute name = cdata          value = e3
+      attribute name = id             value = knowledge
+   Element:  type = unit2
+      attribute name = cdata          value = e3
+      attribute name = id             value = in
+   Element:  type = unit2
+      attribute name = cdata          value = e3
+      attribute name = id             value = context
+   Element:  type = unit2
+      attribute name = cdata          value = e3
+      attribute name = id             value = of
+   Element:  type = unit2
+      attribute name = cdata          value = e3
+      attribute name = id             value = technology
+   Element:  type = unit2
+      attribute name = cdata          value = e3
+      attribute name = id             value = As
+   Element:  type = unit2
+      attribute name = cdata          value = e3
+      attribute name = id             value = exemplified
+   Element:  type = unit2
+      attribute name = cdata          value = e3
+      attribute name = id             value = by
+   Element:  type = unit2
+      attribute name = cdata          value = e3
+      attribute name = id             value = telephone
+   Element:  type = unit2
+      attribute name = cdata          value = e3
+      attribute name = id             value = telescope
+   Element:  type = unit2
+      attribute name = cdata          value = e3
+      attribute name = id             value = television
+   Element:  type = unit2
+      attribute name = cdata          value = e3
+      attribute name = id             value = has
+   Element:  type = unit2
+      attribute name = cdata          value = e3
+      attribute name = id             value = often
+   Element:  type = unit2
+      attribute name = cdata          value = e3
+      attribute name = id             value = been
+   Element:  type = unit2
+      attribute name = cdata          value = e3
+      attribute name = id             value = used
+   Element:  type = unit2
+      attribute name = cdata          value = e3
+      attribute name = id             value = to
+   Element:  type = unit2
+      attribute name = cdata          value = e3
+      attribute name = id             value = bridge
+   Element:  type = unit2
+      attribute name = cdata          value = e3
+      attribute name = id             value = distances
+   Element:  type = unit2
+      attribute name = cdata          value = e3
+      attribute name = id             value = Recent
+   Element:  type = unit2
+      attribute name = cdata          value = e3
+      attribute name = id             value = examples
+   Element:  type = unit2
+      attribute name = cdata          value = e3
+      attribute name = id             value = include
+   Element:  type = unit2
+      attribute name = cdata          value = e3
+      attribute name = id             value = Mars
+   Element:  type = unit2
+      attribute name = cdata          value = e3
+      attribute name = id             value = Sojourner
+   Element:  type = unit2
+      attribute name = cdata          value = e3
+      attribute name = id             value = atomic
+   Element:  type = unit2
+      attribute name = cdata          value = e3
+      attribute name = id             value = force
+   Element:  type = unit2
+      attribute name = cdata          value = e3
+      attribute name = id             value = microscope
+   Element:  type = unit2
+      attribute name = cdata          value = e3
+      attribute name = id             value = lapariscopic
+   Element:  type = unit2
+      attribute name = cdata          value = e3
+      attribute name = id             value = surgery

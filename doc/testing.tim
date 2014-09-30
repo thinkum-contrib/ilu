@@ -1,0 +1,285 @@
+@setfilename testing.info
+@settitle Testing Framework for ILU
+@ifset ilucopyright
+BeginILUCopyright
+
+Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+Unlimited use, reproduction, modification, and distribution of this
+software and modified versions thereof is permitted.  Permission is
+granted to make derivative works from this software or a modified
+version thereof.  Any copy of this software, a modified version
+thereof, or a derivative work must include both the above copyright
+notice of Xerox Corporation and this paragraph.  Any distribution of
+this software, a modified version thereof, or a derivative work must
+comply with all applicable United States export control laws.  This
+software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+OF THE POSSIBILITY OF SUCH DAMAGES.
+  
+EndILUCopyright
+@end ifset
+@ifclear largerdoc
+@titlepage
+@title Testing Framework for ILU
+@author Bill Janssen @code{<janssen@@parc.xerox.com>}
+@sp
+@today{}
+@sp
+Copyright @copyright{} 1999 Xerox Corporation@*
+All Rights Reserved.
+@end titlepage
+@c Experiment with smaller amounts of whitespace between chapters
+@c and sections.
+@tex
+\global\chapheadingskip = 15pt plus 4pt minus 2pt 
+\global\secheadingskip = 12pt plus 3pt minus 2pt
+\global\subsecheadingskip = 9pt plus 2pt minus 2pt
+@end tex
+
+@c Experiment with smaller amounts of whitespace between paragraphs in
+@c the 8.5 by 11 inch format.
+@ifclear smallbook
+@tex
+\global\parskip 6pt plus 1pt
+@end tex
+@end ifclear
+
+
+This document describes a framework for testing ILU in various configurations, written in @language{Python}.
+
+@section Introduction
+
+There are two components to this testing framework.  The first is the individual test script,
+written in Python.  Each script can make use of a set of Python classes which encapsulate standard
+testing behavior, and have access to the configuration information for ILU.  The classes provided
+encapsulate things like a @Python{ClientServerTest}, which runs a server, then runs a client against
+the server, and looks for an error-free completion of the client.  The testing framework takes care
+of things like establishing a temporary binding directory, or running a temporary simple binding server.
+
+The second major element is the automated framework that builds ILU and runs all the test
+scripts.  This component reads descriptions of ILU configurations from a configuration description
+file, then builds and installs an ILU tree, either from an ILU tar file, or from an RCS tree,
+then runs the test scripts in the various @file{example} subdirectories of the installed ILU, once
+for every configuration tested.
+
+@section Test Scripts
+
+Typically, there are zero or one test scripts in each subdirectory of @file{@metavar{ILUSRC}/examples/}.
+However, there may be more than one in a directory.  These scripts are installed into the @file{@metavar{ILUHOME}}
+tree during the @code{make Install} step, and are used for testing the installed examples.
+
+Each script is written in Python, and will be invoked as script input to the Python interpreter.
+Typically, a script creates one or more instances of a @dfn{test object}, an object which at its most
+typical binds together the running of a client and server.  After creating a number of instances,
+the script will @dfn{run} each test object, which causes the test to be run.  If all of the test
+objects run successfully, the script exits with a status of 0; if any of the tests exits unsuccessfully,
+it should exit with a non-zero status.
+
+@subsection Python Classes and Data Structures Provided
+
+The test scripts may make use of a number of data structures and classes defined in the @language{Python} module @Python{@module{ILUTesting}}.  The simplest way to access them in a testing script is to @Python{import ILUTesting} at the top of your script.
+
+A number of test classes are defined.  They are all subclasses of the abstract class @Python{ILUTestingMachinery.Test}.  Each test should be defined by creating an instance of one of these classes.  The test can then be run by calling the @method{run} method on the test instance (though this is usually left to the function @Python{@fn{run_tests}}).  The following kinds of tests can be defined:
+@itemize @bullet
+@item @b{@Python{SimpleClientServerTest (@metavar{testname}, @metavar{client command}, @metavar{server command})}} -- this object encapsulates the normal client server test.  The server is started by executing the @metavar{server command} in a subprocess; a pause then ensues, for the server to start up; the client is then run.  If the client exits with a zero status, the test is successful.  If it exits with a non-zero status, the test is unsuccessful, and the log files of both the server and client are written to standard output.  This object has two instance variables, @Python{server_startup_delay}, which defaults to @Python{5} (seconds), and @Python{server_shutdown_delay}, which defaults to @Python{0} seconds.  The first is tthe time after starting a server that the code will wait before attempting to run the client.  The second is the time that the system will wait after killing a server, before doing anything else.  Both values may be changed after the instantiation of the object if a longer delay is required for a specific test.
+@item @b{@Python{ClientSBHServerTest (@metavar{testname}, @metavar{client command}, @metavar{server command})}} -- this class embodies a client-server test where the server explicitly outputs a string binding handle to standard output, and the client then uses this SBH to bind to the server.  The @metavar{client command} may use the string @code{"$SBH$"} in its arguments, and that string will be replaced by the generated SBH before the client command is executed.  This object type also supports the @Python{server_startup_delay} and @Python{server_shutdown_delay} instance variables, as described for @Python{SimpleClientServerTest}.
+@item @b{@Python{SimpleSingleProgramTest (@metavar{testname}, @metavar{command} [, @metavar{environment}])}} -- this object type encapsulates a single program, which should run and exit with a zero status.  The command used to start the program is given with @metavar{command}; optionally, an environment may be specified which can be used to augment or override the default setting of various environment variables when the program is executed.
+@item @b{@Python{MultiClientMultiServerTest (@metavar{testname}, @metavar{client commands}, @metavar{server commands})}} -- this object captures a test where several servers, or several clients, may have to be run.  It will start all of the servers, then run each of the clients sequentially.  If all clients complete successfully, the test terminates successfully.  If any client terminates unsuccessfully (exits with a non-zero status), the test itself terminates unsuccessfully.  This test also supports the @Python{server_startup_delay} and @Python{server_shutdown_delay} instance variables, but they apply to each of the servers of the test.
+@end itemize
+
+Several dictionaries of configuration information are also available to the test script:
+@itemize @bullet
+@item @b{@Python{iluconf_dict}} contains the contents of the file @file{@metavar{ILUHOME}/imake/iluconf.h}, which is mainly configuration options and settings for the @language{C} compilations.  Each macro defined in that file with a @C{#define} construct is mapped to a key-value pair, with the macro name being the key, and the macro expansion being the value.  This can be tested for various optional attributes; for example, you can check to see if a particular protocol has been configured into @system{ILU}.
+@item @b{@Python{iludefs_dict}} contains the contents of the file @file{@metavar{ILUHOME}/imake/ilu.defs.new}, mapped as for @Python{ILUTesting.iluconf_dict}, with only those constructs defined as @language{C} macros, with @C{#define} statements, being mapped to key-value pairs.  Note that any constructs defined in @file{ilu.defs.new} with the form @code{KEY = VALUE} will @emph{not} appear in @Python{iludefs_dict}.  This can be used to test for configuration attributes which do not appear in the @file{iluconfs.h} file.
+@item @b{@Python{makefile_dict}} contains @emph{either} the values defined in the @file{Makefile} in the current directory with the construct @code{KEY = VALUE}, @emph{or} the values defined in in @file{@metavar{ILUHOME}/imake/ilu.defs.new}, if no @file{Makefile} exists in the current directory.  Note that the contents of the Makefile have already been passed through the @language{C} pre-processor, so the values here are the actual values used in the build phase of @system{ILU}.  This can be used to check for various values, such as the location of a particular library.
+@end itemize
+
+A number of strings, which abstract commands for running a particular scripting language interpreter, are exported:
+@itemize @bullet
+@item @b{java_command} -- an invocation of the @language{Java} interpreter;
+@item @b{python_command} -- an invocation of the @language{Python} interpreter;
+@item @b{lisp_command} -- an invocation of the @language{Common Lisp} interpreter;
+@item @b{guile_command} -- an invocation of the @language{Guile} interpreter
+@end itemize
+
+The boolean value @Python{ilu_threaded} will be TRUE if @system{ILU} has been built with support for threads.
+
+Finally, the function @Python{@fn{run_tests}}, which takes a list of test objects as an argument, will run through the tests one at a time, printing the name and completion status of the test to standard output.  If a test terminates unsuccessfully, the logs of the client and server will be copied to the standard output.
+
+@subsection Writing a Test Script
+
+Most of the testing scripts simply create a list of test objects (instances of @Python{@class{ILUTesting.SimpleClientServerTest}} or @Python{@class{ILUTesting.SimpleSingleProgramTest}} or @Python{@class{ILUTesting.ClientSBHServerTest}} or @Python{@class{ILUTesting.MultiClientMultiServerTest}}), then call the @language{Python} routine @Python{@fn{ILUTesting.run_tests}}, which takes a list of test objects, and runs them, one after another.  When a test terminates unsuccessfully, the logs of the client and server are written to standard output.  Here's an example:
+
+@codeexample
+# we import a number of symbols from ILUTesting, including
+# "run_tests", "iluconf_dict", "python_command",
+# and "SimpleClientServerTest"
+from ILUTesting import *
+
+tests = []
+
+if iluconf_dict.has_key("ILU_CORBA_PYTHON_MAPPING"):
+	tests.append(SimpleClientServerTest ("excn: Python (with CORBA mapping)",
+				             (python_command, "clientCORBA.py",),
+				             (python_command, "serverCORBA.py"))
+	tests.append(SimpleClientServerTest ("excn: Python (with CORBA mapping, threaded)",
+				             (python_command, "clientCORBA.py", "-mt",),
+				             (python_command, "serverCORBA.py", "-mt"))
+else:
+	# the ILU mapping has no provision for raising system exceptions, so
+	#  pass the -nosys flag to the client to tell it not to test them
+	tests.append(SimpleClientServerTest ("excn: Python (with ILU mapping) (no system exceptions)",
+				             (python_command, "client.py", "-nosys",),
+				             (python_command, "server.py"))
+
+if __name__ == "__main__":
+	run_tests(tests)
+@end codeexample
+
+The scripts may however execute arbitrarily complex @language{Python} code, if necessary.  An example of a more complicated testing script can be found in @file{@metavar{ILUSRC}/examples/test1/Test.py}; this defines and uses a @language{Python} function and relies heavily on configuration tests.
+
+@subsection Imake Considerations
+
+The imake macro @macro{PythonTestScript} is provided to define testing scripts.  It takes two arguments.  The first is the name of the file containing the test script.  The second is a list of dependencies; files that must exist or be brought up to date before the test script can be run.  The expansion of @macro{PythonTestScript} will define the test script as a target for @code{"make ptest"}, which will cause the dependent files to be built, then run the @language{Python} interpreter on the test script.  So, suppose the testing script @file{Test.py} ran various combinations of the two programs @program{server} and @program{client}.  You would add a line to the @file{Imakefile} (or, in an @file{examples} subdirectory, the @file{runImakefile}), like this:
+@codeexample
+PythonTestScript(Test.py, client server)
+@end codeexample
+@noindent
+which says that (1) the programs @program{client} and @program{server} must exist before running @file{Test.py}, and (2) that "make ptest" in this directory should run @file{Test.py}.
+
+@section The Automated Testing Framework
+
+There are two major elements to this framework, the configurations file and the program @program{run-ilu-tests}.
+@program{run-ilu-tests} reads the configurations file, and then builds ILU and tests it with one or more configurations.
+
+@subsection Configurations Files
+
+A configurations file has the general syntax of a sequence of Python dictionary literals.  That is, it consists
+of a left parenthesis, followed by zero or more comma-separated dictionary literals specifying testing configurations:
+@codeexample
+( @metavar{test-config-1}, @metavar{test-config-2}, ... )
+@end codeexample
+@noindent
+Each dictionary literal begins with a left brace, ends with a right brace, and contains a number of key-value pairs, separated by commas.  A colon character separates each key from its associated value.  Each key must be a quoted string.  Each value
+is either a quoted string, a sequence of quoted strings, or another dictionary literal.  The following keys
+must be defined:
+@itemize @bullet
+@item @b{@code{"name"}} -- the name of the testing configuration, as a quoted string
+@end itemize
+@noindent
+The following keys may also be defined:
+@itemize @bullet
+@item @b{@code{"copy-ilu-tree"}} -- specifies that the sources should be checked out of the PARC ILU source RCS tree using
+the program @program{/project/rpc/tools/copy-ilu-tree}.  The associated value for this key should be a quoted string giving
+the version argument for the @program{copy-ilu-tree} program, such as @code{"2.0alpha15"}.
+@item @b{@code{"enables"}} -- in the PARC environment, @file{/import} or @file{/project} packages to enable
+before configuring the sources.  The value for this key should be a comma-separated, parenthesis-enclosed, list of quoted strings.
+@item @b{@code{"config-switches"}} -- switches to pass to the @program{@metavar{ILUSRC}/imake/configure} program when
+configuring the sources.  The value for this key should be a comma-separated, parenthesis-enclosed, list of quoted strings.
+@item @b{@code{"environment"}} -- a python dictionary of key-value pairs, used to augment and override the default set of environment variable settings when the configuration of the sources is done.  Each key and value should be a quoted string.
+@item @b{@code{"tarfile"}} -- file to unpack the ILU sources from.  This key cannot be used when the @b{@code{copy-ilu-tree}} key is used.  The value is a quoted string giving the file name.
+@item @b{@code{"patchfile"}} -- used in conjunction with @code{tarfile}, this key indicates a patch file to be applied to the sources after unpacking them.  The value is a quoted string giving the file name.
+@item @b{@code{"directory"}} -- specifies directory to build the ILU build in.  The value is a quoted string giving the name of the directory file.
+@end itemize
+Here's an example of a configuration:
+@codeexample
+@{"name" : "basic-solaris-2",
+  "copy-ilu-tree" : "2.0alpha15",
+  "enables" : ("sunpro-4.2",
+	       "python-1.5",
+	       "franz-4.3",
+	       "java/jdk-1.2",
+	       "texinfo-3.11",
+	       "bison-1.25",
+	       "flex-2.5.3",
+	       "ghostscript-5.03",
+	       "tex",
+	       "pbmplus",
+	       "guile-1.2"),
+  "config-switches" : ("--with-x=/usr/openwin/include",
+		       "--enable-http-protocol",
+		       "--enable-w3mux-transport",
+		       "--enable-cplusplus-support",
+		       "--with-cplusplus-libs=/project/sunpro-4.2/SUNWspro/lib/libC.so",
+		       "--enable-w3ng-protocol",
+		       "--enable-w3mux-transport",
+		       "--enable-fixed-point-support",
+		       "--enable-version-2-type-uids",
+		       "--enable-new-keywords-plain",
+		       "--enable-w3ng-relative-ih-passing"),
+  "environment" : @{
+	  "CC" : "/project/sunpro-4.2/SUNWspro/bin/cc -xs -Xt -v",
+	  "PATH" : "/project/rpc/tools:/usr/ccs/bin:/usr/openwin/bin:/usr/bin:/bin" @},
+  @}
+@end codeexample
+
+@subsection The @program{run-ilu-tests} Script
+
+The program @program{run-ilu-tests} is used to invoke the automated test programs.  This program
+uses the testing script classes discussed in the previous section, and is installed in the @file{@metavar{ILUHOME}/bin}
+directory as part of the normal @system{ILU} installation process.  This creates a bit of a bootstrapping
+situation; you must have successfully built and installed @system{ILU}, with @language{Python} support,
+in order to have access to @program{run-ilu-tests}.
+
+Basically, @program{run-ilu-tests} reads a configuration file, then builds and tests ILU one or more
+times, depending on the command-line options specified.  The syntax for the invocation of @program{run-ilu-tests} is
+@example
+% run-ilu-tests @metavar{[command-line switches]}
+@end example
+@noindent
+Output from the tests, if any, will be sent to standard output.
+
+The following command-line switches are available:
+@itemize @bullet
+@item @b{-dir @metavar{DIRECTORY}} -- Build ILU in @file{@metavar{DIRECTORY}/src}, and install in @file{@metavar{DIRECTORY}}.  If no directory is specified, the directory specified in the configuration will be used.  If no directory is specified in the configuration, a temporary directory will be used.
+@item @b{-verbose} -- Send messages to standard output on what's happening periodically.
+@item @b{-tarfile @metavar{TARFILE}} -- Use the specified @metavar{TARFILE} as the source for ILU.  Automatically @program{ungzip} the file if the extension is @file{.tar.gz} instead of just @file{.tar}.  Overrides any configuration specification.
+@item @b{-patchfile @metavar{FILE}} -- Apply the specified @metavar{FILE} as a patch to the sources after unpacking them.  Can only be used in conjunction with @b{-tarfile}.  Overrides any configuration specification.
+@item @b{-copy-ilu-tree @metavar{VERSION-STAMP}} -- Unpack the sources using @program{/project/rpc/tools/copy-ilu-tree}, using @metavar{VERSION-STAMP} as the stamp for the command.  Only available at PARC.
+@item @b{-configsfile @metavar{FILE}} -- Read this file as the configuration file.
+@item @b{-temproot @metavar{DIRECTORY}} -- If no directory is specified, and a temporary directory is being used, create it under this @metavar{DIRECTORY}.
+@item @b{-config @metavar{CONFIG-NAME}} -- Test the configuration indicated by @metavar{CONFIG-NAME}, which specified one of the configurations defined in the configuration file specified by @b{-testfile}.  A number of configurations to test may be specified on the same command line; they will be tested in the order in which they are specified on the command line.  Each test will be against a fresh build and install of ILU.
+@item @b{-doall} -- Test all of the configurations, even if one of them produces an error.  The default is to halt at the first error; specifying this switch will cause the erroring configuration to be passed over and for the other configurations to be tested.  @program{run-ilu-tests} will exit with a non-zero error status if any of the configurations revealed an error.
+@item @b{-noremove} -- Leave the built and tested configuration or configurations in place.  Normally they are removed if the tests are all successful.
+@end itemize
+
+Here's an example of running @program{run-ilu-tests} successfully:
+@transcript
+% @userinput{run-ilu-tests -configsfile /project/rpc/miscdoc/ILU/ilu-testing-configs
+    -temproot /usr/tmp -config basic-solaris-2 -verbose}
+Reading configuration file /project/rpc/miscdoc/ILU/ilu-testing-configs
++++ Configuration 'basic-solaris-2'
+Starting at Mon Jun  7 15:27:30 1999
+Unpacking sources into /usr/tmp/usr/tmp/@@774.1...
+Using 'copy-ilu-tree -noconfirm 2.0alpha15' to unpack...
+Enabling sunpro-4.2 python-1.5 franz-4.3 java/jdk-1.2 texinfo-3.11
+ bison-1.25 flex-2.5.3 ghostscript-5.03 tex pbmplus guile-1.2...
+Configuring with
+  --with-x=/usr/openwin/include
+  --enable-http-protocol
+  --enable-w3mux-transport
+  --enable-cplusplus-support
+  --with-cplusplus-libs=/project/sunpro-4.2/SUNWspro/lib/libC.so
+  --enable-w3ng-protocol
+  --enable-w3mux-transport
+  --enable-fixed-point-support
+  --enable-version-2-type-uids
+  --enable-new-keywords-plain
+  --enable-w3ng-relative-ih-passing...
+deleting config script file /usr/tmp/@@774.3...
+Doing make Install...
+Doing make Ptest in examples subdirectory...
+Done at Mon Jun  7 16:07:06 1999.
+%
+@end transcript
+
+Each of the different steps here is done in a subprocess, with output,
+both regular and error, going to a log file.  If the step completes
+successfully, the log file is deleted.  If it completes abnormally, the
+log file is sent to standard output of the main process.

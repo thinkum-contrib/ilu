@@ -1,0 +1,936 @@
+/*
+BeginILUCopyright
+
+Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+Unlimited use, reproduction, modification, and distribution of this
+software and modified versions thereof is permitted.  Permission is
+granted to make derivative works from this software or a modified
+version thereof.  Any copy of this software, a modified version
+thereof, or a derivative work must include both the above copyright
+notice of Xerox Corporation and this paragraph.  Any distribution of
+this software, a modified version thereof, or a derivative work must
+comply with all applicable United States export control laws.  This
+software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+OF THE POSSIBILITY OF SUCH DAMAGES.
+  
+EndILUCopyright
+
+$Id: ilu.rules,v 1.104 1999/08/18 03:51:40 janssen Exp $
+*/
+/* Chris Jacobi, January 5, 1999 3:56 pm PST */
+
+/* Modified from ANDREW/config/andrew.rls, which is: */
+
+/* ********************************************************************** *\
+ *         Copyright IBM Corporation 1988,1991 - All Rights Reserved      *
+ *        For full copyright information see:'andrew/config/COPYRITE'     *
+\* ********************************************************************** */
+
+/* ***************************************************************** *\
+ * Preprocessor Dependent Rules 
+ * ================
+ *	Variables:
+ *		AIX
+ *	 	LIBDL_ENV
+ *		LINKINSTALL_ENV
+ *		mips
+ *		SCOunix
+ *		GNU_ENV
+ *		_IBMR2
+ *		hp9000s800
+ *		hpux
+\* ***************************************************************** */
+
+#define CC_RULE		$(ANSI_C_COMPILER) -c $(CFLAGS) $(ILUCINCLUDES) $*.c
+
+#define CPLUSPLUS_RULE	$(CPLUSPLUS_COMMAND) -c $(CFLAGS) $(CPLUSPLUSFLAGS) $(ILUCPLUSPLUSINCLUDES)
+
+#define FORTRAN_RULE	$(FORTRAN_COMMAND) -c $(F77FLAGS) $*.f
+
+/* ***************************************************************** *\
+ * Standard Compilation Rules
+\* ***************************************************************** */
+
+/***************************************************
+ * 	Export:
+ *		AppendFiles()
+ *		CleanTarget()
+ *		CppAndFilter()
+ *		DependTarget()
+ *		LexWithReplacement()
+ *		LibraryTarget()
+ *		LispTarget()	
+ *		MkdirTarget()
+ *		NCLex()
+ *		NCYaccWithHeader()
+ *		NormalAsmPPRule()
+ *		NormalAsmRule()
+ *		NormalHelpRule()
+ *		NormalLexRule()
+ *		NormalObjectRule()
+ *		NormalScribeRule()
+ *		NormalYaccRule()
+ *		ProgramTarget()
+ *		TagsTarget()
+ *		TestProgramTarget()
+ *		TestingOnlyTestingRule()
+ *		YaccWithHeader()
+ *		YaccWithReplacement()
+ *================
+ *	Variables:
+ *		mips
+ *		SGI_4D_ENV
+ *		NeXT
+ *		hp9000s800
+ ***************************************************/
+
+/*
+ * gcc is often slightly mis-installed in a certain way that means
+ * "-lm" must be appended to some compilation commands --- and not
+ * others.  If this is the case for you, define the following make
+ * macro to be "-lm" (sans quotes).
+ */
+
+WORKAROUND_LOCAL_GCC_INSTALLATION_BUG =
+
+#define ILUPythonTarget(results, islfile)			@@\
+								@@\
+results: islfile $(PYTHON_STUBBER)				@@\
+	$(PYTHON_STUBBER) islfile		            	@@\
+								@@\
+clean::								@@\
+	-rm -f results
+
+#define ILUPythonTargetWithOptions(results, islfile, options)	@@\
+								@@\
+results: islfile $(PYTHON_STUBBER)				@@\
+	$(PYTHON_STUBBER) options islfile	            	@@\
+								@@\
+clean::								@@\
+	-rm -f results
+
+#define ILUSchemeTarget(results, islfile)			@@\
+.SUFFIXES: .scm .isl						@@\
+								@@\
+results: islfile $(SCHEME_STUBBER)				@@\
+	$(SCHEME_STUBBER) islfile		            	@@\
+								@@\
+clean::								@@\
+	-rm -f results
+
+#define ILUGuileTarget(results, islfile)			@@\
+ILUSchemeTarget(results, islfile)
+
+#define ILUCPlusPlusTarget(results, islfile)			@@\
+.SUFFIXES: .hh .hpp .cpp .cc .isl				@@\
+								@@\
+results: islfile $(CPLUSPLUS_STUBBER)				@@\
+	$(CPLUSPLUS_STUBBER) islfile		            	@@\
+								@@\
+clean::								@@\
+	-rm -f results
+
+#define ILUCTarget(results, islfile)				@@\
+.SUFFIXES: .c .h .isl						@@\
+								@@\
+results: islfile $(C_STUBBER)					@@\
+	$(C_STUBBER) islfile			            	@@\
+								@@\
+clean::								@@\
+	-rm -f results
+
+#define ILUCTargetWithOptions(results, islfile, options)	@@\
+.SUFFIXES: .c .h .isl						@@\
+								@@\
+results: islfile $(C_STUBBER)					@@\
+	$(C_STUBBER) options islfile		            	@@\
+								@@\
+clean::								@@\
+	-rm -f results
+
+#define ILUFortranTarget(results, islfile)			@@\
+.SUFFIXES: .f .fh .isl						@@\
+								@@\
+results: islfile $(FORTRAN_STUBBER)				@@\
+	$(FORTRAN_STUBBER) islfile		            	@@\
+								@@\
+clean::								@@\
+	-rm -f results
+
+#define IluM3Files(base) base.i3 base/**/_x.i3 base/**/_y.m3 base/**/_c.m3 base/**/_s.m3
+
+#define ILUM3Target(results, islfile)			@@\
+results: islfile $(M3_STUBBER)				@@\
+	$(M3_STUBBER) islfile		            	@@\
+								@@\
+clean::								@@\
+	-rm -f results
+
+#define ILULispTarget(results, islfile)				@@\
+results: islfile $(LISP_STUBBER)				@@\
+	$(LISP_STUBBER) islfile					@@\
+								@@\
+clean::								@@\
+	-rm -f results
+
+/* outdated */
+#define ILUJavaTarget(results, islfile)				@@\
+results: islfile $(JAVA_STUBBER)				@@\
+	$(JAVA_STUBBER) islfile					@@\
+								@@\
+clean::								@@\
+	-rm -f results
+
+
+/* for stubbing java applications */
+#define ILUJavaStubTarget(touchtarget,islfiles,extraswitches)		@@\
+										@@\
+all:: touchtarget								@@\
+										@@\
+touchtarget: islfiles $(JAVA_STUBBER)					@@\
+	$(JAVA_STUBBER) $(JAVA_STUB_SWITCHES) extraswitches islfiles	@@\
+	touch touchtarget							@@\
+										@@\
+clean::									@@\
+	-rm -f touchtarget
+
+
+/* for compiling java applications */
+
+#ifdef ILUJAVA_M_CORECLASSES_INCP
+ILUJAVA_LOCAL_COLON_CORECLASSES=:$(ILUJAVA_M_CORECLASSES)
+#else
+ILUJAVA_LOCAL_COLON_CORECLASSES=
+#endif
+
+#ifdef ILUJAVA_M_CORECLASSES_INBCP
+ILUJAVA_LOCAL_BOOTSWITCH=-bootclasses $(ILUHOME)/lib/ilu.jar:$(ILUJAVA_M_CORECLASSES)
+#else
+ILUJAVA_LOCAL_BOOTSWITCH=
+#endif
+
+
+/* The number 2 in the name of the rule is a version number */
+#define ILUJavaCompile2Target(touchtarget,sources2compile,sources2depend,extrapendencies,extraswitches) @@\
+										@@\
+all:: touchtarget 								@@\
+										@@\
+touchtarget: sources2depend extrapendencies				@@\
+	$(JAVAC) -d $(ILUJAVA_M_CLASSESDIR) $(ILUJAVA_LOCAL_BOOTSWITCH) -classpath "$(ILUJAVA_M_CLASSESDIR):$(ILUJAVA_M_ILUCLASSES)$(ILUJAVA_M_U_EXTRACLASSES)$(ILUJAVA_LOCAL_COLON_CORECLASSES)" $(ILUJAVA_M_JAVACOMPILESWITCHES) extraswitches sources2compile 	@@\
+	touch touchtarget							@@\
+										@@\
+clean::									@@\
+	-rm -f touchtarget							@@\
+	-rm -rf $(ILUJAVA_M_CLASSESDIR)*.class
+
+
+
+
+#define ILUIslTarget(results, idlfile)				@@\
+results: idlfile $(IDL2ISL)					@@\
+	$(IDL2ISL) idlfile > results				@@\
+								@@\
+clean::								@@\
+	-rm -f results
+
+#define InterfaceTarget(file)           			@@\
+InstallRO(file,$(ILUHOME)/interfaces/)
+
+#define ObjectTarget(obj)					@@\
+all:: obj
+
+#define DepObjectTarget(obj, deps)				@@\
+all:: obj							@@\
+obj : deps
+
+#define NormalObjectRule()					@@\
+.SUFFIXES: .o .H .f .cpp .cc					@@\
+								@@\
+all:: $(OBJS)							@@\
+.c.o:								@@\
+	$(RM) $@ 						@@\
+	CC_RULE							@@\
+								@@\
+.f.o:								@@\
+	$(RM) $@ 						@@\
+	FORTRAN_RULE						@@\
+								@@\
+.cc.o:								@@\
+	$(RM) $@						@@\
+	CPLUSPLUS_RULE $*.cc					@@\
+								@@\
+.cpp.o:								@@\
+	$(RM) $@						@@\
+	CPLUSPLUS_RULE $*.cpp					@@\
+								@@\
+.cpp.cc:							@@\
+	$(RM) $*.cc						@@\
+	$(LN) $*.cpp $*.cc
+
+#define PrebuiltTimDoc(name, difmacros, infomacros, texmacros, files)	@@\
+dist:: name.ps.dist name.info.dist				@@\
+								@@\
+name.ps.dist name.info.dist: files				@@\
+	$(RM) name.tim name.ps.dist name.info.dist name.dif name.dif.1		@@\
+	co name.tim						@@\
+	$(DIST_TIM) difmacros -d name.tim >name.dif.1			@@\
+	sed -e s/RELEASE_NUMBER/$(RELNUM)/g <name.dif.1 >name.dif	@@\
+	$(RM) name.dif.1					@@\
+	$(DIST_TIM) infomacros -D -i name.dif >name.info.dist		@@\
+	$(DIST_TIM) texmacros -D -p name.dif >name.ps.dist		@@\
+	$(RM) name.dif
+
+
+#define PrebuiltTimDocWithHTML(name, difmacros, infomacros, texmacros, htmlswitches, files)	@@\
+dist::	name.ps.dist name.info.dist				@@\
+                                                                @@\
+name.ps.dist name.info.dist : files				@@\
+	rm -f name.tim name.ps.dist name.info.dist name.dif name.dif.1		@@\
+	rm -f name*.html					@@\
+	co name.tim						@@\
+	$(DIST_TIM) difmacros -d name.tim >name.dif.1			@@\
+	sed -e s/RELEASE_NUMBER/$(RELNUM)/g <name.dif.1 >name.dif	@@\
+	$(RM) name.dif.1					@@\
+	$(DIST_TIM) infomacros -D -i name.dif >name.info.dist		@@\
+	$(DIST_TIM) texmacros -D -p name.dif >name.ps.dist		@@\
+	$(DIST_TIMDIF2HTML) -eps2jpeg $(DIST_EPS2JPEG) htmlswitches name.dif	@@\
+	chmod 444 name*.html					@@\
+	$(RM) name.dif
+
+
+#define NormalDocRule()						@@\
+.dif.ps:							@@\
+	tim -D -p -v $*.dif >$*.ps				@@\
+.dif.info:							@@\
+	tim -D -i -v $*.dif >$*.info				@@\
+.tim.dif:							@@\
+	tim -d -v $*.tim >$*.dif				@@\
+.tim.ps:							@@\
+	tim -p -v $*.tim >$*.dif				@@\
+.tim.text:							@@\
+	tim -t -v $*.tim >$*.dif				@@\
+.tim.info:							@@\
+	tim -i -v $*.tim >$*.dif				@@\
+								@@\
+all:: $(DOCS)							@@\
+								@@\
+clean::								@@\
+	$(RM) *.dvi *.fn *.fns *.ky *.kys *.log *.pg		@@\
+	$(RM) *.pgs *.toc *.tp *.tps *.vr *.vrs *.aux *.cp	@@\
+	$(RM) *.cps *.dif $(DOCS) .dif				@@\
+								@@\
+InstallDocs($(DOCS),$(DESTDIR)/doc)
+
+#define NormalHelpRule()					@@\
+install.alias:: doc do.alias					@@\
+	@sh -c 'if [ -f ,help.alias ]; then  \			@@\
+		$(ADDALIASES) ,help.alias \			@@\
+		$(ALIASDESTDIR)/help.aliases;\			@@\
+		fi; \						@@\
+	exit 0'							@@\
+								@@\
+do.alias::							@@\
+	@$(RM) ,help.alias
+
+#define	NormalYaccRule()					@@\
+all:: $(SHARED)							@@\
+.y.o: 								@@\
+	$(YACC) $*.y						@@\
+	$(RM) $*.c						@@\
+	$(MV) y.tab.c $*.c					@@\
+	CC_RULE						@@\
+	$(RM) $*.c
+
+
+#define	NormalAsmPPRule()					@@\
+.spp.o:								@@\
+	$(RM) $@ ,$*.s ,$*.c					@@\
+	$(CP) $*.spp ,$*.c					@@\
+	$(ASMPP_CC) $(CFLAGS)  ,$*.c > ,$*.s			@@\
+	$(AS) $(AS_FLAGS) -o $*.o ,$*.s				@@\
+	$(RM) ,$*.c ,$*.s
+
+
+#define	NormalLexRule()						@@\
+all:: $(SHARED)							@@\
+.l.o:								@@\
+	$(LEX) $*.l						@@\
+	$(RM) $*.c						@@\
+	$(MV) lex.yy.c $*.c					@@\
+	CC_RULE						@@\
+	$(RM) $*.c
+
+#define	NormalScribeRule()					@@\
+.mss.PS: ; $(SCRIBE) $*.mss
+
+
+/*
+ *==================================================
+ * Either not quite standard but related rules or
+ * standard rules which did not seem to be used
+ *==================================================
+ */
+
+#define	NormalAsmRule()						@@\
+.s.o:								@@\
+	$(RM) $@						@@\
+	$(AS) -o $*.o $*.s
+
+#define YaccWithHeader(file)					@@\
+all:: $(SHARED)							@@\
+file.c file.h: file.y						@@\
+	$(YACC) -d file.y					@@\
+	$(RM) file.c file.h					@@\
+	$(MV) y.tab.c file.c					@@\
+	$(MV) y.tab.h file.h					@@\
+								@@\
+file.o: file.c							@@\
+	$(RM) file.o						@@\
+	CC_RULE						@@\
+								@@\
+depend:: file.h file.c						@@\
+tidy::  ; $(RM) file.c						@@\
+clean::	; $(RM) file.h
+
+
+#define	YaccWithReplacement(file, string)			@@\
+all:: $(SHARED)							@@\
+file.c file.h: file.y						@@\
+	$(YACC) -d file.y					@@\
+	$(RM) file.c file.h y.tab._c				@@\
+	$(SED) -e '/yy/s//string/g' y.tab.c > y.tab._c		@@\
+	$(RM) y.tab.c						@@\
+	$(MV) y.tab._c file.c					@@\
+	$(MV) y.tab.h file.h					@@\
+								@@\
+file.o: file.c							@@\
+	$(RM) file.o						@@\
+	CC_RULE						@@\
+								@@\
+depend:: file.h file.c						@@\
+tidy::  ; $(RM) file.c						@@\
+clean::	; $(RM) file.h
+
+
+#define	LexWithReplacement(file, string)			@@\
+all:: $(SHARED)							@@\
+file.o: file.l							@@\
+	$(LEX) $*.l						@@\
+	$(RM) $*.c						@@\
+	$(SED) -e '/yy/s//string/g' lex.yy.c > lex.yy._c	@@\
+	$(RM) lex.yy.c						@@\
+	$(MV) lex.yy._c file.c					@@\
+	CC_RULE						@@\
+								@@\
+tidy:: ; $(RM) file.c
+
+#define NCYaccWithHeader(yfile)					@@\
+y.tab.c y.tab.h: yfile						@@\
+	$(RM) y.tab.c y.tab.h					@@\
+	$(YACC) -d yfile					@@\
+								@@\
+depend:: y.tab.h
+
+#define NCLex(lfile)						@@\
+lex.yy.c: lfile							@@\
+	$(RM) lex.yy.c						@@\
+	$(LEX) lfile
+
+#define CppAndFilter(file, lyfile, incfiles, filter)		@@\
+file: lyfile incfiles						@@\
+	$(RM) file						@@\
+	$(CPP) lyfile | filter > file
+
+#define AppendFiles(target, sources)				@@\
+target: sources							@@\
+	$(RM) target						@@\
+	cat sources > target
+
+#define TestingOnlyTestingRule(libs, syslibs)			@@\
+.SUFFIXES: .test						@@\
+.c.test:							@@\
+	$(RM) $@						@@\
+	$(CC) $(TESTING_CFLAGS) -o $*.test $*.c libs syslibs	@@\
+	$(RM) $*.o						@@\
+tidy:: ; $(RM) *.test
+
+/*
+ *==================================================
+ * Basic rules for compilation (and cleanup)
+ *==================================================
+ */
+
+#if (defined(AIX) || defined(hpux) || defined(_IBMR2))
+#define RANLIBHERE /* nothing */
+#define RANLIBRULE(dest) ); done)
+#else
+#define RANLIBHERE $(RANLIB) $@@
+#define RANLIBRULE(dest) $(RANLIB) dest/$$i); done)
+#endif
+
+#define	LibraryTarget(library, objs)				@@\
+all:: library							@@\
+library: objs							@@\
+	$(RM) $@						@@\
+	$(AR) $@ objs						@@\
+	$(RANLIB) $@
+
+/*
+ * This section added for Linux shared libs
+ */
+
+/*
+ * Concat - concatenates two strings.
+ */
+#ifndef Concat
+#if (__STDC__ && !defined(UnixCpp)) || defined(AnsiCpp)
+#define Concat(a,b)a##b
+#else
+#define Concat(a,b)a/**/b
+#endif
+#endif
+
+#define	M3LibraryTarget(library, parts, syslibs)		@@\
+all:: library							@@\
+library: parts							@@\
+	$(M3_COMPILER) $(M3FLAGS) -a library parts syslibs
+
+#define	TestProgramTarget(program, objs, libs, syslibs)		@@\
+test:: program							@@\
+ptest:: program							@@\
+program: objs libs						@@\
+	$(RM) $@						@@\
+	$(ANSI_C_COMPILER) $(CFLAGS) -o $@ objs libs $(CC_LINK) syslibs	$(ANSI_C_LIBRARY) $(SYSAUX_LIBRARIES) $(WORKAROUND_LOCAL_GCC_INSTALLATION_BUG) @@\
+clean:: 							@@\
+	$(RM) program
+
+
+#define	ProgramTarget(program, objs, libs, syslibs)		@@\
+all:: program							@@\
+program: objs libs						@@\
+	$(RM) $@						@@\
+	$(ANSI_C_COMPILER) $(CFLAGS) -o $@ objs libs syslibs $(CC_LINK)	$(ANSI_C_LIBRARY) $(SYSAUX_LIBRARIES) @@\
+clean:: ; $(RM) program
+
+
+#define	M3ProgramTarget(prog, parts, syslibs)			@@\
+all:: prog							@@\
+prog: parts							@@\
+	$(M3_COMPILER) $(M3FLAGS) -o prog parts syslibs			@@\
+clean:: ; $(RM) program 
+
+#define	ILUM3ProgramTarget(prog, parts, syslibs)		@@\
+all:: prog							@@\
+prog: parts $(ILUHOME)/lib/libilu-m3.a $(ILUHOME)/lib/libilu-m3.ax $(ILUHOME)/lib/libilu.a	@@\
+	$(M3_COMPILER) $(M3FLAGS) -o prog parts $(ILUHOME)/lib/libilu-m3.a $(ILUHOME)/lib/libilu-m3.ax $(ILUHOME)/lib/libilu.a syslibs
+
+
+#define	CPlusPlusProgramTarget(program, objs, libs, syslibs)	@@\
+all:: program							@@\
+								@@\
+program: objs libs						@@\
+	$(RM) $@						@@\
+	$(CPLUSPLUS_COMMAND) $(CFLAGS) -o $@ objs libs syslibs	@@\
+								@@\
+clean::								@@\
+	$(RM) program
+
+#define	ILUCPlusPlusProgramTarget(program, objs, libs, syslibs)	@@\
+all:: program							@@\
+								@@\
+program: objs libs $(ILUCPLUSPLUSLIBS)				@@\
+	$(RM) $@						@@\
+	$(CPLUSPLUS_COMMAND) $(CFLAGS) -o $@ objs libs $(ILUCPLUSPLUSLIBS) syslibs $(SYSAUX_LIBRARIES) -lm @@\
+								@@\
+clean::								@@\
+	$(RM) program
+
+#define	CProgramTarget(program, objs, libs, syslibs)		@@\
+all:: program							@@\
+								@@\
+program: objs libs						@@\
+	$(RM) $@						@@\
+	$(CC) $(CFLAGS) -o $@ objs libs syslibs	$(ANSI_C_LIBRARY) @@\
+								@@\
+clean::								@@\
+	$(RM) program
+
+#define	ILUCProgramTarget(program, objs, libs, syslibs)		@@\
+all:: program							@@\
+								@@\
+program: objs libs $(ILUCLIBS)					@@\
+	$(RM) $@						@@\
+	$(CC) $(CFLAGS) -o $@ objs libs $(ILUCLIBS) syslibs $(ANSI_C_LIBRARY) $(SYSAUX_LIBRARIES) $(WORKAROUND_LOCAL_GCC_INSTALLATION_BUG) @@\
+								@@\
+clean::								@@\
+	$(RM) program
+
+#define	FortranProgramTarget(program, objs, libs, syslibs)	@@\
+all:: program							@@\
+								@@\
+program: objs libs						@@\
+	$(RM) $@						@@\
+	$(FORTRAN_COMMAND) $(F77FLAGS) -o $@ objs libs syslibs	@@\
+								@@\
+clean::								@@\
+	$(RM) program
+
+#define	ILUGuileProgramTarget(program, objs, libs, syslibs)	@@\
+all:: program							@@\
+								@@\
+program: objs libs $(ILUGUILELIBS)				@@\
+	$(RM) $@						@@\
+	$(CC) $(CFLAGS) -o $@ objs -L$(GUILE_LIB_DIR) libs $(ILUGUILELIBS) syslibs $(ANSI_C_LIBRARY) $(SYSAUX_LIBRARIES) -lguile -lm @@\
+								@@\
+clean::								@@\
+	$(RM) program
+
+#define	ILUFortranProgramTarget(program, objs, libs, syslibs)	@@\
+all:: program							@@\
+								@@\
+program: objs libs $(ILUHOME)/lib/libilu-fortran.a $(ILUHOME)/lib/libilu.a @@\
+	$(RM) $@						@@\
+	$(FORTRAN_COMMAND) $(F77FLAGS) -o $@ objs libs $(ILUHOME)/lib/libilu-fortran.a $(ILUHOME)/lib/libilu.a syslibs	@@\
+								@@\
+clean::								@@\
+	$(RM) program
+
+#define SharedLibraryTarget(module, objs, deplibs, syslibs)	@@\
+all:: module.$(SHAREDEXT)					@@\
+								@@\
+module.$(SHAREDEXT): objs deplibs				@@\
+	$(LDSHARED) $(LDSHARED_FLAGS) -o $@ objs deplibs $(ILU_ZLIB_LIBRARY) syslibs $(ANSI_C_LIBRARY) @@\
+								@@\
+CleanTarget(module.$(SHAREDEXT))
+
+#define SharedLibrary(module, objs, deplibs, syslibs)		@@\
+SharedLibraryTarget(module, objs, deplibs, syslibs)		@@\
+InstallProgram(module.$(SHAREDEXT),$(DESTDIR)/lib)
+
+#define PythonExtension(module, objs, deplibs, syslibs)		@@\
+	SharedLibrary(module, objs, deplibs, syslibs)
+
+#if (!defined(ILU_HAVE_TESTING_PYTHON))
+#define PythonTestScript(fname, reqfiles)			@@\
+ptest::								@@\
+	echo "You must have configured in testing Python support (1.5 or higher) for 'make ptest' to work"		                        @@\
+	exit 1
+#else
+#define PythonTestScript(fname, reqfiles)			@@\
+ptest:: reqfiles						@@\
+	PYTHONPATH=$(ILU_TESTING_PYTHON_LIBS) ; export PYTHONPATH ; $(TESTING_PYTHON) fname
+#endif
+
+/*Create a subdirectory for building in*/
+#define BuildDir(dirs)						@@\
+all:: dirs							@@\
+								@@\
+dirs:								@@\
+	@sh -c 'for i in dirs;  do  \				@@\
+            if [ -f $$i ]; then  \				@@\
+              echo Mkdir: $$i is a FILE; \			@@\
+              exit 1; \						@@\
+            elif [ ! -d $$i ]; then  \				@@\
+              echo Making directory $$i; \			@@\
+              mkdir $$i; \					@@\
+            fi; \						@@\
+          done'							@@\
+                                                                @@\
+clean::								@@\
+	@sh -c 'for i in dirs;  do  \				@@\
+            if [ -d $$i ]; then  \				@@\
+              echo removing directory $$i; \			@@\
+              rm -rf $$i; \					@@\
+            fi; \						@@\
+          done'
+
+
+#define JavaExtension(module, objs, deplibs, syslibs)		@@\
+SharedLibrary(module, objs, deplibs, syslibs)
+
+#define	CleanTarget(files)					@@\
+clean:: ; $(RM) files
+
+
+#define MkdirTarget(dirs)					@@\
+install.time:: makedirs						@@\
+	@echo directories '(' dirs ')' checked for install	@@\
+install.doc:: makedirs						@@\
+	@echo directories '(' dirs ')' checked for doc	@@\
+makedirs::							@@\
+	@echo "Checking Destination Directories...."		@@\
+	@sh -c 'for i in dirs;  do  \				@@\
+            if [ -f $$i ]; then  \				@@\
+              echo Mkdir: $$i is a FILE; \		@@\
+              exit 1; \				@@\
+            elif [ ! -d $$i ]; then  \			@@\
+              echo Making directory $$i; \		@@\
+              mkdir $$i; \				@@\
+            fi; \						@@\
+          done'
+
+#define	TagsTarget()						@@\
+tags::								@@\
+	$(TAGS) -w *.[ch]					@@\
+	$(TAGS) -xw *.[ch] > TAGS
+
+#define	DependTarget(dependencies)				@@\
+depend:: dependencies						@@\
+	$(DEPENDSCRIPT) $(XMAKEDEPEND) $(CLASS) \		@@\
+	"$(ALL_INCLUDES)" "$(ALL_DEFINES)"
+
+/*
+ *==================================================
+ * Installation rules
+ *==================================================
+ * Exported rules:
+ *	InstallBasename()
+ *	InstallByPattern()
+ *	InstallClassFiles()
+ *	InstallClassProgram()
+ *	InstallDocs()
+ *	InstallExampleClassFiles()
+ *	InstallFile()
+ *	InstallFileToFile()
+ *	InstallFiles()
+ *	InstallHardLink()
+ *	InstallHelpAlias()
+ *	InstallLibraries()
+ *	InstallLibrary()
+ *	InstallLink()
+ *	InstallMultiple()
+ *	InstallMultipleByExtension()
+ *	InstallProgram()
+ *	InstallPrograms()
+ *	InstallProgramsRW()
+ *	InstallRO()
+ *==================================================
+ */
+
+
+
+/*
+ *==================================================
+ * WITHOUT LinkInstall
+ *==================================================
+ */
+
+#ifdef sgi
+#define InstallFiles(files, mode, dest)					@@\
+install.time:: files							@@\
+	@(case '$(MFLAGS)' in *[i]*) set +e;; esac; \			@@\
+          for i in $?; do \						@@\
+            (set -x; $(INSTALL) mode -src $$i -f dest $$i); done)
+#else
+#define InstallFiles(files, mode, dest)					@@\
+install.time:: files							@@\
+	@(case '$(MFLAGS)' in *[i]*) set +e;; esac; \			@@\
+          for i in $?; do \						@@\
+            (set -x; $(INSTALL) mode $$i dest/$$i); done)
+#endif /* SGI */
+
+#ifdef sgi
+#define InstallLibraries(libs, dest)					@@\
+install.time:: libs							@@\
+	@(case '$(MFLAGS)' in *[i]*) set +e;; esac; \			@@\
+          for i in $?; do \						@@\
+            (set -x; \						@@\
+             $(INSTALL) $(INSTLIBFLAGS) -src $$i -f dest $$i ;\		@@\
+             RANLIBRULE(dest)
+#else
+#define InstallLibraries(libs, dest)					@@\
+install.time:: libs							@@\
+	@(case '$(MFLAGS)' in *[i]*) set +e;; esac; \			@@\
+          for i in $?; do \						@@\
+           (set -x; \						@@\
+            $(INSTALL) $(INSTLIBFLAGS) $$i dest/$$i ;\		@@\
+            RANLIBRULE(dest)
+#endif /* sgi */
+
+#define InstallM3Library(lib, dest)		@@\
+InstallLibraries(lib.a,dest)			@@\
+InstallFiles(lib.ax,$(INSTLIBFLAGS),dest)
+
+#ifdef sgi
+#define InstallFileToFile(file, mode, destfile)				@@\
+install.time:: file							@@\
+	-rm -f destfile							@@\
+	cp file destfile
+#else
+#define InstallFileToFile(file, mode, destfile)				@@\
+install.time:: file							@@\
+	$(INSTALL) mode file destfile
+#endif /* sgi */
+
+#ifdef sgi
+#define InstallBasename(files, mode, dest, ex1, ex2)			@@\
+install.time:: files							@@\
+	@(case '$(MFLAGS)' in *[i]*) set +e;; esac; \			@@\
+        a=`echo ex1 | tr -d " 	"`; \					@@\
+        b=`echo ex2 | tr -d " 	"`; \					@@\
+        for i in $?; do \						@@\
+          (c=`basename $$i .$$a`.$$b; \				@@\
+           set -x; \						@@\
+           $(INSTALL) mode -src $$i -f dest $$c ); done)
+#else
+#define InstallBasename(files, mode, dest, ex1, ex2)			@@\
+install.time:: files							@@\
+	@(case '$(MFLAGS)' in *[i]*) set +e;; esac; \			@@\
+        a=`echo ex1 | tr -d " 	"`; \					@@\
+        b=`echo ex2 | tr -d " 	"`; \					@@\
+        for i in $?; do \						@@\
+           (c=`basename $$i .$$a`.$$b; \				@@\
+            set -x; \						@@\
+            $(INSTALL) mode $$i dest/$$c ); done)
+#endif /* sgi */
+
+#define InstallShScript(file, dest)			     @@\
+InstallFileToFile(file,$(INSTPROGFLAGS),dest)
+
+#define InstallCshScript(file, dest)			     @@\
+InstallFileToFile(file,$(INSTPROGFLAGS),dest)
+
+#define InstallPrograms(files, dest)					@@\
+InstallFiles(files,$(INSTPROGFLAGS),dest)
+
+#define InstallRO(files, dest)						@@\
+InstallFiles(files,$(INSTINCFLAGS),dest)
+
+#define InstallProgramsRW(files, dest)					@@\
+InstallFiles(files,$(INSTPROGRWFLAGS),dest)
+
+
+#define	InstallHardLink(file, link)					@@\
+install.time:: file							@@\
+	$(RM) link							@@\
+	ln file link
+
+#define InstallHelpAlias(file, aliases)					@@\
+do.alias::								@@\
+	@(case '$(MFLAGS)' in *[i]*) set +e;; esac; \			@@\
+          PWD=`pwd`; for i in aliases; do \				@@\
+          (set -x; echo "$$i	file	!$$PWD" >> ,help.alias); done)
+
+#define	InstallLink(file, link)						@@\
+install.time::								@@\
+	$(RM) link							@@\
+	$(LN) file link
+
+/***************************************************
+ * For Backward Compatibility - should be removed
+ * eventually
+ ***************************************************/
+#define InstallFile(file, flags, dest)					@@\
+InstallFiles(file,flags,dest)
+
+#define InstallLibrary(file, dest)					@@\
+InstallLibraries(file,dest)
+
+#define InstallMultiple(list, flags, dest)				@@\
+InstallFiles(list,flags,dest)
+
+#define InstallByPattern(pattern, flags, dest)				@@\
+InstallFiles(pattern,flags,dest)
+
+/* - needs to be based on install.doc not install.time */
+#define InstallDocs(files, dest)					@@\
+InstallFiles(files,$(INSTINCFLAGS),dest)
+
+#define InstallProgram(file, dest)					@@\
+InstallPrograms(file,dest)
+
+#define InstallMultipleByExtension(extension, flags, dest)		@@\
+InstallFiles(*.extension,flags,dest)
+
+
+/* ***************************************************************** *\
+ * Internal (to template) rules
+\* ***************************************************************** */
+
+#define	GenericCleanTarget()					@@\
+tidy::								@@\
+	$(RM) \#* ,* *~ *.CKP *.BAK *.bas errs core		@@\
+	$(RM) *.ln *.o *.[im][xo] *.dog tags TAGS make.log	@@\
+clean::								@@\
+	$(RM) *.do *.eh *.ih *.a *.fwm *.snf *.pcf *.rtx *.fb	@@\
+	$(RM) *.ax *.pyc					@@\
+	$(RM) install.time install.doc
+
+#define	MakefileTarget()					@@\
+Makefile:: Imakefile $(MAKEFILE_SOURCES)			@@\
+	$(IMAKE_CMD) ; \			    		@@\
+        touch .depends; \					@@\
+        cat .depends >>Makefile
+
+#define SubdirTarget(dirs, mktag, string)			@@\
+mktag::								@@\
+	@(case '$(MFLAGS)' in *[ik]*) set +e;; esac; \		@@\
+        for i in dirs; do \					@@\
+          (cd $$i; echo string "(`pwd`)"; \			@@\
+            $(MAKE) $(MFLAGS) mktag ) ; done)
+
+#define DistSubdirs(dirs)					@@\
+Dist::								@@\
+	@(case '$(MFLAGS)' in *[ik]*) set +e;; esac; \		@@\
+        for i in dirs; do \					@@\
+          (cd $$i; echo preparing distribution "(`pwd`)"; \	@@\
+             rcsupdate ; \					@@\
+             $(MAKE) $(MFLAGS) Dist ) ; done)
+
+#define MakeSubdirs(dirs)					@@\
+SubdirTarget(dirs,All,"making")
+
+#define DependMakeSubdirs(dirs)					@@\
+SubdirTarget(dirs,dependAll,"depend/making")
+
+#define InstallSubdirs(dirs)					@@\
+SubdirTarget(dirs,Install,"installing")
+
+#define InstallDocSubdirs(dirs)					@@\
+SubdirTarget(dirs,Doc,"installing docs")
+
+#define InstallAliasSubdirs(dirs)				@@\
+SubdirTarget(dirs,Aliases,"installing aliases")
+
+#define DependInstallSubdirs(dirs)				@@\
+SubdirTarget(dirs,dependInstall,"building (dependInstall)")
+
+#define WorldInstallSubdirs(dirs)				@@\
+SubdirTarget(dirs,World,"building (World)")
+
+#define CleanSubdirs(dirs)					@@\
+SubdirTarget(dirs,Clean,"cleaning")
+
+#define TidySubdirs(dirs)					@@\
+SubdirTarget(dirs,Tidy,"tidying")
+
+#define PTestSubdirs(dirs)					@@\
+SubdirTarget(dirs,Ptest,"testing")
+
+#define TagSubdirs(dirs)					@@\
+tags::								@@\
+	@case '$(MFLAGS)' in *[ik]*) set +e;; esac; \		@@\
+	for i in dirs; do \					@@\
+          (cd $$i; echo "tagging (`pwd`)"; \			@@\
+           $(MAKE) $(MFLAGS) TAGS='$(TAGS)' tags)\		@@\
+	done
+
+#define MakeMakeSubdirs(dirs)					@@\
+Makefiles::							@@\
+	@case '$(MFLAGS)' in *[ik]*) set +e;; esac; \		@@\
+        for i in dirs; do \					@@\
+          echo "Making Makefiles (`pwd`/$$i)"; \		@@\
+          cd $$i; pwd ;\		@@\
+          $(IMAKE) -I$(IMAKE_RULES_SRCDIR) -T$(IMAKE_RULES_SRCDIR)/ilu.tmpl -s Makefile ; \ @@\
+          $(MAKE) $(MFLAGS) Makefiles ; cd .. ; \		@@\
+        done
+
+#define MakefileSubdirs(dirs)					@@\
+MakeMakeSubdirs(dirs)

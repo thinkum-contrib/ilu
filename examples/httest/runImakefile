@@ -1,0 +1,74 @@
+/** $Id: runImakefile,v 1.9 1999/08/03 01:58:25 janssen Exp $
+ BeginILUCopyright
+
+ Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+ Unlimited use, reproduction, modification, and distribution of this
+ software and modified versions thereof is permitted.  Permission is
+ granted to make derivative works from this software or a modified
+ version thereof.  Any copy of this software, a modified version
+ thereof, or a derivative work must include both the above copyright
+ notice of Xerox Corporation and this paragraph.  Any distribution of
+ this software, a modified version thereof, or a derivative work must
+ comply with all applicable United States export control laws.  This
+ software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+ WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+ LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+ EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+ NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+ OF THE POSSIBILITY OF SUCH DAMAGES.
+
+ EndILUCopyright
+*/
+/* Last edited by Mike Spreitzer October 8, 1998 11:07 pm PDT */
+
+/* Note:  These following 2 variables may need to be set differently in
+your environment.  They are used to tailor the directories in which
+things are found so that developers can test private versions.
+
+ILUCINCLUDES = -I/jilu/src/runtime/c -I/jilu/src/runtime/kernel
+ILUCLIBS = /jilu/src/runtime/c/libilu-c.a /jilu/src/runtime/kernel/libilu.a
+
+/* You shouldn't need to change anything below this (or above this,
+if you're not a developer. */
+
+NormalObjectRule()
+
+InterfaceTarget(iluhttp.isl)
+InterfaceTarget(httest.isl)
+
+
+#####################################################
+#
+# C
+#
+
+ILUCTarget(iluhttp.h iluhttp-true.c iluhttp-surrogate.c iluhttp-common.c,  $(ILUHOME)/interfaces/iluhttp.isl)
+ObjectTarget(iluhttp-common.o)
+ObjectTarget(iluhttp-surrogate.o)
+ObjectTarget(iluhttp-true.o)
+
+ILUCTarget(httest.h httest-true.c httest-surrogate.c httest-common.c, httest.isl)
+ObjectTarget(httest-common.o)
+ObjectTarget(httest-surrogate.o)
+ObjectTarget(httest-true.o)
+
+ObjectTarget(htclient.o)
+ObjectTarget(htserver.o)
+ObjectTarget(webserver.o)
+ObjectTarget(ilugetbot.o)
+
+htclient.o : htclient.c iluhttp.h httest.h
+htserver.o : htserver.c iluhttp.h httest.h
+webserver.o : webserver.c iluhttp.h
+ilugetbot.o : ilugetbot.c iluhttp.h
+
+ILUCProgramTarget(htclient, htclient.o iluhttp-surrogate.o iluhttp-common.o httest-surrogate.o httest-common.o,,)
+
+ILUCProgramTarget(htserver, htserver.o iluhttp-true.o iluhttp-common.o httest-true.o httest-common.o,,)
+
+ILUCProgramTarget(webserver, webserver.o iluhttp-true.o iluhttp-common.o,,)
+
+ILUCProgramTarget(ilugetbot, ilugetbot.o iluhttp-surrogate.o iluhttp-common.o,,)

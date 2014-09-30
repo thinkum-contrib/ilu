@@ -1,0 +1,770 @@
+@c $Id: genminors.c,v 1.5 1999/07/17 03:18:37 janssen Exp $
+@node BAD_PARAM, IMP_LIMIT, Intro, ILU-Specific CORBA System Exception Minor Codes
+@section Minor Codes for System Exception BAD_PARAM
+@ftindex BAD_PARAM
+@itemize @bullet
+
+@item
+@ftindex ilu_bpm_duh (minor code of BAD_PARAM)
+ @constant{ilu_bpm_duh}(1229717504, 0x494c0000) --- It should be pretty obvious.
+@item
+@ftindex ilu_bpm_true (minor code of BAD_PARAM)
+ @constant{ilu_bpm_true}(1229717505, 0x494c0001) --- Attempting RPC on true server.
+@item
+@ftindex ilu_bpm_asynch_unreliable (minor code of BAD_PARAM)
+ @constant{ilu_bpm_asynch_unreliable}(1229717506, 0x494c0002) --- asynch method call on unreliable transport.
+@item
+@ftindex ilu_bpm_late (minor code of BAD_PARAM)
+ @constant{ilu_bpm_late}(1229717507, 0x494c0003) --- called ilu_SetFoo too late.
+@item
+@ftindex ilu_bpm_not_exported (minor code of BAD_PARAM)
+ @constant{ilu_bpm_not_exported}(1229717508, 0x494c0004) --- asked to output object of server with no ports.
+@item
+@ftindex ilu_bpm_tinfo (minor code of BAD_PARAM)
+ @constant{ilu_bpm_tinfo}(1229717509, 0x494c0005) --- invalid transport info string.
+@item
+@ftindex ilu_bpm_pinfo (minor code of BAD_PARAM)
+ @constant{ilu_bpm_pinfo}(1229717510, 0x494c0006) --- invalid protocol info string.
+@item
+@ftindex ilu_bpm_typeID (minor code of BAD_PARAM)
+ @constant{ilu_bpm_typeID}(1229717511, 0x494c0007) --- invalid type ID.
+@item
+@ftindex ilu_bpm_OID (minor code of BAD_PARAM)
+ @constant{ilu_bpm_OID}(1229717512, 0x494c0008) --- invalid object ID.
+@item
+@ftindex ilu_bpm_SBH (minor code of BAD_PARAM)
+ @constant{ilu_bpm_SBH}(1229717513, 0x494c0009) --- bad SBH.
+@item
+@ftindex ilu_bpm_URL (minor code of BAD_PARAM)
+ @constant{ilu_bpm_URL}(1229717514, 0x494c000a) --- invalid URL.
+@item
+@ftindex ilu_bpm_serverId (minor code of BAD_PARAM)
+ @constant{ilu_bpm_serverId}(1229717515, 0x494c000b) --- bad server ID string.
+@item
+@ftindex ilu_bpm_networkAddr (minor code of BAD_PARAM)
+ @constant{ilu_bpm_networkAddr}(1229717516, 0x494c000c) --- bad network address or host name.
+@item
+@ftindex ilu_bpm_connToDefault (minor code of BAD_PARAM)
+ @constant{ilu_bpm_connToDefault}(1229717517, 0x494c000d) --- default host appears where a definite one should.
+@item
+@ftindex ilu_bpm_badPointer (minor code of BAD_PARAM)
+ @constant{ilu_bpm_badPointer}(1229717518, 0x494c000e) --- attempt to address memory not in the process address space.
+@item
+@ftindex ilu_bpm_fd (minor code of BAD_PARAM)
+ @constant{ilu_bpm_fd}(1229717519, 0x494c000f) --- bad file descriptor.
+@item
+@ftindex ilu_bpm_sequenceLimit (minor code of BAD_PARAM)
+ @constant{ilu_bpm_sequenceLimit}(1229717520, 0x494c0010) --- sequence too long for its limit.
+@item
+@ftindex ilu_bpm_unionDiscSize (minor code of BAD_PARAM)
+ @constant{ilu_bpm_unionDiscSize}(1229717521, 0x494c0011) --- invalid discriminant size.
+@item
+@ftindex ilu_bpm_unionDiscValue (minor code of BAD_PARAM)
+ @constant{ilu_bpm_unionDiscValue}(1229717522, 0x494c0012) --- discriminant value invalid for this union type.
+@item
+@ftindex ilu_bpm_nil (minor code of BAD_PARAM)
+ @constant{ilu_bpm_nil}(1229717523, 0x494c0013) --- NIL passed where not allowed.
+@item
+@ftindex ilu_bpm_broken (minor code of BAD_PARAM)
+ @constant{ilu_bpm_broken}(1229717524, 0x494c0014) --- not NIL, but contents look bad.
+@item
+@ftindex ilu_bpm_closed (minor code of BAD_PARAM)
+ @constant{ilu_bpm_closed}(1229717525, 0x494c0015) --- op invoked on closed something.
+@item
+@ftindex ilu_bpm_small_buffer (minor code of BAD_PARAM)
+ @constant{ilu_bpm_small_buffer}(1229717526, 0x494c0016) --- callee needs larger buffer.
+@item
+@ftindex ilu_bpm_string_null_char (minor code of BAD_PARAM)
+ @constant{ilu_bpm_string_null_char}(1229717527, 0x494c0017) --- octet 0 in `string' parm.
+@item
+@ftindex ilu_bpm_threading (minor code of BAD_PARAM)
+ @constant{ilu_bpm_threading}(1229717528, 0x494c0018) --- A proc appropriate only for single-threaded runtimes was called in a mult-threaded runtime --- or the other way around..
+@item
+@ftindex ilu_bpm_prefix_type_violation (minor code of BAD_PARAM)
+ @constant{ilu_bpm_prefix_type_violation}(1229717529, 0x494c0019) --- type in pickle doesn't satisfy prefix type condition on pickle being marshalled or unmarshalled..
+@item
+@ftindex ilu_bpm_not_byte_type (minor code of BAD_PARAM)
+ @constant{ilu_bpm_not_byte_type}(1229717530, 0x494c001a) --- expected byte type.
+@item
+@ftindex ilu_bpm_not_boolean_type (minor code of BAD_PARAM)
+ @constant{ilu_bpm_not_boolean_type}(1229717531, 0x494c001b) --- expected boolean type.
+@item
+@ftindex ilu_bpm_not_character_type (minor code of BAD_PARAM)
+ @constant{ilu_bpm_not_character_type}(1229717532, 0x494c001c) --- expected character type.
+@item
+@ftindex ilu_bpm_not_shortcharacter_type (minor code of BAD_PARAM)
+ @constant{ilu_bpm_not_shortcharacter_type}(1229717533, 0x494c001d) --- expected shortcharacter type.
+@item
+@ftindex ilu_bpm_not_shortinteger_type (minor code of BAD_PARAM)
+ @constant{ilu_bpm_not_shortinteger_type}(1229717534, 0x494c001e) --- expected shortinteger type.
+@item
+@ftindex ilu_bpm_not_integer_type (minor code of BAD_PARAM)
+ @constant{ilu_bpm_not_integer_type}(1229717535, 0x494c001f) --- expected integer type.
+@item
+@ftindex ilu_bpm_not_longinteger_type (minor code of BAD_PARAM)
+ @constant{ilu_bpm_not_longinteger_type}(1229717536, 0x494c0020) --- expected longinteger type.
+@item
+@ftindex ilu_bpm_not_shortcardinal_type (minor code of BAD_PARAM)
+ @constant{ilu_bpm_not_shortcardinal_type}(1229717537, 0x494c0021) --- expected shortcardinal type.
+@item
+@ftindex ilu_bpm_not_cardinal_type (minor code of BAD_PARAM)
+ @constant{ilu_bpm_not_cardinal_type}(1229717538, 0x494c0022) --- expected cardinal type.
+@item
+@ftindex ilu_bpm_not_longcardinal_type (minor code of BAD_PARAM)
+ @constant{ilu_bpm_not_longcardinal_type}(1229717539, 0x494c0023) --- expected longcardinal type.
+@item
+@ftindex ilu_bpm_not_shortreal_type (minor code of BAD_PARAM)
+ @constant{ilu_bpm_not_shortreal_type}(1229717540, 0x494c0024) --- expected shortreal type.
+@item
+@ftindex ilu_bpm_not_real_type (minor code of BAD_PARAM)
+ @constant{ilu_bpm_not_real_type}(1229717541, 0x494c0025) --- expected real type.
+@item
+@ftindex ilu_bpm_not_longreal_type (minor code of BAD_PARAM)
+ @constant{ilu_bpm_not_longreal_type}(1229717542, 0x494c0026) --- expected longreal type.
+@item
+@ftindex ilu_bpm_not_object_type (minor code of BAD_PARAM)
+ @constant{ilu_bpm_not_object_type}(1229717543, 0x494c0027) --- expected object type.
+@item
+@ftindex ilu_bpm_not_optional_type (minor code of BAD_PARAM)
+ @constant{ilu_bpm_not_optional_type}(1229717544, 0x494c0028) --- expected optional type.
+@item
+@ftindex ilu_bpm_not_alias_type (minor code of BAD_PARAM)
+ @constant{ilu_bpm_not_alias_type}(1229717545, 0x494c0029) --- expected alias type.
+@item
+@ftindex ilu_bpm_not_union_type (minor code of BAD_PARAM)
+ @constant{ilu_bpm_not_union_type}(1229717546, 0x494c002a) --- expected union type.
+@item
+@ftindex ilu_bpm_invalid_union_arm_index (minor code of BAD_PARAM)
+ @constant{ilu_bpm_invalid_union_arm_index}(1229717547, 0x494c002b) --- out of bounds.
+@item
+@ftindex ilu_bpm_not_sequence_type (minor code of BAD_PARAM)
+ @constant{ilu_bpm_not_sequence_type}(1229717548, 0x494c002c) --- expected sequence type.
+@item
+@ftindex ilu_bpm_not_array_type (minor code of BAD_PARAM)
+ @constant{ilu_bpm_not_array_type}(1229717549, 0x494c002d) --- expected array type.
+@item
+@ftindex ilu_bpm_not_record_type (minor code of BAD_PARAM)
+ @constant{ilu_bpm_not_record_type}(1229717550, 0x494c002e) --- expected record type.
+@item
+@ftindex ilu_bpm_invalid_record_field_index (minor code of BAD_PARAM)
+ @constant{ilu_bpm_invalid_record_field_index}(1229717551, 0x494c002f) --- invalid record field index.
+@item
+@ftindex ilu_bpm_not_enumeration_type (minor code of BAD_PARAM)
+ @constant{ilu_bpm_not_enumeration_type}(1229717552, 0x494c0030) --- expected enumeration type.
+@item
+@ftindex ilu_bpm_invalid_enum_element_index (minor code of BAD_PARAM)
+ @constant{ilu_bpm_invalid_enum_element_index}(1229717553, 0x494c0031) --- invalid enum element index.
+@item
+@ftindex ilu_bpm_not_variant_type (minor code of BAD_PARAM)
+ @constant{ilu_bpm_not_variant_type}(1229717554, 0x494c0032) --- expected variant type.
+@item
+@ftindex ilu_bpm_invalid_variant_type (minor code of BAD_PARAM)
+ @constant{ilu_bpm_invalid_variant_type}(1229717555, 0x494c0033) --- variant type is badly formed.
+@item
+@ftindex ilu_bpm_not_string_type (minor code of BAD_PARAM)
+ @constant{ilu_bpm_not_string_type}(1229717556, 0x494c0034) --- expected string type.
+@item
+@ftindex ilu_bpm_invalid_typekind (minor code of BAD_PARAM)
+ @constant{ilu_bpm_invalid_typekind}(1229717557, 0x494c0035) --- ilu_Type with bad "kind".
+@item
+@ftindex ilu_bpm_invalid_method_index (minor code of BAD_PARAM)
+ @constant{ilu_bpm_invalid_method_index}(1229717558, 0x494c0036) --- out of bounds.
+@item
+@ftindex ilu_bpm_invalid_argument_index (minor code of BAD_PARAM)
+ @constant{ilu_bpm_invalid_argument_index}(1229717559, 0x494c0037) --- out of bounds.
+@item
+@ftindex ilu_bpm_invalid_exception_index (minor code of BAD_PARAM)
+ @constant{ilu_bpm_invalid_exception_index}(1229717560, 0x494c0038) --- out of bounds.
+@item
+@ftindex ilu_bpm_not_sibling (minor code of BAD_PARAM)
+ @constant{ilu_bpm_not_sibling}(1229717561, 0x494c0039) --- non-sibling passed where sibling required.
+@item
+@ftindex ilu_bpm_protocol_registered (minor code of BAD_PARAM)
+ @constant{ilu_bpm_protocol_registered}(1229717562, 0x494c003a) --- attempt to register already-registered protocol.
+@item
+@ftindex ilu_bpm_transport_registered (minor code of BAD_PARAM)
+ @constant{ilu_bpm_transport_registered}(1229717563, 0x494c003b) --- attempt to register already-registered transport.
+@item
+@ftindex ilu_bpm_identity_type_registered (minor code of BAD_PARAM)
+ @constant{ilu_bpm_identity_type_registered}(1229717564, 0x494c003c) --- attempting to register already-registered identity type.
+@item
+@ftindex ilu_bpm_bogus_raise (minor code of BAD_PARAM)
+ @constant{ilu_bpm_bogus_raise}(1229717565, 0x494c003d) --- Method tried to raise an exception not in its RAISES list..
+@item
+@ftindex ilu_bpm_some_raise (minor code of BAD_PARAM)
+ @constant{ilu_bpm_some_raise}(1229717566, 0x494c003e) --- Method with empty exn list tried to raise an exn..
+@item
+@ftindex ilu_bpm_short_char_codeset (minor code of BAD_PARAM)
+ @constant{ilu_bpm_short_char_codeset}(1229717567, 0x494c003f) --- unsupported short character code set.
+@item
+@ftindex ilu_bpm_char_codeset (minor code of BAD_PARAM)
+ @constant{ilu_bpm_char_codeset}(1229717568, 0x494c0040) --- unsupported character code set.
+@item
+@ftindex ilu_bpm_non_batching (minor code of BAD_PARAM)
+ @constant{ilu_bpm_non_batching}(1229717569, 0x494c0041) --- flush called on non-batching conn.
+@item
+@ftindex ilu_bpm_serialVsServer (minor code of BAD_PARAM)
+ @constant{ilu_bpm_serialVsServer}(1229717570, 0x494c0042) --- ilu_Serializer used on wrong server.
+@item
+@ftindex ilu_bpm_idTypePresent (minor code of BAD_PARAM)
+ @constant{ilu_bpm_idTypePresent}(1229717571, 0x494c0043) --- passport already contains this identity type.
+@item
+@ftindex ilu_bpm_serialConcurrent (minor code of BAD_PARAM)
+ @constant{ilu_bpm_serialConcurrent}(1229717572, 0x494c0044) --- bad case of ilu_Serializer used in concurrent calls.
+@item
+@ftindex ilu_bpm_bad_character (minor code of BAD_PARAM)
+ @constant{ilu_bpm_bad_character}(1229717573, 0x494c0045) --- this char not supported in this codeset.
+@item
+@ftindex ilu_bpm_invalid_base (minor code of BAD_PARAM)
+ @constant{ilu_bpm_invalid_base}(1229717574, 0x494c0046) --- bad radix specified for string scan.
+@item
+@ftindex ilu_bpm_divide_by_zero (minor code of BAD_PARAM)
+ @constant{ilu_bpm_divide_by_zero}(1229717575, 0x494c0047) --- zero passed as divisor.
+@item
+@ftindex ilu_bpm_serialVsTransport (minor code of BAD_PARAM)
+ @constant{ilu_bpm_serialVsTransport}(1229717576, 0x494c0048) --- ilu_Serializer used with unreliable transport.
+@item
+@ftindex ilu_bpm_muxBadEndpoint (minor code of BAD_PARAM)
+ @constant{ilu_bpm_muxBadEndpoint}(1229717577, 0x494c0049) --- bad endpoint specified in mux trans.
+@item
+@ftindex ilu_bpm_mux_channel (minor code of BAD_PARAM)
+ @constant{ilu_bpm_mux_channel}(1229717578, 0x494c004a) --- bad channel specified in mux trans.
+@item
+@ftindex ilu_bpm_not_collectible (minor code of BAD_PARAM)
+ @constant{ilu_bpm_not_collectible}(1229717579, 0x494c004b) --- non-collectible class used.
+@item
+@ftindex ilu_bpm_surrogate (minor code of BAD_PARAM)
+ @constant{ilu_bpm_surrogate}(1229717580, 0x494c004c) --- surrogate obj or server used where true required.
+@item
+@ftindex ilu_bpm_badMallocPtr (minor code of BAD_PARAM)
+ @constant{ilu_bpm_badMallocPtr}(1229717581, 0x494c004d) --- attempt to free non-malloced storage.
+@item
+@ftindex ilu_bpm_badTinfoIndex (minor code of BAD_PARAM)
+ @constant{ilu_bpm_badTinfoIndex}(1229717582, 0x494c004e) --- invalid index into tinfo vector (too large).
+@item
+@ftindex ilu_bpm_convProtocolExcn (minor code of BAD_PARAM)
+ @constant{ilu_bpm_convProtocolExcn}(1229717583, 0x494c004f) --- converted ilu_ProtocolException_GarbageArguments.
+@item
+@ftindex ilu_bpm_gssNameString (minor code of BAD_PARAM)
+ @constant{ilu_bpm_gssNameString}(1229717584, 0x494c0050) --- malformed gss namestring; missing namespace id?.
+@end itemize
+
+@node IMP_LIMIT, COMM_FAILURE, BAD_PARAM, ILU-Specific CORBA System Exception Minor Codes
+@section Minor Codes for System Exception IMP_LIMIT
+@ftindex IMP_LIMIT
+@itemize @bullet
+
+@item
+@ftindex ilu_ilm_strlen (minor code of IMP_LIMIT)
+ @constant{ilu_ilm_strlen}(1229717504, 0x494c0000) --- ILU will marshal only strings & byte-sequences less than a certain length..
+@item
+@ftindex ilu_ilm_nomst (minor code of IMP_LIMIT)
+ @constant{ilu_ilm_nomst}(1229717505, 0x494c0001) --- When importing a surrogate, ILU requires that the importing program know some of the object's types, and that one of those known types is a subtype of all the other known types..
+@item
+@ftindex ilu_ilm_max_protocols (minor code of IMP_LIMIT)
+ @constant{ilu_ilm_max_protocols}(1229717506, 0x494c0002) --- too many protocols registered.
+@item
+@ftindex ilu_ilm_max_transports (minor code of IMP_LIMIT)
+ @constant{ilu_ilm_max_transports}(1229717507, 0x494c0003) --- too many transports registered.
+@item
+@ftindex ilu_ilm_max_identity_types (minor code of IMP_LIMIT)
+ @constant{ilu_ilm_max_identity_types}(1229717508, 0x494c0004) --- too many identity types registered.
+@item
+@ftindex ilu_ilm_refcnt (minor code of IMP_LIMIT)
+ @constant{ilu_ilm_refcnt}(1229717509, 0x494c0005) --- refcount would overflow.
+@item
+@ftindex ilu_ilm_max_union_arms (minor code of IMP_LIMIT)
+ @constant{ilu_ilm_max_union_arms}(1229717510, 0x494c0006) --- too many arms to a union (ILU only permits 32766).
+@item
+@ftindex ilu_ilm_bad_type_for_protocol (minor code of IMP_LIMIT)
+ @constant{ilu_ilm_bad_type_for_protocol}(1229717511, 0x494c0007) --- this protocol does not support this type (some reasonable operation cannot be performed because of a bug in the CORBA spec which ILU faithfully implements).
+@item
+@ftindex ilu_ilm_sub_protocol (minor code of IMP_LIMIT)
+ @constant{ilu_ilm_sub_protocol}(1229717512, 0x494c0008) --- a sub-protocol has been specified which is not supported.
+@item
+@ftindex ilu_ilm_unsupportedPickleFormat (minor code of IMP_LIMIT)
+ @constant{ilu_ilm_unsupportedPickleFormat}(1229717513, 0x494c0009) --- specified pickle format not supported.
+@item
+@ftindex ilu_ilm_max_buffer_size (minor code of IMP_LIMIT)
+ @constant{ilu_ilm_max_buffer_size}(1229717514, 0x494c000a) --- attempt to use a buffer for a sequence too long for it.
+@item
+@ftindex ilu_ilm_unsupported_charset_encoding (minor code of IMP_LIMIT)
+ @constant{ilu_ilm_unsupported_charset_encoding}(1229717515, 0x494c000b) --- specified character set encoding not supported.
+@item
+@ftindex ilu_ilm_unsupported_language (minor code of IMP_LIMIT)
+ @constant{ilu_ilm_unsupported_language}(1229717516, 0x494c000c) --- specified string language not supported.
+@item
+@ftindex ilu_ilm_unsupported_id_type (minor code of IMP_LIMIT)
+ @constant{ilu_ilm_unsupported_id_type}(1229717517, 0x494c000d) --- specified identity type not supported.
+@item
+@ftindex ilu_ilm_bignum_size (minor code of IMP_LIMIT)
+ @constant{ilu_ilm_bignum_size}(1229717518, 0x494c000e) --- bignum too large for use.
+@item
+@ftindex ilu_ilm_corba_iiop_unions (minor code of IMP_LIMIT)
+ @constant{ilu_ilm_corba_iiop_unions}(1229717519, 0x494c000f) --- some valid OMG IDL union typecodes cannot be marshalled with IIOP 1.0 or 1.1.
+@item
+@ftindex ilu_ilm_redirect_cross_protocol (minor code of IMP_LIMIT)
+ @constant{ilu_ilm_redirect_cross_protocol}(1229717520, 0x494c0010) --- attempt to redirect call to different RPC protocol.
+@end itemize
+
+@node COMM_FAILURE, INV_OBJREF, IMP_LIMIT, ILU-Specific CORBA System Exception Minor Codes
+@section Minor Codes for System Exception COMM_FAILURE
+@ftindex COMM_FAILURE
+@itemize @bullet
+
+@item
+@ftindex ilu_cfm_socket_type (minor code of COMM_FAILURE)
+ @constant{ilu_cfm_socket_type}(1229717504, 0x494c0000) --- OS doesn't support sock type or protocol.
+@item
+@ftindex ilu_cfm_bad_address (minor code of COMM_FAILURE)
+ @constant{ilu_cfm_bad_address}(1229717505, 0x494c0001) --- local or remote addr not available.
+@item
+@ftindex ilu_cfm_connect_refused (minor code of COMM_FAILURE)
+ @constant{ilu_cfm_connect_refused}(1229717506, 0x494c0002) --- remote end refused connection.
+@item
+@ftindex ilu_cfm_timeout (minor code of COMM_FAILURE)
+ @constant{ilu_cfm_timeout}(1229717507, 0x494c0003) --- timeout.
+@item
+@ftindex ilu_cfm_nonblock (minor code of COMM_FAILURE)
+ @constant{ilu_cfm_nonblock}(1229717508, 0x494c0004) --- can't achieve non-blocking I/O.
+@item
+@ftindex ilu_cfm_connect_failed (minor code of COMM_FAILURE)
+ @constant{ilu_cfm_connect_failed}(1229717509, 0x494c0005) --- some other, or unknown, reason.
+@item
+@ftindex ilu_cfm_eof (minor code of COMM_FAILURE)
+ @constant{ilu_cfm_eof}(1229717510, 0x494c0006) --- unexpected eof on connection.
+@item
+@ftindex ilu_cfm_protocol_sync_lost (minor code of COMM_FAILURE)
+ @constant{ilu_cfm_protocol_sync_lost}(1229717511, 0x494c0007) --- unexpected bytes with no way to recover.
+@item
+@ftindex ilu_cfm_tr_non_boundaried (minor code of COMM_FAILURE)
+ @constant{ilu_cfm_tr_non_boundaried}(1229717512, 0x494c0008) --- can't use this transport stack.
+@item
+@ftindex ilu_cfm_conn_lost (minor code of COMM_FAILURE)
+ @constant{ilu_cfm_conn_lost}(1229717513, 0x494c0009) --- other or unknown reason.
+@item
+@ftindex ilu_cfm_resource_mgmt (minor code of COMM_FAILURE)
+ @constant{ilu_cfm_resource_mgmt}(1229717514, 0x494c000a) --- closed due to need for FD.
+@item
+@ftindex ilu_cfm_convProtocolExcn (minor code of COMM_FAILURE)
+ @constant{ilu_cfm_convProtocolExcn}(1229717515, 0x494c000b) --- converted ilu_ProtocolException_LostConnection.
+@item
+@ftindex ilu_cfm_gcRegFailed (minor code of COMM_FAILURE)
+ @constant{ilu_cfm_gcRegFailed}(1229717516, 0x494c000c) --- a GC callback failed.
+@item
+@ftindex ilu_cfm_pingFailed (minor code of COMM_FAILURE)
+ @constant{ilu_cfm_pingFailed}(1229717517, 0x494c000d) --- a ping failed.
+@end itemize
+
+@node INV_OBJREF, INTERNAL, COMM_FAILURE, ILU-Specific CORBA System Exception Minor Codes
+@section Minor Codes for System Exception INV_OBJREF
+@ftindex INV_OBJREF
+@itemize @bullet
+
+@item
+@ftindex ilu_iom_unknown (minor code of INV_OBJREF)
+ @constant{ilu_iom_unknown}(1229717504, 0x494c0000) --- reason unknown or has no specific minor code.
+@item
+@ftindex ilu_iom_sbh (minor code of INV_OBJREF)
+ @constant{ilu_iom_sbh}(1229717505, 0x494c0001) --- malformed SBH.
+@item
+@ftindex ilu_iom_ci (minor code of INV_OBJREF)
+ @constant{ilu_iom_ci}(1229717506, 0x494c0002) --- malformed contact info.
+@item
+@ftindex ilu_iom_pi (minor code of INV_OBJREF)
+ @constant{ilu_iom_pi}(1229717507, 0x494c0003) --- malformed protocol info.
+@item
+@ftindex ilu_iom_pc (minor code of INV_OBJREF)
+ @constant{ilu_iom_pc}(1229717508, 0x494c0004) --- unknown protocol class.
+@item
+@ftindex ilu_iom_ps (minor code of INV_OBJREF)
+ @constant{ilu_iom_ps}(1229717509, 0x494c0005) --- protocol-specific part invalid.
+@item
+@ftindex ilu_iom_ti (minor code of INV_OBJREF)
+ @constant{ilu_iom_ti}(1229717510, 0x494c0006) --- malformed transport info.
+@item
+@ftindex ilu_iom_tc (minor code of INV_OBJREF)
+ @constant{ilu_iom_tc}(1229717511, 0x494c0007) --- unknown transport class.
+@item
+@ftindex ilu_iom_ts (minor code of INV_OBJREF)
+ @constant{ilu_iom_ts}(1229717512, 0x494c0008) --- transport-specific part invalid.
+@item
+@ftindex ilu_iom_sid (minor code of INV_OBJREF)
+ @constant{ilu_iom_sid}(1229717513, 0x494c0009) --- malformed server ID.
+@item
+@ftindex ilu_iom_ih (minor code of INV_OBJREF)
+ @constant{ilu_iom_ih}(1229717514, 0x494c000a) --- malformed instance handle.
+@item
+@ftindex ilu_iom_bad_mstid (minor code of INV_OBJREF)
+ @constant{ilu_iom_bad_mstid}(1229717515, 0x494c000b) --- malformed MSTID.
+@item
+@ftindex ilu_iom_mstid_fail (minor code of INV_OBJREF)
+ @constant{ilu_iom_mstid_fail}(1229717516, 0x494c000c) --- can't resolve MSTID.
+@item
+@ftindex ilu_iom_nil (minor code of INV_OBJREF)
+ @constant{ilu_iom_nil}(1229717517, 0x494c000d) --- NIL object found in invalid context.
+@item
+@ftindex ilu_iom_bad_url_scheme (minor code of INV_OBJREF)
+ @constant{ilu_iom_bad_url_scheme}(1229717518, 0x494c000e) --- invalid scheme tag.
+@item
+@ftindex ilu_iom_tf (minor code of INV_OBJREF)
+ @constant{ilu_iom_tf}(1229717519, 0x494c000f) --- Transport class used in inappropriately filterly position..
+@item
+@ftindex ilu_iom_ior (minor code of INV_OBJREF)
+ @constant{ilu_iom_ior}(1229717520, 0x494c0010) --- invalid IIOP IOR.
+@item
+@ftindex ilu_iom_cant_connect (minor code of INV_OBJREF)
+ @constant{ilu_iom_cant_connect}(1229717521, 0x494c0011) --- can't connect to server.
+@item
+@ftindex ilu_iom_svr_closed (minor code of INV_OBJREF)
+ @constant{ilu_iom_svr_closed}(1229717522, 0x494c0012) --- server closed.
+@item
+@ftindex ilu_iom_type_nf (minor code of INV_OBJREF)
+ @constant{ilu_iom_type_nf}(1229717523, 0x494c0013) --- exist no inst.s of req'd type.
+@item
+@ftindex ilu_iom_meth_nf (minor code of INV_OBJREF)
+ @constant{ilu_iom_meth_nf}(1229717524, 0x494c0014) --- receiver doesn't recognize method.
+@item
+@ftindex ilu_iom_inst_nf (minor code of INV_OBJREF)
+ @constant{ilu_iom_inst_nf}(1229717525, 0x494c0015) --- instance doesn't exist.
+@item
+@ftindex ilu_iom_bad_single (minor code of INV_OBJREF)
+ @constant{ilu_iom_bad_single}(1229717526, 0x494c0016) --- can't exist due to singleton restr..
+@item
+@ftindex ilu_iom_wrong_type (minor code of INV_OBJREF)
+ @constant{ilu_iom_wrong_type}(1229717527, 0x494c0017) --- instance doesn't have right type.
+@item
+@ftindex ilu_iom_short_char_codeset (minor code of INV_OBJREF)
+ @constant{ilu_iom_short_char_codeset}(1229717528, 0x494c0018) --- unsupported short character code set.
+@item
+@ftindex ilu_iom_char_codeset (minor code of INV_OBJREF)
+ @constant{ilu_iom_char_codeset}(1229717529, 0x494c0019) --- unsupported character code set.
+@item
+@ftindex ilu_iom_relocate_loop (minor code of INV_OBJREF)
+ @constant{ilu_iom_relocate_loop}(1229717530, 0x494c001a) --- relocate loop.
+@item
+@ftindex ilu_iom_conc_serial (minor code of INV_OBJREF)
+ @constant{ilu_iom_conc_serial}(1229717531, 0x494c001b) --- serializer used when contact info is concurrent.
+@item
+@ftindex ilu_iom_CosNaming_NotFound (minor code of INV_OBJREF)
+ @constant{ilu_iom_CosNaming_NotFound}(1229717532, 0x494c001c) --- CosNaming returned NotFound.
+@item
+@ftindex ilu_iom_CosNaming_CannotProceed (minor code of INV_OBJREF)
+ @constant{ilu_iom_CosNaming_CannotProceed}(1229717533, 0x494c001d) --- CosNaming returned CannotProceed.
+@item
+@ftindex ilu_iom_CosNaming_InvalidName (minor code of INV_OBJREF)
+ @constant{ilu_iom_CosNaming_InvalidName}(1229717534, 0x494c001e) --- CosNaming returned InvalidName.
+@end itemize
+
+@node INTERNAL, MARSHAL, INV_OBJREF, ILU-Specific CORBA System Exception Minor Codes
+@section Minor Codes for System Exception INTERNAL
+@ftindex INTERNAL
+@itemize @bullet
+
+@item
+@ftindex ilu_im_inv_mutex (minor code of INTERNAL)
+ @constant{ilu_im_inv_mutex}(1229717504, 0x494c0000) --- some mutex was deemed "invalid".
+@item
+@ftindex ilu_im_broken (minor code of INTERNAL)
+ @constant{ilu_im_broken}(1229717505, 0x494c0001) --- kernel data str broken --- NIL where shouldn't be.
+@item
+@ftindex ilu_im_unhandled (minor code of INTERNAL)
+ @constant{ilu_im_unhandled}(1229717506, 0x494c0002) --- Unexpected ilu_Error type raised in MOP.
+@item
+@ftindex ilu_im_errno (minor code of INTERNAL)
+ @constant{ilu_im_errno}(1229717507, 0x494c0003) --- syscall raised unexpected errno.
+@item
+@ftindex ilu_im_badKernelErr (minor code of INTERNAL)
+ @constant{ilu_im_badKernelErr}(1229717508, 0x494c0004) --- kernel call returned undexpected major err code.
+@item
+@ftindex ilu_im_trBufSize (minor code of INTERNAL)
+ @constant{ilu_im_trBufSize}(1229717509, 0x494c0005) --- tc_get_output_buffer couldn't.
+@item
+@ftindex ilu_im_tInfoLen (minor code of INTERNAL)
+ @constant{ilu_im_tInfoLen}(1229717510, 0x494c0006) --- tinfo too long.
+@item
+@ftindex ilu_im_badTypeKind (minor code of INTERNAL)
+ @constant{ilu_im_badTypeKind}(1229717511, 0x494c0007) --- invalid ilu_TypeKind code for context.
+@item
+@ftindex ilu_im_callFail (minor code of INTERNAL)
+ @constant{ilu_im_callFail}(1229717512, 0x494c0008) --- an internal call failed.
+@item
+@ftindex ilu_im_badLocks (minor code of INTERNAL)
+ @constant{ilu_im_badLocks}(1229717513, 0x494c0009) --- bad_locks maps to this case.
+@item
+@ftindex ilu_im_brokenLocks (minor code of INTERNAL)
+ @constant{ilu_im_brokenLocks}(1229717514, 0x494c000a) --- broken_locks maps to this case.
+@item
+@ftindex ilu_im_inputBuffer (minor code of INTERNAL)
+ @constant{ilu_im_inputBuffer}(1229717515, 0x494c000b) --- Input buffer expected but not found.
+@item
+@ftindex ilu_im_outputBuffer (minor code of INTERNAL)
+ @constant{ilu_im_outputBuffer}(1229717516, 0x494c000c) --- Output buffer expected but not found.
+@item
+@ftindex ilu_im_endMessage (minor code of INTERNAL)
+ @constant{ilu_im_endMessage}(1229717517, 0x494c000d) --- tc_end_message when no msg active.
+@item
+@ftindex ilu_im_endMessageDir (minor code of INTERNAL)
+ @constant{ilu_im_endMessageDir}(1229717518, 0x494c000e) --- end_output_message_nonblock called during message input.
+@item
+@ftindex ilu_im_beginMessage (minor code of INTERNAL)
+ @constant{ilu_im_beginMessage}(1229717519, 0x494c000f) --- tc_begin_message when msg active.
+@item
+@ftindex ilu_im_bytesWithoutMsg (minor code of INTERNAL)
+ @constant{ilu_im_bytesWithoutMsg}(1229717520, 0x494c0010) --- byte I/O outside message boundaries.
+@item
+@ftindex ilu_im_tcBytesDropped (minor code of INTERNAL)
+ @constant{ilu_im_tcBytesDropped}(1229717521, 0x494c0011) --- for tc_end_message.
+@item
+@ftindex ilu_im_tcBug (minor code of INTERNAL)
+ @constant{ilu_im_tcBug}(1229717522, 0x494c0012) --- TransportClass didn't meet contract.
+@item
+@ftindex ilu_im_tcInputSkipsBuff (minor code of INTERNAL)
+ @constant{ilu_im_tcInputSkipsBuff}(1229717523, 0x494c0013) --- a particular Trans'Class caller bug.
+@item
+@ftindex ilu_im_tcNotBoundaried (minor code of INTERNAL)
+ @constant{ilu_im_tcNotBoundaried}(1229717524, 0x494c0014) --- for b'd method of unb'd Trans'Class.
+@item
+@ftindex ilu_im_tcReliable (minor code of INTERNAL)
+ @constant{ilu_im_tcReliable}(1229717525, 0x494c0015) --- for unreliable call on reliable TC.
+@item
+@ftindex ilu_im_tcBadBuff (minor code of INTERNAL)
+ @constant{ilu_im_tcBadBuff}(1229717526, 0x494c0016) --- bad buffer given to Trans'Class proc.
+@item
+@ftindex ilu_im_protNonConcurrent (minor code of INTERNAL)
+ @constant{ilu_im_protNonConcurrent}(1229717527, 0x494c0017) --- DelayInterp called on non-concurrent prot.
+@item
+@ftindex ilu_im_tcNoMsgHandle (minor code of INTERNAL)
+ @constant{ilu_im_tcNoMsgHandle}(1229717528, 0x494c0018) --- for tc_end_message.
+@item
+@ftindex ilu_im_noHostName (minor code of INTERNAL)
+ @constant{ilu_im_noHostName}(1229717529, 0x494c0019) --- unable to get a name for this host.
+@item
+@ftindex ilu_im_noHostIpAddr (minor code of INTERNAL)
+ @constant{ilu_im_noHostIpAddr}(1229717530, 0x494c001a) --- unable to get IP addr for this host.
+@item
+@ftindex ilu_im_bufxpMisuse (minor code of INTERNAL)
+ @constant{ilu_im_bufxpMisuse}(1229717531, 0x494c001b) --- bufxp caller violated contract.
+@item
+@ftindex ilu_im_typeMismatch (minor code of INTERNAL)
+ @constant{ilu_im_typeMismatch}(1229717532, 0x494c001c) --- two stubs with different ideas.
+@item
+@ftindex ilu_im_typeIncomplete (minor code of INTERNAL)
+ @constant{ilu_im_typeIncomplete}(1229717533, 0x494c001d) --- type not completely constructed.
+@item
+@ftindex ilu_im_typeDuplicated (minor code of INTERNAL)
+ @constant{ilu_im_typeDuplicated}(1229717534, 0x494c001e) --- type multiply registered (same ID).
+@item
+@ftindex ilu_im_typeNameCollision (minor code of INTERNAL)
+ @constant{ilu_im_typeNameCollision}(1229717535, 0x494c001f) --- same name on different types.
+@item
+@ftindex ilu_im_dupForkProc (minor code of INTERNAL)
+ @constant{ilu_im_dupForkProc}(1229717536, 0x494c0020) --- attempt to register ForkProc twice.
+@item
+@ftindex ilu_im_noForkProc (minor code of INTERNAL)
+ @constant{ilu_im_noForkProc}(1229717537, 0x494c0021) --- no way to fork an internal thread.
+@item
+@ftindex ilu_im_threading (minor code of INTERNAL)
+ @constant{ilu_im_threading}(1229717538, 0x494c0022) --- confusion on whether threaded.
+@item
+@ftindex ilu_im_threadFork (minor code of INTERNAL)
+ @constant{ilu_im_threadFork}(1229717539, 0x494c0023) --- fork failed.
+@item
+@ftindex ilu_im_threadIDSize (minor code of INTERNAL)
+ @constant{ilu_im_threadIDSize}(1229717540, 0x494c0024) --- thread ID size too large for context.
+@item
+@ftindex ilu_im_threadAttribute (minor code of INTERNAL)
+ @constant{ilu_im_threadAttribute}(1229717541, 0x494c0025) --- problem setting/getting thread attr.
+@item
+@ftindex ilu_im_tportRole (minor code of INTERNAL)
+ @constant{ilu_im_tportRole}(1229717542, 0x494c0026) --- incoming vs. outgoing transport err.
+@item
+@ftindex ilu_im_check (minor code of INTERNAL)
+ @constant{ilu_im_check}(1229717543, 0x494c0027) --- internal consistency check failed.
+@item
+@ftindex ilu_im_badEnumValue (minor code of INTERNAL)
+ @constant{ilu_im_badEnumValue}(1229717544, 0x494c0028) --- unexpected enumeration value.
+@item
+@ftindex ilu_im_pickleFormat (minor code of INTERNAL)
+ @constant{ilu_im_pickleFormat}(1229717545, 0x494c0029) --- bad pointer found in pickle format pos.
+@item
+@ftindex ilu_im_ptrAlignment (minor code of INTERNAL)
+ @constant{ilu_im_ptrAlignment}(1229717546, 0x494c002a) --- mis-aligned pointer encountered.
+@item
+@ftindex ilu_im_tcCreate (minor code of INTERNAL)
+ @constant{ilu_im_tcCreate}(1229717547, 0x494c002b) --- unknown error in transport creation.
+@item
+@ftindex ilu_im_multiple_channels (minor code of INTERNAL)
+ @constant{ilu_im_multiple_channels}(1229717548, 0x494c002c) --- in W3MUX, same chnl regd twice.
+@item
+@ftindex ilu_im_mux_max_credit (minor code of INTERNAL)
+ @constant{ilu_im_mux_max_credit}(1229717549, 0x494c002d) --- in W3MUX, local credit buildup.
+@item
+@ftindex ilu_im_badRelocVals (minor code of INTERNAL)
+ @constant{ilu_im_badRelocVals}(1229717550, 0x494c002e) --- relocate proc returned odd results.
+@item
+@ftindex ilu_im_badRelocPinfo (minor code of INTERNAL)
+ @constant{ilu_im_badRelocPinfo}(1229717551, 0x494c002f) --- relocate proc returned invalid pinfo value.
+@item
+@ftindex ilu_im_badRelocTinfo (minor code of INTERNAL)
+ @constant{ilu_im_badRelocTinfo}(1229717552, 0x494c0030) --- relocate proc returned invalid tinfo value.
+@item
+@ftindex ilu_im_convPESuccess (minor code of INTERNAL)
+ @constant{ilu_im_convPESuccess}(1229717553, 0x494c0031) --- attempt to convert ilu_ProtocolException_Success to an error.
+@item
+@ftindex ilu_im_invalidPE (minor code of INTERNAL)
+ @constant{ilu_im_invalidPE}(1229717554, 0x494c0032) --- attempt to convert invalid ilu_ProtocolException value to an error.
+@end itemize
+
+@node MARSHAL, BAD_TYPECODE, INTERNAL, ILU-Specific CORBA System Exception Minor Codes
+@section Minor Codes for System Exception MARSHAL
+@ftindex MARSHAL
+@itemize @bullet
+
+@item
+@ftindex ilu_mm_eom (minor code of MARSHAL)
+ @constant{ilu_mm_eom}(1229717504, 0x494c0000) --- attempted read past end of msg.
+@item
+@ftindex ilu_mm_alien_disc (minor code of MARSHAL)
+ @constant{ilu_mm_alien_disc}(1229717505, 0x494c0001) --- unmarshalling discriminator of different server.
+@item
+@ftindex ilu_mm_bad_union_disc (minor code of MARSHAL)
+ @constant{ilu_mm_bad_union_disc}(1229717506, 0x494c0002) --- invalid union discriminant value.
+@item
+@ftindex ilu_mm_bad_typekind (minor code of MARSHAL)
+ @constant{ilu_mm_bad_typekind}(1229717507, 0x494c0003) --- TypeCode received with invalid type kind value.
+@item
+@ftindex ilu_mm_wronglen (minor code of MARSHAL)
+ @constant{ilu_mm_wronglen}(1229717508, 0x494c0004) --- fixed length array came in with different length.
+@item
+@ftindex ilu_mm_sequenceLimit (minor code of MARSHAL)
+ @constant{ilu_mm_sequenceLimit}(1229717509, 0x494c0005) --- attempt to read or write a sequence longer than its limit.
+@item
+@ftindex ilu_mm_badMagicNumber (minor code of MARSHAL)
+ @constant{ilu_mm_badMagicNumber}(1229717510, 0x494c0006) --- bad message header magic number.
+@item
+@ftindex ilu_mm_versionMismatch (minor code of MARSHAL)
+ @constant{ilu_mm_versionMismatch}(1229717511, 0x494c0007) --- wrong version of message protocol.
+@item
+@ftindex ilu_mm_badInteger (minor code of MARSHAL)
+ @constant{ilu_mm_badInteger}(1229717512, 0x494c0008) --- signed or unsigned integer that doesn't fit position.
+@item
+@ftindex ilu_mm_badFloat (minor code of MARSHAL)
+ @constant{ilu_mm_badFloat}(1229717513, 0x494c0009) --- floating point value that doesn't fit position.
+@item
+@ftindex ilu_mm_dgramLimit (minor code of MARSHAL)
+ @constant{ilu_mm_dgramLimit}(1229717514, 0x494c000a) --- datagram (eg, UDP) size limit exceeded.
+@item
+@ftindex ilu_mm_badPickle (minor code of MARSHAL)
+ @constant{ilu_mm_badPickle}(1229717515, 0x494c000b) --- malformed pickle bytes.
+@item
+@ftindex ilu_mm_badTypeName (minor code of MARSHAL)
+ @constant{ilu_mm_badTypeName}(1229717516, 0x494c000c) --- badly formed type name.
+@item
+@ftindex ilu_mm_protNoTypekind (minor code of MARSHAL)
+ @constant{ilu_mm_protNoTypekind}(1229717517, 0x494c000d) --- this typekind not supported by this protocol.
+@item
+@ftindex ilu_mm_msgTypeUnknown (minor code of MARSHAL)
+ @constant{ilu_mm_msgTypeUnknown}(1229717518, 0x494c000e) --- invalid message type received.
+@item
+@ftindex ilu_mm_utf2Len (minor code of MARSHAL)
+ @constant{ilu_mm_utf2Len}(1229717519, 0x494c000f) --- UTF2 encoded string's length doesn't correspond to plain string length.
+@item
+@ftindex ilu_mm_noCharset (minor code of MARSHAL)
+ @constant{ilu_mm_noCharset}(1229717520, 0x494c0010) --- can't determine charset of string.
+@item
+@ftindex ilu_mm_cantConvertCharset (minor code of MARSHAL)
+ @constant{ilu_mm_cantConvertCharset}(1229717521, 0x494c0011) --- can't convert string to specified charset.
+@item
+@ftindex ilu_mm_mst_unreg (minor code of MARSHAL)
+ @constant{ilu_mm_mst_unreg}(1229717522, 0x494c0012) --- LSR can't make surrogate.
+@item
+@ftindex ilu_mm_fixedpoint_range (minor code of MARSHAL)
+ @constant{ilu_mm_fixedpoint_range}(1229717523, 0x494c0013) --- bounded fixedpoint value out-of-range.
+@item
+@ftindex ilu_mm_excn_id (minor code of MARSHAL)
+ @constant{ilu_mm_excn_id}(1229717524, 0x494c0014) --- Exception reply has bad excn indicator.
+@item
+@ftindex ilu_mm_enum_value (minor code of MARSHAL)
+ @constant{ilu_mm_enum_value}(1229717525, 0x494c0015) --- Value for enum out of range.
+@item
+@ftindex ilu_mm_unknown (minor code of MARSHAL)
+ @constant{ilu_mm_unknown}(1229717526, 0x494c0016) --- Unknown marshalling error.
+@item
+@ftindex ilu_mm_url_quoted_char (minor code of MARSHAL)
+ @constant{ilu_mm_url_quoted_char}(1229717527, 0x494c0017) --- Bad quoted hex char in URL form.
+@item
+@ftindex ilu_mm_no_val_for_nonopt_ref (minor code of MARSHAL)
+ @constant{ilu_mm_no_val_for_nonopt_ref}(1229717528, 0x494c0018) --- no value for non-optional reference.
+@end itemize
+
+@node BAD_TYPECODE, BAD_OPERATION, MARSHAL, ILU-Specific CORBA System Exception Minor Codes
+@section Minor Codes for System Exception BAD_TYPECODE
+@ftindex BAD_TYPECODE
+@itemize @bullet
+
+@item
+@ftindex ilu_btm_unknownType (minor code of BAD_TYPECODE)
+ @constant{ilu_btm_unknownType}(1229717504, 0x494c0000) --- reference to unknown (by this addr space) type.
+@item
+@ftindex ilu_btm_convNoSuchClass (minor code of BAD_TYPECODE)
+ @constant{ilu_btm_convNoSuchClass}(1229717504, 0x494c0000) --- converted ilu_ProtocolException_NoSuchClassAtServer.
+@item
+@ftindex ilu_btm_convVersionMismatch (minor code of BAD_TYPECODE)
+ @constant{ilu_btm_convVersionMismatch}(1229717504, 0x494c0000) --- converted ilu_ProtocolException_ClassVersionMismatch.
+@end itemize
+
+@node BAD_OPERATION, NO_RESOURCES, BAD_TYPECODE, ILU-Specific CORBA System Exception Minor Codes
+@section Minor Codes for System Exception BAD_OPERATION
+@ftindex BAD_OPERATION
+@itemize @bullet
+
+@item
+@ftindex ilu_bom_noSuchOperationOnType (minor code of BAD_OPERATION)
+ @constant{ilu_bom_noSuchOperationOnType}(1229717504, 0x494c0000) --- specified operation not defined on specified type.
+@item
+@ftindex ilu_bom_convProtocolExcn (minor code of BAD_OPERATION)
+ @constant{ilu_bom_convProtocolExcn}(1229717505, 0x494c0001) --- converted ilu_ProtocolException_NoSuchMethodOnClass.
+@end itemize
+
+@node NO_RESOURCES, TRANSIENT, BAD_OPERATION, ILU-Specific CORBA System Exception Minor Codes
+@section Minor Codes for System Exception NO_RESOURCES
+@ftindex NO_RESOURCES
+@itemize @bullet
+
+@item
+@ftindex ilu_nrm_EMFILE (minor code of NO_RESOURCES)
+ @constant{ilu_nrm_EMFILE}(1229717504, 0x494c0000) --- per-process descriptor table full.
+@item
+@ftindex ilu_nrm_ENFILE (minor code of NO_RESOURCES)
+ @constant{ilu_nrm_ENFILE}(1229717505, 0x494c0001) --- system file table full.
+@item
+@ftindex ilu_nrm_ENOBUFS (minor code of NO_RESOURCES)
+ @constant{ilu_nrm_ENOBUFS}(1229717506, 0x494c0002) --- insufficient buffer space avail.
+@item
+@ftindex ilu_nrm_fds (minor code of NO_RESOURCES)
+ @constant{ilu_nrm_fds}(1229717507, 0x494c0003) --- FD budget.
+@item
+@ftindex ilu_nrm_mux_sessions (minor code of NO_RESOURCES)
+ @constant{ilu_nrm_mux_sessions}(1229717508, 0x494c0004) --- Sessions on a single mux channel.
+@item
+@ftindex ilu_nrm_mux_channels (minor code of NO_RESOURCES)
+ @constant{ilu_nrm_mux_channels}(1229717509, 0x494c0005) --- Channels available via mux in a single endpoint.
+@item
+@ftindex ilu_nrm_mlreg (minor code of NO_RESOURCES)
+ @constant{ilu_nrm_mlreg}(1229717510, 0x494c0006) --- main loop registrations.
+@item
+@ftindex ilu_nrm_mux_atom_id (minor code of NO_RESOURCES)
+ @constant{ilu_nrm_mux_atom_id}(1229717511, 0x494c0007) --- no more atom values available.
+@end itemize
+
+@node TRANSIENT, NO_MEMORY, NO_RESOURCES, ILU-Specific CORBA System Exception Minor Codes
+@section Minor Codes for System Exception TRANSIENT
+@ftindex TRANSIENT
+@itemize @bullet
+
+@item
+@ftindex ilu_tm_retry (minor code of TRANSIENT)
+ @constant{ilu_tm_retry}(1229717504, 0x494c0000) --- stub should retry call (but didn't, if app sees this).
+@end itemize
+

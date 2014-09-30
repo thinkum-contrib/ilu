@@ -1,0 +1,93 @@
+/** $Id: runImakefile,v 1.10 1999/08/03 01:57:30 janssen Exp $
+ BeginILUCopyright
+
+ Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+ Unlimited use, reproduction, modification, and distribution of this
+ software and modified versions thereof is permitted.  Permission is
+ granted to make derivative works from this software or a modified
+ version thereof.  Any copy of this software, a modified version
+ thereof, or a derivative work must include both the above copyright
+ notice of Xerox Corporation and this paragraph.  Any distribution of
+ this software, a modified version thereof, or a derivative work must
+ comply with all applicable United States export control laws.  This
+ software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+ WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+ LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+ EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+ NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+ OF THE POSSIBILITY OF SUCH DAMAGES.
+
+ EndILUCopyright
+*/
+/* Last edited by Mike Spreitzer October 9, 1998 12:08 pm PDT */
+
+NormalObjectRule()
+
+InterfaceTarget(Fibber.isl)
+InterfaceTarget(Batcher2.isl)
+InterfaceTarget(SerialTest.isl)
+
+ILUCTarget(Fibber.h Fibber-true.c Fibber-surrogate.c Fibber-common.c, Fibber.isl)
+ObjectTarget(Fibber-common.o)
+ObjectTarget(Fibber-surrogate.o)
+ObjectTarget(Fibber-true.o)
+
+ILUCTarget(Batcher2.h Batcher2-true.c Batcher2-surrogate.c Batcher2-common.c, Batcher2.isl)
+ObjectTarget(Batcher2-common.o)
+ObjectTarget(Batcher2-surrogate.o)
+ObjectTarget(Batcher2-true.o)
+
+ILUCTarget(SerialTest.h SerialTest-true.c SerialTest-surrogate.c SerialTest-common.c, SerialTest.isl)
+ObjectTarget(SerialTest-common.o)
+ObjectTarget(SerialTest-surrogate.o)
+ObjectTarget(SerialTest-true.o)
+
+fprog.o: fprog.c Fibber.h
+
+ObjectTarget(fprog.o)
+
+ILUCProgramTarget(fp, fprog.o Fibber-true.o Fibber-surrogate.o Fibber-common.o,,)
+
+b2svr.o: b2svr.c Batcher2.h
+b2clnt.o: b2clnt.c Batcher2.h
+
+ObjectTarget(b2svr.o)
+ObjectTarget(b2clnt.o)
+
+ILUCProgramTarget(b2svr, b2svr.o Batcher2-common.o Batcher2-true.o Batcher2-surrogate.o,,)
+ILUCProgramTarget(b2clnt, b2clnt.o Batcher2-common.o Batcher2-true.o Batcher2-surrogate.o,,)
+
+stclnt.o: stclnt.c SerialTest.h
+sptclnt.o: sptclnt.c SerialTest.h
+stsrvr.o: stsrvr.c SerialTest.h
+
+ILUCProgramTarget(sptclnt, sptclnt.o SerialTest-common.o SerialTest-surrogate.o,,)
+ILUCProgramTarget(stclnt, stclnt.o SerialTest-common.o SerialTest-surrogate.o,,)
+ILUCProgramTarget(stsrvr, stsrvr.o SerialTest-common.o SerialTest-true.o,,)
+
+/* OBSOLETE
+
+InterfaceTarget(Batcher.isl)
+
+ILUCTarget(Batcher.h Batcher-true.c Batcher-surrogate.c Batcher-common.c, Batcher.isl)
+ObjectTarget(Batcher-common.o)
+ObjectTarget(Batcher-surrogate.o)
+ObjectTarget(Batcher-true.o)
+
+
+bclnt.o: bclnt.c Batcher.h
+bclntp.o: bclntp.c Batcher.h
+bsvr.o: bsvr.c Batcher.h
+
+ObjectTarget(bclnt.o)
+ObjectTarget(bclntp.o)
+ObjectTarget(bsvr.o)
+
+ILUCProgramTarget(bclnt, bclnt.o Batcher-common.o Batcher-surrogate.o,,)
+ILUCProgramTarget(bclntp, bclntp.o Batcher-common.o Batcher-surrogate.o,,)
+ILUCProgramTarget(bsvr, bsvr.o Batcher-common.o Batcher-true.o,,)
+
+*/

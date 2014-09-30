@@ -1,0 +1,520 @@
+@c $Id: scheme.tim,v 1.5 1999/08/03 01:57:02 janssen Exp $
+@setfilename ilu-scheme.info
+@settitle Using ILU with Scheme
+@ifset ilucopyright
+BeginILUCopyright
+
+Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+Unlimited use, reproduction, modification, and distribution of this
+software and modified versions thereof is permitted.  Permission is
+granted to make derivative works from this software or a modified
+version thereof.  Any copy of this software, a modified version
+thereof, or a derivative work must include both the above copyright
+notice of Xerox Corporation and this paragraph.  Any distribution of
+this software, a modified version thereof, or a derivative work must
+comply with all applicable United States export control laws.  This
+software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+OF THE POSSIBILITY OF SUCH DAMAGES.
+  
+EndILUCopyright
+@end ifset
+@ifclear largerdoc
+@include ilu-macros.tim
+
+@defcodeindex ft
+@defcodeindex vt
+@defcodeindex et
+@defcodeindex mt
+@defcodeindex tt
+@defcodeindex dt
+
+@syncodeindex dt ft
+@syncodeindex vt ft
+@syncodeindex et ft
+@syncodeindex mt ft
+@syncodeindex tt ft
+
+@syncodeindex pg cp
+@syncodeindex tp ft
+
+@c Experiment with smaller amounts of whitespace between chapters
+@c and sections.
+@tex
+\global\chapheadingskip = 15pt plus 4pt minus 2pt 
+\global\secheadingskip = 12pt plus 3pt minus 2pt
+\global\subsecheadingskip = 9pt plus 2pt minus 2pt
+\global\parskip 6pt plus 1pt
+@end tex
+
+@titlepage
+@title Using ILU with Scheme
+@author Bill Nell @code{<bnell@@scr.siemens.com>}
+@sp
+@today{}
+@sp
+Copyright @copyright{} 1997 Xerox Corporation@*
+All Rights Reserved.
+@end titlepage
+@ifinfo
+@node Top, ,(dir),(dir)
+@top Using ILU with Scheme
+@end ifinfo
+@end ifclear
+
+@section Introduction
+@cindex ILU and Scheme
+This document is for the @language{Scheme} programmer who wishes to use 
+@system{ILU}. The following sections will show how @language{ILU} is
+mapped into @language{Scheme} constructs and how both @language{Scheme}
+clients and servers are generated and built.
+
+The @language{Scheme} support in @system{ILU} was kindly donated by@*
+@url{Siemens Corporate Research Inc., http://www.scr.siemens.com/}, and
+written by @url{Bill Nell,mailto:bnell@@scr.siemens.com}.
+
+@section The ISL Mapping to Scheme
+
+@subsection Names
+
+The mapping of ISL names to Scheme names for objects and methods are described
+in the following sections.  For all other ISL types and exceptions
+the Scheme name will be @metavar{module-name}:name.
+
+@subsection Basic Types
+
+This section describes the mapping of ISL types to Scheme types.  Note
+that some mappings use extra precision where it is not necessary.  This is
+because the Scheme types have no finer distinctions for these
+types.  The basic @language{ISL} types have the following mapping to @language{Scheme} constructs:
+
+@itemize @bullet
+@item @language{ISL} @isl{boolean} is mapped to @language{Scheme} @scheme{boolean};
+@item @language{ISL} @isl{short cardinal} is mapped to @language{Scheme} @scheme{unsigned long};
+@item @language{ISL} @isl{cardinal} is mapped to @language{Scheme} @scheme{unsigned long};
+@item @language{ISL} @isl{long cardinal} is mapped to @language{Scheme} @scheme{pair (unsigned long . unsigned long)};
+@item @language{ISL} @isl{short integer} is mapped to @language{Scheme} @scheme{long};
+@item @language{ISL} @isl{integer} is mapped to @language{Scheme} @scheme{long};
+@item @language{ISL} @isl{long int} is mapped to @language{Scheme} @scheme{pair (long . unsigned long)};
+@item @language{ISL} @isl{short real} is mapped to @language{Scheme} @scheme{double precision real};
+@item @language{ISL} @isl{real} is mapped to @language{Scheme} @scheme{double precision real};
+@item @language{ISL} @isl{short character} is mapped to @language{Scheme} @scheme{character};
+@item @language{ISL} @isl{character} is mapped to @language{Scheme} @scheme{long};
+@item @language{ISL} @isl{byte} is mapped to @language{Scheme} @scheme{character}.
+@end itemize
+
+@subsubsection Constant
+
+@subsection Strings
+
+@itemize @bullet
+@item @language{ISL} @isl{string} is mapped to @language{Scheme} @scheme{string}.
+@item @language{ISL} @isl{wstring} is mapped to @language{Scheme} @scheme{vector of unsigned longs}.
+@end itemize
+
+@subsection Pickles and Typecodes
+
+Not implemented yet.
+
+@subsection Constructed Types
+
+@subsubsection Enumeration
+
+Implemented with a set of symbols bound to the integer values of the enumeration type.
+
+@subsubsection Array
+
+Arrays are implemented as @language{Scheme} @scheme{vector}s.
+For arrays, a Scheme function will be generated that takes no arguments
+and returns a vector with dimensions corresponding to the ISL array type.
+The user is responsible for setting elements in the vector.
+
+@subsubsection Sequence
+
+Sequences are implemented as @scheme{list}s, except for sequences of
+characters, which are implemented as @scheme{string}s.
+
+@subsubsection Record
+
+Each record is mapped to an ILU-YASOS object.  Each object has a
+constructor named (make-@metavar{module-name}:@metavar{record-name}) that takes
+no arguments.  Each object also has methods to get and set all the fields
+of that record.  These accessors follow the pattern of
+(get-@metavar{field-name} obj) and (set-@metavar{field-name} obj value). In the
+future record constructors will be able to take arguments to initialize
+their fields.
+
+@subsubsection Union
+
+Unions are implemented as a cons'ed value, with the cdr containing
+the union type discriminant, and the cdr containing the actual value.
+For union types, a constructor function taking two arguments is created.  The first
+argument is the discriminator and the second is the union value.  The
+discriminator of a union can be accessed or set using the @scheme{car} and
+@scheme{set-car!} functions, respectively.  The value of a union can be
+accessed or set using the @scheme{cdr} and @scheme{set-cdr!} functions,
+respectively.
+
+@subsubsection Optional
+
+Either @scheme{#f} or the value.  Note that this mapping is broken
+for optional boolean types.
+
+@subsection Object Types
+
+Each object is mapped to an ILU-YASOS object.
+
+Each object type has a constructor named (make-@metavar{module-name}:@metavar{object-name})
+that takes no arguments.  The user should not attempt to create objects
+using the constructor since these are surrogate objects and not true
+objects.  All the method names should map exactly as they appear in the
+ISL definition.
+
+@subsubsection Surrogate and True Object Types
+
+@deftp {Class} {ilu:object}
+@ttindex ilu:object (Guile LSR class)
+
+This is the root class of all objects in the
+Scheme LSR.  It provides some basic functionality required by all ILU
+objects.  The public methods are described below.  Since ILU-YASOS has
+no notion of public or private there are additional methods which are
+not described here and should not ever be called by the user.
+
+@itemize @bullet
+@item @scheme{(string-binding-handle @metavar{obj})} - return the string binding handle of @metavar{obj}
+@item @scheme{(publish @metavar{obj})} - publish this object.  Returns a boolean value for success or failure.
+@item @scheme{(withdraw @metavar{obj})} - withdraw this object.  Returns a boolean value for success or failure.
+@item @scheme{(class-name @metavar{obj})} - return the class name for this object.
+@item @scheme{(class-id @metavar{obj})} - return the class id for this object.
+@item @scheme{(get-server @metavar{obj})} - get the kernel server that controls this object.
+@item @scheme{(get-instance-handle @metavar{obj})} - get the instance handle for this object.
+@item @scheme{(get-kernel-server @metavar{obj})} - get the true server for this object.
+@item @scheme{(get-instance-class-record @metavar{obj})} - get the instance class record for this object.
+@item @scheme{(destroy @metavar{obj})} - destroy this surrogate object.  Unfortunately,
+@system{ILU-YASOS} objects are not hooked into the scheme garbage collector
+yet.  So, the destroy method must be called when you are finished
+with a surrogate object to prevent memory leaks.
+@end itemize
+@end deftp
+
+Surrogate objects present an interface to access a true objects
+which may or may not live in the same address space as the
+surrogate object.  The user is not allowed to create their own
+surrogate objects.  They must be looked up using a name binding
+service or through the use if a string binding handle.
+
+Behind every surrogate object there must be a true object.  The
+user is in charge of defining true objects.  Implementing a true
+object for a particular surrogate object is accomplished by
+subclassing the surrogate object class provided by the Scheme
+stubber.  Each true object implementation must override every
+method of the surrogate "parent" object to work correctly.  See
+the section on ILU-YASOS for implementing objects in Scheme.
+Also, see the examples of a Scheme client and server given in the
+examples/test1 directory.
+
+@b{IMPORTANT CAVEAT}:  When using multiple inheritance with
+ILU-YASOS objects to implement "true" objects it is important that
+the correct ILU class record be assigned to the true object.  The
+class record of the last class listed in the superclass list of
+the object definition will be the one used for the object being
+defined.  If this is not the desired class record, the implementor
+must set it by hand.  (Hopefully, in the future this will be taken
+care of automatically).  Usually, this is not a problem if you
+always place the most specific superclass of an object last in the
+list of superclasses.
+
+@subsubsection Methods, Parameters, and Exceptions
+
+All methods take at least two arguments in addition to any other
+arguments specified in the ISL definition.  The first argument is
+the object the method is being called on and the second argument is
+the status object.  The remaining arguments are the same as in the ISL
+definition.
+
+@deftp {Class} {ilu:status}
+@ttindex @scheme{ilu:status} (Guile LSR class)
+
+This is a status object type, used to record the success or
+failure of all method calls.  Later this will be replaced with catch
+and throw.  Also note that even though individual modules create their
+own status types, the ilu:status type can still be used in their place.
+
+@scheme{ilu:status} objects support the following methods:
+@itemize @bullet
+@item @scheme{(get-return-code @metavar{this})} - get the return code for this status
+object.  If the value is ilu:success then the method call was
+successful. Any other value indicates an exception string, which
+can be printed.
+@item @scheme{(set-return-code @metavar{this} code)} - set the return code of this status
+object.
+@item @scheme{(get-status-value @metavar{this})} - get the value associated with any
+exception raised in this status object.  If the call was successful
+this field should be #f.  Otherwise it will contain the contents of
+an exception record.
+@item @scheme{(set-status-value @metavar{this} value)} - set the status value of this
+status object.  Used for setting additional information when an
+exception is raised.
+@item @scheme{(get-caller-passport @metavar{this})} - get the passport for this method
+call.
+@item @scheme{(set-caller-passport @metavar{this} passport)} - set the passport for this
+method call.
+@end itemize
+@end deftp
+
+Normal methods are called in the following manner:@*
+@scheme{(@metavar{method-name} @metavar{object} @metavar{status} @metavar{arguments})}@*
+@noindent
+If any errors are encountered while
+executing the method, they will be stored in the status object
+parameter.  Failed method calls always return @scheme{#f}.
+
+Arguments defined as "out" must still be passed as placeholders
+even though their values are ignored.  The return values of methods
+are as follows:  If the method has no "inout" or "out" parameters,
+a single value is returned.  When a method has "inout" or "out"
+parameters the method returns a list of values which contains any
+"inout" and "out" values (in the order they are specified in the
+ISL definition) followed by the "normal" return value as the last
+element of the list.
+
+All exceptions are raised by setting the return code of a status
+value to something other than ilu:success.  Depending on the type
+of the exception there may also be additional data associated with
+it that can be set using the "set-status-value" method on a status
+object.
+
+Asynchronous methods are available in the Scheme LSR.  They will
+return immediatedly with a return value of #t.
+
+Functional methods are currently not supported in the Scheme LSR.
+At the moment they are treated as normal method calls.
+
+@subsubsection Garbage Collection and COLLECTIBLE
+
+At the moment garbage collection of surrogate and true objects is
+not supported.
+
+@section Access to standard ILU features
+
+@subsection Servers and Ports
+
+@subsubsection Object Tables
+
+See @fn{@scheme{ilu:create-object-table}}.
+
+@subsection Threading and Event Loops
+
+At the moment the Scheme LSR does not support threading, so only the
+event loop mode of operation will work.
+
+@subsection Custom Records
+
+@subsection String Binding Handle Formation
+
+@subsection Simple Binding
+
+@subsection Principal Identities and Passports
+
+@section Building Scheme/ILU Applications
+
+@subsection Initialization order
+
+All object and type definitions are initialized automatically when
+loading the Scheme code for a particular interface.  The (ilu:init)
+function is used to initialize the GC server and callback object.
+If the user wishes to select their own main loop object, they must
+register it before calling (ilu:init).
+
+@subsection ILU-YASOS
+
+The ILU version of YASOS is a slightly modified version of the
+standard YASOS with the following differences:
+@itemize @bullet
+@item All the standard YASOS functions are prepended with the prefix
+"ilu-", so regular YASOS and ILU-YASOS can operate together.
+@item All ILU-YASOS methods make take a variable number of arguments.
+This is so the same method may take different numbers of arguments
+depending on which object it is called with.
+@item An additional function called ilu-bind-arguments is provided to
+extract multiple arguments from a list and bind them to symbols
+(almost like a let block).  It is provided only as a convienience and
+is not a required part of a method definition.
+@end itemize
+
+@subsection Where to get Guile 1.2 and SLIB
+
+@noindent
+@url{Guile 1.2,ftp://prep.ai.mit.edu/pub/gnu/guile-1.2.tar.gz}.@*
+
+@noindent
+@url{SLIB 2b1,http://www-swiss.ai.mit.edu/~jaffer/SLIB.html}.@*
+
+@noindent 
+@url{Guile snapshots,ftp://ftp.red-bean.com/pub/guile/guile-snap.tar.gz} -- 
+Guile snapshots are daily updates of the Guile system, use
+them at your own risk.  Also some snapshots may not be compatible with
+the current implementation of the stubber and runtime.
+
+@noindent
+See also the @url{Report on the Algorithmic Language Scheme -- revision 4,http://www-swiss.ai.mit.edu/~jaffer/r4rs_toc.html} and the @url{SLIB Reference Manual,http://www-swiss.ai.mit.edu/~jaffer/slib_toc.html}.
+
+@subsection Stub Generation
+
+@subsection Implementing an ILU module in Scheme
+
+@subsubsection Implementation Inheritance
+
+@subsubsection Exporting Objects
+
+@subsection Using an ILU module in Scheme
+
+If you are using @language{Guile Scheme}, the value of the environment variable @var{LD_LIBRARY_PATH}
+should include the directory in which the @module{ilu} library for @language{Guile} has been installed;
+that's normally @file{@metavar{ILUHOME}/lib}.  Additionally, the environment variable @var{SCHEME_LOAD_PATH}
+should contain @file{@metavar{ILUHOME}/guile}, so that the @system{ILU} Guile files can be found.
+
+@section Scheme/ILU API Reference
+
+@itemize @bullet
+@item @scheme{(ilu:init)} - called to initialize the scheme interface to ILU.  If the
+user wants to set their own main loop (see (ilu:set-main-loop)), they
+must do so before calling (ilu:init).  Multiple calls to (ilu:init) will
+have no effect.
+
+@item @scheme{(ilu:time-now)} - get the current time in seconds as a floating point
+value.
+
+@item @scheme{(ilu:find-class-from-type-name name)} - get the class record given the
+type name of an object.
+
+@item @scheme{(ilu:find-class-from-id id)} - get the class record given the type id of
+an object.
+
+@item @scheme{(ilu-class:name class)} - given a class record object, get the name of
+the class.
+
+@item @scheme{(ilu:create-object-table object-of-ih-func free-self-func)} - create an
+object table given a function that converts instance handles to objects
+and a function that cleans up an object table.  object-of-ih-func must
+take at least two arguments the first being the object table and the
+second the instance handle of the object being requested.  The 
+free-self-func must take at least one argument which is the object table
+being freed.
+
+@item @scheme{(ilu:set-default-server server)} - set the default server in the process
+to be "server".
+
+@item @scheme{(ilu:get-default-server)} - return the default server object.
+
+@item @scheme{(ilu:create-port server protocol-type transport-type)} - create a port on
+the given server.  protocol-type is a string containing the protocol 
+type and transport-type is a vector containing the transport layers to
+use on the given port.  protocol-type and transport-type may have the
+value of #f in which case the default protocol and transport types are
+used.
+
+@item @scheme{(ilu:set-server-default-port server port)} - set the default port for a
+given server.
+
+@item @scheme{(ilu-server:create server-name object-table)} - create a server given a
+name and an object-table.
+
+@item @scheme{(ilu-server:id server)} - return the id of a server.
+
+@item @scheme{(ilu-server:add-port server protocol-type transport-type make-default)} -
+add a port to the given server.  Basically, the same as "ilu:create-port",
+except it takes one additional argument "make-default" which indicates
+whether the new port should be made the default one for the given server.
+
+@item @scheme{(ilu:make-main-loop-id)} - make an "id" that can be used to start and
+stop a main loop execution.
+
+@item @scheme{(ilu:free-main-loop-id id)} - free a main-loop-id created by the function
+(ilu:make-main-loop-id).  This should only be used when the id is no longer
+needed.  Note: the same main loop id can be reused for different main loops
+if desired, but may not be used by multiple main loops at the same time.
+
+@item @scheme{(ilu:run-main-loop id)} - run the ILU main loop.  id must be 0 or an id
+created by (ilu:make-main-loop-id).  If the id is 0 the scheme runtime
+will assign a default id to use.  Note: that the 0 id can be only used
+for one main loop at a time.
+
+@item @scheme{(ilu:exit-main-loop id)} - stop execution of a main loop with the given
+id.
+
+@item @scheme{(ilu:set-main-loop main-loop)} - set the main loop to a user defined main
+loop object.  See (make-ilu:main-loop) for more information.
+
+@item @scheme{(ilu:register-input-handler port handler)} - register in input handler
+for the given input port.  handler may be any lambda expression.
+
+@item @scheme{(ilu:unregister-input-handler port)} - unregister an input handler for
+the given port.
+
+@item @scheme{(ilu:register-output-handler port handler)} - register in output handler
+for the given output port.  handler may be any lambda expression.
+
+@item @scheme{(ilu:unregister-output-handler port)} - unregister an output handler for
+the given port.
+
+@item @scheme{(ilu:create-alarm)} - create an alarm object.
+
+@item @scheme{(ilu:set-alarm alarm time proc)} - set an alarm object.  The time is
+given as a floating point value in seconds.  proc is an arbitrary
+lambda expression.
+
+@item @scheme{(ilu:clear-alarm alarm)} - clear the given alarm so it will not be
+called.
+
+@item @scheme{(make-ilu:main-loop)} - this is an ILU-YASOS object is an abstract base
+class for main loop objects.  If the user desires to make their own main
+loop object, the must subclass from this one and redefine all of the
+following methods.
+
+Public Methods:
+@itemize @bullet
+@item @scheme{(run this stop)} - run this main loop.  stop is a main-loop-id as
+described in (ilu:make-main-loop-id);
+@item @scheme{(exit this stop)} - stop this main loop.  stop is a main-loop-id as
+described in (ilu:make-main-loop-id);
+@item @scheme{(register-input-handler this port handler)} - register an input
+handler for the given port.  handler can be an arbitrary lambda
+expression;
+@item @scheme{(register-output-handler this port handler)} - register an output
+handler for the given port.  handler can be an arbitrary lambda
+expression;
+@item @scheme{(unregister-input-handler this port)} - unregister an input handler
+for the given port;
+@item @scheme{(unregister-output-handler this port)} - unregister an input handler
+for the given port;
+@item @scheme{(create-alarm this)} - create an alarm object;
+@item @scheme{(set-alarm this alarm time proc)} - set an alarm object
+(see ilu:set-alarm for more details);
+@item @scheme{(clear-alarm this alarm)} - clear the given alarm so it won't trigger.
+@end itemize
+
+@item @scheme{(ilu:sbh-to-object sbh class)} - takes a string binding handle and a
+class record and returns the object associated with that string binding
+handle.  It also checks to make sure the correct class is set.
+
+@item @scheme{(ilu:parse-sbh sbh)} - parse the given string binding handle.  A list
+is returned which has the following form: (instance-handle server-id
+mstid contact-info length-of-contact-info-substring).
+
+@item @scheme{(ilu-object:lookup server-id instance-handle class)} - attempt to lookup
+an object given a server-id, instance-handle and class record.  If the
+lookup fails, #f is returned.
+@end itemize
+
+@ifclear largerdoc
+@section Index of Functions
+@printindex ft
+@end ifclear

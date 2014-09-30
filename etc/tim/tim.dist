@@ -1,0 +1,892 @@
+#!/bin/sh
+###########################################################################
+# Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+# 
+# Unlimited use, reproduction, modification, and distribution of this
+# software and modified versions thereof is permitted.  Permission is
+# granted to make derivative works from this software or a modified
+# version thereof.  Any copy of this software, a modified version
+# thereof, or a derivative work must include both the above copyright
+# notice of Xerox Corporation and this paragraph.  Any distribution of
+# this software, a modified version thereof, or a derivative work must
+# comply with all applicable United States export control laws.  This
+# software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+# WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+# PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+# LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+# EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+# NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+# OF THE POSSIBILITY OF SUCH DAMAGES.
+#  
+#  $Id: tim.dist,v 1.25 1999/08/03 01:56:15 janssen Exp $
+###########################################################################
+#
+# This file contains a Python program which works as a TIM front end.
+# It reads the input file, and produces an output file, which may be in
+# Postscript format (using TeX and the texinfo macros), in info format
+# (using GNU makeinfo), or in texinfo format (again using GNU makeinfo).
+#
+# Common transformations:
+#
+#   1)  process all #include directives.
+#   2)  process all #defmacro directives.
+#   4)  Add "\@bye" to end of file.
+#   5)  translate all macros found in the body of the file.
+#
+# Postscript-specific:
+#
+#   1)  Add epsf and ttitalic font support at beginning:
+#	\\input epsf
+#	\\input texinfo @c -*-texinfo-*-
+#	@font@tenttsl=<some typewriter-slanted font>@newfam@ttslfam
+#	@def@ttsl{@fam@ttslfam@tenttsl}@textfont@ttslfam=@tenttsl
+#	@catcode\`@#=6
+#	@def@ttitalic#1{@t{@ttsl #1}}
+#	@catcode\`@#=@other
+#   2)  Run tex to generate the indices.
+#   3)  Run texindex to sort the indices.
+#   4)  Run tex again to create the dvi.
+#   5)  Run dvips to create the Postscript.
+#
+# Info-specific:
+#
+#   1)  Substitute @t for all uses of @ttitalic.
+#   2)  Handle @ampnr{} by replacing with `&'.
+#   3)  Process all @picture commands appropriately with pbmplus:
+#
+#	eps2gif | giftoppm | ppmquant 2 | ppmtopgm | pnmscale -width 156 | pgmtopbm | pbmtoascii -2x4
+#
+#   4)  Run makeinfo with the options "--nosplit" and "--no-validate".
+#
+# Text-specific:
+#
+#   1)  Substitute @t for all uses of @ttitalic.
+#   2)  Handle @ampnr{} by replacing with `&'.
+#   3)  Process all @picture commands appropriately with pbmplus:
+#
+#	eps2gif | giftoppm | ppmquant 2 | ppmtopgm | pnmscale -width 156 | pgmtopbm | pbmtoascii -2x4
+#
+#   4)  Run makeinfo with the options "--nosplit", "--no-headers", and "--no-validate".
+#
+# Texinfo-specific:
+#
+#   1)  Substitute @t for all uses of @ttitalic.
+#   2)  Handle @ampnr{} by replacing with `&'.
+#   3)  Process all @picture commands appropriately with pbmplus:
+#
+#	eps2gif | giftoppm | ppmquant 2 | ppmtopgm | pnmscale -width 156 | pgmtopbm | pbmtoascii -2x4
+#
+#
+###########################################################################
+###########################################################################
+##
+##  Have /bin/sh exec python, whereever it may be.  The following code,
+##  from Martin von Loewis <loewis@informatik.hu-berlin.de>, is valid
+##  both as Python code and as Bourne shell code.  In Python it has
+##  no effect, but in the Bourne shell it causes the Python interpreter
+##  to be invoked on this file.  We do this because the path for our
+##  Python interpreter is longer than the 32 character limit imposed by
+##  our operating system.
+##
+###########################################################################
+###########################################################################
+
+true=0;
+then=1;
+fi=1;
+if true :
+	then
+	exec "PYTHON_EXECUTABLE" "$0" "$@"
+fi
+
+del true, then, fi
+
+###########################################################################
+###########################################################################
+##
+##
+##  External programs used by this program
+##
+##
+###########################################################################
+###########################################################################
+
+MAKEINFO = 'MAKEINFO_EXECUTABLE'
+TEX = 'TEX_EXECUTABLE'
+TEXINDEX = 'TEXINDEX_EXECUTABLE'
+DVIPS = 'DVIPS_EXECUTABLE'
+
+###########################################################################
+###########################################################################
+##
+##
+##  Other modules used by this file
+##
+##
+###########################################################################
+###########################################################################
+
+import sys, string, regex, traceback, regsub, os, types, tempfile, getopt
+
+###########################################################################
+###########################################################################
+##
+##
+##  Exceptions raised by this program
+##
+##
+###########################################################################
+###########################################################################
+
+TimError = 'general TIM to internal form conversion error'
+
+###########################################################################
+###########################################################################
+##
+##
+##  Compiled regular expressions used in this program
+##
+##
+###########################################################################
+###########################################################################
+
+macro_def_command = regex.compile('@timmacro[ \t]+\([a-zA-Z0-9-.+_]+\)[ \t]+\([^ \t][^\r\n]*\)[\r\n]*$')
+include_command = regex.compile('@include[ \t]+\([^ \t\r\n]+\)[ \t\r\n]*$')
+block_command_end_or_start = regex.compile('^\(@\|@end[ \t]+\)\([a-zA-Z0-9-._]+\)[ \t\r\n]*$')
+line_command_head = regex.compile('@\([a-zA-Z0-9-.+_]+\)[ \t]')
+html_command = regex.compile('@ifhtml[ \t]*.*$')
+span_end = regex.compile('[^@{}]*}')
+span_enclosure_begin = regex.compile('[^@]*{')
+span_command_begin = regex.compile('\([^@{}]*\)@\([a-zA-Z0-9-.+_]+\){')
+picture_command = regex.compile('@picture[ \t]\([^ \t\r\n]+\)\([^\r\n]*\).*$')
+conditional_command = regex.compile('@\(ifset\|ifclear\)[ \t]+\([a-zA-Z0-9]+\).*$')
+set_or_clear_command = regex.compile('@\(set\|clear\)[ \t]+\([a-zA-Z0-9]+\).*$')
+ifset_terminator_command = regex.compile('@end[ \t]+ifset[ \t\r\n]*.*$')
+ifclear_terminator_command = regex.compile('@end[ \t]+ifclear[ \t\r\n].*$')
+html_terminator_command = regex.compile('@end[ \t]+ifhtml[ \t\r\n]*.*$')
+
+# pattern to handle Texinfo "simple things" (like @foo)
+simple_pattern = '@\(\*\| \|\n\||\|:\|!\|\?\|\.\)'
+
+###########################################################################
+###########################################################################
+##
+##
+##  Global variables used in this program
+##
+##
+###########################################################################
+###########################################################################
+
+verbose = 0
+
+global_flags = []
+
+###########################################################################
+###########################################################################
+##
+##
+##  Utility functions
+##
+##
+###########################################################################
+###########################################################################
+
+def gettempfile():
+	import traceback
+	fname = tempfile.mktemp()
+	# sys.stderr.write('getting a temp file name:  ' + fname + '\n')
+	# traceback.print_stack()
+	return fname
+
+# errmsg -- output a msg to stderr with filename and line number
+
+def errmsg (file, lineno, msg, line=None, charpos=-1):
+
+	sys.stderr.write (file + ', ' + str(lineno) + ':  ' + msg + '\n')
+	if line:
+		sys.stderr.write(line)
+	if charpos >= 0:
+		sys.stderr.write(' ' * (charpos - 1) + '^\n')
+
+# msg -- if verbose is true, output a message to stderr
+
+def msg (level, line):
+
+	if (verbose > level):
+		sys.stderr.write (line)
+
+# delfile -- delete a file, discarding any errors that might be signalled
+
+def delfile (fname):
+	try:
+		os.unlink(fname)
+	except:
+		pass
+
+# report_dangling_scopes -- report unterminated span markups
+
+def report_dangling_scopes (filename, scopes, msg):
+	if len(scopes) == 1:
+		suffix = ''
+	else:
+		suffix = 's'
+	sys.stderr.write('%s:  Unterminated command%s%s:\n' % (filename, suffix, msg))
+	for scope in scopes:
+		sys.stderr.write ('   "%s", line %d, character position %d\n' % scope)
+
+# copy_file -- copy input to output, where input and output may be either open files or file names
+
+def copy_file (input, output):
+	if (type(input) == types.StringType):
+		inf = open(input, 'r')
+	else:
+		inf = input
+	if (type(output) == types.StringType):
+		outf = open(output, 'w')
+	else:
+		outf = output
+	line = inf.readline()
+	while line:
+		outf.write(line)
+		line = inf.readline()
+
+# url_massage -- take line possibly containing @url{[CAPTION,]URL}, turn into "[CAPTION ]<URL>".
+
+url_with_caption = regex.compile('\(.*\)@url{\([^,}]*\),[ ]*\([^}]*\)}\(.*\)')
+url_without_caption = regex.compile('\(.*\)@url{\([^}]*\)}\(.*\)')
+
+def url_massage (line):
+	index = 0
+	while 1:
+		index = url_with_caption.match(line)
+		if (index >= 0):
+			prefix, caption, url, suffix = url_with_caption.group(1,2,3,4)
+			line = prefix + caption + ' (@code{' + url + '})' + suffix
+		else:
+			index = url_without_caption.match(line)
+			if (index >= 0):
+				prefix, url, suffix = url_without_caption.group(1,2,3)
+				line = prefix + '@code{' + url + '}' + suffix
+			else:
+				break;
+	return line
+
+def setopt (flagname):
+	if not flagname in global_flags:
+		global_flags.append(flagname)
+
+###########################################################################
+###########################################################################
+##
+##
+##  tim2internal -- this function takes an input file and an output file,
+##     and converts the input file (in domain-specific TIM format) to
+##     domain-independent TIM format in the output file.
+##
+##
+###########################################################################
+###########################################################################
+
+def tim2internal2 (input_file, output_file, input_file_name, level, macros, currentscopes, conditionals, flags):
+
+	def macrocheck (macros, macroname):
+		if macros.has_key(macroname):
+			return macros[macroname]
+		else:
+			return macroname
+
+	lineno = 0	# keep track of lineno for debugging messages
+
+	has_indices = 0	# keep track of whether indices must be produced
+
+	line = input_file.readline()
+	while line:
+
+		lineno = lineno + 1
+
+		# first, check for macro definitions
+
+		if (macro_def_command.match(line) >= 0):
+
+			macro_name = macro_def_command.group(1)
+			macro_expansion = macro_def_command.group(2)
+			msg(2, 'defining "%s" as "%s"\n' % (macro_name, macro_expansion))
+			macros[macro_name] = macro_expansion
+
+		# then, check for include statements
+
+		elif (include_command.match(line) >= 0):
+
+			filename = include_command.group(1)
+			msg(0, 'including file "%s"\n' % filename)
+			newfile = open (filename, 'r')
+			tim2internal2 (newfile, output_file, filename, level + 1, macros, [], [], flags)
+			newfile.close()
+			msg(1, 'finished file "%s"\n' % filename)
+
+		# then, check for conditional input
+
+		elif (conditional_command.match(line) >= 0):
+
+			clear_or_set = conditional_command.group(1)
+			flagname = conditional_command.group(2)
+
+			# either we should skip everything till the corresponding @end...
+
+			if (((clear_or_set == 'ifclear') and (flagname in flags)) or
+			    ((clear_or_set == 'ifset') and not (flagname in flags))):
+				start_lineno = lineno
+				msg(1, 'skipping input conditional on "%s %s", line %d\n' % (clear_or_set, flagname, lineno))
+				if (clear_or_set == 'ifclear'): terminator = ifclear_terminator_command
+				elif (clear_or_set == 'ifset'): terminator = ifset_terminator_command
+				line = input_file.readline()
+				lineno = lineno + 1
+				while (line and terminator.match(line) < 0):
+					msg(3, '  skipping line %s\n' % lineno);
+					line = input_file.readline()
+					lineno = lineno + 1
+				if not line:
+					errmsg(input_file_name, start_lineno, 'Unterminated %s command' % clear_or_set)
+					raise TimError
+				else:
+					msg(2, 'finished skipping "%s %s" input, on line %s\n' % (clear_or_set, flagname, lineno))
+
+			# or we should include it
+
+			else:
+				msg(1, 'entering conditional section "%s %s" on line %d\n' % (clear_or_set, flagname, lineno))
+				conditionals.append((clear_or_set, flagname, lineno,))
+
+		# then, check for end of ifclear or ifset
+
+		elif (ifclear_terminator_command.match(line) >= 0):
+			if (len(conditionals) < 1) or conditionals[-1][0] != 'ifclear':
+				errmsg(input_file_name, lineno, 'Bad @end ifclear, given current conditional scopes %s\n' % conditionals)
+			else:
+				msg(2, 'leaving conditional section "%s %s" entered on line %d\n' % conditionals[-1])
+				del conditionals[-1]
+
+		elif (ifset_terminator_command.match(line) >= 0):
+			if (len(conditionals) < 1) or conditionals[-1][0] != 'ifset':
+				errmsg(input_file_name, lineno, 'Bad @end ifset, given current conditional scopes %s\n' % conditionals)
+			else:
+				msg(2, 'leaving conditional section "%s %s" entered on line %d\n' % conditionals[-1])
+				del conditionals[-1]
+
+		# then, check for set or clear commands
+
+		elif (set_or_clear_command.match(line) >= 0):
+
+			clear_or_set = set_or_clear_command.group(1)
+			flagname = set_or_clear_command.group(2)
+			if ((clear_or_set == 'clear') and (flagname in flags)):
+				flags.remove(flagname)
+			elif ((clear_or_set == 'set') and not (flagname in flags)):
+				flags.append(flagname)
+
+		# finally, handle standard macro replacements
+
+		else:	# process all macros ending or beginning on this line
+
+			line = regsub.gsub('@@', 'hIgHlYuNlIkElYsTrInG1', line)
+			line = regsub.gsub('@{', 'hIgHlYuNlIkElYsTrInG2', line)
+			line = regsub.gsub('@}', 'hIgHlYuNlIkElYsTrInG3', line)
+			line = regsub.gsub(simple_pattern, 'hIgHlYuNlIkElYsTrInG4\\1', line)
+			lineindex = 0
+			linelen = len(line)
+			newline = ''
+
+			# first, check for a block macro
+
+			if (block_command_end_or_start.match(line) >= 0):
+
+				blockend = block_command_end_or_start.group(1)
+				commandname = block_command_end_or_start.group(2)
+				newline = blockend + macrocheck(macros, commandname) + '\n'
+				lineindex = linelen
+
+			# next, check for a `line' macro at the beginning of the line
+
+			elif (line_command_head.match(line) >= 0):
+
+				macroname = line_command_head.group(1)
+
+				if len(currentscopes) > 0:
+
+					report_dangling_scopes(input_file_name, currentscopes,
+							       ' when encountering line macro "%s" on line %d' % (macroname, lineno))
+					raise TimError
+
+				else:
+
+					macroname = macrocheck(macros, macroname)
+					if (macroname == 'printindex'):
+						has_indices = 1
+					newline = newline + '@' + macroname + ' '
+					lineindex = len(line_command_head.group(0))
+
+			# finally, replace all in-line macros in the line
+
+			while (linelen - lineindex) > 0:
+
+				# check for a regular command or command ending
+
+				if (span_end.match(line[lineindex:]) >= 0):
+					matchstring = span_end.group(0)
+					if (len(currentscopes) < 1):
+						errmsg(input_file_name, lineno,
+						       'Invalid close brace',
+						       line, lineindex + len(matchstring))
+						raise TimError
+					# close innermost current macro
+					newline = newline + matchstring
+					currentscopes = currentscopes[:-1]
+					lineindex = lineindex + len(matchstring)
+					
+				elif (span_enclosure_begin.match(line[lineindex:]) >= 0):
+					matchstring = span_enclosure_begin.group(0)
+					newline = newline + matchstring
+					currentscopes.append(('', lineno, lineindex + len(matchstring),))
+					lineindex = lineindex + len(matchstring)
+
+				elif (span_command_begin.match(line[lineindex:]) >= 0):
+					macroname = span_command_begin.group(2)
+					texinfoname = macrocheck(macros, macroname)
+					simpletext = span_command_begin.group(1)
+					newline = newline + simpletext + '@' + texinfoname + '{'
+					currentscopes.append((texinfoname, lineno, lineindex + len(simpletext),))
+					lineindex = lineindex + len(span_command_begin.group(0))
+				else:
+					newline = newline + line[lineindex:]
+					lineindex = linelen
+
+			# OK, finished with line, change @@ back and write it out
+
+			newline = regsub.gsub('hIgHlYuNlIkElYsTrInG1', '@@', newline)
+			newline = regsub.gsub('hIgHlYuNlIkElYsTrInG2', '@{', newline)
+			newline = regsub.gsub('hIgHlYuNlIkElYsTrInG3', '@}', newline)
+			newline = regsub.gsub('hIgHlYuNlIkElYsTrInG4\(.\)', '@\\1', newline)
+			output_file.write(newline)
+
+		# read the next line
+		line = input_file.readline()
+
+	# finished with the file, check scopes and write trailer if level 0
+
+	if (len(currentscopes) > 0):
+		report_dangling_scopes(input_file_name, currentscopes, ' at end of file')
+		raise TimError
+	if (level == 0):
+		output_file.write('@bye\n');
+
+	# end of tim2internal2
+	return has_indices
+
+
+def tim2internal (input, output, input_file_name, macros={}):
+	# call tim2internal2 with the right starting state
+	return tim2internal2 (input, output, input_file_name, 0, macros, [], [], global_flags)
+
+###########################################################################
+###########################################################################
+##
+##
+##  Convert TIM domain-independent format to Postscript using TeX
+##
+##
+###########################################################################
+###########################################################################
+
+def inter2postscript (input, output, input_filename, has_indices):
+
+	html_mode = 0
+	line_no = 0;
+
+	tempdir = tempfile.tempdir
+	tempfile.tempdir = os.getcwd()
+	base_file_name = gettempfile()
+	tempfile.tempdir = tempdir
+
+	tex_file_name = base_file_name + '.tmp'
+	error_file_name = base_file_name + '.err'
+	dvi_file_name = base_file_name + '.dvi'
+	ps_file_name = base_file_name + '.ps'
+
+	# rewrite into vanilla texinfo
+
+	msg(0, '  processing @url, @html, @ttitalic, and @picture...\n')
+
+	tex_file = open(tex_file_name, 'w')
+	tex_file.write('\\input epsf\n')
+	tex_file.write('\\input texinfo @c -*-texinfo-*-\n')
+	tex_file.write('@ifx@usingpsfonts@relax' +
+		       '  @font@tenttsl=rpcrro' +
+		       '@else' +
+		       '  @font@tenttsl=cmsltt10' +
+		       '@fi' +
+		       '@newfam@ttslfam\n')
+	tex_file.write('@def@ttsl{@fam@ttslfam@tenttsl}@textfont@ttslfam=@tenttsl\n')
+	tex_file.write('@catcode`@#=6\n')
+	tex_file.write('@def@ttitalic#1{@t{@ttsl #1}}\n')
+	tex_file.write('@catcode`@#=@other\n')
+	line = input.readline()
+	line_no = line_no + 1
+	while line:
+		# check for @picture
+		if picture_command.match(line) >= 0:
+			filename = picture_command.group(1)
+			caption = picture_command.group(2)
+			if not caption:
+				tex_file.write('@sp 1\n@centerline{@epsfbox{%s}}\n@sp 1\n' % filename)
+			else:
+				tex_file.write('@sp 1\n@centerline{@epsfbox{%s}}\n@*\n@center %s\n@sp 1\n' % (filename, caption))
+		# check for @html
+		elif html_command.match(line) >= 0:
+			html_mode = 1;
+			msg(1, 'entering HTML mode at line %s\n' % line_no)
+		elif html_mode:
+			if html_terminator_command.match(line) >= 0:
+				html_mode = 0;
+				msg(1, 'leaving HTML mode at line %s\n' % line_no)
+		# check for @end html
+		elif html_terminator_command.match(line) >= 0:
+			errmsg(input_filename, line_no, '@end html found without preceding @html')
+			raise TimError
+		else:
+			line = regsub.gsub('@@', 'hIgHlYuNlIkElYsTrInG', line)
+			line = url_massage(line)
+			line = regsub.gsub('hIgHlYuNlIkElYsTrInG', '@@', line)
+			tex_file.write(line)
+		line = input.readline()
+		line_no = line_no + 1
+	tex_file.close()
+	
+	# run TeX to build the aux files and indices
+
+	msg(0, '  running first TeX pass...\n')
+	command = "/bin/csh -c '%s %s >&%s </dev/null'" % (TEX, tex_file_name, error_file_name)
+	status = os.system(command)
+	if (status/256 != 0):
+		copy_file (error_file_name, sys.stderr)
+		raise TimError
+	else:
+		delfile(error_file_name)
+
+	if has_indices:
+
+		msg(0, '  running texindex...\n')
+		command = "/bin/csh -c '%s %s.?? >&%s </dev/null'" % (TEXINDEX, base_file_name, error_file_name)
+		status = os.system(command)
+		if (status/256 != 0):
+			errmsg(base_file_name, 0, 'non-zero result from texindex:  %d\n' % status)
+			copy_file (error_file_name, sys.stderr)
+			raise TimError
+		else:
+			delfile(error_file_name)
+
+		# now run it again
+
+		msg(0, '  running second TeX pass...\n')
+		command = "/bin/csh -c '%s %s >&%s </dev/null'" % (TEX, tex_file_name, error_file_name)
+		status = os.system(command)
+		if (status/256 != 0):
+			copy_file (error_file_name, sys.stderr)
+			raise TimError
+		else:
+			delfile(error_file_name)
+
+	# now run dvips...
+
+	msg(0, '  converting dvips to Postscript...\n')
+	command = "/bin/csh -c '%s %s -o %s >&%s </dev/null'" % (DVIPS, dvi_file_name, ps_file_name, error_file_name)
+	status = os.system(command)
+	if (status/256 != 0):
+		copy_file (error_file_name, sys.stderr)
+		raise TimError
+	else:
+		delfile(error_file_name)
+
+	# copy to output
+
+	copy_file (ps_file_name, output)
+
+	# clean up a lot of temporary files
+
+	for file in (tex_file_name, ps_file_name, dvi_file_name, error_file_name):
+		delfile(file)
+
+	msg(2, 'base file name is %s\n' % base_file_name)
+	for suffix in ('aux', 'cp', 'fn', 'ky', 'log', 'pg', 'toc', 'tp', 'vr',
+		       'cps', 'fns', 'kys', 'pgs', 'tps', 'vrs', 'dt', 'dts',
+		       'et', 'ets', 'ft', 'fts', 'mt', 'mts', 'tt', 'tts', 'vt', 'vts'):
+		filename = base_file_name + '.' + suffix
+		delfile(filename)
+
+###########################################################################
+###########################################################################
+##
+##
+##  Convert TIM domain-independent format to Texinfo format
+##
+##
+###########################################################################
+###########################################################################
+
+def inter2texinfo (input, output, input_filename):
+
+	html_mode = 0
+	line_no = 0
+
+	msg(0, '  converting @url, @ttitalic, and @picture...\n')
+
+	output.write('\\input texinfo @c -*-texinfo-*-\n')
+	line = input.readline()
+	line_no = line_no + 1
+	while line:
+		# check for @picture
+		if picture_command.match(line) >= 0:
+			filename = picture_command.group(1)
+			caption = picture_command.group(2)
+			if not caption:
+				caption = '<no caption>'
+			output.write('@sp 1\n@center [picture @file{%s} omitted here.]\n@*\n@center %s\n@sp 1\n' % (filename, caption))
+		# check for @html
+		elif html_command.match(line) >= 0:
+			html_mode = 1;
+			msg(1, 'entering HTML mode at line %s\n' % line_no)
+		elif html_mode:
+			if html_terminator_command.match(line) >= 0:
+				html_mode = 0;
+				msg(1, 'leaving HTML mode at line %s\n' % line_no)
+		# check for @end html
+		elif html_terminator_command.match(line) >= 0:
+			errmsg(input_filename, line_no, '@end html found without preceding @html')
+			raise TimError
+		else:
+			line = regsub.gsub('@@', 'hIgHlYuNlIkElYsTrInG', line)
+			line = regsub.gsub('@ttitalic', '@t', line)
+			line = regsub.gsub('@ampnr{}', '&', line)
+			line = url_massage(line)
+			line = regsub.gsub('hIgHlYuNlIkElYsTrInG', '@@', line)
+			output.write(line)
+		line = input.readline()
+		line_no = line_no + 1
+
+###########################################################################
+###########################################################################
+##
+##
+##  Convert TIM domain-independent format to either text or info, using GNU makeinfo
+##
+##
+###########################################################################
+###########################################################################
+
+def inter2textORinfo (which, input, output, input_filename):
+	temp_name1 = gettempfile()
+	temp_name2 = gettempfile()
+	temp_name3 = gettempfile()
+	temp_file1 = open(temp_name1, 'w+')
+	try:
+		inter2texinfo (input, temp_file1, input_filename)
+		temp_file1.close()
+		if (which == 'text'):
+			command = '%s --no-split --no-headers --output %s --no-validate %s </dev/null >/dev/null' % (MAKEINFO, temp_name2, temp_name1)
+		elif (which == 'info'):
+			command = '%s --no-split --output %s --no-validate %s </dev/null >/dev/null' % (MAKEINFO, temp_name2, temp_name1)
+		msg(0, '  running GNU makeinfo...\n')
+		msg(1, '    makeinfo command is "%s".\n'%command)
+		result = os.system(command)
+	finally:
+		pass
+		delfile(temp_name1)
+	msg(1, '    result of makeinfo command is %s.\n' % result)
+	if (result/256 == 0):
+		temp_file2 = open(temp_name2, 'r')
+		try:
+			copy_file (temp_file2, output)
+		finally:
+			temp_file2.close()
+			delfile(temp_name2)
+	else:
+		sys.stderr.write('error converting to Texinfo from TIM internal format\n')
+
+def inter2text (input, output, input_filename):
+	inter2textORinfo ("text", input, output, input_filename)
+
+def inter2info (input, output, input_filename):
+	inter2textORinfo ("info", input, output, input_filename)
+
+###########################################################################
+###########################################################################
+##
+##
+##  Main routine, and conversion driver
+##
+##
+###########################################################################
+###########################################################################
+
+def loadmacros (macro_file_name, macros):
+
+	msg(0, 'loading macros in "%s"...\n' % macro_file_name)
+	macro_file = open(macro_file_name, 'r')
+	tf_name = gettempfile()
+	tf = open(tf_name, 'w')
+	# called for side-effect on "macros"
+	tim2internal2 (macro_file, tf, macro_file_name, 1, macros, [], [], global_flags)
+	tf.close()
+	delfile(tf_name)
+
+def usage():
+	sys.stderr.write('Usage:  %s [-p | -i | -t | -x | -d] [-s FLAG] [-v] [-X] [-m MACRO_FILENAME] [-o OUTPUT_FILENAME] [ INPUT_FILENAME ]\n' %
+			 program_name);
+	sys.stderr.write('        -p for Postscript; -i for GNU info; -t for text; -d for TIM DIF; -x for texinfo\n');
+	sys.stderr.write('        -m MACRO_FILENAME to preload a file of TIM macros; -v for verbose; -X to indicate index processing\n')
+	sys.stderr.write('        default output to stdout; default input from stdin\n');
+	sys.exit(1)
+
+def main(args):
+
+	global program_name, verbose
+
+	program_name = args[0]
+
+	try:
+		opts, args = getopt.getopt (args[1:], 'pitxvdDXo:m:V:s:')
+	except getopt.error:
+		traceback.print_exc()
+		usage()
+
+	verbose = 0
+	postscript = 0
+	text = 0
+	texinfo = 0
+	timdif = 0
+	assured_dif = 0
+	info = 0
+	has_indices = 0
+	has_indices2 = 0
+	macros = {}
+
+	output_file = None
+	output_file_name = "<stdout>"
+
+	if (len(args) > 1):
+		sys.stderr.write('Wrong number of arguments %s.\n' % (args, ))
+		usage()
+	elif (len(args) == 1):
+		input_file_name = args[0]
+		input_file = open(input_file_name, 'r')
+	else:
+		input_file_name = "<stdin>"
+		input_file = sys.stdin
+
+	for opt in opts:
+		if (len(opt) == 0):
+			pass
+		elif (opt[0] == '-v'):
+			verbose = 1
+		elif (opt[0] == '-V'):
+			verbose = string.atoi(opt[1])
+		elif (opt[0] == '-p'):
+			postscript = 1;
+		elif (opt[0] == '-t'):
+			text = 1
+		elif (opt[0] == '-x'):
+			texinfo = 1
+		elif (opt[0] == '-d'):
+			timdif = 1
+		elif (opt[0] == '-X'):
+			has_indices = 1
+		elif (opt[0] == '-D'):
+			assured_dif = 1
+		elif (opt[0] == '-i'):
+			info = 1
+		elif (opt[0] == '-m'):
+			loadmacros(opt[1], macros)
+		elif (opt[0] == '-s'):
+			setopt (opt[1])
+		elif (opt[0] == '-o'):
+			if output_file:
+				output_file.close()
+			output_file_name = opt[1]
+			output_file = open(output_file_name, 'w')
+		else:
+			sys.stderr.write('Bad option %s.\n' % opt)
+			usage()
+
+	if (output_file_name == '<stdout>'):
+		output_file = sys.stdout
+		
+	if timdif:
+		interfile = output_file
+		interfile_name = output_file_name
+
+	else:
+
+		tempfile.template = None	# clear template, in case I am a subprocess
+		interfile_name = gettempfile()
+		interfile = open(interfile_name, 'w+')
+
+	try:
+		if assured_dif:
+			copy_file (input_file, interfile)
+		else:
+
+			msg(0, 'converting "%s" to TIM domain-independent form...\n' % input_file_name)
+			has_indices2 = tim2internal (input_file, interfile, input_file_name, macros)
+
+	except TimError:
+		if (interfile != sys.stdout):
+			interfile.close()
+			delfile(interfile_name)
+		sys.exit(1)
+			       
+	except:
+		traceback.print_exc()
+		if (interfile != sys.stdout):
+			interfile.close()
+			delfile(interfile_name)
+		sys.exit(1)
+
+	interfile.seek(0)
+
+	try:
+		if postscript:
+			msg(0, 'converting TIM DIF to Postscript in "%s"...\n' % output_file_name)
+			inter2postscript (interfile, output_file, interfile_name, has_indices or has_indices2)
+		elif text:
+			msg(0, 'converting TIM DIF to text in "%s"...\n' % output_file_name)
+			inter2text (interfile, output_file, interfile_name)
+		elif info:
+			msg(0, 'converting TIM DIF to info in "%s"...\n' % output_file_name)
+			inter2info (interfile, output_file, interfile_name)
+		elif texinfo:
+			msg(0, 'converting TIM DIF to texinfo in "%s"...\n' % output_file_name)
+			inter2texinfo (interfile, output_file, interfile_name)
+		elif timdif:
+			pass
+		else:
+			sys.stderr.write('converting TIM DIF to text in "%s", since no output format was specified.\n' % output_file_name)
+			inter2text (interfile, output_file, interfile_name)
+
+	except:
+		sys.stderr.write('Error converting internal format to specified output format:\n')
+		traceback.print_exc()
+		sys.stderr.write('Intermediate format left in the file %s.\n' % interfile_name)
+		sys.exit(1)
+				
+	try:
+		if (interfile != sys.stdout):
+			interfile.close()
+	except:
+		pass
+	if (interfile != output_file):
+		delfile(interfile_name)
+	sys.exit(0)
+
+if __name__ == '__main__':
+	main(sys.argv)

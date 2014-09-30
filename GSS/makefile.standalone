@@ -1,0 +1,312 @@
+# BeginILUCopyright
+# 
+# Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+# 
+# Unlimited use, reproduction, modification, and distribution of this
+# software and modified versions thereof is permitted.  Permission is
+# granted to make derivative works from this software or a modified
+# version thereof.  Any copy of this software, a modified version
+# thereof, or a derivative work must include both the above copyright
+# notice of Xerox Corporation and this paragraph.  Any distribution of
+# this software, a modified version thereof, or a derivative work must
+# comply with all applicable United States export control laws.  This
+# software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+# WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+# PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+# LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+# EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+# NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+# OF THE POSSIBILITY OF SUCH DAMAGES.
+#   
+# EndILUCopyright
+#
+# Makefile for GSS API shell
+#
+
+# Configuration options:
+
+CF1 = -DINCLUDE_NIL_SECMECH
+
+CF2 = -DINCLUDE_SSL_SECMECH
+
+CF3 = -DINCLUDE_X500_NAMESPACE
+
+CF4 = -DINCLUDE_RFC822_NAMESPACE
+
+CDEFS = $(CF1) $(CF2) $(CF3) $(CF4)
+
+# DESINCDIR -- location where libdes include files are found
+DESINCDIR = ../libdes-3.0
+
+# DESLIBDIR -- directory where libdes library found
+DESLIBDIR = $(DESINCDIR)
+
+# RSAREFDIR -- directory which is root of RSARef sources
+RSAREFDIR = ./rsaref20
+
+# DEPFLAGS -- flags to makedepend: used for things like implicit include
+# directories used by the compiler
+DEPFLAGS = -I/usr/lib/gcc-lib/i486-linux/2.7.0/include
+
+
+CC = gcc
+CPPFLAGS = -I. -I$(DESINCDIR) -I$(RSAREFDIR)
+CFLAGS = $(CPPFLAGS) $(CDEFS) -g -ansi -pedantic -W -Wimplicit
+MDCFLAGS = $(CPPFLAGS) $(CDEFS)
+LDFLAGS = -L. -L$(DESLIBDIR)
+LIBOBJS =
+GSSOBJS	= gss_impl.o gss_oids.o gss_util.o gss_oidtbl.o gss_asn1.o gss_ext.o \
+	rfc822_ns.o x509_ns.o nil_scheme.o ssl_scheme.o \
+	ssl_sid.o ssl_cipher.o ssl_msgs.o gss_debug.o ssl_des.o \
+	ssl_md5.o md5.o gss_ssl_credtbl.o gss_x500_ns.o der.o \
+	ssl_asn1.o ssl_idea.o idea.o
+GSSSRCS = $(GSSOBJS:%.o=%.c)
+LIBS = -lgss -ldes -lrsaref
+
+all:	nstest nstest2 mechtest sslclnt sslsrvr der_dump asn1_test \
+	enc_oids testidea
+
+libgss.a:	$(GSSOBJS) librsaref.a
+	ar rv libgss.a $(GSSOBJS)
+
+#
+# target here because RSAREF library name is Broken and Wrong
+#
+librsaref.a:	$(RSAREFDIR)/binaries/rsaref.a
+	ln -s $(RSAREFDIR)/binaries/rsaref.a librsaref.a
+
+nstest:		nstest.o libgss.a
+	$(CC) $(LDFLAGS) -o nstest nstest.o $(LIBS)
+
+nstest2:	nstest2.o libgss.a
+	$(CC) $(LDFLAGS) -o nstest2 nstest2.o $(LIBS)
+
+mechtest:	mechtest.o libgss.a
+	$(CC) $(LDFLAGS) -o mechtest mechtest.o $(LIBS)
+
+sslclnt:	sslclnt.o libgss.a
+	$(CC) $(LDFLAGS) -o sslclnt sslclnt.o $(LIBS)
+
+sslsrvr:	sslsrvr.o libgss.a
+	$(CC) $(LDFLAGS) -o sslsrvr sslsrvr.o $(LIBS)
+
+nmcheck:	FRC
+	nm -g $(GSSOBJS) |grep T |grep -v gss
+
+der_dump:	der_dump.o libgss.a
+	$(CC) $(LDFLAGS) -o der_dump der_dump.o $(LIBS)
+
+asn1_test:	asn1_test.o libgss.a
+	$(CC) $(LDFLAGS) -o asn1_test asn1_test.o $(LIBS)
+
+enc_oids:	encode_oids.o
+	$(CC) $(LDFLAGS) -o enc_oids encode_oids.o
+
+testidea:	testidea.o libgss.a
+	$(CC) $(LDFLAGS) -o testidea testidea.o $(LIBS)
+
+clean:	FRC
+	rm -f testgss $(TESTOBJS) $(GSSOBJS) libgss.a
+
+depend:
+	makedepend $(MDCFLAGS) $(DEPFLAGS) $(GSSSRCS)
+
+FRC:
+# DO NOT DELETE THIS LINE -- make depend depends on it.
+
+gss_impl.o: /usr/include/assert.h /usr/include/stdio.h /usr/include/libio.h
+gss_impl.o: /usr/include/stdlib.h gssapi.h
+gss_impl.o: /usr/lib/gcc-lib/i486-linux/2.7.0/include/stddef.h gss_impl.h
+gss_impl.o: gss_debug.h /usr/include/errno.h /usr/include/features.h
+gss_impl.o: /usr/include/sys/cdefs.h /usr/include/linux/errno.h gss_conf.h
+gss_impl.o: gss_opaque.h gss_scheme.h gss_namespace.h gss_oids.h gss_ext.h
+gss_impl.o: gss_util.h gss_oidtbl.h gss_asn1.h rfc822_ns.h
+gss_oids.o: gssapi.h /usr/lib/gcc-lib/i486-linux/2.7.0/include/stddef.h
+gss_oids.o: gss_oids.h
+gss_util.o: /usr/include/stdlib.h /usr/include/assert.h /usr/include/stdio.h
+gss_util.o: /usr/include/libio.h gssapi.h
+gss_util.o: /usr/lib/gcc-lib/i486-linux/2.7.0/include/stddef.h gss_util.h
+gss_oidtbl.o: gssapi.h /usr/lib/gcc-lib/i486-linux/2.7.0/include/stddef.h
+gss_oidtbl.o: /usr/include/stdio.h /usr/include/libio.h /usr/include/stdlib.h
+gss_oidtbl.o: /usr/include/assert.h gss_oidtbl.h gss_util.h
+gss_asn1.o: gssapi.h /usr/lib/gcc-lib/i486-linux/2.7.0/include/stddef.h
+gss_asn1.o: /usr/include/assert.h gss_asn1.h gss_impl.h gss_debug.h
+gss_asn1.o: /usr/include/stdio.h /usr/include/libio.h /usr/include/errno.h
+gss_asn1.o: /usr/include/features.h /usr/include/sys/cdefs.h
+gss_asn1.o: /usr/include/linux/errno.h gss_conf.h gss_opaque.h gss_scheme.h
+gss_asn1.o: gss_namespace.h gss_oids.h gss_ext.h gss_util.h gss_oidtbl.h
+gss_ext.o: /usr/include/stdio.h /usr/include/libio.h /usr/include/stdlib.h
+gss_ext.o: gssapi.h /usr/lib/gcc-lib/i486-linux/2.7.0/include/stddef.h
+gss_ext.o: gss_ext.h gss_impl.h gss_debug.h /usr/include/errno.h
+gss_ext.o: /usr/include/features.h /usr/include/sys/cdefs.h
+gss_ext.o: /usr/include/linux/errno.h gss_conf.h gss_opaque.h gss_scheme.h
+gss_ext.o: gss_namespace.h gss_oids.h gss_util.h gss_oidtbl.h gss_asn1.h
+rfc822_ns.o: gssapi.h /usr/lib/gcc-lib/i486-linux/2.7.0/include/stddef.h
+rfc822_ns.o: /usr/include/stdio.h /usr/include/libio.h /usr/include/stdlib.h
+rfc822_ns.o: /usr/include/string.h /usr/include/features.h
+rfc822_ns.o: /usr/include/sys/cdefs.h /usr/include/ctype.h
+rfc822_ns.o: /usr/include/endian.h /usr/include/bytesex.h
+rfc822_ns.o: /usr/include/linux/version.h /usr/include/assert.h gss_opaque.h
+rfc822_ns.o: gss_namespace.h gss_oids.h gss_oidtbl.h rfc822_ns.h gss_util.h
+rfc822_ns.o: gss_impl.h gss_debug.h /usr/include/errno.h
+rfc822_ns.o: /usr/include/linux/errno.h gss_conf.h gss_scheme.h gss_ext.h
+x509_ns.o: gssapi.h /usr/lib/gcc-lib/i486-linux/2.7.0/include/stddef.h
+x509_ns.o: /usr/include/stdio.h /usr/include/libio.h /usr/include/string.h
+x509_ns.o: /usr/include/features.h /usr/include/sys/cdefs.h
+x509_ns.o: /usr/include/ctype.h /usr/include/endian.h /usr/include/bytesex.h
+x509_ns.o: /usr/include/linux/version.h /usr/include/assert.h gss_opaque.h
+x509_ns.o: gss_namespace.h gss_oids.h gss_oidtbl.h x509_ns.h gss_util.h gss_impl.h
+x509_ns.o: gss_debug.h /usr/include/errno.h /usr/include/linux/errno.h gss_conf.h
+x509_ns.o: gss_scheme.h gss_ext.h gss_x500_ns.h
+nil_scheme.o: /usr/include/stdio.h /usr/include/libio.h gssapi.h
+nil_scheme.o: /usr/lib/gcc-lib/i486-linux/2.7.0/include/stddef.h
+nil_scheme.o: /usr/include/assert.h gss_impl.h gss_debug.h /usr/include/errno.h
+nil_scheme.o: /usr/include/features.h /usr/include/sys/cdefs.h
+nil_scheme.o: /usr/include/linux/errno.h gss_conf.h gss_opaque.h gss_scheme.h
+nil_scheme.o: gss_namespace.h gss_oids.h gss_ext.h gss_util.h gss_oidtbl.h
+ssl_scheme.o: /usr/include/stdio.h /usr/include/libio.h /usr/include/stdlib.h
+ssl_scheme.o: gssapi.h /usr/lib/gcc-lib/i486-linux/2.7.0/include/stddef.h
+ssl_scheme.o: /usr/include/assert.h gss_impl.h gss_debug.h /usr/include/errno.h
+ssl_scheme.o: /usr/include/features.h /usr/include/sys/cdefs.h
+ssl_scheme.o: /usr/include/linux/errno.h gss_conf.h gss_opaque.h gss_scheme.h
+ssl_scheme.o: gss_namespace.h gss_oids.h gss_ext.h gss_util.h gss_oidtbl.h gss_ssl.h
+ssl_scheme.o: /usr/include/time.h ./rsaref20/source/global.h
+ssl_scheme.o: ./rsaref20/source/rsaref.h ./rsaref20/source/md2.h md5.h
+ssl_scheme.o: ./rsaref20/source/des.h ./rsaref20/source/rsa.h ssl_const.h
+ssl_scheme.o: gss_x500_ns.h gss_ssl_impl.h ssl_cipher.h ssl_asn1.h x509_ns.h
+ssl_scheme.o: ssl_sid.h ssl_msgs.h gss_ssl_credtbl.h
+ssl_sid.o: /usr/include/stdio.h /usr/include/libio.h /usr/include/stdlib.h
+ssl_sid.o: gssapi.h /usr/lib/gcc-lib/i486-linux/2.7.0/include/stddef.h
+ssl_sid.o: /usr/include/assert.h gss_impl.h gss_debug.h /usr/include/errno.h
+ssl_sid.o: /usr/include/features.h /usr/include/sys/cdefs.h
+ssl_sid.o: /usr/include/linux/errno.h gss_conf.h gss_opaque.h gss_scheme.h
+ssl_sid.o: gss_namespace.h gss_oids.h gss_ext.h gss_util.h gss_oidtbl.h gss_ssl.h
+ssl_sid.o: /usr/include/time.h ./rsaref20/source/global.h
+ssl_sid.o: ./rsaref20/source/rsaref.h ./rsaref20/source/md2.h md5.h
+ssl_sid.o: ./rsaref20/source/des.h ./rsaref20/source/rsa.h ssl_const.h
+ssl_sid.o: gss_x500_ns.h gss_ssl_impl.h ssl_cipher.h ssl_asn1.h x509_ns.h
+ssl_sid.o: ssl_sid.h
+ssl_cipher.o: /usr/include/stdio.h /usr/include/libio.h /usr/include/stdlib.h
+ssl_cipher.o: gssapi.h /usr/lib/gcc-lib/i486-linux/2.7.0/include/stddef.h
+ssl_cipher.o: /usr/include/assert.h gss_impl.h gss_debug.h /usr/include/errno.h
+ssl_cipher.o: /usr/include/features.h /usr/include/sys/cdefs.h
+ssl_cipher.o: /usr/include/linux/errno.h gss_conf.h gss_opaque.h gss_scheme.h
+ssl_cipher.o: gss_namespace.h gss_oids.h gss_ext.h gss_util.h gss_oidtbl.h gss_ssl.h
+ssl_cipher.o: /usr/include/time.h ./rsaref20/source/global.h
+ssl_cipher.o: ./rsaref20/source/rsaref.h ./rsaref20/source/md2.h md5.h
+ssl_cipher.o: ./rsaref20/source/des.h ./rsaref20/source/rsa.h ssl_const.h
+ssl_cipher.o: gss_x500_ns.h gss_ssl_impl.h ssl_cipher.h ssl_asn1.h x509_ns.h
+ssl_msgs.o: /usr/include/stdio.h /usr/include/libio.h /usr/include/stdlib.h
+ssl_msgs.o: gssapi.h /usr/lib/gcc-lib/i486-linux/2.7.0/include/stddef.h
+ssl_msgs.o: /usr/include/assert.h gss_impl.h gss_debug.h /usr/include/errno.h
+ssl_msgs.o: /usr/include/features.h /usr/include/sys/cdefs.h
+ssl_msgs.o: /usr/include/linux/errno.h gss_conf.h gss_opaque.h gss_scheme.h
+ssl_msgs.o: gss_namespace.h gss_oids.h gss_ext.h gss_util.h gss_oidtbl.h gss_ssl.h
+ssl_msgs.o: /usr/include/time.h ./rsaref20/source/global.h
+ssl_msgs.o: ./rsaref20/source/rsaref.h ./rsaref20/source/md2.h md5.h
+ssl_msgs.o: ./rsaref20/source/des.h ./rsaref20/source/rsa.h ssl_const.h
+ssl_msgs.o: gss_x500_ns.h gss_ssl_impl.h ssl_cipher.h ssl_asn1.h x509_ns.h
+ssl_msgs.o: ssl_sid.h ssl_msgs.h
+gss_debug.o: /usr/include/unistd.h /usr/include/features.h
+gss_debug.o: /usr/include/sys/cdefs.h /usr/include/posix_opt.h
+gss_debug.o: /usr/include/gnu/types.h
+gss_debug.o: /usr/lib/gcc-lib/i486-linux/2.7.0/include/stddef.h
+gss_debug.o: /usr/include/confname.h /usr/include/stdlib.h
+gss_debug.o: /usr/lib/gcc-lib/i486-linux/2.7.0/include/stdarg.h
+gss_debug.o: /usr/include/string.h gss_debug.h /usr/include/stdio.h
+gss_debug.o: /usr/include/libio.h /usr/include/errno.h /usr/include/linux/errno.h
+ssl_des.o: /usr/include/stdio.h /usr/include/libio.h /usr/include/stdlib.h
+ssl_des.o: /usr/include/assert.h gssapi.h
+ssl_des.o: /usr/lib/gcc-lib/i486-linux/2.7.0/include/stddef.h gss_impl.h
+ssl_des.o: gss_debug.h /usr/include/errno.h /usr/include/features.h
+ssl_des.o: /usr/include/sys/cdefs.h /usr/include/linux/errno.h gss_conf.h
+ssl_des.o: gss_opaque.h gss_scheme.h gss_namespace.h gss_oids.h gss_ext.h
+ssl_des.o: gss_util.h gss_oidtbl.h ssl_cipher.h ./rsaref20/source/des.h
+ssl_md5.o: /usr/include/stdio.h /usr/include/libio.h /usr/include/stdlib.h
+ssl_md5.o: /usr/include/assert.h gssapi.h
+ssl_md5.o: /usr/lib/gcc-lib/i486-linux/2.7.0/include/stddef.h gss_impl.h
+ssl_md5.o: gss_debug.h /usr/include/errno.h /usr/include/features.h
+ssl_md5.o: /usr/include/sys/cdefs.h /usr/include/linux/errno.h gss_conf.h
+ssl_md5.o: gss_opaque.h gss_scheme.h gss_namespace.h gss_oids.h gss_ext.h
+ssl_md5.o: gss_util.h gss_oidtbl.h ssl_cipher.h md5.h
+md5.o: md5.h
+gss_ssl_credtbl.o: /usr/include/stdio.h /usr/include/libio.h
+gss_ssl_credtbl.o: /usr/include/stdlib.h gssapi.h
+gss_ssl_credtbl.o: /usr/lib/gcc-lib/i486-linux/2.7.0/include/stddef.h
+gss_ssl_credtbl.o: /usr/include/assert.h gss_impl.h gss_debug.h
+gss_ssl_credtbl.o: /usr/include/errno.h /usr/include/features.h
+gss_ssl_credtbl.o: /usr/include/sys/cdefs.h /usr/include/linux/errno.h
+gss_ssl_credtbl.o: gss_conf.h gss_opaque.h gss_scheme.h gss_namespace.h
+gss_ssl_credtbl.o: gss_oids.h gss_ext.h gss_util.h gss_oidtbl.h gss_ssl.h
+gss_ssl_credtbl.o: /usr/include/time.h ./rsaref20/source/global.h
+gss_ssl_credtbl.o: ./rsaref20/source/rsaref.h ./rsaref20/source/md2.h md5.h
+gss_ssl_credtbl.o: ./rsaref20/source/des.h ./rsaref20/source/rsa.h
+gss_ssl_credtbl.o: ssl_const.h gss_x500_ns.h gss_ssl_impl.h ssl_cipher.h
+gss_ssl_credtbl.o: ssl_asn1.h x509_ns.h ssl_sid.h ssl_msgs.h
+gss_ssl_credtbl.o: gss_ssl_credtbl.h
+gss_x500_ns.o: /usr/include/assert.h /usr/include/stdio.h
+gss_x500_ns.o: /usr/include/libio.h gssapi.h
+gss_x500_ns.o: /usr/lib/gcc-lib/i486-linux/2.7.0/include/stddef.h gss_impl.h
+gss_x500_ns.o: gss_debug.h /usr/include/errno.h /usr/include/features.h
+gss_x500_ns.o: /usr/include/sys/cdefs.h /usr/include/linux/errno.h gss_conf.h
+gss_x500_ns.o: gss_opaque.h gss_scheme.h gss_namespace.h gss_oids.h gss_ext.h
+gss_x500_ns.o: gss_util.h gss_oidtbl.h gss_x500_ns.h
+der.o: /usr/include/assert.h /usr/include/stdio.h /usr/include/libio.h
+der.o: /usr/include/stdlib.h /usr/include/sys/types.h
+der.o: /usr/include/linux/types.h /usr/include/asm/types.h
+der.o: /usr/include/sys/socket.h /usr/include/features.h
+der.o: /usr/include/sys/cdefs.h /usr/include/linux/socket.h
+der.o: /usr/include/linux/sockios.h /usr/include/netinet/in.h
+der.o: /usr/include/linux/in.h /usr/include/asm/byteorder.h
+der.o: /usr/include/arpa/inet.h /usr/include/sys/param.h
+der.o: /usr/lib/gcc-lib/i486-linux/2.7.0/include/limits.h
+der.o: /usr/lib/gcc-lib/i486-linux/2.7.0/include/syslimits.h
+der.o: /usr/include/linux/limits.h /usr/include/linux/param.h
+der.o: /usr/include/asm/param.h /usr/include/string.h
+der.o: /usr/lib/gcc-lib/i486-linux/2.7.0/include/stddef.h
+der.o: /usr/include/sys/time.h /usr/include/linux/time.h /usr/include/time.h
+der.o: /usr/include/unistd.h /usr/include/posix_opt.h
+der.o: /usr/include/gnu/types.h /usr/include/confname.h /usr/include/fcntl.h
+der.o: /usr/include/linux/fcntl.h /usr/include/errno.h
+der.o: /usr/include/linux/errno.h /usr/include/signal.h
+der.o: /usr/include/linux/signal.h /usr/include/sys/stat.h
+der.o: /usr/include/linux/stat.h gssapi.h gss_ext.h gss_ssl.h
+der.o: ./rsaref20/source/global.h ./rsaref20/source/rsaref.h
+der.o: ./rsaref20/source/md2.h md5.h ./rsaref20/source/des.h
+der.o: ./rsaref20/source/rsa.h ssl_const.h gss_oids.h gss_util.h der.h
+ssl_asn1.o: /usr/include/stdio.h /usr/include/libio.h /usr/include/stdlib.h
+ssl_asn1.o: gssapi.h /usr/lib/gcc-lib/i486-linux/2.7.0/include/stddef.h
+ssl_asn1.o: /usr/include/assert.h /usr/include/time.h /usr/include/features.h
+ssl_asn1.o: /usr/include/sys/cdefs.h /usr/include/ctype.h
+ssl_asn1.o: /usr/include/endian.h /usr/include/bytesex.h
+ssl_asn1.o: /usr/include/linux/version.h /usr/include/string.h gss_impl.h
+ssl_asn1.o: gss_debug.h /usr/include/errno.h /usr/include/linux/errno.h
+ssl_asn1.o: gss_conf.h gss_opaque.h gss_scheme.h gss_namespace.h gss_oids.h
+ssl_asn1.o: gss_ext.h gss_util.h gss_oidtbl.h gss_ssl.h ./rsaref20/source/global.h
+ssl_asn1.o: ./rsaref20/source/rsaref.h ./rsaref20/source/md2.h md5.h
+ssl_asn1.o: ./rsaref20/source/des.h ./rsaref20/source/rsa.h ssl_const.h
+ssl_asn1.o: gss_x500_ns.h gss_ssl_impl.h ssl_cipher.h ssl_asn1.h x509_ns.h
+ssl_asn1.o: ssl_sid.h ssl_msgs.h der.h
+ssl_idea.o: /usr/include/stdio.h /usr/include/libio.h /usr/include/stdlib.h
+ssl_idea.o: /usr/include/assert.h gssapi.h
+ssl_idea.o: /usr/lib/gcc-lib/i486-linux/2.7.0/include/stddef.h gss_impl.h
+ssl_idea.o: gss_debug.h /usr/include/errno.h /usr/include/features.h
+ssl_idea.o: /usr/include/sys/cdefs.h /usr/include/linux/errno.h gss_conf.h
+ssl_idea.o: gss_opaque.h gss_scheme.h gss_namespace.h gss_oids.h gss_ext.h
+ssl_idea.o: gss_util.h gss_oidtbl.h ssl_cipher.h gss_ssl.h /usr/include/time.h
+ssl_idea.o: ./rsaref20/source/global.h ./rsaref20/source/rsaref.h
+ssl_idea.o: ./rsaref20/source/md2.h md5.h ./rsaref20/source/des.h
+ssl_idea.o: ./rsaref20/source/rsa.h ssl_const.h gss_ssl_impl.h ssl_asn1.h
+ssl_idea.o: x509_ns.h ssl_msgs.h idea.h
+idea.o: /usr/include/stdio.h /usr/include/libio.h gssapi.h
+idea.o: /usr/lib/gcc-lib/i486-linux/2.7.0/include/stddef.h
+idea.o: /usr/include/sys/types.h /usr/include/linux/types.h
+idea.o: /usr/include/asm/types.h /usr/include/sys/time.h
+idea.o: /usr/include/features.h /usr/include/sys/cdefs.h
+idea.o: /usr/include/linux/time.h /usr/include/time.h
+idea.o: /usr/include/netinet/in.h /usr/include/sys/socket.h
+idea.o: /usr/include/linux/socket.h /usr/include/linux/sockios.h
+idea.o: /usr/include/linux/in.h /usr/include/asm/byteorder.h
+idea.o: /usr/include/string.h /usr/include/ctype.h /usr/include/endian.h
+idea.o: /usr/include/bytesex.h /usr/include/linux/version.h idea.h

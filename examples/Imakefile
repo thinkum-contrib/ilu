@@ -1,0 +1,119 @@
+/** $Id: Imakefile,v 1.54 1999/08/07 00:43:44 janssen Exp $
+ BeginILUCopyright
+
+ Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+ Unlimited use, reproduction, modification, and distribution of this
+ software and modified versions thereof is permitted.  Permission is
+ granted to make derivative works from this software or a modified
+ version thereof.  Any copy of this software, a modified version
+ thereof, or a derivative work must include both the above copyright
+ notice of Xerox Corporation and this paragraph.  Any distribution of
+ this software, a modified version thereof, or a derivative work must
+ comply with all applicable United States export control laws.  This
+ software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+ WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+ LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+ EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+ NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+ OF THE POSSIBILITY OF SUCH DAMAGES.
+  
+ EndILUCopyright
+*/
+/* Last edited by Mike Spreitzer October 8, 1998 9:55 pm PDT */
+/* Chris Jacobi, January 5, 1999 5:01 pm PST */
+
+#define IHaveSubdirs
+
+#if (defined(ADD_C_LANGUAGE) && defined(ADD_PYTHON_LANGUAGE) && defined(PYTHON_LIBRARIES_INSTALLED)) && (!defined(ILU_CORBA_PYTHON_MAPPING))
+ MULTLANG_DIR = multlang
+#endif
+
+#if (defined(ADD_C_LANGUAGE) || defined(ADD_PYTHON_LANGUAGE))
+ TUT_DIRS = tutorial
+#endif
+
+#ifdef ADD_C_LANGUAGE
+ C_DIRS = test2 timeit changeup dialog objtable excn indirect
+#endif
+
+#ifdef ADD_PYTHON_LANGUAGE
+ PYTHON_DIRS = blob
+#endif
+
+#if (defined(ADD_PYTHON_LANGUAGE) && defined(ADD_IIOP_PROTOCOL))
+ PYTHON_IIOP_DIR = cubit black-widow-bank relocate
+#endif
+
+#if (defined(ADD_PYTHON_LANGUAGE) && defined(ADD_IIOP_PROTOCOL) && (defined(ADD_IDL_SUPPORT) || defined(ADD_DIRECT_OMG_IDL_SUPPORT)))
+ IDL2ISL_PYTHON_IIOP_GRID_DIR = orbix-grid
+#endif
+
+#if ((defined(ADD_PYTHON_LANGUAGE) || defined(ADD_COMMONLISP_LANGUAGE)) && defined(ADD_IIOP_PROTOCOL) && (defined(ADD_IDL_SUPPORT) || defined(ADD_DIRECT_OMG_IDL_SUPPORT)))
+ IDL2ISL_PYTHON_IIOP_BANK3_DIR = orbplus-bank3
+#endif
+
+#if (defined(ADD_C_LANGUAGE) && defined(ADD_IIOP_PROTOCOL))
+ IIOPTEST1_DIR = iiop
+#endif
+
+#if (defined(ADD_C_LANGUAGE) && defined(ADD_HTTP_PROTOCOL))
+ HTTEST_DIR = httest
+#endif
+
+#if (defined(ADD_ILU_CPLUSPLUS_LANGUAGE) && defined(CPLUSPLUS_LIBRARIES_SPECIFIED) && ((defined(ADD_PYTHON_LANGUAGE) && !defined(ILU_CORBA_PYTHON_MAPPING)) || (defined(ADD_JAVA_LANGUAGE) && defined(ADD_KERNEL_SHARED_LIBRARY))))
+ ML2_DIR = ml2
+#endif
+
+#if (defined(ADD_PYTHON_LANGUAGE) && !defined(ILU_CORBA_PYTHON_MAPPING) && defined(ADD_JAVA_LANGUAGE) && defined(ADD_KERNEL_SHARED_LIBRARY) && ((PYTHON_MAJOR_VERSION > 1) || (PYTHON_MINOR_VERSION > 5)))
+/* this example needs fix in Python processing of environment which is only available in 1.6 and later.
+   Java makes the environ param somehow read-only, so munging it in the traditional style just doesn't
+   work */
+ ML3_DIR = ml3
+#endif
+
+#if (defined(ADD_C_LANGUAGE) && defined(ADD_HTTP_PROTOCOL) && defined(HAS_NANOSLEEP) && (!defined(ILU_USE_NEW_KEYWORDS)) && defined(ADD_W3NG_PROTOCOL) && defined(ADD_W3MUX_TRANSPORT))
+ NGTEST_DIR = ngtest
+#endif
+
+#if (defined(ADD_C_LANGUAGE) && defined(ILU_REFERENCE_TYPES))
+ REF_DIR = reference
+#endif
+
+#if (defined(ADD_C_LANGUAGE) && defined(ADD_W3MUX_TRANSPORT))
+ W3MUX_DIR = w3mux
+#endif
+
+#if defined(ADD_JAVA_LANGUAGE)
+ JAVA_DIR = javatest1
+#endif
+
+#ifdef ADD_MODULA3_LANGUAGE
+ M3_DIRS = foogen foo
+#endif
+
+#ifdef ADD_CORBA_CPLUSPLUS_LANGUAGE
+ CORBACPP_DIRS = cpp2foo
+#endif
+
+#if (defined(ADD_PYTHON_LANGUAGE) && defined(ADD_VARIANT_SUPPORT) && defined(ADD_IIOP_PROTOCOL))
+ PYTHON_IIOP_PICKLE_DIR = pickle
+#endif
+
+#if (defined(ILU_FIXED_POINT_SUPPORT))
+ FIXEDPOINT_DIR = fixedpoint
+#endif
+
+#if (defined(ADD_JAVA_LANGUAGE))
+ JAVA_TESTJAVAOBV_DIR = testjavaobv
+#endif
+
+#if ((defined(ADD_C_LANGUAGE) || defined(ADD_PYTHON_LANGUAGE)) && defined(ADD_IIOP_PROTOCOL) && (defined(ADD_IDL_SUPPORT) || defined(ADD_DIRECT_OMG_IDL_SUPPORT)))
+ NAMING_DIR = naming
+#endif
+
+SUBDIRS = test1 $(M3_DIRS) $(LISP_DIRS) $(CORBACPP_DIRS) $(PYTHON_DIRS) $(C_DIRS) $(MULTLANG_DIR) $(ML2_DIR) $(ML3_DIR) $(TUT_DIRS) $(PYTHON_IIOP_DIR) $(IDL2ISL_PYTHON_IIOP_GRID_DIR) $(IDL2ISL_PYTHON_IIOP_BANK3_DIR) $(HTTEST_DIR) $(NGTEST_DIR) $(JAVA_DIR) $(IIOPTEST1_DIR) $(PYTHON_IIOP_PICKLE_DIR) $(W3MUX_DIR) $(FIXEDPOINT_DIR) $(JAVA_TESTJAVAOBV_DIR) $(REF_DIR) $(NAMING_DIR)
+
+InstallRO(Imakefile, $(DESTDIR)/examples)

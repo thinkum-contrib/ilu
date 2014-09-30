@@ -1,0 +1,862 @@
+README for the "test2" example directory.
+$Id: README,v 1.14 1999/01/20 19:20:17 spreitze Exp $
+
+[ Copyright (c) 1995--1997 Xerox Corporation.  All Rights Reserved.  
+
+  Unlimited use, reproduction, and distribution of this software is
+  permitted.  Any copy of this software must include both the above
+  copyright notice of Xerox Corporation and this paragraph.  Any
+  distribution of this software must comply with all applicable United
+  States export control laws.  This software is made available AS IS,
+  and XEROX CORPORATION DISCLAIMS ALL WARRANTIES, EXPRESS OR IMPLIED,
+  INCLUDING WITHOUT LIMITATION THE IMPLIED WARRANTIES OF MERCHANTABILITY
+  AND FITNESS FOR A PARTICULAR PURPOSE, AND NOTWITHSTANDING ANY OTHER
+  PROVISION CONTAINED HEREIN, ANY LIABILITY FOR DAMAGES RESULTING FROM
+  THE SOFTWARE OR ITS USE IS EXPRESSLY DISCLAIMED, WHETHER ARISING IN
+  CONTRACT, TORT (INCLUDING NEGLIGENCE) OR STRICT LIABILITY, EVEN IF
+  XEROX CORPORATION IS ADVISED OF THE POSSIBILITY OF SUCH DAMAGES. ]
+
+This directory is intended for tests of non-mainstream features.
+There are currently four: a test of concurrent protocols, a test of
+batching and pipelining, and a test of call order preservation (AKA
+serialization), and a test of both pipelining and call order
+preservation.  There are also two obsolete tests: one of ASYNCHRONOUS
+methods, and one of pipelining.  All examples are available only in C.
+
+
+I.  Concurrent Protocols
+
+The concurrent protocol test consists of two objects that call each
+other in a mutual recursion of selectable depth (and constant
+branching factor of 2).  They compute a Fibbonacci number according to
+the definition (Fib(n) = Fib(n-1) + Fib(n-2)), with each recursive
+call going between the two objects.
+
+The concurrent protocol test consists of one program, `fp`; command
+line arguments tell it whether to be a server or client.  The
+arguments to the client say which Fibbonacci is to be computed.  Both
+sides take optional arguments specifying "pinfo" and "tinfo".  The
+test is most interesting when a concurrent "pinfo" is given.
+
+Beware that in some cases this test can require a lot of concurrent
+connections; the -fds command line switch is available to set ILU's FD
+(File Descriptor) budget higher than the default value (currently 16).
+
+To build the concurrent protocol test,
+
+% ilumkmf
+% make fp
+
+To run the server,
+
+% setenv ILU_DEBUG SUNRPCRM
+% ./fp
+Usage: ./fp [-p pinfo] [-t tinfo [tinfo...]] [-st | -mt | -mte] [-fds num] (-s | -c n)
+% ./fp -p csunrpc -s
+ILU version 2.0alpha7.6.  Copyright 1990-1996 Xerox Corporation.
+------------------------------------------------------------
+Configuration info: big-endian, is BSD, is POSIX, Solaris 2 threads, size_t=size_t
+  char=1s, short=2, int=4, long=4, void *=4, fnptr=4, long long=8, long double=16, enum=4,
+  protocols = sunrpc courier iiop, transports = inmem tcp udp sunrpcrm secure,
+  binding via shared files in /project/rpc/current/lib/binding
+------------------------------------------------------------
+ilu_SetDebugLevel:  setting debug mask from 0x0 to 0x80000
+sunrpcrm(156a68): CreateMooring(lower=156a48)
+my SBH = 'ilu:Fibber-Test-Server/it;ilu%3Ai5P8tLpwvh+a8ordp1Z3rnZVdlF;csunrpc_2_0x61a78_1266674080@sunrpcrm=tcp_13.2.116.108_46647'
+Serving...
+
+Then run the client
+
+% setenv ILU_DEBUG SUNRPCRM
+% ./fp -p csunrpc -c 4
+ILU version 2.0alpha7.6.  Copyright 1990-1996 Xerox Corporation.
+------------------------------------------------------------
+Configuration info: big-endian, is BSD, is POSIX, Solaris 2 threads, size_t=size_t
+  char=1s, short=2, int=4, long=4, void *=4, fnptr=4, long long=8, long double=16, enum=4,
+  protocols = sunrpc courier iiop, transports = inmem tcp udp sunrpcrm secure,
+  binding via shared files in /project/rpc/current/lib/binding
+------------------------------------------------------------
+ilu_SetDebugLevel:  setting debug mask from 0x0 to 0x80000
+sunrpcrm(156a28): CreateMooring(lower=156a08)
+my SBH = 'ilu:13.2.116.108.dc5.31be547a.2f96/it;ilu%3Ai5P8tLpwvh+a8ordp1Z3rnZVdlF;csunrpc_2_0x61a78_1266674080@sunrpcrm=tcp_13.2.116.108_46648'
+sunrpcrm:NewTrans(lower=15b120) = 15b260
+sunrpcrm(15b260): BeginMessage(output)
+sunrpcrm(15b260): EndMessage(output, flush=1, last chunkSize=144)
+sunrpcrm(15b260): BeginMessage(input)
+sunrpcrm(15b260): Read 28 more bytes, in addition to 0 previous, of next chunk (incl header).
+sunrpcrm(15b260): Parse header of length 24 chunk (last=1), 24 in buffer.
+sunrpcrm(15b260): EndMessage(input)
+sunrpcrm(15b260): BeginMessage(output)
+sunrpcrm(15b260): EndMessage(output, flush=1, last chunkSize=288)
+sunrpcrm:NewTrans(lower=15b410) = 15f6e0
+sunrpcrm(15f6e0): BeginMessage(input)
+sunrpcrm(15f6e0): Read 292 more bytes, in addition to 0 previous, of next chunk (incl header).
+sunrpcrm(15f6e0): Parse header of length 288 chunk (last=1), 288 in buffer.
+sunrpcrm(15f6e0): EndMessage(input)
+..fib(3, d=2): calling step 1.
+sunrpcrm(15b260): BeginMessage(output)
+sunrpcrm(15b260): EndMessage(output, flush=1, last chunkSize=288)
+sunrpcrm(15f6e0): BeginMessage(input)
+sunrpcrm(15f6e0): Read 292 more bytes, in addition to 0 previous, of next chunk (incl header).
+sunrpcrm(15f6e0): Parse header of length 288 chunk (last=1), 288 in buffer.
+sunrpcrm(15f6e0): EndMessage(input)
+....fib(1, d=4): returning 1.
+sunrpcrm(15f6e0): BeginMessage(output)
+sunrpcrm(15f6e0): EndMessage(output, flush=1, last chunkSize=32)
+sunrpcrm(15f6e0): BeginMessage(input)
+sunrpcrm(15f6e0): Read 292 more bytes, in addition to 0 previous, of next chunk (incl header).
+sunrpcrm(15f6e0): Parse header of length 288 chunk (last=1), 288 in buffer.
+sunrpcrm(15f6e0): EndMessage(input)
+....fib(0, d=4): returning 1.
+sunrpcrm(15f6e0): BeginMessage(output)
+sunrpcrm(15f6e0): EndMessage(output, flush=1, last chunkSize=32)
+sunrpcrm(15b260): BeginMessage(input)
+sunrpcrm(15b260): Read 36 more bytes, in addition to 0 previous, of next chunk (incl header).
+sunrpcrm(15b260): Parse header of length 32 chunk (last=1), 32 in buffer.
+sunrpcrm(15b260): EndMessage(input)
+..fib(3, d=2): calling step 2.
+sunrpcrm(15b260): BeginMessage(output)
+sunrpcrm(15b260): EndMessage(output, flush=1, last chunkSize=288)
+sunrpcrm(15b260): BeginMessage(input)
+sunrpcrm(15b260): Read 36 more bytes, in addition to 0 previous, of next chunk (incl header).
+sunrpcrm(15b260): Parse header of length 32 chunk (last=1), 32 in buffer.
+sunrpcrm(15b260): EndMessage(input)
+..fib(3, d=2): returning 3.
+sunrpcrm(15f6e0): BeginMessage(output)
+sunrpcrm(15f6e0): EndMessage(output, flush=1, last chunkSize=32)
+sunrpcrm(15b260): BeginMessage(input)
+sunrpcrm(15b260): Read 0 more bytes, in addition to 0 previous, of next chunk (incl header).
+sunrpcrm(15f6e0): BeginMessage(input)
+sunrpcrm(15f6e0): Read 292 more bytes, in addition to 0 previous, of next chunk (incl header).
+sunrpcrm(15f6e0): Parse header of length 288 chunk (last=1), 288 in buffer.
+sunrpcrm(15f6e0): EndMessage(input)
+..fib(2, d=2): calling step 1.
+sunrpcrm(15b260): BeginMessage(output)
+sunrpcrm(15b260): EndMessage(output, flush=1, last chunkSize=288)
+sunrpcrm(15b260): BeginMessage(input)
+sunrpcrm(15b260): Read 36 more bytes, in addition to 0 previous, of next chunk (incl header).
+sunrpcrm(15b260): Parse header of length 32 chunk (last=1), 32 in buffer.
+sunrpcrm(15b260): EndMessage(input)
+..fib(2, d=2): calling step 2.
+sunrpcrm(15b260): BeginMessage(output)
+sunrpcrm(15b260): EndMessage(output, flush=1, last chunkSize=288)
+sunrpcrm(15b260): BeginMessage(input)
+sunrpcrm(15b260): Read 36 more bytes, in addition to 0 previous, of next chunk (incl header).
+sunrpcrm(15b260): Parse header of length 32 chunk (last=1), 32 in buffer.
+sunrpcrm(15b260): EndMessage(input)
+..fib(2, d=2): returning 2.
+sunrpcrm(15f6e0): BeginMessage(output)
+sunrpcrm(15f6e0): EndMessage(output, flush=1, last chunkSize=32)
+sunrpcrm(15b260): BeginMessage(input)
+sunrpcrm(15b260): Read 0 more bytes, in addition to 0 previous, of next chunk (incl header).
+sunrpcrm(15b260): BeginMessage(input)
+sunrpcrm(15b260): Read 36 more bytes, in addition to 0 previous, of next chunk (incl header).
+sunrpcrm(15b260): Parse header of length 32 chunk (last=1), 32 in buffer.
+sunrpcrm(15b260): EndMessage(input)
+Fib(4) = 5
+% 
+
+which should provoke output like the following on the server:
+
+sunrpcrm:NewTrans(lower=15ab68) = 15abf0
+sunrpcrm(15abf0): BeginMessage(input)
+sunrpcrm(15abf0): Read 148 more bytes, in addition to 0 previous, of next chunk (incl header).
+sunrpcrm(15abf0): Parse header of length 144 chunk (last=1), 144 in buffer.
+sunrpcrm(15abf0): EndMessage(input)
+sunrpcrm(15abf0): BeginMessage(output)
+sunrpcrm(15abf0): EndMessage(output, flush=1, last chunkSize=24)
+sunrpcrm(15abf0): BeginMessage(input)
+sunrpcrm(15abf0): Read 292 more bytes, in addition to 0 previous, of next chunk (incl header).
+sunrpcrm(15abf0): Parse header of length 288 chunk (last=1), 288 in buffer.
+sunrpcrm(15abf0): EndMessage(input)
+.fib(4, d=1): calling step 1.
+sunrpcrm:NewTrans(lower=15ace0) = 15b498
+sunrpcrm(15b498): BeginMessage(output)
+sunrpcrm(15b498): EndMessage(output, flush=1, last chunkSize=288)
+sunrpcrm(15abf0): BeginMessage(input)
+sunrpcrm(15abf0): Read 292 more bytes, in addition to 0 previous, of next chunk (incl header).
+sunrpcrm(15abf0): Parse header of length 288 chunk (last=1), 288 in buffer.
+sunrpcrm(15abf0): EndMessage(input)
+...fib(2, d=3): calling step 1.
+sunrpcrm(15b498): BeginMessage(output)
+sunrpcrm(15b498): EndMessage(output, flush=1, last chunkSize=288)
+sunrpcrm(15b498): BeginMessage(input)
+sunrpcrm(15b498): Read 36 more bytes, in addition to 0 previous, of next chunk (incl header).
+sunrpcrm(15b498): Parse header of length 32 chunk (last=1), 32 in buffer.
+sunrpcrm(15b498): EndMessage(input)
+...fib(2, d=3): calling step 2.
+sunrpcrm(15b498): BeginMessage(output)
+sunrpcrm(15b498): EndMessage(output, flush=1, last chunkSize=288)
+sunrpcrm(15b498): BeginMessage(input)
+sunrpcrm(15b498): Read 36 more bytes, in addition to 0 previous, of next chunk (incl header).
+sunrpcrm(15b498): Parse header of length 32 chunk (last=1), 32 in buffer.
+sunrpcrm(15b498): EndMessage(input)
+...fib(2, d=3): returning 2.
+sunrpcrm(15abf0): BeginMessage(output)
+sunrpcrm(15abf0): EndMessage(output, flush=1, last chunkSize=32)
+sunrpcrm(15b498): BeginMessage(input)
+sunrpcrm(15b498): Read 0 more bytes, in addition to 0 previous, of next chunk (incl header).
+sunrpcrm(15abf0): BeginMessage(input)
+sunrpcrm(15abf0): Read 292 more bytes, in addition to 0 previous, of next chunk (incl header).
+sunrpcrm(15abf0): Parse header of length 288 chunk (last=1), 288 in buffer.
+sunrpcrm(15abf0): EndMessage(input)
+...fib(1, d=3): returning 1.
+sunrpcrm(15abf0): BeginMessage(output)
+sunrpcrm(15abf0): EndMessage(output, flush=1, last chunkSize=32)
+sunrpcrm(15b498): BeginMessage(input)
+sunrpcrm(15b498): Read 36 more bytes, in addition to 0 previous, of next chunk (incl header).
+sunrpcrm(15b498): Parse header of length 32 chunk (last=1), 32 in buffer.
+sunrpcrm(15b498): EndMessage(input)
+.fib(4, d=1): calling step 2.
+sunrpcrm(15b498): BeginMessage(output)
+sunrpcrm(15b498): EndMessage(output, flush=1, last chunkSize=288)
+sunrpcrm(15abf0): BeginMessage(input)
+sunrpcrm(15abf0): Read 292 more bytes, in addition to 0 previous, of next chunk (incl header).
+sunrpcrm(15abf0): Parse header of length 288 chunk (last=1), 288 in buffer.
+sunrpcrm(15abf0): EndMessage(input)
+...fib(1, d=3): returning 1.
+sunrpcrm(15abf0): BeginMessage(output)
+sunrpcrm(15abf0): EndMessage(output, flush=1, last chunkSize=32)
+sunrpcrm(15abf0): BeginMessage(input)
+sunrpcrm(15abf0): Read 292 more bytes, in addition to 0 previous, of next chunk (incl header).
+sunrpcrm(15abf0): Parse header of length 288 chunk (last=1), 288 in buffer.
+sunrpcrm(15abf0): EndMessage(input)
+...fib(0, d=3): returning 1.
+sunrpcrm(15abf0): BeginMessage(output)
+sunrpcrm(15abf0): EndMessage(output, flush=1, last chunkSize=32)
+sunrpcrm(15b498): BeginMessage(input)
+sunrpcrm(15b498): Read 36 more bytes, in addition to 0 previous, of next chunk (incl header).
+sunrpcrm(15b498): Parse header of length 32 chunk (last=1), 32 in buffer.
+sunrpcrm(15b498): EndMessage(input)
+.fib(4, d=1): returning 5.
+sunrpcrm(15abf0): BeginMessage(output)
+sunrpcrm(15abf0): EndMessage(output, flush=1, last chunkSize=32)
+sunrpcrm(15abf0): BeginMessage(input)
+sunrpcrm(15abf0): Read 0 more bytes, in addition to 0 previous, of next chunk (incl header).
+sunrpcrm(15abf0): No more messages incoming.
+sunrpcrm(15abf0): Close(lower=15ab68)
+sunrpcrm(15b498): BeginMessage(input)
+sunrpcrm(15b498): Read 0 more bytes, in addition to 0 previous, of next chunk (incl header).
+sunrpcrm(15b498): No more messages incoming.
+sunrpcrm(15b498): Close(lower=15ace0)
+
+Check that "sunrpcrm:NewTrans" is printed exactly twice on each side;
+that's evidence that multiple calls are sometimes outstanding on
+connections.
+
+This program can also be used to test multi-threading.  Giving the
+"-mt" switch causes OS-supplied threads to be used, if support for
+them is configured into ILU.  Giving the "-mte" switch goes further
+and causes each Fibbonacci calculation to be done by forking two
+threads to do the recursive calls.  "-st" requests single-threaded
+execution (the default, regardless of configuration).  Don't expect
+"sunrpcrm:NewTrans" to be printed exactly twice when using multiple
+threads.
+
+
+II.  Batching and Pipelining
+
+This test involves an ASYNCHRONOUS call and callback pair, where the
+time of initiation of the call and callback are reported.  The calls
+are all part of the same pipeline, and associated with one batcher.
+Examining the times reveals the effects of batching (as well as other
+things).  To build:
+
+% ilumkmf
+% make b2svr b2clnt
+
+The server can be given "pinfo" and "tinfo" with the -p and -t
+switches.  Running the server looks like this:
+
+% ./b2svr
+tosleep = 0
+SBH = 'ilu:Batcher2-Server/it;ilu%3AeplLrOAh8foV35Cyzwj5ILfL+Cx;sunrpc@sunrpcrm=tcp_13.2.116.14_45012'
+
+The client periodically makes the call, with period "pCall".  The
+client optionally periodically pushes the batcher, with period "pPush"
+(if it's not 0).  The batcher is created with timeout "bTimeout".  The
+call includes a sequence of "len" bytes.  The client can be limited to
+making at most "nCalls" calls.
+
+% ./b2clnt
+Usage: ./b2clnt pCall bTimeout pPush len [nCalls] [-r] [-v]
+
+pCall, bTimeout, and pPush are floating-point numbers; len and nCalls
+are unsigned integers.  Here are three cases of using the client:
+
+% ./b2clnt 3 7.5 0 1 10
+Reply(893800122:330460, 0 -> 893800129:843014)
+Reply(893800125:338749, 1 -> 893800129:848998)
+Reply(893800128:340067, 2 -> 893800129:851575)
+Reply(893800131:348865, 3 -> 893800138:852814)
+Reply(893800134:349218, 4 -> 893800138:858679)
+Reply(893800137:349521, 5 -> 893800138:861515)
+Reply(893800140:350810, 6 -> 893800147:854422)
+Reply(893800143:351075, 7 -> 893800147:861137)
+Reply(893800146:351384, 8 -> 893800147:863182)
+Reply(893800149:352191, 9 -> 893800156:864510)
+
+The first line of output says that call 0 was initiated at an
+ilu_FineTime of 893800122 secs + 330460 ticks, and its callback was
+initiated at an ilu_FineTime of 893800129 secs + 843014 ticks; on this
+machine, a tick is one millionth of a second.  In this case, the
+batcher has a timeout of 7.5 sec, and there are no periodic explicit
+pushes.  Calls 0--2 are pushed by a timeout of call 0; similarly for
+3--5 and 6--8.
+
+% ./b2clnt 3 0 7.5 1 10
+Reply(893800183:734179, 0 -> 893800191:238419)
+Reply(893800186:734504, 1 -> 893800191:244294)
+Reply(893800189:735241, 2 -> 893800191:246724)
+Reply(893800192:736467, 3 -> 893800198:740923)
+Reply(893800195:736875, 4 -> 893800198:746968)
+Reply(893800198:737732, 5 -> 893800206:240975)
+Reply(893800201:746053, 6 -> 893800206:247103)
+Reply(893800204:746394, 7 -> 893800206:249117)
+Reply(893800207:746691, 8 -> 893800213:750476)
+Reply(893800210:746989, 9 -> 893800213:756352)
+
+In this case, we use periodic explicit pushes, not the batcher's
+timeout.  Note that in this case, the receipts of call batches are
+separated by 7.5 sec.
+
+% ./b2clnt 10 33 0 10000 10
+Reply(893801279:24956, 0 -> 893801289:28765)
+Reply(893801289:26287, 1 -> 893801299:31716)
+Reply(893801299:28255, 2 -> 893801309:31780)
+Reply(893801309:28320, 3 -> 893801312:40625)
+Reply(893801319:30167, 4 -> 893801329:35704)
+Reply(893801329:31615, 5 -> 893801339:38521)
+Reply(893801339:34225, 6 -> 893801349:45794)
+Reply(893801349:42336, 7 -> 893801352:35494)
+Reply(893801359:43345, 8 -> 893801369:48505)
+Reply(893801369:44411, 9 -> 893801392:51791)
+
+In this case the length of the byte sequence is greater than the
+buffering, so each call pushes its predecessor out unless the
+batcher's timeout has already done the job.
+
+
+III.  Call Order Preservation (AKA Serialization)
+
+The server simply prints out notes of calls, and every 45 seconds
+closes all its idle connections.  To build:
+
+% ilumkmf
+% make stsrvr stclnt
+
+Running the server looks like this:
+
+% ./stsrvr
+SBH = 'ilu:SerialTest-Server/it;ilu%3AdtZlS3R9meEQUIBfvCnSu0rPyrM;sunrpc@sunrpcrm=tcp_13.2.116.32_48187'
+M(0, 5)
+M(2, 5)
+M(1, 5)
+M(0, 4)
+M(2, 4)
+M(2, 3)
+M(0, 3)
+M(2, 2)
+M(1, 4)
+M(1, 3)
+M(1, 2)
+M(1, 1)
+
+873836681 FD usage = 1
+M(0, 2)
+M(2, 1)
+M(0, 1)
+
+873836726 FD usage = 1
+
+The client makes a given number of calls over a given number of
+serialization channels.  Each channel's calls are spaced at random
+intervals, drawn uniformly from the interval [0, 20.26] seconds.  The
+client prints something like
+
+Calling M(0, 5) at 873836647:3081
+
+before issuing each call.  The first parameter identifies the channel;
+the second counts down from the given number of calls to 1.  The last
+thing on the line is the ilu_FineTime of the call.
+
+To evaluate this test, you have to understand the implementation.
+Each ilu_Serializer is associated with one ilu_Connection at a time;
+calls associated with a given ilu_Serializer are sent over its
+associated ilu_Connection.  The Serializer/Connection association is
+only changed when the ilu_Connection closes.  When switching to a new
+connection at a time when it's not known whether the last call has
+finished executing on the server, the client's next call has to be a
+barrier call.  Use the CALL debug flag to get debugging output that
+reveals which connection is used for which call; check that the
+Serializer/Connection association behaves as designed.  Check that the
+barrier exception is raised as needed.
+
+Running the client looks like this:
+
+% setenv ILU_DEBUG CALL
+
+% ./stclnt 3 6
+ILU version 2.0a10.5.  Copyright 1990-1996 Xerox Corporation.
+------------------------------------------------------------
+Configuration info: big-endian, is BSD, is POSIX, no threads, variant, size_t=size_t,
+  char=1s, short=2, int=4, long=4, void *=4, fnptr=4, long long=0, long double=16, enum=4,
+  arch=sparc-sun-sunos4.1.3_U1, compiler="/project/rpc/tools/filtered-acc",
+  ANSI C lib="/import/sc3.0.1/solaris-1/SC3.0.1/lib/libansi.a", sys aux libs="",
+  protocols = sunrpc courier iiop http, transports = inmem tcp sunrpcrm w3mux batching,
+  binding via shared files in /project/rpc/registries/test
+------------------------------------------------------------
+ilu_SetDebugLevel:  setting debug mask from 0x0 to 0x400
+ilu_StartCall       (efffe028 over 14ee98 to "SerialTest-Server" #1, ilu.Object.ILUPing, pl=0, si=0).
+ilu_StartRequest    (efffe028 over 14ee98 to "SerialTest-Server" #1, argSize 0) => success
+ilu_FinishRequest   (efffe028 over 14ee98 to "SerialTest-Server" #1)
+ilu_GetReply        (efffe028 over 14ee98 to "SerialTest-Server" #1)...
+ilu_GetReply        (efffe028 over 14ee98 to "SerialTest-Server" #1) => (from wire) ans=Success estatus=0 err=success
+ilu_ReplyRead       (efffe028 over 14ee98 to "SerialTest-Server" #1) => success
+ilu_FinishCall      (efffe028 over 14ee98 to "SerialTest-Server" #1, pl=0, si=0) => err=success ca_pe=Success
+ilu_StartCall       (effff094 over 14ee98 to "SerialTest-Server" #2, SerialTest.T.Prep, pl=0, si=0).
+ilu_StartRequest    (effff094 over 14ee98 to "SerialTest-Server" #2, argSize 0) => success
+ilu_FinishRequest   (effff094 over 14ee98 to "SerialTest-Server" #2)
+ilu_GetReply        (effff094 over 14ee98 to "SerialTest-Server" #2)...
+ilu_GetReply        (effff094 over 14ee98 to "SerialTest-Server" #2) => (from wire) ans=Success estatus=0 err=success
+ilu_ReplyRead       (effff094 over 14ee98 to "SerialTest-Server" #2) => success
+ilu_FinishCall      (effff094 over 14ee98 to "SerialTest-Server" #2, pl=0, si=0) => err=success ca_pe=Success
+Calling M(0, 6) at 874994965:788547
+ilu_StartCall       (efffe99c over 14ee98 to "SerialTest-Server" #3, SerialTest.T.M, pl=0, si=150928).
+ilu_StartRequest    (efffe99c over 14ee98 to "SerialTest-Server" #3, argSize 0) => success
+ilu_FinishRequest   (efffe99c over 14ee98 to "SerialTest-Server" #3)
+ilu_FinishCall      (efffe99c over 14ee98 to "SerialTest-Server" #3, pl=0, si=150928) => err=success ca_pe=Success
+Calling M(1, 6) at 874994973:389808
+ilu_StartCall       (efffe99c over 154bd0 to "SerialTest-Server" #1, SerialTest.T.M, pl=0, si=150988).
+ilu_StartRequest    (efffe99c over 154bd0 to "SerialTest-Server" #1, argSize 0) => success
+ilu_FinishRequest   (efffe99c over 154bd0 to "SerialTest-Server" #1)
+ilu_FinishCall      (efffe99c over 154bd0 to "SerialTest-Server" #1, pl=0, si=150988) => err=success ca_pe=Success
+Calling M(2, 6) at 874994975:220077
+ilu_StartCall       (efffe99c over 158db8 to "SerialTest-Server" #1, SerialTest.T.M, pl=0, si=1509e8).
+ilu_StartRequest    (efffe99c over 158db8 to "SerialTest-Server" #1, argSize 0) => success
+ilu_FinishRequest   (efffe99c over 158db8 to "SerialTest-Server" #1)
+ilu_FinishCall      (efffe99c over 158db8 to "SerialTest-Server" #1, pl=0, si=1509e8) => err=success ca_pe=Success
+Calling M(0, 5) at 874994983:41370
+ilu_StartCall       (efffe99c over 14ee98 to "SerialTest-Server" #4, SerialTest.T.M, pl=0, si=150928).
+ilu_StartRequest    (efffe99c over 14ee98 to "SerialTest-Server" #4, argSize 0) => success
+ilu_FinishRequest   (efffe99c over 14ee98 to "SerialTest-Server" #4)
+ilu_FinishCall      (efffe99c over 14ee98 to "SerialTest-Server" #4, pl=0, si=150928) => err=success ca_pe=Success
+Calling M(1, 5) at 874994988:662125
+ilu_StartCall       (efffe99c over 154bd0 to "SerialTest-Server" #2, SerialTest.T.M, pl=0, si=150988).
+ilu_StartRequest    (efffe99c over 154bd0 to "SerialTest-Server" #2, argSize 0) => success
+ilu_FinishRequest   (efffe99c over 154bd0 to "SerialTest-Server" #2)
+ilu_FinishCall      (efffe99c over 154bd0 to "SerialTest-Server" #2, pl=0, si=150988) => err=success ca_pe=Success
+Calling M(2, 5) at 874994992:282740
+ilu_StartCall       (efffe99c over 158db8 to "SerialTest-Server" #2, SerialTest.T.M, pl=0, si=1509e8).
+ilu_StartRequest    (efffe99c over 158db8 to "SerialTest-Server" #2, argSize 0) => success
+ilu_FinishRequest   (efffe99c over 158db8 to "SerialTest-Server" #2)
+ilu_FinishCall      (efffe99c over 158db8 to "SerialTest-Server" #2, pl=0, si=1509e8) => err=success ca_pe=Success
+Calling M(0, 4) at 874995000:193819
+ilu_StartCall(serializer 150928, connection 14ee98) is barrier because conn. closed or closing.
+ilu_StartCall       (to SerialTest-Server, SerialTest.T.M, pl=0, si=150928) raises err barrier (from call.c ln 411).
+M(0, 4) => ILU: call is barrier call
+Calling M(0, 4) at 874995007:254981
+ilu_StartCall       (efffe99c over 154ad8 to "SerialTest-Server" #1, SerialTest.T.M, pl=0, si=150928).
+ilu_StartRequest    (efffe99c over 154ad8 to "SerialTest-Server" #1, argSize 0) => success
+ilu_FinishRequest   (efffe99c over 154ad8 to "SerialTest-Server" #1)
+ilu_FinishCall      (efffe99c over 154ad8 to "SerialTest-Server" #1, pl=0, si=150928) => err=success ca_pe=Success
+Calling M(1, 4) at 874995008:435383
+ilu_StartCall(serializer 150988, connection 154bd0) is barrier because conn. closed or closing.
+ilu_StartCall       (to SerialTest-Server, SerialTest.T.M, pl=0, si=150988) raises err barrier (from call.c ln 411).
+M(1, 4) => ILU: call is barrier call
+Calling M(2, 4) at 874995009:495267
+ilu_StartCall(serializer 1509e8, connection 158db8) is barrier because conn. closed or closing.
+ilu_StartCall       (to SerialTest-Server, SerialTest.T.M, pl=0, si=1509e8) raises err barrier (from call.c ln 411).
+M(2, 4) => ILU: call is barrier call
+Calling M(1, 4) at 874995016:716408
+ilu_StartCall       (efffe99c over 154ba8 to "SerialTest-Server" #1, SerialTest.T.M, pl=0, si=150988).
+ilu_StartRequest    (efffe99c over 154ba8 to "SerialTest-Server" #1, argSize 0) => success
+ilu_FinishRequest   (efffe99c over 154ba8 to "SerialTest-Server" #1)
+ilu_FinishCall      (efffe99c over 154ba8 to "SerialTest-Server" #1, pl=0, si=150988) => err=success ca_pe=Success
+Calling M(1, 3) at 874995020:346954
+ilu_StartCall       (efffe99c over 154ba8 to "SerialTest-Server" #2, SerialTest.T.M, pl=0, si=150988).
+ilu_StartRequest    (efffe99c over 154ba8 to "SerialTest-Server" #2, argSize 0) => success
+ilu_FinishRequest   (efffe99c over 154ba8 to "SerialTest-Server" #2)
+ilu_FinishCall      (efffe99c over 154ba8 to "SerialTest-Server" #2, pl=0, si=150988) => err=success ca_pe=Success
+Calling M(2, 4) at 874995022:597264
+ilu_StartCall       (efffe99c over 158c78 to "SerialTest-Server" #1, SerialTest.T.M, pl=0, si=1509e8).
+ilu_StartRequest    (efffe99c over 158c78 to "SerialTest-Server" #1, argSize 0) => success
+ilu_FinishRequest   (efffe99c over 158c78 to "SerialTest-Server" #1)
+ilu_FinishCall      (efffe99c over 158c78 to "SerialTest-Server" #1, pl=0, si=1509e8) => err=success ca_pe=Success
+Calling M(2, 3) at 874995026:807943
+ilu_StartCall       (efffe99c over 158c78 to "SerialTest-Server" #2, SerialTest.T.M, pl=0, si=1509e8).
+ilu_StartRequest    (efffe99c over 158c78 to "SerialTest-Server" #2, argSize 0) => success
+ilu_FinishRequest   (efffe99c over 158c78 to "SerialTest-Server" #2)
+ilu_FinishCall      (efffe99c over 158c78 to "SerialTest-Server" #2, pl=0, si=1509e8) => err=success ca_pe=Success
+Calling M(0, 3) at 874995027:488047
+ilu_StartCall       (efffe99c over 154ad8 to "SerialTest-Server" #2, SerialTest.T.M, pl=0, si=150928).
+ilu_StartRequest    (efffe99c over 154ad8 to "SerialTest-Server" #2, argSize 0) => success
+ilu_FinishRequest   (efffe99c over 154ad8 to "SerialTest-Server" #2)
+ilu_FinishCall      (efffe99c over 154ad8 to "SerialTest-Server" #2, pl=0, si=150928) => err=success ca_pe=Success
+Calling M(1, 2) at 874995039:559954
+ilu_StartCall       (efffe99c over 154ba8 to "SerialTest-Server" #3, SerialTest.T.M, pl=0, si=150988).
+ilu_StartRequest    (efffe99c over 154ba8 to "SerialTest-Server" #3, argSize 0) => success
+ilu_FinishRequest   (efffe99c over 154ba8 to "SerialTest-Server" #3)
+ilu_FinishCall      (efffe99c over 154ba8 to "SerialTest-Server" #3, pl=0, si=150988) => err=success ca_pe=Success
+Calling M(0, 2) at 874995039:699937
+ilu_StartCall       (efffe99c over 154ad8 to "SerialTest-Server" #3, SerialTest.T.M, pl=0, si=150928).
+ilu_StartRequest    (efffe99c over 154ad8 to "SerialTest-Server" #3, argSize 0) => success
+ilu_FinishRequest   (efffe99c over 154ad8 to "SerialTest-Server" #3)
+ilu_FinishCall      (efffe99c over 154ad8 to "SerialTest-Server" #3, pl=0, si=150928) => err=success ca_pe=Success
+Calling M(2, 2) at 874995043:830641
+ilu_StartCall       (efffe99c over 158c78 to "SerialTest-Server" #3, SerialTest.T.M, pl=0, si=1509e8).
+ilu_StartRequest    (efffe99c over 158c78 to "SerialTest-Server" #3, argSize 0) => success
+ilu_FinishRequest   (efffe99c over 158c78 to "SerialTest-Server" #3)
+ilu_FinishCall      (efffe99c over 158c78 to "SerialTest-Server" #3, pl=0, si=1509e8) => err=success ca_pe=Success
+Calling M(1, 1) at 874995052:71798
+ilu_StartCall(serializer 150988, connection 154ba8) is barrier because conn. closed or closing.
+ilu_StartCall       (to SerialTest-Server, SerialTest.T.M, pl=0, si=150988) raises err barrier (from call.c ln 411).
+M(1, 1) => ILU: call is barrier call
+Calling M(0, 1) at 874995054:292203
+ilu_StartCall(serializer 150928, connection 154ad8) is barrier because conn. closed or closing.
+ilu_StartCall       (to SerialTest-Server, SerialTest.T.M, pl=0, si=150928) raises err barrier (from call.c ln 411).
+M(0, 1) => ILU: call is barrier call
+Calling M(1, 1) at 874995056:442752
+ilu_StartCall       (efffe99c over 158bc8 to "SerialTest-Server" #1, SerialTest.T.M, pl=0, si=150988).
+ilu_StartRequest    (efffe99c over 158bc8 to "SerialTest-Server" #1, argSize 0) => success
+ilu_FinishRequest   (efffe99c over 158bc8 to "SerialTest-Server" #1)
+ilu_FinishCall      (efffe99c over 158bc8 to "SerialTest-Server" #1, pl=0, si=150988) => err=success ca_pe=Success
+Calling M(2, 1) at 874995057:2610
+ilu_StartCall(serializer 1509e8, connection 158c78) is barrier because conn. closed or closing.
+ilu_StartCall       (to SerialTest-Server, SerialTest.T.M, pl=0, si=1509e8) raises err barrier (from call.c ln 411).
+M(2, 1) => ILU: call is barrier call
+Calling M(2, 1) at 874995067:254730
+ilu_StartCall       (efffe99c over 158bc8 to "SerialTest-Server" #2, SerialTest.T.M, pl=0, si=1509e8).
+ilu_StartRequest    (efffe99c over 158bc8 to "SerialTest-Server" #2, argSize 0) => success
+ilu_FinishRequest   (efffe99c over 158bc8 to "SerialTest-Server" #2)
+ilu_FinishCall      (efffe99c over 158bc8 to "SerialTest-Server" #2, pl=0, si=1509e8) => err=success ca_pe=Success
+Calling M(0, 1) at 874995068:174249
+ilu_StartCall       (efffe99c over 158bc8 to "SerialTest-Server" #3, SerialTest.T.M, pl=0, si=150928).
+ilu_StartRequest    (efffe99c over 158bc8 to "SerialTest-Server" #3, argSize 0) => success
+ilu_FinishRequest   (efffe99c over 158bc8 to "SerialTest-Server" #3)
+ilu_FinishCall      (efffe99c over 158bc8 to "SerialTest-Server" #3, pl=0, si=150928) => err=success ca_pe=Success
+
+% 
+
+
+IV.  Pipelining Together with Call Order Preservation
+
+In this test, the multi-threaded client makes multiple concurrent
+calls, all using the same pipeline and serializer.  The goals is to
+test whether the calls are indeed serialized and made over the same
+connection.  This test only works if ILU has been configured to
+support OS-supplied threads.
+
+To make:
+
+% ilumkmf
+% make stsrvr sptclnt
+
+Running the server looks like this:
+
+% ./stsrvr
+SBH = 'ilu:SerialTest-Server/it;ilu%3AhCSGnKUbNNx9F0BkG7amW1AD3ag;sunrpc@sunrpcrm=tcp_13.2.116.32_34442'
+M(0, 1001)      at      879791913:648064
+M(0, 1001) returning at 879791914:008137
+N(1, 1001)      at      879791914:009192
+N(1, 1001) returning at 879791915:008089
+M(2, 1001)      at      879791915:011489
+M(2, 1001) returning at 879791916:008250
+N(3, 1001)      at      879791916:009095
+N(3, 1001) returning at 879791917:008429
+M(4, 1001)      at      879791917:014350
+M(4, 1001) returning at 879791918:013211
+N(5, 1001)      at      879791918:014052
+N(5, 1001) returning at 879791919:008719
+
+879791936 FD usage = 1
+
+The server pauses for 1 second inside each M and N call, to give the
+caller a good chance to make a pipelined call on the same connection.
+
+The client takes as a command line parameter the number of concurrent
+calls to make.  Half of them are on an ASYNCHRONOUS method (M), the
+other half are on a synchronous one (N).  As before, using debugging
+output to check that the calls all go over the same connection.
+Here's an example:
+
+% setenv ILU_DEBUG call
+% ./sptclnt 6
+ILU version 2.0a11.2.  Copyright 1990-1996 Xerox Corporation.
+------------------------------------------------------------
+Configuration info: big-endian, is BSD, is POSIX, Solaris 2 threads, variant, size_t=size_t,
+  char=1s, short=2, int=4, long=4, void *=4, fnptr=4, long long=8, long double=16, enum=4,
+  arch=sparc-sun-solaris2.5.1, compiler="/import/sunpro-4.0/SUNWspro/bin/cc -xs -Xt -v",
+  ANSI C lib=" -lm", sys aux libs=" -lsocket -lnsl -lthread",
+  protocols = sunrpc courier iiop http w3ng, transports = inmem tcp sunrpcrm w3mux batching,
+  binding via shared files in /net/augustus/augustus/ilub
+------------------------------------------------------------
+ilu_SetDebugLevel:  setting debug mask from 0x0 to 0x400
+ilu_StartCall       (efffe4f0 over 21e4c0 to "SerialTest-Server" #1, ilu.Object.ILUPing, pl=0, si=0).
+ilu_StartRequest    (efffe4f0 over 21e4c0 to "SerialTest-Server" #1, argSize 0) => success
+ilu_FinishRequest   (efffe4f0 over 21e4c0 to "SerialTest-Server" #1)
+ilu_GetReply        (efffe4f0 over 21e4c0 to "SerialTest-Server" #1)...
+ilu_GetReply        (efffe4f0 over 21e4c0 to "SerialTest-Server" #1) => (from wire) ans=Success estatus=0 err=success
+ilu_ReplyRead       (efffe4f0 over 21e4c0 to "SerialTest-Server" #1) => success
+ilu_FinishCall      (efffe4f0 over 21e4c0 to "SerialTest-Server" #1, pl=0, si=0) => err=success ca_pe=Success
+ilu_StartCall       (effff55c over 21e4c0 to "SerialTest-Server" #2, SerialTest.T.Prep, pl=0, si=0).
+ilu_StartRequest    (effff55c over 21e4c0 to "SerialTest-Server" #2, argSize 0) => success
+ilu_FinishRequest   (effff55c over 21e4c0 to "SerialTest-Server" #2)
+ilu_GetReply        (effff55c over 21e4c0 to "SerialTest-Server" #2)...
+ilu_GetReply        (effff55c over 21e4c0 to "SerialTest-Server" #2) => (from wire) ans=Success estatus=0 err=success
+ilu_ReplyRead       (effff55c over 21e4c0 to "SerialTest-Server" #2) => success
+ilu_FinishCall      (effff55c over 21e4c0 to "SerialTest-Server" #2, pl=0, si=0) => err=success ca_pe=Success
+Calling       M(0, 1001) at 879791913:633595
+ilu_StartCall       (ee407b7c over 21e4c0 to "SerialTest-Server" #3, SerialTest.T.M, pl=218f20, si=219550).
+ilu_StartRequest    (ee407b7c over 21e4c0 to "SerialTest-Server" #3, argSize 0) => success
+ilu_FinishRequest   (ee407b7c over 21e4c0 to "SerialTest-Server" #3)
+ilu_FinishCall      (ee407b7c over 21e4c0 to "SerialTest-Server" #3, pl=218f20, si=219550) => err=success ca_pe=Success
+Returned from M(0, 1001) at 879791913:638558
+Calling       N(1, 1001) at 879791913:638916
+ilu_StartCall       (ee305b7c over 21e4c0 to "SerialTest-Server" #4, SerialTest.T.N, pl=218f20, si=219550).
+ilu_StartRequest    (ee305b7c over 21e4c0 to "SerialTest-Server" #4, argSize 0) => success
+ilu_FinishRequest   (ee305b7c over 21e4c0 to "SerialTest-Server" #4)
+ilu_GetReply        (ee305b7c over 21e4c0 to "SerialTest-Server" #4)...
+Calling       M(2, 1001) at 879791913:644123
+ilu_StartCall       (ee203b7c over 21e4c0 to "SerialTest-Server" #5, SerialTest.T.M, pl=218f20, si=219550).
+ilu_StartRequest    (ee203b7c over 21e4c0 to "SerialTest-Server" #5, argSize 0Calling       N(3, 1001) at 879791913:649742
+Calling       M(4, 1001) at 879791913:650023
+Calling       N(5, 1001) at 879791913:650229
+) => success
+ilu_FinishRequest   (ee203b7c over 21e4c0 to "SerialTest-Server" #5)
+ilu_FinishCall      (ee203b7c over 21e4c0 to "SerialTest-Server" #5, pl=218f20, si=219550) => err=success ca_pe=Success
+ilu_StartCall       (ee101b7c over 21e4c0 to "SerialTest-Server" #6, SerialTest.T.N, pl=218f20, si=219550).
+ilu_StartRequest    (ee101b7c over 21e4c0 to "SerialTest-Server" #6, argSize 0) => success
+ilu_FinishRequest   (ee101b7c over 21e4c0 to "SerialTest-Server" #6)
+ilu_GetReply        (ee101b7c over 21e4c0 to "SerialTest-Server" #6)...
+ilu_StartCall       (edc0fb7c over 21e4c0 to "SerialTest-Server" #7, SerialTest.T.M, pl=218f20, si=219550).
+ilu_StartRequest    (edc0fb7c over 21e4c0 to "SerialTest-Server" #7, argSize 0) => success
+ilu_FinishRequest   (edc0fb7c over 21e4c0 to "SerialTest-Server" #7)
+ilu_FinishCall      (edc0fb7c over 21e4c0 to "SerialTest-Server" #7, pl=218f20, si=219550) => err=success ca_pe=Success
+Returned from M(4, 1001) at 879791913:662018
+ilu_StartCall       (edb0db7c over 21e4c0 to "SerialTest-Server" #8, SerialTest.T.N, pl=218f20, si=219550).
+ilu_StartRequest    (edb0db7c over 21e4c0 to "SerialTest-Server" #8, argSize 0) => success
+ilu_FinishRequest   (edb0db7c over 21e4c0 to "SerialTest-Server" #8)
+ilu_GetReply        (edb0db7c over 21e4c0 to "SerialTest-Server" #8)...
+Returned from M(2, 1001) at 879791913:666836
+ilu_GetReply        (edb0db7c over 21e4c0 to "SerialTest-Server" #8) queueing reply for SN #4.
+ilu_GetReply        (ee305b7c over 21e4c0 to "SerialTest-Server" #4) => (from queue) ans=Success estatus=0 err=success
+ilu_ReplyRead       (ee305b7c over 21e4c0 to "SerialTest-Server" #4) => success
+ilu_FinishCall      (ee305b7c over 21e4c0 to "SerialTest-Server" #4, pl=218f20, si=219550) => err=success ca_pe=Success
+Returned from N(1, 1001) at 879791915:045079
+ilu_GetReply        (edb0db7c over 21e4c0 to "SerialTest-Server" #8) queueing reply for SN #6.
+ilu_GetReply        (ee101b7c over 21e4c0 to "SerialTest-Server" #6) => (from queue) ans=Success estatus=0 err=success
+ilu_ReplyRead       (ee101b7c over 21e4c0 to "SerialTest-Server" #6) => success
+ilu_FinishCall      (ee101b7c over 21e4c0 to "SerialTest-Server" #6, pl=218f20, si=219550) => err=success ca_pe=Success
+Returned from N(3, 1001) at 879791917:013541
+ilu_GetReply        (edb0db7c over 21e4c0 to "SerialTest-Server" #8) => (from wire) ans=Success estatus=0 err=success
+ilu_ReplyRead       (edb0db7c over 21e4c0 to "SerialTest-Server" #8) => success
+ilu_FinishCall      (edb0db7c over 21e4c0 to "SerialTest-Server" #8, pl=218f20, si=219550) => err=success ca_pe=Success
+Returned from N(5, 1001) at 879791919:012727
+
+% 
+
+
+V.  ASYNCHRONOUS Methods (OBSOLETE)
+
+The ASYNCHRONOUS method test involves two methods: a ASYNCHRONOUS and
+a normal (synchronous) one.  The client consists of two nested loops.
+Each iteration of the outer loop calls the ASYNCHRONOUS method NSEND
+times (this is the inner loop), and then the synchronous method once.
+The outer loop is repeated NSYNC times.  On each call, the client
+passes the time (ilu_FineTime, to be specific) of the start of the
+call, and the server records the time at which the actual method
+executes.  The client sleeps for 1 second after each call on the
+ASYNCHRONOUS method, to give clean separations of the times.  The
+synchronous method returns this record of pairs of times, and clears
+the timing buffer for the next series.  The client prints out the
+pairs of times.  If the ASYNCHRONOUS feature is working, you should
+see that in each series all call times precede all serving times.
+
+The server takes optional arguments specifying pinfo and tinfo.
+There is also a verbosity switch, and a parameter to make the synchronous
+method delay before returning --- don't bother with it for this test.
+
+To build the ASYNCHRONOUS method test,
+
+% ilumkmf
+% make bsvr bclnt
+
+To run the server,
+
+% ./bsvr -help
+Usage: ./bsvr [-v] [-s sleep] [-p pinfo] [-t tinfo [tinfo...]]
+% ./bsvr -p bsunrpc
+SBH = 'ilu:Batcher-Server/it;ilu%3Ak-lmMaRANKW88bREv8w2Uuu9erm;bsunrpc_2_0x61a78_1903640186@sunrpcrm=tcp_13.2.116.14_2197'
+
+Then run the client:
+
+% ./bclnt
+Usage: ./bclnt n-syncs n-sends-per-sync
+% ./bclnt 3 3
+Ans(0) = 4
+        808701766.206907->808701769.241622
+        808701767.219225->808701769.242611
+        808701768.230319->808701769.243263
+        808701769.239055->808701769.243915
+
+Ans(1) = 4
+        808701769.264150->808701772.291410
+        808701770.269161->808701772.292069
+        808701771.281031->808701772.292706
+        808701772.289489->808701772.293348
+
+Ans(2) = 4
+        808701772.307187->808701775.332846
+        808701773.309603->808701775.333504
+        808701774.319827->808701775.334145
+        808701775.330895->808701775.334786
+
+% 
+
+
+VI.  Pipelining (OBSOLETE)
+
+This test uses the same server as the previous, and a different
+client.  To build:
+
+% ilumkmf
+% make bsvr bclntp
+
+When invoking the server, use the "-s <sleep>" parameter to cause it
+to pause <sleep> seconds inside the synchronous method:
+
+% ./bsvr -help
+Usage: ./bsvr [-v] [-s sleep] [-p pinfo] [-t tinfo [tinfo...]]
+% ./bsvr -s 2
+tosleep = 2
+SBH = 'ilu:Batcher-Server/it;ilu%3Aa63ScIfREIiKucXgN4R+iPud+nt;sunrpc@sunrpcrm=tcp_13.2.116.32_48277'
+
+This delay gives the client an easy chance to actually pile up some
+calls in a pipeline.  The client simply creates one ilu_Pipeline and
+makes a given number of calls on it.  If multi-threading support is
+configured in, the client can optionally make the calls from
+independent threads.
+
+To evaluate this test, use the CALL debug flag to see whether all the
+calls are made on the same connection.
+
+% setenv ILU_DEBUG CALL
+
+% ./bclntp
+Usage: ./bclntp n-syncs [-v] [-pl|+pl] [-mt|-st]
+
+% ./bclntp 3
+ILU version 2.0a10.5.  Copyright 1990-1996 Xerox Corporation.
+------------------------------------------------------------
+Configuration info: big-endian, is BSD, is POSIX, no threads, variant, size_t=size_t,
+  char=1s, short=2, int=4, long=4, void *=4, fnptr=4, long long=0, long double=16, enum=4,
+  arch=sparc-sun-sunos4.1.3_U1, compiler="/project/rpc/tools/filtered-acc",
+  ANSI C lib="/import/sc3.0.1/solaris-1/SC3.0.1/lib/libansi.a", sys aux libs="",
+  protocols = sunrpc courier iiop http, transports = inmem tcp sunrpcrm w3mux batching,
+  binding via shared files in /project/rpc/registries/test
+------------------------------------------------------------
+ilu_SetDebugLevel:  setting debug mask from 0x0 to 0x400
+ilu_StartCall       (efffdc48 over 1513a0 to "Batcher-Server" #1, ilu.Object.ILUPing, pl=0, si=0).
+ilu_StartRequest    (efffdc48 over 1513a0 to "Batcher-Server" #1, argSize 0) => success
+ilu_FinishRequest   (efffdc48 over 1513a0 to "Batcher-Server" #1)
+ilu_GetReply        (efffdc48 over 1513a0 to "Batcher-Server" #1)...
+ilu_GetReply        (efffdc48 over 1513a0 to "Batcher-Server" #1) => (from wire) ans=Success estatus=0 err=success
+ilu_ReplyRead       (efffdc48 over 1513a0 to "Batcher-Server" #1) => success
+ilu_FinishCall      (efffdc48 over 1513a0 to "Batcher-Server" #1, pl=0, si=0) => err=success ca_pe=Success
+Doing 3 syncs, pipelined.
+ilu_StartCall       (efffe524 over 1513a0 to "Batcher-Server" #2, Batcher.T.Sync, pl=152e10, si=0).
+ilu_StartRequest    (efffe524 over 1513a0 to "Batcher-Server" #2, argSize 0) => success
+ilu_FinishRequest   (efffe524 over 1513a0 to "Batcher-Server" #2)
+ilu_GetReply        (efffe524 over 1513a0 to "Batcher-Server" #2)...
+ilu_StartCall       (efffd454 over 1513a0 to "Batcher-Server" #3, Batcher.T.Sync, pl=152e10, si=0).
+ilu_StartRequest    (efffd454 over 1513a0 to "Batcher-Server" #3, argSize 0) => success
+ilu_FinishRequest   (efffd454 over 1513a0 to "Batcher-Server" #3)
+ilu_GetReply        (efffd454 over 1513a0 to "Batcher-Server" #3)...
+ilu_StartCall       (efffc384 over 1513a0 to "Batcher-Server" #4, Batcher.T.Sync, pl=152e10, si=0).
+ilu_StartRequest    (efffc384 over 1513a0 to "Batcher-Server" #4, argSize 0) => success
+ilu_FinishRequest   (efffc384 over 1513a0 to "Batcher-Server" #4)
+ilu_GetReply        (efffc384 over 1513a0 to "Batcher-Server" #4)...
+ilu_GetReply        (efffc384 over 1513a0 to "Batcher-Server" #4) queueing reply for SN #2.
+ilu_GetReply        (efffc384 over 1513a0 to "Batcher-Server" #4) queueing reply for SN #3.
+ilu_GetReply        (efffc384 over 1513a0 to "Batcher-Server" #4) => (from wire) ans=Success estatus=0 err=success
+ilu_ReplyRead       (efffc384 over 1513a0 to "Batcher-Server" #4) => success
+ilu_FinishCall      (efffc384 over 1513a0 to "Batcher-Server" #4, pl=152e10, si=0) => err=success ca_pe=Success
+Sync_0() = 1
+	874995217.006525->874995221.037732
+
+ilu_GetReply        (efffd454 over 1513a0 to "Batcher-Server" #3) => (from queue) ans=Success estatus=0 err=success
+ilu_ReplyRead       (efffd454 over 1513a0 to "Batcher-Server" #3) => success
+ilu_FinishCall      (efffd454 over 1513a0 to "Batcher-Server" #3, pl=152e10, si=0) => err=success ca_pe=Success
+Sync_1() = 1
+	874995217.001569->874995219.019064
+
+ilu_GetReply        (efffe524 over 1513a0 to "Batcher-Server" #2) => (from queue) ans=Success estatus=0 err=success
+ilu_ReplyRead       (efffe524 over 1513a0 to "Batcher-Server" #2) => success
+ilu_FinishCall      (efffe524 over 1513a0 to "Batcher-Server" #2, pl=152e10, si=0) => err=success ca_pe=Success
+Sync_2() = 1
+	874995216.992371->874995216.999863
+
+% 
+
+
+For comparison, give the "-pl" switch to disable the use of an
+ilu_Pipeline; observe that the calls are made on different
+ilu_Connections:
+
+% ./bclntp 3 -pl
+ILU version 2.0a10.5.  Copyright 1990-1996 Xerox Corporation.
+------------------------------------------------------------
+Configuration info: big-endian, is BSD, is POSIX, no threads, variant, size_t=size_t,
+  char=1s, short=2, int=4, long=4, void *=4, fnptr=4, long long=0, long double=16, enum=4,
+  arch=sparc-sun-sunos4.1.3_U1, compiler="/project/rpc/tools/filtered-acc",
+  ANSI C lib="/import/sc3.0.1/solaris-1/SC3.0.1/lib/libansi.a", sys aux libs="",
+  protocols = sunrpc courier iiop http, transports = inmem tcp sunrpcrm w3mux batching,
+  binding via shared files in /project/rpc/registries/test
+------------------------------------------------------------
+ilu_SetDebugLevel:  setting debug mask from 0x0 to 0x400
+ilu_StartCall       (efffdc40 over 1513a0 to "Batcher-Server" #1, ilu.Object.ILUPing, pl=0, si=0).
+ilu_StartRequest    (efffdc40 over 1513a0 to "Batcher-Server" #1, argSize 0) => success
+ilu_FinishRequest   (efffdc40 over 1513a0 to "Batcher-Server" #1)
+ilu_GetReply        (efffdc40 over 1513a0 to "Batcher-Server" #1)...
+ilu_GetReply        (efffdc40 over 1513a0 to "Batcher-Server" #1) => (from wire) ans=Success estatus=0 err=success
+ilu_ReplyRead       (efffdc40 over 1513a0 to "Batcher-Server" #1) => success
+ilu_FinishCall      (efffdc40 over 1513a0 to "Batcher-Server" #1, pl=0, si=0) => err=success ca_pe=Success
+Doing 3 syncs, not pipelined.
+ilu_StartCall       (efffe51c over 1513a0 to "Batcher-Server" #2, Batcher.T.Sync, pl=0, si=0).
+ilu_StartRequest    (efffe51c over 1513a0 to "Batcher-Server" #2, argSize 0) => success
+ilu_FinishRequest   (efffe51c over 1513a0 to "Batcher-Server" #2)
+ilu_GetReply        (efffe51c over 1513a0 to "Batcher-Server" #2)...
+ilu_StartCall       (efffd44c over 157030 to "Batcher-Server" #1, Batcher.T.Sync, pl=0, si=0).
+ilu_StartRequest    (efffd44c over 157030 to "Batcher-Server" #1, argSize 0) => success
+ilu_FinishRequest   (efffd44c over 157030 to "Batcher-Server" #1)
+ilu_GetReply        (efffd44c over 157030 to "Batcher-Server" #1)...
+ilu_StartCall       (efffc37c over 15b218 to "Batcher-Server" #1, Batcher.T.Sync, pl=0, si=0).
+ilu_StartRequest    (efffc37c over 15b218 to "Batcher-Server" #1, argSize 0) => success
+ilu_FinishRequest   (efffc37c over 15b218 to "Batcher-Server" #1)
+ilu_GetReply        (efffc37c over 15b218 to "Batcher-Server" #1)...
+ilu_GetReply        (efffc37c over 15b218 to "Batcher-Server" #1) => (from wire) ans=Success estatus=0 err=success
+ilu_ReplyRead       (efffc37c over 15b218 to "Batcher-Server" #1) => success
+ilu_FinishCall      (efffc37c over 15b218 to "Batcher-Server" #1, pl=0, si=0) => err=success ca_pe=Success
+Sync_0() = 1
+	874995400.096899->874995402.100228
+
+ilu_GetReply        (efffd44c over 157030 to "Batcher-Server" #1) => (from wire) ans=Success estatus=0 err=success
+ilu_ReplyRead       (efffd44c over 157030 to "Batcher-Server" #1) => success
+ilu_FinishCall      (efffd44c over 157030 to "Batcher-Server" #1, pl=0, si=0) => err=success ca_pe=Success
+Sync_1() = 1
+	874995400.088098->874995404.119394
+
+ilu_GetReply        (efffe51c over 1513a0 to "Batcher-Server" #2) => (from wire) ans=Success estatus=0 err=success
+ilu_ReplyRead       (efffe51c over 1513a0 to "Batcher-Server" #2) => success
+ilu_FinishCall      (efffe51c over 1513a0 to "Batcher-Server" #2, pl=0, si=0) => err=success ca_pe=Success
+Sync_2() = 1
+	874995400.078238->874995400.086210
+
+%
+
+
+The Java version of this test: Some source code is included, but at
+this time the java code has not been tested.
+
+

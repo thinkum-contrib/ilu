@@ -1,0 +1,213 @@
+
+<!-- BeginILUCopyright
+
+ Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+ Unlimited use, reproduction, modification, and distribution of this
+ software and modified versions thereof is permitted.  Permission is
+ granted to make derivative works from this software or a modified
+ version thereof.  Any copy of this software, a modified version
+ thereof, or a derivative work must include both the above copyright
+ notice of Xerox Corporation and this paragraph.  Any distribution of
+ this software, a modified version thereof, or a derivative work must
+ comply with all applicable United States export control laws.  This
+ software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+ WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+ LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+ EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+ NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+ OF THE POSSIBILITY OF SUCH DAMAGES.
+  
+ EndILUCopyright
+-->
+<!-- tests skeleton of initial ilu.isl based structure -->
+<!-- should given two content structure errors -->
+<!DOCTYPE interface 
+       [ <!ELEMENT interface (uname, brand?, imports?, types?) > 
+         <!ELEMENT imports (import)+ >
+         <!ELEMENT import (uname, fromfile)>
+         <!ELEMENT types (type)+ >
+         <!ELEMENT type
+               (uname, typeid?,  
+                    ( existing | array | sequence | record | union    
+                     | optional | enumeration | object | constant))> 
+         <!ELEMENT existing (typeref)>
+         <!ELEMENT array (typeref, dims) > 
+         <!ELEMENT dims (dim)+ > 
+         <!ELEMENT sequence (typeref, short?, limit?)>
+         <!ELEMENT record (fields)> 
+         <!ELEMENT fields (field)+> 
+         <!ELEMENT field  (lname, typeref)>
+         <!ELEMENT union (tag-type?, others, arms) >
+         <!ELEMENT arms (arm)+>
+         <!ELEMENT arm  (lname, typeref, cases)+>
+         <!ELEMENT cases (case | default)+ >
+         <!ELEMENT default EMPTY>
+         <!ELEMENT optional (typeref)> 
+         <!ELEMENT enumeration (enum-elements)>
+         <!ELEMENT enum-elements (enum-elements)+> 
+         <!ELEMENT enum-element (uname, enum-id)>
+         <!ELEMENT object 
+             (singleton?, doc?, collectible?, optional? , typeid?,
+              brand?, supertypes?,  methods?,  exceptions?)? >    
+         <!ELEMENT supertypes (supertype)+>  
+         <!ELEMENT supertype (typeref)>  
+         <!ELEMENT methods (method)+>
+         <!ELEMENT method (lname, functional?, asynchronous?,
+                           returntype?, args?) >
+         <!ELEMENT args (arg)+ > 
+         <!ELEMENT arg (lname, typeref, direction?, sibling?) > 
+         <!ELEMENT exceptions (exception)+>
+         <!ELEMENT exception (lname, typeref?, doc?)>
+         <!ELEMENT constant (uname, typeref, value)> 
+                       
+   <!-- 
+    Leaf-level elements of two types:.
+        Empty elements used to represent y/n alternatives.
+        Non-empty elements contain FIXED attributes, used
+              as a way of passing required detailed data types
+              to the application, and can/should be omitted by
+              interface definer 
+   --> 
+
+   <!--Empty leaf-level elements --> 
+    <!ELEMENT short       EMPTY>
+    <!ELEMENT others      EMPTY>
+    <!ELEMENT singleton   EMPTY>
+    <!ELEMENT collectible EMPTY> 
+    <!ELEMENT isoptional  EMPTY> 
+    <!ELEMENT functional  EMPTY>
+    <!ELEMENT asynchronou EMPTY>
+    <!ELEMENT sibling     EMPTY>
+
+   <!--Non-empty leaf-level elements --> 
+    <!ELEMENT uname    (#PCDATA)>
+    <!ELEMENT lname    (#PCDATA)>
+    <!ELEMENT typeref  (#PCDATA)> 
+    <!ELEMENT brand    (#PCDATA)>
+    <!ELEMENT fromfile (#PCDATA)>
+    <!ELEMENT typeid   (#PCDATA)> 
+    <!ELEMENT dim      (#PCDATA)> 
+    <!ELEMENT limit    (#PCDATA)> 
+    <!ELEMENT tag-type (#PCDATA)> 
+    <!ELEMENT case     (#PCDATA)>
+    <!ELEMENT enum-id  (#PCDATA)> 
+    <!ELEMENT direction (#PCDATA)>
+    <!ELEMENT value    (#PCDATA)> 
+    <!ELEMENT doc      (#PCDATA)> 
+
+    <!ATTLIST uname     sc_type  CDATA #FIXED "NAME"  
+                        validity CDATA #FIXED  "UNIQUE"> 
+    <!ATTLIST lname     sc_type  CDATA #FIXED "NAME" 
+                        validity CDATA #FIXED  "LOCALLYUNIQUE"> 
+    <!ATTLIST typeref   sc_type  CDATA #FIXED "NAME" 
+                        validity CDATA #FIXED  "TYPENAME"> 
+    <!ATTLIST brand     sc_type  CDATA #FIXED "NAME"> 
+    <!ATTLIST fromfile  sc_type  CDATA #FIXED "FILENAME" 
+                        validity CDATA #FIXED  "UNIQUE"> 
+    <!ATTLIST typeid    sc_type  CDATA #FIXED "MSTID"> 
+    <!ATTLIST dim       sc_type  CDATA #FIXED "POSINT"> 
+    <!ATTLIST limit     sc_type  CDATA #FIXED "POSINT"> 
+    <!ATTLIST tag-type  sc_type  CDATA #FIXED "NAME" 
+                        validity CDATA #FIXED "TAGTYPE"> 
+    <!ATTLIST case      sc_type  CDATA #FIXED "ANY" 
+                        validity CDATA #FIXED "CASETYPE" > 
+    <!ATTLIST enum-id   sc_type  CDATA #FIXED "NAME" 
+                        validity CDATA #FIXED  "LOCALLYUNIQUE"> 
+    <!ATTLIST direction sc_type  CDATA #FIXED "NAME" 
+                        validity CDATA #FIXED  "INOUT"> 
+    <!ATTLIST value     sc_type  CDATA #FIXED "ANY" 
+                        validity CDATA #FIXED "CONSTANTTYPE"> 
+    <!ATTLIST doc       sc_type  CDATA #FIXED "QSTRING">
+]>
+
+
+<interface> 
+   <uname>UNAME</uname>
+   <brand>BRAND</brand>
+   <imports> 
+     <import> 
+        <uname>UNAME</uname>
+        <fromfile>FILENAME</fromfile>
+     </import>
+   </imports>
+
+  <types>
+
+    <type>
+      <uname>UNAME</uname> 
+      <typeid> TYPEID </typeid> 
+      <array>  
+        <typeref> TYPEREF </typeref> 
+        <dims>
+           <dim> INTEGER </dim>
+        </dims>
+      </array>
+      </type>
+    <type>
+      <object>
+      <doc>QSTRING</doc>
+      <collectible/>    
+      <optional/>
+      <typeid>TYPEID </typeid>
+      <brand>BRAND</brand>     
+      <supertypes>
+          <supertype>
+            <typeref>TYPEREF</typeref>
+          </supertype>
+       </supertypes>  
+      <methods>  
+           <method>
+             <lname>LNAME</lname>
+             <functional/>
+             <asynchronous/> 
+             <returntype>TYPE-REF</returntype>
+             <isproc>PROC-ID</isproc>
+             <doc>QSTRING></doc>
+             <args>
+                <arg>
+                   <lname>LNAME</lname>
+                   <typeref>TYPE-REF</typeref>
+                   <direction>INOUT</direction>
+                   <sibling/>
+                </arg> 
+             </args>
+           </method>
+         </methods>
+      <exceptions>
+          <exception>
+             <lname>NAME</lname>
+             <typeref>TYPE-REF</typeref>
+             <doc>QSTG</doc>
+          </exception>
+       </exceptions> 
+    </object>
+  </type> 
+ </types> 
+</interface>
+    
+    
+
+    
+
+    
+    
+                             
+    
+
+         
+         
+
+
+
+
+   
+
+                  
+                   
+
+
+      
+

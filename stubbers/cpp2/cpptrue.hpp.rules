@@ -1,0 +1,114 @@
+
+# BeginILUCopyright
+#
+# Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+#
+# Unlimited use, reproduction, modification, and distribution of this
+# software and modified versions thereof is permitted.  Permission is
+# granted to make derivative works from this software or a modified
+# version thereof.  Any copy of this software, a modified version
+# thereof, or a derivative work must include both the above copyright
+# notice of Xerox Corporation and this paragraph.  Any distribution of
+# this software, a modified version thereof, or a derivative work must
+# comply with all applicable United States export control laws.  This
+# software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+# WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+# PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+# LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+# EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+# NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+# OF THE POSSIBILITY OF SUCH DAMAGES.
+#
+# EndILUCopyright
+
+
+# much of this repeats begin of surr.hpp; should be way of reusing
+# e.g., common rule scopes  
+R_true_h(Interface i) -->
+  L_top(i.name, i.isl_name, F_vs_string())
+  R_true_h_module(i.module_str, 1)
+  L_() " "
+  L_() "#endif"
+.
+
+L_top(iname, isl_name, vs_string) -->
+
+
+// This file was automatically generated with ILU (version %vs_string%) tools
+// ILU is Copyright 1991-1999 Xerox Corporation, All Rights Reserved.
+// ILU information:  ftp://ftp.parc.xerox.com/pub/ilu/ilu.html.
+
+// Prevent multiple inclusions
+#ifndef __%isl_name%_cpptrue_H_
+#define __%isl_name%_cpptrue_H_
+
+#include \"%isl_name%-cpp.hpp\"
+
+#define %iname%_true_(name) NAME_INSIDE_SCOPE(%iname%_true, name)
+#define %iname%_true(name) NAME_OUTSIDE_SCOPE(%iname%_true, name)
+.
+
+
+R_true_h_module(Module m, Int first) (ContentElem ce, mname, mname1, mpfx) -->
+
+  E_ [ mname1 = m.simple_name 
+       [ [ first == 1   mname = F_concat(mname1, "_true")] 
+         | mname = mname1]     
+        mpfx = F_side_prefix("true", m, 1)
+     ]    
+
+  L_ (mname) " // start the scope for %mname% "
+
+  { L_ (mname) [F_use_namespace() == 1] "namespace %mname% {"  |
+    L_ (mname) [F_use_classes() == 1] "class %mname% { public:" |
+        TRUE }
+
+  R_true_h_classes_and_nested: ce in m.content_sequence: (mpfx, m, ce)
+
+  L_()  " "
+  L_ (mname) "// end the scope for %mname% "
+
+  { L_() [F_use_namespace() == 1] " }" 
+   | L_() [F_use_classes() == 1  ]  " };"
+   | TRUE }
+.
+
+
+R_true_h_classes_and_nested(mpfx, Module m, ContentElem ce) -->
+  { R_true_h_class(m, ce.content)
+      [ce.content_type == "type" ce.content.supertype == NULL]
+    |
+   R_true_h_module (ce.content,  0)
+      [ce.content_type == "module"]
+   | TRUE
+  }
+.
+
+R_true_h_class(Module m, Object object)
+     (obj_name, mpfx, us_obj_name) -->
+ 
+   E_ [ mpfx =  F_side_prefix("true", object, 0)
+        us_obj_name = F_underscore_name(object) ]
+ 
+   L_class_decl(mpfx, object.name, us_obj_name)
+ 
+.
+
+
+L_class_decl(mpfx, s_obj_name, us_obj_name) -->
+
+  class %mpfx%%s_obj_name%_initializer {
+    public:
+      %mpfx%%s_obj_name%_initializer ();
+      void * ensure_instantiation ();
+
+      static %mpfx%%s_obj_name%_initializer sm_the_true_%us_obj_name%_initializer;
+
+    private:
+      static void iluInitialize ();
+      // set to 1 once initialization has occured.
+      static int initialized;
+  };
+
+.

@@ -1,0 +1,348 @@
+/**
+ BeginILUCopyright
+
+ Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+ Unlimited use, reproduction, modification, and distribution of this
+ software and modified versions thereof is permitted.  Permission is
+ granted to make derivative works from this software or a modified
+ version thereof.  Any copy of this software, a modified version
+ thereof, or a derivative work must include both the above copyright
+ notice of Xerox Corporation and this paragraph.  Any distribution of
+ this software, a modified version thereof, or a derivative work must
+ comply with all applicable United States export control laws.  This
+ software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+ WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+ LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+ EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+ NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+ OF THE POSSIBILITY OF SUCH DAMAGES.
+
+ EndILUCopyright
+*/
+
+1. Introduction
+---------------
+This an outline of the generation grammar formalism assumed in
+the ilu genstub approach.  The purpose of the approach is to
+provide an executable specification of stubber output that may 
+simplify stubber development, and make the overall scheme of the
+output easier to scan and modify.  The approach has been used to specify
+the 1999 CORBA-compatible c++ stubber.
+
+The remainder of this section attempts to provide a general impression
+of the grammar formalism; the next section briefly discusses the
+data structures assumed, and the final section describes the grammar
+syntax in more detail.
+
+As an example of the flavor of the grammar, the following is a
+simplified fragment of the beginning of a stubber, and a rough
+explanation for each of the rules involved.
+
+R_cpp_h (Interface i) -->
+  L_top (i.name)
+  R_module (i.module_str)
+  L_ () " #endif"
+.
+ 
+Indicates that rule R_cpp_h
+   -  must be invoked with a single argument referrring to an
+      Interface instance, which willl be referred to in the rule as "i".
+   -  consists of 
+      - invoking literal rule L_top, with argument i.name
+        (the "name" property of i).
+      - invoking grammar rule R_module, with argument i.module_str.
+      - invoking the immediate literal rule L_, which just prints
+        a line containing an #endif. 
+
+
+L_top (iname) -->
+  #ifndef __%iname%_H_
+   #define __%iname%_H_
+  
+  //Note corba.hpp includes ilucpp.hpp and ilucp.templates.hpp
+  #include <corba.hpp>
+.
+
+Indicates that rule L_top
+   - must be invoked with a scalar string argument (untyped arguments
+     are assumed to be strings), which will be referred to as "iname"   
+     within the rule.
+   - consists of printing the block of lines following the "-->"
+     substituting the value of iname for the substrings %iname%.
+
+
+R_module (Module m) (Module m1, String mname, String mpfx) -->
+  E_ [ mname = m.simple_name]
+  { L_ (mname) [F_use_namespace() == 1] "namespace %mname% {" | TRUE }
+  E_ [mpfx = F_module_prefix(m)]
+  R_except(mpfx, m.contained_exceptions)
+  R_cpp_h_defs1(mpfx, m.contained_types) 
+  L_initializers(mpfx)
+  R_module :m1 in m.contained_modules: (m1) 
+  { L_() [F_use_namespace() == 1]  " }" | TRUE }
+.
+ 
+Indicates that rule R_module 
+  - must be invoked with a single argument referring to a Module instance
+    which will be referred to as "m" in the body of the rule.
+  - will also use three local variables: another module instance m1, 
+    and the strings mname and mpfx.
+  - consists of 
+     - evaluating the constraints of the "epsilon rule" E_ to set
+       the local variable "mname" to the value of the "simple_name"
+       property of m.  (An epsilon rule is a null rule, consisting of
+       constraints only.)
+     - if the result of invoking user-function F_use_namespace is 
+       1, invoking the immediate literal rule "L_" to
+       produce a line containing "namespace %mname% {", with 
+       the value of %mname% substitituted.  If the value is not 1,
+       nothing is done (and the disjunction is assumed to succeed).
+     - evaluating the constraints of the next "epsilon rule" E_ to set
+       the local variable "mpfx" to the value of returned from
+       user-function F_module_prefix.
+     - invoking the rule R_cpp_defs1 with the value of mpfx, and
+       the value of the contained_types property of m. 
+     - invoking literal rule L_initializers with scalar argument "mpfx".
+     - And then, invoking R_module again (recursively) for each 
+       element m1 of the list m.contained_modules, providing the 
+       argument m1. 
+     - etc.
+
+
+The grammar is thus composed of two general types of productions. 
+Rules (with categories headed R_ ) are phrase structure
+rules defining alternative realizations of the left-hand category. 
+Literal blocks (with categories headed L_)
+are at the leaves of the grammar, and are blocks of lines, with
+parameter substitutions indicated by %parameter-name%.  To allow
+reasonable naming, productions are organized into scopes between "====" lines
+(4 or more =).  The first production in the group is the entry
+production; its name must be unique within the grammar.  All other
+productions in the scope are local, and their names need be unique only
+within the scope.
+
+
+2. Data structures assumed by grammar
+---------------------------------------
+Execution of the grammar relies on the existence of a regular, 
+interpretable form of the existing iluptype interface specification.
+In particular, all data is contained in "instance structures", which are
+headed by an "instance type", followed by a vector of "properties".
+The vector is interpreted according to the descriptor for the
+instance type, which lists the properties of the type in the order they
+occur in its instances (see data.h for declarations of descriptor and
+instance structures, ilup.data.c for the specific descriptors used,
+and README.USAGE for some further discussion). 
+
+The use of generic data structures allows grammar rule conditions (see below)
+to be interpreted rather than hard-coded. For example, if b is the nth
+property of type ta, then a reference to a.b, where a is of type ta, 
+is interpreted as a reference to the nth property of a,
+obtained by applying the descriptor for ta to the instance.
+
+Functions are provided so that these structures can be
+accessed directly from c code, primarily for use in implementing
+user-defined functions referenced within the grammar rules.
+
+3. Generation grammar syntax
+-----------------------------
+A generation grammar for a stubber consists of one grammar file
+for each output file to be produced by the stubber. Each file 
+consists of a collection of rules and literal blocks, with the first  
+such file specified to to the rule parser also containing 
+a collection of function definitions, as described by the following
+not-quite-formal productions. 
+
+File_Grammar::= {function | comment}* scope*
+
+function::=  
+
+  F_functionname parms "return" fun_return_type. 
+
+  e.g., F_Listinindex(List l, String e1, String e2) return Int.
+
+  Function declarations specify functions invoked within rule 
+  constraints but implemented within user code. fun_return_type must 
+  be one of the types "Int", "LongInt", "String", "List", "Any",
+  or "Opaque". (The "Any" type is used to return type instance references,
+  and the Opaque type is used to pass data not declared to the generator
+  to and from user code).
+
+comment::=
+ # anything
+
+  I.e., a comment is a line beginning with a "#". Outside rules,
+  the # must be the first character on the line. 
+
+scope::=  
+
+  {Rule | LiteralBlock | Comment }*  
+  ====
+
+  A scope consists of one or more rules, literal blocks, and comments, 
+  terminated with a line beginning with at least four "=".
+  It is a rule name scoping construct.  Only the first rule 
+  in the scope may be referenced from outside the scope;  its name   
+  must be unique across the grammar.  Names of other rules and literal
+  blocks in the scope need be unique only within the scope.
+
+rule::=
+  R_category_name parms rulelocals --> category_exp .
+
+  an R_category name is any name prefaced by "R_". 
+
+parms::=   
+   "("typename varname (,typename varname)...")" 
+
+    declares the types of arguments that must be passed to the rule, and 
+    the names by which they will be referenced.  A "typename" may be one 
+    of the instance types declared in ilup.data.c, or one of the scalar types
+    String, Int, LongInt, List, Opaque, or Any.  If a typename 
+    is omitted, it is assumed to be String.  "varname"s must be simple
+    alphanumeric strings.
+
+rulelocals::=   
+   "("typename varname (,typename varname)...")" 
+
+    declares rule-local variables.
+
+category_exp::= 
+    simple_category_seq | disjunctive_category_seq
+
+simple category_seq::=
+     category | comment (category | comment...)* 
+
+disjunctive_category_seq::= 
+ "{" (category | nested_category_seq) ("|" category | nested_category_seq )+ "}"
+
+nested_category_seq::=
+   "{" category | comment (category | comment...)* "}"
+   | disjunctive_category_seq 
+
+    category_exp is a simple  regular expression in categories allowing
+    only conjunction (category category) and disjunction ("|").
+    A rule succeeds if there is a path through the category sequence that 
+    succeeds.  A category succeeds if the conditions for the category 
+    succeed (see below), and the rule for the category succeeds.
+    The generation is deterministic in that the first path which forms
+    part of a valid solution to all the rules is the one used.
+    To indicate that a category or category sequence is optional,
+    a special category TRUE may be used; a subexpression
+        { cat1 | cat2 | TRUE }
+    must always succeed.
+
+    The rather complicated-looking rules say only that
+    (a) any category_exp's containing disjunctions must be
+    surrounded with braces, and (b) Also, any nested category expressions  
+    not consisting of a single category must also be surrounded with braces.
+
+category::=
+     category_name (repetition) catparms ( [ conditions ] )
+   | E_ [conditions] 
+   | local_output (repetition) localparms quoted_string 
+
+    where repetition is for category iteration, catparms are the values
+    passed to the rule or literalblock category, and "conditions" are evaluated
+    before invoking the referenced category, and may set
+    some local variables used in catparms.  A further condition is 
+    imposed by parameter passing; the types passed must match those
+    of the ruleparms for the invoked rule (otherwise the rule 
+    fails; it is not an error). 
+
+    The special E_ (= epsilon) category
+    is used to insert some conditions into the path and/or set some variables.
+
+    "local_output" is an immediate literal block, and is signalled by
+     a bare output type label, either  "L_", or "LP_". It  
+     permits embedding of literal outputs within rules, e.g.,
+     L_() --> "   };"   Each "localparm" must be a simple scalar
+     string or integer (argument or local variable).
+
+     L_ outputs a complete line, with trailing newline.
+     LP_ outputs a partial line, with no trailing newline.
+         (To end a line createed by a sequence of LP_, add a literal "\n")
+
+
+repetition::=
+   :var in listvar: 
+
+    where "var" is a declared local variable, and "listvar" is 
+    a parameter or local variable with a list type. It  
+    indicates that the category to be invoked once for each member 
+    of the list specified by listvar for which the conditions succeed. 
+    (Note: rules with repetitions always succeed, even if no repetitions
+    succeed.)
+
+catparms::=
+    "("ref1 (, ref),...")"
+
+conditions::= 
+    simple_condition_exp | disjunctive_condition_exp
+
+simple_condition_exp::=
+     condition+ 
+
+disjunctive_condition_exp::= 
+  ( (condition | nested_condition_exp  ("|" (condition | nested_condition_exp))+
+
+nested_condition_exp::=
+  "[" condition+ "]" | "[" disjunctive_condition_exp "]"  
+
+    conditions are simple regular expressions like category expressions,
+    with identical bracketing requirements, except that the brackets used
+    are square brackets.r
+    They may set variables (see below) as well as test them.
+    (Note: To simplify grammar interpretation in cases where variables are 
+    set, disjunctive conditions are actually interpreted as disjunctive
+    categories. At rule-parse time, disjunctive conditions are expanded 
+    to disjunctive normal form.  Then, in generation, a category    
+    c [ d1 | d2 | ... dn} is interpreted as { c [d1] | c[d2] | ... | c[dn] }
+
+condition;:=
+     ref =|==|!= ref1   
+
+     for unify, is_equal_to, is_unequal_to respectively.  "unify" 
+     will succeed either if both references have been set and are equal, 
+     or if only one has been set.  In the latter case, the previously
+     unset value will be set.
+
+ref::=
+    var(.name) | '"'value'"' | F_name"("")" | F_name(ref (,ref)*)     
+
+    var can be an argument or a local variable.
+    if var has been typed as Any (within the referencing rule), its properties
+    cannot be referenced (but it can be passed to another rule which
+    requires an explicit type). 
+
+    F_name is a user-specified function that must have been declared
+    in a function declaration (see above).  
+
+literalblock::=
+  L_category_name litparms  -->   
+      litline
+      litline*
+   .
+
+litparms::=
+   "(" ")" |  "(" (typename) name  (,typename name)* ")"   
+
+    If a parameter name is not typed, String is assumed.
+    Only String, Int, and LongInt are accepted as types.
+
+litline::=
+    char*
+
+    Each line following the initial one in a LiteralBlock becomes
+    separate output line.  Substitution values are represented   
+    within those lines as %parmname%, where parmname is a rule parameter.
+
+     A single period at the begining of a line terminates the line.
+     To include the "reserved" characters "%" and ".", in the line,
+     the escapes %percent% and %period% are used.    
+
+    Note that a blank line within the body of a Literal Block
+    becomes a blank line in the output.
+

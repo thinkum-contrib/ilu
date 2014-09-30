@@ -1,0 +1,156 @@
+/** $Id: Imakefile,v 1.65 1999/08/03 01:52:30 janssen Exp $
+ BeginILUCopyright
+
+ Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+ Unlimited use, reproduction, modification, and distribution of this
+ software and modified versions thereof is permitted.  Permission is
+ granted to make derivative works from this software or a modified
+ version thereof.  Any copy of this software, a modified version
+ thereof, or a derivative work must include both the above copyright
+ notice of Xerox Corporation and this paragraph.  Any distribution of
+ this software, a modified version thereof, or a derivative work must
+ comply with all applicable United States export control laws.  This
+ software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+ WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+ LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+ EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+ NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+ OF THE POSSIBILITY OF SUCH DAMAGES.
+
+ EndILUCopyright
+*/
+/* Last edited by Mike Spreitzer October 9, 1998 11:19 am PDT */
+
+ILUCINCLUDES = -I../../runtime/kernel $(BUILD_SECURITY_INCLUDES) $(BUILD_BIGNUM_INCLUDES)
+ILUCLIBS = ../../runtime/kernel/libilu.a  $(BUILD_GSS_LIBS) $(ILU_ZLIB_LIBRARY)
+
+all:: Test1.isl
+
+MkdirTarget($(DESTDIR)/examples)
+MkdirTarget($(DESTDIR)/examples/test1)
+
+#ifdef ADD_COMMONLISP_LANGUAGE
+load-lisp-example.lisp : load-lisp-example.lisp.dist
+	-rm -f load-lisp-example.lisp
+	sed 's;ILUHOME;$(ILUHOME);' <load-lisp-example.lisp.dist >load-lisp-example.lisp
+
+all:: load-lisp-example.lisp
+
+
+InstallRO(client.lisp server.lisp load-lisp-example.lisp, $(DESTDIR)/examples/test1)
+CleanTarget(load-lisp-example.lisp)
+#endif
+
+#ifdef ILU_TESTING_SCRIPTS
+
+ILUTESTINC = -I../../runtime/c -I../../runtime/kernel 
+
+all::  test1.configvals 
+
+all::
+	$(RM) testload.tcl testreg.tcl testprocs.tcl
+	$(CP) testload.tcl.sbfile testload.tcl
+	$(CP) testreg.tcl.sbfile testreg.tcl
+	$(CP) testprocs.tcl.sbfile testprocs.tcl
+
+test1.configvals:: get_configvals ../../runtime/kernel/iluxport.h ../../runtime/c/iluchdrs.h ../../runtime/kernel/iluconf.h
+	$(RM) test1.configvals
+	./get_configvals
+
+get_configvals:: get_configvals.c
+	$(ANSI_C_COMPILER) -o get_configvals $(CFLAGS) $(ILUCINCLUDES) $(ILUTESTINC) get_configvals.c 
+	chmod u+w get_configvals 
+
+InstallRO(testload.tcl testreg.tcl testprocs.tcl test1.configvals, $(DESTDIR)/examples/test1)
+InstallRO(README.TEST, $(DESTDIR)/examples/test1)
+
+CleanTarget(testload.tcl testreg.tcl testprocs.tcl test1.configvals)
+
+#endif /* def ILU_TESTING_SCRIPTS */
+
+InstallRO(Test1.isl Test2.isl Test3.isl, $(DESTDIR)/examples/test1)
+InstallRO(clnt.c clnt.h clntu.c clntw.c srvrw.c srvr.c srvr.h srvru.c, $(DESTDIR)/examples/test1)
+InstallRO(clnt.mak  cppsrvr.mak iluwin32.mak srvrw.mak clntw.mak cppclnt.mak cppsrvrw.mak cppclntw.mak  srvr.mak, $(DESTDIR)/examples/test1)
+InstallRO(clnconsl.ico clntw.rc srvrw.ico clntw.ico srvrw.rc svrconsl.ico, $(DESTDIR)/examples/test1)
+
+#ifdef ADD_ILU_CPLUSPLUS_LANGUAGE
+InstallRO(cppclnt.cpp cppclntw.cpp cppsrvr.cpp cppsrvrw.cpp, $(DESTDIR)/examples/test1)
+#elif defined(ADD_CORBA_CPLUSPLUS_LANGUAGE)
+InstallRO(cpp2clnt.cpp cpp2srvr.cpp cpp2clnt.mak cpp2srvr.mak, $(DESTDIR)/examples/test1)
+#endif
+
+InstallRO(TestServer.m3 TestClient.m3, $(DESTDIR)/examples/test1)
+InstallRO(pyClient.py pyServer.py, $(DESTDIR)/examples/test1)
+InstallRO(TestClient.java TestServer.java, $(DESTDIR)/examples/test1)
+InstallRO(README Test.py, $(DESTDIR)/examples/test1)
+InstallFileToFile(runImakefile, $(INSTINCFLAGS), $(DESTDIR)/examples/test1/Imakefile)
+
+#ifdef ILU_BINDING_DIRECTORY
+
+testserver: Makefile
+	$(RM) testserver
+	$(CP) testserver.sbfile testserver
+
+#endif
+
+#ifdef ILU_BINDING_HOST
+
+testserver: Makefile
+	$(RM) testserver
+	$(CP) testserver.sbilu testserver
+
+#endif
+
+all:: testserver
+
+InstallRO(testserver, $(DESTDIR)/examples/test1)
+CleanTarget(testserver)
+
+#ifdef ADD_GUILE_LANGUAGE
+
+InstallProgram(server.scm, $(DESTDIR)/examples/test1)
+InstallProgram(client.scm, $(DESTDIR)/examples/test1)
+
+#endif /* ADD_GUILE_LANGUAGE */
+
+######################################################################
+######################################################################
+######################################################################
+##
+##  The following rules are included to test the build with...
+##
+
+ILUCINCLUDES = -I../../runtime/c -I../../runtime/kernel $(BUILD_SECURITY_INCLUDES) $(BUILD_BIGNUM_INCLUDES)
+TESTCLIBS = ../../runtime/c/libilu-c.a ../../runtime/kernel/libilu.a $(BUILD_SECURITY_LIBRARIES) $(ILU_ZLIB_LIBRARY)
+C_STUBBER = ../../stubbers/c/c-stubber
+
+NormalObjectRule()
+
+Test1.h Test1-true.c Test1-surrogate.c Test1-common.c : Test1.isl ../../stubbers/c/c-stubber ../../stubbers/parser/ilu.isl
+	../../stubbers/c/c-stubber -I ../../stubbers/parser Test1.isl
+
+Test2.h Test2-true.c Test2-surrogate.c Test2-common.c : Test2.isl ../../stubbers/c/c-stubber ../../stubbers/parser/ilu.isl
+	../../stubbers/c/c-stubber -I ../../stubbers/parser Test2.isl
+
+Test3.h Test3-true.c Test3-surrogate.c Test3-common.c : Test3.isl ../../stubbers/c/c-stubber ../../stubbers/parser/ilu.isl
+	../../stubbers/c/c-stubber -I ../../stubbers/parser Test3.isl
+
+CleanTarget(Test1.h Test1-true.c Test1-surrogate.c Test1-common.c)
+CleanTarget(Test2.h Test2-true.c Test2-surrogate.c Test2-common.c)
+CleanTarget(Test3.h Test3-true.c Test3-surrogate.c Test3-common.c)
+
+clnt.o : Test1.h Test2.h Test3.h clnt.c clnt.h ../../runtime/kernel/iluxport.h ../../runtime/c/iluchdrs.h
+srvr.o : Test1.h Test2.h Test3.h srvr.c srvr.h ../../runtime/c/iluchdrs.h
+clntu.o : clntu.c clnt.h
+srvru.o : srvru.c srvr.h ../../runtime/kernel/iluxport.h 
+
+TestProgramTarget(client, clnt.o clntu.o Test1-surrogate.o Test1-common.o Test2-surrogate.o Test2-common.o Test3-surrogate.o Test3-common.o, $(TESTCLIBS),)
+
+TestProgramTarget(server, srvr.o srvru.o Test1-common.o Test1-true.o Test2-common.o Test3-common.o Test3-true.o, $(TESTCLIBS),)
+
+test:: testserver server client
+	./testserver
+

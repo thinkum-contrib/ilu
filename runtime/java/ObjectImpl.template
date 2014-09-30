@@ -1,0 +1,119 @@
+/*template*/    /* START OF TEMPLATE */
+/*template*/    /* Chris Jacobi, November 23, 1998 3:33 pm PST */
+/*template*/    // 
+/*template*/    // This is a template:  You should be able to put this 
+/*template*/    // into your impl class without looking at it.  You need 
+/*template*/    // this when defining Ilu true types but you can't or   
+/*template*/    // don't want to inherit from xerox.ilu.IluObjectBase. 
+/*template*/    // This implements xerox.ilu.IluDataSupport; your class 
+/*template*/    // definition should specify so.
+/*template*/    // 
+/*template*/    // This version was tested with JDK-1.2-RC2
+/*template*/    // Expect that this template might be replaced on 
+/*template*/    // both ilu releases as well as on jdk releases.
+/*template*/    //
+/*template*/
+/*template*/    private transient xerox.ilu.IluOInt __delegate;
+/*template*/
+/*template*/    /** required to implement xerox.ilu.IluDataSupport */
+/*template*/    public void setIluData(java.lang.Object internal) {
+/*template*/        __delegate = (xerox.ilu.IluOInt) internal
+/*template*/    } //setIluData
+/*template*/    
+/*template*/    /** required to implement xerox.ilu.IluDataSupport */
+/*template*/    public java.lang.Object getIluData() {
+/*template*/        return __delegate;
+/*template*/    } //getIluData
+/*template*/    
+/*template*/    /** required by Ilu (actually only for stubs). Ilu private. */
+/*template*/    public xerox.ilu.IluClassRep getIluClass() {
+/*template*/        xerox.ilu.IluOInt oint = __delegate;
+/*template*/        if (oint == null) {
+/*template*/            throw new org.omg.CORBA.OBJECT_NOT_EXIST();
+/*template*/        }
+/*template*/        return oint.jjClassRep;
+/*template*/    } //getIluClass
+/*template*/    
+/*template*/    /** required by org.omg.CORBA.Object */
+/*template*/    public boolean _is_a(java.lang.String repid) {
+/*template*/        xerox.ilu.IluOInt oint = __delegate;
+/*template*/        if (oint==null) {return false;}
+/*template*/        return oint..is_a(this, repid);
+/*template*/    } //_is_a
+/*template*/    
+/*template*/    /** required by org.omg.CORBA.Object; impl is Ilu specific */
+/*template*/    public boolean _is_equivalent(org.omg.CORBA.Object other) {
+/*template*/        return (other == this);
+/*template*/    } //_is_equivalent
+/*template*/
+/*template*/    /** required by org.omg.CORBA.Object */
+/*template*/    public boolean _non_existent() {
+/*template*/        xerox.ilu.IluOInt oint = __delegate;
+/*template*/        if (oint==null) {return true;}
+/*template*/        return oint.non_existent(this);
+/*template*/    } //_non_existent
+/*template*/
+/*template*/    /** required by org.omg.CORBA.Object */
+/*template*/    public int _hash(int maximum) {
+/*template*/        xerox.ilu.IluOInt oint = __delegate;
+/*template*/        if (oint==null) {
+/*template*/             new org.omg.CORBA.OBJECT_NOT_EXIST();
+/*template*/        }
+/*template*/        return oint.hash(this, maximum);
+/*template*/    } //_hash
+/*template*/
+/*template*/    /** required by org.omg.CORBA.Object */
+/*template*/    public org.omg.CORBA.Object _duplicate() {
+/*template*/        return this;
+/*template*/    } //_duplicate
+/*template*/
+/*template*/    /** required by org.omg.CORBA.Object */
+/*template*/    public void _release() {
+/*template*/    } //_release
+/*template*/
+/*template*/    /** required by org.omg.CORBA.Object */
+/*template*/    public org.omg.CORBA.Object _get_interface_def() {
+/*template*/        throw new org.omg.CORBA.NO_IMPLEMENT();
+/*template*/    } //_get_interface_def
+/*template*/
+/*template*/    /** required by org.omg.CORBA.Object */
+/*template*/    public org.omg.CORBA.Request _request(java.lang.String operation) {
+/*template*/        throw new org.omg.CORBA.NO_IMPLEMENT();
+/*template*/    } //_request
+/*template*/
+/*template*/    /** required by org.omg.CORBA.Object */
+/*template*/    public org.omg.CORBA.Request _create_request(org.omg.CORBA.Context ctx,
+/*template*/            java.lang.String operation,
+/*template*/            org.omg.CORBA.NVList arg_list,
+/*template*/            org.omg.CORBA.NamedValue result) {
+/*template*/        throw new org.omg.CORBA.NO_IMPLEMENT();
+/*template*/    } //_create_request
+/*template*/
+/*template*/    /** required by org.omg.CORBA.Object */
+/*template*/    public org.omg.CORBA.Request _create_request(org.omg.CORBA.Context ctx,
+/*template*/            java.lang.String operation,
+/*template*/            org.omg.CORBA.NVList arg_list,
+/*template*/            org.omg.CORBA.NamedValue result,
+/*template*/            org.omg.CORBA.ExceptionList exclist,
+/*template*/            org.omg.CORBA.ContextList ctxlist) {
+/*template*/        throw new org.omg.CORBA.NO_IMPLEMENT();
+/*template*/    } //_create_request
+/*template*/
+/*template*/    /** required by org.omg.CORBA.Object */
+/*template*/    public org.omg.CORBA.Policy _get_policy(int policy_type) {
+/*template*/        throw new org.omg.CORBA.NO_IMPLEMENT();
+/*template*/    } //_get_policy
+/*template*/
+/*template*/    /** required by org.omg.CORBA.Object */
+/*template*/    public org.omg.CORBA.Object _set_policy_override(
+/*template*/            org.omg.CORBA.Policy[] policies,
+/*template*/            org.omg.CORBA.SetOverrideType set_add) {
+/*template*/        throw new org.omg.CORBA.NO_IMPLEMENT();
+/*template*/    } //_set_policy_override
+/*template*/
+/*template*/    /** required by org.omg.CORBA.Object */
+/*template*/    public org.omg.CORBA.DomainManager[] _get_domain_managers() {
+/*template*/        throw new org.omg.CORBA.NO_IMPLEMENT();
+/*template*/    } //_get_domain_managers
+/*template*/
+/*template*/    /* END OF TEMPLATE */

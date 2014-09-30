@@ -1,0 +1,412 @@
+@setfilename ilu-customization.info
+@settitle ILU Customization Interfaces
+@ifset ilucopyright
+BeginILUCopyright
+
+Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+Unlimited use, reproduction, modification, and distribution of this
+software and modified versions thereof is permitted.  Permission is
+granted to make derivative works from this software or a modified
+version thereof.  Any copy of this software, a modified version
+thereof, or a derivative work must include both the above copyright
+notice of Xerox Corporation and this paragraph.  Any distribution of
+this software, a modified version thereof, or a derivative work must
+comply with all applicable United States export control laws.  This
+software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+OF THE POSSIBILITY OF SUCH DAMAGES.
+  
+EndILUCopyright
+@end ifset
+@ifclear largerdoc
+@setfilename ilu-customization
+@titlepage
+@title ILU Customization
+@author Bill Janssen @code{<janssen@@parc.xerox.com>}
+@sp
+@today{}
+@sp
+Copyright @copyright{} 1995 Xerox Corporation@*
+All Rights Reserved.
+@end titlepage
+@ifinfo
+@node Top, ,(dir),(dir)
+@top ILU Customization
+@end ifinfo
+@end ifclear
+
+@section Introduction
+
+@system{ILU} includes a number of internal interfaces that allow
+various functionality of the @system{ILU} kernel library to be
+replaced by user functionality.
+@itemize @bullet
+@item
+In a single-threaded application,
+the entire ``main loop'' can be replaced; in a threaded application,
+features of the thread system can be described to the @system{ILU} kernel so
+that the kernel will use them.  
+@item
+New messaging protocols and inter-address-space transport mechanisms
+can be registered for use by an application.
+@item
+Object incarnation routines can be registered for `kernel servers',
+so that true instances can be created on reference, rather than
+before reference.
+@item
+URL parsing routines can be registered for various URL schemes,
+so that application-specific object URLs can be used.
+@item
+New identity schemes can be defined and registered with the kernel
+to support application-specific authorization and accounting schemes.
+@item
+Handler routines can be registered to deal with @fn{@C{malloc()}} failures
+in application-specific ways.
+@item
+Handler routines can be registered to perform application-specific
+actions when errors are signalled.
+@item
+If debugging is enabled at configuration time, specific sets of debugging messages can
+be selected at run time, and an application routine can be defined to intercept
+and handle debugging messages.
+@end itemize
+@noindent
+Most of these interfaces are defined in two @system{ILU} source files,
+@file{@metavar{ILUSRC}/runtime/kernel/iluxport.h} and @file{@metavar{ILUSRC}/runtime/kernel/iluntrnl.h}.
+We will not attempt to duplicate that documentation here, to avoid the inevitable errors
+when documentation is provided in two different forms;
+rather, this section of the manual will provide sketches of the
+interfaces, and refer the reader to the appropriate header files.
+For any discrepancies noted between the material here, and the material in the
+header files, the header files should be assumed to the `truth'.
+
+@section Event Loops and Threads
+
+Every @system{ILU} address space uses either real threads, or some sort of event dispatching
+loop to simulate threads.  ILU is thread-safe internally, and by default will continue to check its usage for
+even when event dispatching is used.  Since many different thread systems and event dispatching
+loops exist, @system{ILU} provides interfaces to allow the user to describe the particular
+one that they're using to the @system{ILU} kernel.  See section @ref{Threads and Event Loops}
+for more information on these topics.  See @file{@metavar{ILUSRC}/runtime/kernel/iluxport.h} for
+documentation of the interfaces.
+
+@section RPC Protocols and Data Transport Mechanisms
+
+The @system{ILU} remote procedure call mechanism operates in layers.
+@itemize @bullet
+@item
+The application, at the highest layer, calls down into language-specific,
+interface-specific stub code, passing language-specific, method-specific values;
+@item
+that stub code calls down into an
+interface-independent language-specific runtime layer, passing method-independent, but language-specific
+values;
+@item
+that LSR calls down into language-independent, interface-independent @system{ILU} `kernel'
+code, passing simple @language{C} values;
+@item
+the kernel calls into the code for a specific RPC
+protocol, such as @system{ONC RPC}, passing @language{C} values;
+@item
+the protocol code calls
+down into transport-mechanism code, passing `messages' as opaque byte sequences;
+@item
+the transport code, which may consist of several layers, may perform various
+transformations on the messages, and finally conveys them to the peer transport layers.
+@end itemize
+@noindent
+@system{ILU} includes registration mechanisms to allow applications to add to the
+kinds of RPC protocols and data transport mechanisms that can be used.
+
+@subsection RPC Protocols
+
+Each @type{@C{ilu_Protocol}} object reflects a particular mapping of the
+abstract @system{ILU} RPC protocol onto a specific externally-defined RPC protocol.
+(See @ref{Protocols and Transports} for a discussion of the abstract @system{ILU} protocol,
+and how it is mapped to the @system{ONC RPC} protocol, and to the @system{XNS Courier}
+protocol.)
+
+New RPC message protocols can be added to the @system{ILU} kernel
+by writing a new @type{@C{ilu_Protocol}}
+object, and calling the @system{ILU} kernel function @fn{@C{ilu_RegisterProtocol()}}.
+register it.  The structure and
+requirements of an @type{@C{ilu_Protocol}} object are defined in the file
+@file{@metavar{ILUSRC}/runtime/kernel/iluprotocol.h}; the methods of the protocol
+are considered to be `inside' the @system{ILU} kernel, and must therefore conform
+to all @system{ILU} locking and error conventions.  The locking conventions
+are discussed in @file{@metavar{ILUSRC}/runtime/kernel/iluxport.h}; the error
+conventions are documented in
+@*
+@noindent
+@file{@metavar{ILUSRC}/runtime/kernel/iluerror.h},
+and pre-defined errors are documented in
+@*
+@noindent
+@file{@metavar{ILUSRC}/runtime/kernel/iluerrs.h}.
+
+Various examples of @system{ILU} protocols are available for study:
+@itemize @bullet
+@item
+the ONC RPC mapping (@file{@metavar{ILUSRC}/runtime/kernel/sunrpc.c}
+@item
+the XNS Courier protocol (@file{@metavar{ILUSRC}/runtime/kernel/courier.c})
+@item
+the OMG Internet Inter-Orb Protocol (@file{@metavar{ILUSRC}/runtime/kernel/iiop.c})
+@item
+the World Wide Web Hyper-Text Transport Protocol (@file{@metavar{ILUSRC}/runtime/kernel/http.c})
+@end itemize
+
+@subsection Transport Filters
+
+In general, @system{ILU} protocols form `messages' consisting of sequences of bytes,
+which are then passed to the @system{ILU} transport layer to be conveyed to another
+address space.  The transport layer itself is composed of one or more @system{ILU} @dfn{transport filter}s,
+each of which handles the message in turn.  These filters are either communication
+filters, such as the filters which actually convey messages via TCP/IP or UDP/IP,
+or transformation filters, which alter the message and pass it to
+another transport filter, such as the @system{ONC RPC} record-marking filter, or
+the secure transport filter.
+
+Each transport filter is either @dfn{reliable} or @dfn{unreliable}.
+All transformation filters are reliable; communication filters may or may not
+be reliable.  A communication filter is reliable if it guarantees that any messages
+handed to it for transport will be reliably delivered to the other end of the
+communication connection.  This in turn means that the communication mechanism
+used by the transport will take care of timeouts, retries, etc., internally,
+so that the @system{ILU} application need not worry about these itself.
+Unreliable communication filters are those which may require @system{ILU}
+participation in timeout and resending of messages to achieve reliable delivery.
+
+Each filter is also either @dfn{boundaried} or @dfn{non-boundaried}.  Boundaried filters
+are those which can comprehend and preserve message boundaries.  Non-boundaried
+filters simply deal in chunks of bytes and have no way to recognize or
+preserve message boundaries.  Various protocols and filters may have requirements
+as to whether the next filter below it in the communication stack is boundaried
+or non-boundaried.
+
+New transport filters may be registered with the @system{ILU} kernel by
+calling the kernel function @fn{@C{ilu_RegisterTransport()}}, described in
+@file{@metavar{ILU}/runtime/kernel/iluxport.h}, with the name of a new
+transport filter and the address of a routine which returns an instance
+of the new transport object type.  Implementing a new transport
+object type actually consists of implementing several related object types,
+including @type{@C{ilu_TransportCreator}}, @type{@C{ilu_TransportClass}},
+and @type{@C{ilu_Mooring}}.  These object types are defined in the
+file @file{@metavar{ILUSRC}/runtime/kernel/ilutransport.h}.
+
+As with protocols, the methods of the transport filter
+are considered to be `inside' the @system{ILU} kernel, and must therefore conform
+to all @system{ILU} locking and error conventions.  The locking conventions
+are discussed in @file{@metavar{ILUSRC}/runtime/kernel/iluxport.h}; the error
+conventions are documented in @file{@metavar{ILUSRC}/runtime/kernel/iluerror.h},
+and pre-defined errors are documented in @file{@metavar{ILUSRC}/runtime/kernel/iluerrs.h}.
+
+Examples of transformation filters may be found
+in @file{@metavar{ILUSRC}/runtime/kernel/sunrpcrm.c}, which is a boundaried filter implementing
+@system{ONC RPC}'s TCP/IP record marking scheme, and
+@file{@metavar{ILUSRC}/runtime/kernel/security.c}, which is a non-boundaried filter implementing
+message integrity, sender authentication, and message privacy.  Examples of communication
+filters may be found in
+@file{@metavar{ILUSRC}/runtime/kernel/newtcp.c}, which is a non-boundaried reliable filter implementing
+data communication via TCP/IP,
+@file{@metavar{ILUSRC}/runtime/kernel/udp.c}, which is a non-boundaried unreliable filter implementing
+data communication via UDP/IP,
+and
+@file{@metavar{ILUSRC}/runtime/kernel/inmem.c}, which is a boundaried reliable filter implementing
+intra-address-space communication via memory buffers.
+
+@section Object Incarnation Procedures
+
+@system{ILU} true objects live in @dfn{kernel server}s, a kernel data structure
+that handles communication and other aspects of the object implementation.  When
+an object reference is received from another address space, the kernel server is
+responsible for mapping this reference to an actual object.  Normally, the kernel server
+simply consults an internal hash table for an object corresponding to a specified
+`instance handle'; however, an application may register an application-specific
+callback function to be used instead.  This allows on-the-fly creation of objects,
+which is often vital when handling many objects.  Actual in-memory representations
+of the objects can be garbage-collected, then dynamically re-incarnated when
+needed by a client.
+
+The application registers this functionality by creating an implementation of
+an @type{@C{ilu_ObjectTable}} object, and passing that implementation as a parameter
+to @fn{@C{ilu_CreateTrueServer}} when creating the kernel server.  Typically,
+@fn{@C{ilu_CreateTrueServer}} is called directly only by a language-specific runtime;
+the actual application would work with object tables via whatever mechanism is
+exported by the language-specific runtime.  Check the documentation for your
+particular language runtime for more information.
+
+@section Object URLs
+
+@system{ILU} regards string binding handles generically as a way of
+encoding four pieces of information: the instance handle for an object,
+the server ID for an object, the most-specific type ID (MSTID) for an
+object, and communication information about how to communicate with that
+object, which we call @dfn{contact-info}.  It further restricts them to
+conform to the URL syntax specified in the World Wide Web Consortium and
+IETF standard RFC 1738
+(@url{http://www.w3.org/pub/WWW/Addressing/rfc1738.txt}).  But this
+still allows @system{ILU} to support any number of URL schemes, which we
+define as some way of encoding these four pieces of information which
+conforms to the URL syntax rules.
+
+The default URL scheme is called @code{ilu:}, and encodes the information as
+
+@code{ilu:@metavar{<server-id>}/@metavar{<instance-handle>};@metavar{<MSTID>};@metavar{<contact-info>}}
+
+@noindent
+Most of these elements consist of US-ASCII strings with various additional constraints.
+The strings are encoded in what is called the @dfn{SBH element encoded form}:
+the set of
+alphanumeric characters plus the 4 characters DOLLAR (@samp{$}), HYPHEN (@samp{-}), PERIOD (@samp{.}), and PLUS (@samp{+})
+are represented by the character itself; other characters are escaped via
+the mechanism specified in RFC 1738:  each is represented with 3 characters, a PERCENT (@samp{%}) character followed by
+two hexadecimal digits giving the US-ASCII character code for the escaped character.
+
+The non-encoded form of the @metavar{<server-id>} and @metavar{<instance-handle>} strings may contain any character
+except for US-ASCII NUL.
+
+The non-encoded form of the @metavar{<MSTID>} consists of the following
+
+@code{@metavar{<type-id-scheme>}:@metavar{<type-id>}}
+
+@noindent
+where the @metavar{<type-id-scheme>} consists of US-ASCII alphanumeric characters, and any constraints
+on @metavar{<type-id>} are specified by the @metavar{<type-id-scheme>}.
+
+The @metavar{<contact-info>} is not encoded in the same way as the other fields.
+Rather, it consists of a series of communication info fields, separated by SEMICOLON (@samp{;}) characters.
+Each communications info field has the form
+
+@code{@metavar{<protocol-info>}@@@metavar{<transport-layer>}[=@metavar{<transport-layer>}...]}
+
+@noindent
+where each of the @metavar{<protocol-info>} and @metavar{<transport-layer>} elements
+contain SBH element-encoded strings.  The non-encoded form of these strings has an
+additional constraint:  each must begin with the name or identifier for the protocol
+or transport layer it specifies, optionally followed by an UNDERSCORE (@samp{_}) character
+and any parameters for the protocol or transport.
+The name of the protocol or transport may not contain any UNDERSCORE (@samp{_}) characters.
+There are no additional @system{ILU} constraints
+on the formats used to represent parameters for the protocol or transport.
+
+An application
+can register a parser for one or more application-specific URL schemes
+by calling the function @fn{@C{ilu_RegisterSBHParser}}.  It takes as an argument a function
+which will accept a URL string, and return the four components required by @system{ILU}.
+For instance, you might want to use a URL scheme for
+the OMG @system{CORBA} @protocol{IIOP} something like
+
+@code{iiop_1_0://@metavar{<hostname>}:@metavar{<port>}/@metavar{<server-id>}/@metavar{<ih>}}
+
+@noindent
+which can be considered to contain an instance handle of @metavar{<ih>}, a server ID of
+@metavar{<server-id>}, an implicit object type of @type{IDL:omg.org/CORBA/Object:1.0}, 
+and contact-info of@*@code{iiop_1_0_1@@tcp_@metavar{<hostname>}_@metavar{<port>}}.
+
+Or, you might want to use an @protocol{HTTP} URL for an @system{ILU} object which
+is exported via the @protocol{HTTP} @system{ILU} protocol.  Suppose that the normal @system{ILU}
+string binding handle for the object was
+
+@code{ilu:tcp_1.2.3.4_20000//http_obj0;ilu:Ilu_Http_Type;http_1_0@@tcp_1.2.3.4_20000}
+
+@noindent
+An alternate form which would be compatible with Web browsers would be
+
+@code{http://1.2.3.4:20000//http_obj0}
+
+@noindent
+with an implicit server ID of @code{tcp_1.2.3.4_20000}, an implicit MSTID of 
+@code{ilu:Ilu_Http_Type}, an instance handle of @code{/http_obj0},
+and contact-info of @code{http_1_0@@tcp_1.2.3.4_20000}.
+
+See the @file{@metavar{ILUSRC}/runtime/kernel/iluxport.h} for details on how
+to use@*@fn{@C{ilu_RegisterSBHParser}}.
+
+@section Identity Types
+
+As discussed in @ref{Security and Identities, , Identities}, application-specific identity types can be
+registered with the @system{ILU} kernel for use with various authorization and
+accounting schemes, and to support various forms of security in wire protocols
+and transports.  An application does this by creating a new value of type @type{ilu_IdentityType},
+as specified in @file{@metavar{ILUSRC}/runtime/kernel/iluxport.h}, and calling the
+kernel function @fn{ilu_RegisterIdentityType}.  After this is done, values of the new identity
+types may be used.  The major use for these identity types is to work together with
+new application-specific RPC protocols and message transports (described above),
+to implement various security and access policies for distributed systems.
+
+Note that the mere act of registering a new identity type with the @system{ILU}
+kernel will not cause values of that identity type to be automatically transmitted
+in @system{ILU} calls.  This will only happen if an appropriately designed transport
+or protocol, which knows to do this, is also used.  For experimental purposes, we
+provide a switch will will cause the various flavors of @protocol{Sun RPC} implemented for @system{ILU}
+to automatically pass @emph{one} specific identity type.  To enable this, set the
+environment variable @var{ILU_SUNRPC_PREFERRED_IDENTITY} to the name of the identity
+type to be passed automatically before running any of your @system{ILU} programs.
+
+By default, the @protocol{Sun RPC} protocols will automatically pass the UNIX
+identification of the caller (the user id, group id, host IP address, and list of
+groups to which the caller belongs).  The identity type for this information is
+called @code{"SunRPCAuthUnixIdentity"}.  To prevent its being passed automatically,
+set the environment variable @var{ILU_NO_SUNRPC_UNIX_AUTH} to any value before
+running your @system{ILU} programs.
+
+@section Malloc Failure Recovery
+
+@system{ILU} uses a number of internal interfaces to allocate and free memory,
+such as @fn{@C{ilu_malloc()}}, @fn{@C{ilu_free()}}, and @fn{@C{ilu_realloc()}}.
+These functions wrap calls to the standard @fn{@C{malloc()}}, etc., in wrappers
+that allow for better error handling.  They are documented in
+
+@file{@metavar{ILUSRC}/runtime/kernel/iluxport.h}.
+
+@noindent
+Applications can register callback functions to handle @fn{malloc} failures,
+in two ways.  The kernel function @fn{@C{ilu_AddFreer()}} allows registration
+of routines which can be called to free up memory, to allow a @fn{malloc} call
+to succeed.  The kernel functions @fn{@C{ilu_SetMemFaultAction()}} and
+@fn{@C{ilu_SetMemFaultConsumer()}} allow applications to determine what action
+should be taken if a @fn{malloc} failure occurs.
+
+@section Error Reporting
+
+@system{ILU} includes a comprehensive error-signalling system in the kernel library,
+which is documented in @file{@metavar{ILUSRC}/runtime/kernel/iluerror.h}.  In addition,
+the kernel library contains many calls to @fn{@C{_ilu_Assert}}, which check that
+various kernel invariants are maintained.  When a runtime assertion fails,
+the kernel may either call an application-specified failure handler, set
+by a call to @fn{@C{ilu_SetAssertionFailureConsumer()}}, or take one of three
+default actions, chosen by a call on @fn{@C{ilu_SetAssertionFailureAction()}}.
+The three default actions are (1) to generate an illegal instruction trap,
+and thus coredump; (2) to exit with some error code; and (3) to enter an endless
+loop, calling @fn{@C{sleep()}} repeatedly.  The third action is the default
+action; the intent is to stop the program with all invalid data intact on the
+stack, and network connections intact, so that a debugger may attach to the `live' process.
+
+@section Debugging Interfaces
+
+The @system{ILU} kernel contains a large number of debugging print statements,
+which document various things going on inside the kernel.  The specific things
+printed may be controlled by calling either @fn{@C{ilu_SetDebugLevel()}} or
+@fn{@C{ilu_SetDebugLevelViaString()}}.  The specific bits which can be specified
+to @fn{@C{ilu_SetDebugLevel()}}, or names which can be specified to
+@fn{@C{ilu_SetDebugLevelViaString()}}, are documented @file{@metavar{ILUSRC}/runtime/kernel/iludebug.h}.
+
+All debugging messages are displayed via calls to the kernel function @fn{@C{ilu_DebugPrintf()}}.
+Normally, this routine simply calls @C{vfprintf (stderr, ...)} to actually output the messages.
+However, this can be changed to call some
+application-specific message output system by calling @fn{@C{ilu_SetDebugMessageHandler()}},
+documented in @file{@metavar{ILUSRC}/runtime/kernel/iluxport.h}.  Two special values
+are defined for, and accepted by, @fn{@C{ilu_SetDebugMessageHandler()}}; the value
+@constant{@C{ILU_DEFAULT_DEBUG_MESSAGE_HANDLER}} causes the debug system to revert to the
+original output handler; the value @constant{@C{ILU_NIL_DEBUG_MESSAGE_HANDLER}} causes the debug system to
+simply discard any debugging messages.
+
+Debugging output can be directed to a file, by calling @fn{@C{ilu_SendDebugOutputToFile()}} with
+a filename as an argument.  The file will be created, and debugging messages will be written to it.

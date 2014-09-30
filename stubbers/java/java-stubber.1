@@ -1,0 +1,40 @@
+.\" java-stubber.1
+.TH JAVA-STUBBER 1 "24 July 1996"
+.SH NAME
+java-stubber \- generate ILU stubs for the Java programming language
+.SH SYNOPSIS
+\fBjava-stubber\fR [ \fI...ISLFILES\fR ]
+.SH DESCRIPTION
+.B java-stubber
+generates Java code for the
+interface defined in \fIISLFILE\fR, which should be a file
+containing an ISL specification of the interface.  If no file extension is
+specified for \fIISLFILE\fR, the extension "\fC.isl\fR" is assumed.
+.sp
+.SH EXAMPLES
+.LP
+.RS
+\fC% ./java-stubber foo.isl
+.br
+writing file foo_Operations.java...
+.br
+writing file foo_Holder.java...
+.br
+writing file foo_Ref.java...
+.br
+writing file foo_Stub.java...
+.br
+writing file foo_Servant.java...
+% \fR
+.SH "ENVIRONMENT VARIABLES"
+The environment variable "ILUPATH" is consulted to find referenced
+interfaces.  It should consist of a sequence of colon-separated directories,
+which contain interface specifications in the form of files
+with names like \fI<interface-name>\fC.isl\fR.
+.SH "SEE ALSO"
+\fCc++-stubber(1), lisp-stubber(1), python-stubber(1), c-stubber(1), ILU(1)\fR
+.sp
+\fIThe ILU Reference Manual\fR
+.SH "AUTHOR"
+.RE
+Bill Janssen

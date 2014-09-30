@@ -1,0 +1,42 @@
+/*
+ Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+ Unlimited use, reproduction, modification, and distribution of this
+ software and modified versions thereof is permitted.  Permission is
+ granted to make derivative works from this software or a modified
+ version thereof.  Any copy of this software, a modified version
+ thereof, or a derivative work must include both the above copyright
+ notice of Xerox Corporation and this paragraph.  Any distribution of
+ this software, a modified version thereof, or a derivative work must
+ comply with all applicable United States export control laws.  This
+ software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+ WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+ LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+ EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+ NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+ OF THE POSSIBILITY OF SUCH DAMAGES.
+*/ 
+/* $Id: Imakefile,v 1.10 1999/08/03 01:56:23 janssen Exp $ */
+/* Last edited by Mike Spreitzer August 18, 1998 3:52 pm PDT */
+/* Chris Jacobi, October 8, 1998 3:05 pm PDT */
+
+NormalObjectRule()
+
+ILUHEADERFILES=../../runtime/kernel/iluxport.h ../../runtime/kernel/ilubasic.h ../../runtime/kernel/iludebug.h ../../runtime/kernel/iluconf.h ../../runtime/kernel/iluerror.h ../../runtime/kernel/iluerrs.h
+
+ILUCTargetWithOptions(SunPortMapper.h SunPortMapper-true.c SunPortMapper-surrogate.c SunPortMapper-common.c, SunPortMapper.isl, -I ../../stubbers/parser)
+
+CleanTarget(SunPortMapper.h SunPortMapper-surrogate.c SunPortMapper-common.c SunPortMapper-true.c)
+
+ObjectTarget(SunPortMapper-common.o)
+ObjectTarget(SunPortMapper-surrogate.o)
+
+ObjectTarget(portmap.o)
+portmap.o : SunPortMapper.h portmap.c ${ILUHEADERFILES}
+
+LibraryTarget(libsunportmapper.a, SunPortMapper-surrogate.o SunPortMapper-common.o portmap.o)
+InstallLibrary(libsunportmapper.a, $(DESTDIR)/lib)
+InstallRO(ilusunportmapper.h, $(DESTDIR)/include)
+InstallRO(SunPortMapper.isl, $(DESTDIR)/interfaces)

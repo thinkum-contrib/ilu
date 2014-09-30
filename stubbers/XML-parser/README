@@ -1,0 +1,176 @@
+
+/** 
+ BeginILUCopyright
+
+ Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+ Unlimited use, reproduction, modification, and distribution of this
+ software and modified versions thereof is permitted.  Permission is
+ granted to make derivative works from this software or a modified
+ version thereof.  Any copy of this software, a modified version
+ thereof, or a derivative work must include both the above copyright
+ notice of Xerox Corporation and this paragraph.  Any distribution of
+ this software, a modified version thereof, or a derivative work must
+ comply with all applicable United States export control laws.  This
+ software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+ WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+ LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+ EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+ NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+ OF THE POSSIBILITY OF SUCH DAMAGES.
+  
+ EndILUCopyright
+*/
+
+PRELIMINARY DOCUMENTATION:
+
+This is a validating c-based xml-parser, producing a document tree
+accessed by a collection of supplied functions.
+Below is preliminary usage information and a list of some
+known limitations and deviations from the the current
+XML 1.0 specification.  
+
+USAGE:
+
+  To use the ILU XML parser, ILU should be configured with the
+  parameter --enable-xml-parser-library.  The system build/install
+  procedure will then place: 
+
+     - A copy of the necessary include file "doctree.h" in
+      the build target include directory, and  
+
+     - A copy of the parser library "libxml.a" in the build target
+       bin directory.
+ 
+
+  A program using the parser should include "doctree.h", link
+  to "libxml.a", and invoke the parser as illustrated in file
+        ILUSRC/stubbers/XML-parser/xml.c, 
+  reproduced below.
+
+ -------------------------------------------  
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <assert.h>
+  #include "doctree.h"
+
+ int main(int argc, char *argv[]) {
+
+   Node *top_node;
+   void *ctl;
+   int   rtn;
+
+   if(argc < 2) {
+     fprintf(stderr, "Missing filename");
+     return 0;
+   }
+
+  rtn = parse_xml(argv[1], &top_node, &ctl, NULL);
+
+  if(top_node != NULL) {
+    fprintf(stdout, "\nDocument Tree\n");
+    print_document_tree(top_node, 0, ctl);
+    fprintf(stdout, "\n");
+  }
+
+  if(!rtn) return 1;
+
+  return 0;
+ }
+-------------------------------------------  
+
+ The program illustrates:
+
+   -  the necessary include of "doctree.h" (which see)
+      to declares the parser invocation and the (output) document tree
+      data types and access functions.
+
+    - a simple parser invocation:
+      rtn = parse_xml(argv[1], &top_node, &ctl, NULL);
+    
+ The parser returns 0 if syntax, formation, or validation errors 
+ were found in the document; the identified errors are printed to stderr.  
+
+ If "PUBLIC" external ids are present in the document, the last
+ argument may reference a caller routine which will be used as a
+ callback to convert a public identifier to a system identifier.
+ The declaration of parse_xml (see doctree.h) is
+
+   int parse_xml(char *filename, Node **treetop, void **dctl,
+               XmlCvtPublic convert_pubid_proc /* may be null*/)
+ 
+
+ Output of the parser is a "document-tree", rooted in "top_node",
+ which can be accessed by a collection of functions roughly modelled 
+ on the Document Object Model, but c-based and accordingly renamed.
+
+ To see what the access functions do, it is best (at present) to review
+ their definitions in ILUSRC/stubbers/XML-parser/doctree.c. 
+ The latter file also contains the "print_document_tree" function,
+ illustrating how the access functions are used to display the entire tree.
+
+
+CURRENT LIMITATIONS and DEVIATIONS:
+
+1. Related Specifications:
+   The parser does not implement the related XML-link and 
+   XML-namespace specifications.
+
+2. xml/text declarations:  "encoding"
+   The parser accepts and honors declarations of ASCII, IS0-8859-1,
+   UTF-8, and UTF-16 character sets as the document encoding,
+   although use with the latter two has been only minimally tested. 
+   The default assumed 8-bit character set is ISO-8859-1 rather than UTF-8.
+   (Use of UTF-16 is signalled by a file-initial 0xFEFF code,
+    as required by XML.)
+
+   All these encodings are converted internally to 16-bit unicode.
+   However, please note that validation of attribute values required  
+   to be names or nmtokens currently extends only to the limits of
+   IS0-8859-1, in the sense that all characters beyond those limits 
+   are accepted as valid alpha characters. 
+
+   Note also that UTF-8 and UTF-16 are supported in appropriately 
+   coded input files only;  c-string /nnn character escapes are not 
+   currently supported (and are not part of the XML specification).
+
+3. xml/text declarations: "standalone" 
+   The parser accepts the declaration of a document as "standalone"
+   but ignores it in the sense that no validation errors are 
+   identified if the declaration is violated.
+
+
+3. Dtd's: 
+  -  External identifiers: Only relative URI's and  
+       file identifiers ( file://...) are supported as external 
+       identifiers (prefixed by SYSTEM) in the declaration of 
+       external parsed entities to be included in the dtd or document.
+
+      Also, "public identifiers" in that context are parsed but ignored.
+
+   - The set of built-in attribute kinds susceptible to validation
+     has been extended beyond CDATA, ID, etc. to include:
+        
+         NAME/NAMES  XML names not required to be ID's, i.e., not
+                     required to be unique within the document.
+         UINT        digits only (may be extended  to c-type integers) 
+         INT         UINT optionally preceded by sign.
+
+4. Validation  
+  -  Declarations of xml:space and xml:lang attributes are 
+     not given special treatment, and the values of such attributes in
+     document content are not checked for consistency with 
+     respectively, the values default|preserve, or the 
+     set of ISO639 and Iana codes.
+
+  - All syntactically correct regular expressions in  
+    element content specifications are accepted and used
+    in validation.  The SGML compatibility limitation that 
+    only those expressions initially producing deterministic automata  
+    by the Glushkov algorithm is not supported.
+
+5. Public ids
+   - No check is made of the characters included in public identifiers
+

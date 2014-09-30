@@ -1,0 +1,418 @@
+/**
+ BeginILUCopyright
+
+ Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+ Unlimited use, reproduction, modification, and distribution of this
+ software and modified versions thereof is permitted.  Permission is
+ granted to make derivative works from this software or a modified
+ version thereof.  Any copy of this software, a modified version
+ thereof, or a derivative work must include both the above copyright
+ notice of Xerox Corporation and this paragraph.  Any distribution of
+ this software, a modified version thereof, or a derivative work must
+ comply with all applicable United States export control laws.  This
+ software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+ WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+ LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+ EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+ NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+ OF THE POSSIBILITY OF SUCH DAMAGES.
+
+ EndILUCopyright
+*/
+
+The genstub directory build produces three files:
+    parse-rules  (an executable)
+    libilu-stub.a 
+    print-genstub-ilup (an executable utility) 
+and contains some additional .c and .h files needed for stubber build 
+using genstub. 
+
+The usage and usage-relevant functions of these files is described below,
+and then the general structure of a stubber using these files. 
+
+I. parse-rules 
+------------------
+
+    parse-rules is an executable for use in the stubber build. 
+
+    It takes as input
+        (a) the name of an output file, which must be a .c file.
+        (b) one or more input file names, which must be .rules files
+    for example:
+      parse-rules encoded-rules.c mylang.h.rules mylang.c.rules
+
+    Each input .rules file contains a generation grammar for a particular 
+    kind of stubber output file.  The generation grammar language is described
+    in README.GRAMMAR (which see).  
+
+    The output file, e.g., encoded-rules.c, contains an  
+    internal representation of the content of all the submitted .rules
+    files.  
+
+    At stub generation time, information from each .rules file will be
+    used to create an associated stubber output file for a given interface 
+    (see below).  In partiular, information from input file
+    xxxx.rules (e.g., mylang.h.rules) will be used to create stubber output
+    file interface_name-xxxx (e.g., foo-mylang.h). 
+   
+    The output file, e.g., encoded-rules.c, is incorporated into 
+    the stubber executable.  Thus the stubber Imakefile should
+    contain fragments like: 
+
+       mylang-rules.c : ../genstub/parse-rules cpp.h.rules
+           $(RM) encoded-rules-.c 
+           ../genstub/parse-rules mylang-rules.c mylang.h.rules mylang.c.rules
+
+       ProgramTarget(isl2mylang, isl2mylang.c mylang-rules.c ..., 
+                 libilu-stub.a $(ILU_STUBBER_LIBRARIES),) 
+
+    encoded-rules.c contains a collection of tables, whose content 
+    is, in general, not relevant for usage.  However, two tables are
+    relevant:
+       - the RuleSets table, containing one summary entry for each 
+         file to be produced.
+       - the Functions table, containing one entry for each user-supplied
+         stubber function declared in the grammar;
+
+    Stub-generation-time invocations of the rule interpreter reference
+    these structures (see below for further information
+    on building the stubber executable)
+ 
+II. libilu-stub.a
+------------------
+
+    libilu-stub.a is a library used at stub generation time.  
+
+    It provides three primary functions: 
+
+      1. module structure development.  This is an optional step
+         for use by stubbers (like CPP2) whose mappings require 
+         delineation of the CORBA module structure.
+
+      2. iluptype conversion: conversion of interface description data
+         in iluptype.h form into a neutral form needed by the rule interpreter.
+          
+      3. stub generation: generation of stubber output files by interpreting
+         the encoded rules (in the .c file produced by parse-rules) on the
+         neutral-form interface description.
+   
+    
+    These functions are applied after all submitted .isl and .idl files
+    submitted to a stubber have been compiled into the standard ilu internal
+    interface structures, as declared in src/stubbers/parser/iluptype.h.
+
+    The specific invocations are described further on; the discussion 
+    here focusses on their role in the stub generation process.   
+
+    1. Module structure development    
+    The module structure development function builds an internal 
+    adjunct to the iluptype structure for an interface consisting of a module 
+    tree.
+
+     struct ilu_module_s {
+        char   *simple_name;
+        struct ilu_module_s  *containing_module; /* its containing module */
+        list    scoping;    /* its containing module names */
+        list    contained_modules;
+        list    contained_types;
+        list    contained_constants; 
+        list    contained_exceptions;
+        list    content_sequence; /* list of ContentElem */
+        Type    module_object; /* if is CORBA interface containing other */
+                              /* types, the equiv object entry */ 
+        int     marked;
+     };
+     typedef struct ilu_module_s *Module;
+
+     struct ilu_content_elem_s { 
+        char *content_type; /* must be fwd_type, type,  or module */ 
+        void *content;
+     };
+     typedef struct ilu_content_elem_s *ContentElem;
+    
+    The "content sequence" of a module can be developed separately, 
+    by a language-specific typesort.  That appropriate to CPP2 is
+    given in the genstub/typesort.c file.  
+
+    
+   2. iluptype-conversion 
+   The conversion process moves iluptype data, plus module structures
+   if they have been developed, into a collection of
+   structurally identical "Instance"s (see data.h), declared as:
+
+      struct Instance_ {
+         char             *typename;   
+         int               typeindex;
+         ...
+         void *properties[MAXPROPERTIES];     
+      };
+
+      typedef struct Instance_ Instance;
+
+   where the "properties" contain the values of the associated
+   iluptype structures, declared as neutral "void *" types. 
+
+   The typename in an instance refers to a descriptor for the specific
+   structure, indicating how the properties are to be interpreted,
+   in ilup.data.c.  This descriptor indicates how iluptype
+   information is to be referenced, after conversion, in a stubber grammar,
+   and how the contained information will be interpreted by the generator.
+
+   A fragment of ilup.data.c.  is given below:
+
+     TypeDesc ST_TYPES[ ] = { 
+        { "Any", 0, { 
+                   { "dummy",      PropString, NULL},
+                   { "last",       PropLast, NULL}
+               }
+        },
+        { "Interface", 0, {
+                     { "name",       PropString, NULL} , 
+                     { "isl_name",   PropString, NULL},
+                     { "flat_name",   PropString, NULL},
+                     { "module_str" ,PropStruct, "Module"},
+                     { "brand"      , PropString, NULL},
+                     { "ilup_ref"   , PropOpaque, NULL},
+                     { "types"      , PropList,   NULL},
+                     { "classes"    , PropList,   "Object" },
+                     { "exceptions" , PropList,  "Exception" },
+                     { "imports"    , PropList,  "Interface" }, 
+                     { "constants"  , PropList,  "Constant"}, 
+                     { "filename"   , PropString, NULL},
+                     { "u_attach"   , PropOpaque, NULL},
+                     { "last",       PropLast, NULL}
+                   }
+       }, 
+        .....
+       { "Array", 0, {
+                 { "name",          PropString,    NULL},  /* simple name */
+                 { "isl_name",   PropString, NULL},
+                 { "flat_name",   PropString, NULL},
+                 { "scoping"       ,PropList,      "NameMember"},
+                 { "builtin"      , PropInt,        NULL},
+                 { "supertype"    , PropStruct,     NULL},
+                 { "importedfromname", PropString,  NULL},
+                 { "typeininterface", PropStruct,   "Interface"},
+                 { "uid"          , PropString,     NULL},
+                 { "explicit_uid" , PropBool,       NULL},
+                 { "brand"        , PropString,     NULL},
+                 { "ilup_ref"     , PropOpaque,     NULL},
+                 { "oftype"       , PropStruct,    "Type"},
+                 { "dimensions"   , PropList,      "DimInteger"},
+                 { "optional"     , PropBool,       NULL},
+                 { "u_attach"     , PropOpaque,     NULL},
+                 { "last"         , PropLast,    NULL}
+               } 
+        ....
+
+   };
+
+   PropString, PropBool, PropInt, and PropList have the obvious meanings.
+   PropStruct indicates that the property contains a reference to
+   another instance structure.  PropOpaque is uninterpreted; it is  
+   used for values that can be passed to c-coded generation functions.
+
+   There are different instance structures defined for 
+   each typekind represented in iluptype, each kind of 
+   constant value, as well as for subordinate structures such as
+   methods, arguments, etc.
+
+   Most of the property names are either identical to, or very similar 
+   to, those of the source iluptype attributes.  An important divergence
+   is in the treatment of names.  In place of the iluptype.h Name structure,  
+   consisting of a base_name for the instance plus a list of 
+   language-specific names, each instance is given three names:
+
+       isl_name: the original base_name for the element, in isl form, 
+
+       flat_name: The language specific name equivalent for isl_name
+                  obtained during conversion by callback  (if specified)
+                  to a language-specific function.
+
+       name:      The language-specific equivalent for the last
+                  component in the scoping list for the instance.   
+                  This can differ from the "flat_name" in the case of 
+                  nested CORBA modules, where "isl_name" will include
+                  hyphen-separated names of all containing modules except
+                  the outermost.
+                  include the 
+       
+   The elements of scoping lists also contain both isl_name and namevalue
+   components, the latter being the result of thie language-specific
+   conversions.
+
+   Note: The executable "print-genstub-ilup" allows the results   
+          of conversion for an interface to be printed separately
+          from a particular stubber. 
+   
+
+III Stubber construction using genstub facilities
+--------------------------------------------------     
+
+ A stubber using these facilities should contain the following 
+ fragments:  For a full example see the CPP2 stubber main program.
+
+   #include <iluptype.h>
+   #include "../genstub/data.h"
+   #include "../genstub/rules.h"
+
+   /* Declaration of stubber control, passed to initialize_gen, */ 
+   /* and then passed back to user functions                    */_ 
+
+      typedef struct {
+              int  something_to_remember;
+      } SCtl;
+
+
+  /*--------------------------------- */
+  /* References to encoded-rules.c    */ 
+  /*--------------------------------- */
+
+     extern RuleSet RuleSets[];
+     extern Function Functions[];
+     extern PropDesc PropDescs0[]; 
+     extern int struct_type_count;
+
+  /*-------------------------------------------------- */
+  /* References to conversion and generation functions */ 
+  /*-------------------------------------------------- */
+
+     /* name conversion callback */
+     typedef char* NameCvt(char*);
+     extern void * initialize_convert(NameCvt);  
+
+    /* Converts structures for iluptype interface structures (represented */
+    /*  by input list) and their descendants to instance form; returns list*/
+    /* of the top level interface instances */
+     extern list cvt_interfaces(void *, list in);
+
+    /* If want to print result of convert; l is (ilu) list of  */
+    /* interface instances returned by cvt_interface           */
+    extern void print_instances(void *, FILE *outfile, list l); 
+
+    /* Returns gen_ctl, which must be given as first arg of cvt_interface */
+    /* stub_ctl argument allows stubber control structure to be accessed  */ 
+    /* by user functions invoked during generation                        */ 
+    extern void *initialize_gen(int struct_type_count, SCtl *stub_ctl);
+
+    /* Produces the file specified by given ruleset, for a given interface*/
+     extern int produce_file(void *, Function *functions, PropDesc *propdesc,
+                        RuleSet *ruleset, Instance *interface);
+
+   /* References to generation utilities for user functions refd in rules  */ 
+
+      extern char *get_string_property_value(void *, Instance *instance,
+                                      char *property);
+      extern void *get_any_property_value(void *, Instance *instance,
+                             char *property);
+     /*....*/
+
+
+
+ /* Functions referenced in rule set, and associated utilities            */
+ /* each function should include as arguments those declared in rules     */
+ /* file, prefixed by gen_ctl value, and stub_ctl value                   */
+ /* e.g.,
+  char *F_module_prefix(void *ctl, SCtl *sctl, Instance *m) {
+
+     list l;
+       if(sctl->use_cpp_namespace) return ""; 
+
+     l= (list)get_any_property_value(ctl, m, "scoping"); 
+     return(concat_instance_namelist(ctl, l->head, "_"));  
+  }
+
+ /**************** stubber main *******************************************/
+  int main(int argc, char *argv[]) {
+
+   list         ilup_top, cvt_top, ilup_tops; 
+   void         *cvt_ctl;  /*used wholly within convert, for now */   
+   void         *gen_ctl;  /*used wholly within generator, for now */ 
+   SCtl         *stub_ctl;
+   Instance     *interface;
+   listElement  *ptr; 
+   int           i,j; 
+   /* ... */
+
+
+  /* interpret arguments, other stubber initial processing */
+  /* ....  */
+
+  /* NAME_CONVERT_PROC is user proc of type char *f(char *)      */
+   /* Converts isl names to names acceptable to target language  */
+   /* and uses the latter  in  instance name fields              */
+   /* If NULL, no conversion performed                           */
+   /* cvt_ctl must be passed back to the actual convert invocation */ 
+  cvt_ctl = initialize_convert(NAME_CONVERT_PROC);  
+
+   if(cvt_ctl == NULL) {
+      fprintf(stderr,"System Error: iluptype convert");
+      exit(1);
+  }
+
+  ilup_tops = new_list(); 
+
+  /* Initialize stub_ctl */ 
+   stub_ctl = (void *)calloc(1, sizeof(SCtl));
+  /* ... */
+
+  /* Invoke ilu.bison on each interface file and convert result */ 
+  for (i = ....)  {
+    if( (ilup_top = ParseFile(argv[i])) == NULL) {   
+      fprintf(stderr,"Couldn't find or parse %s", argv[i]);  
+      exit(1);
+     }
+
+    /* Add new interfaces to collection */
+     for(ptr = ilup_top->head; ptr; ptr = ptr->next) {
+       for(ptr1 = ilup_tops->head; ptr1; ptr1 = ptr1->next) {
+         if(ptr->data == ptr1->data) break;
+      }
+      if(ptr1 == NULL) list_insert(ilup_tops, (void *)ptr->data);
+    }
+   } 
+
+  /* Here can invoke module structure build if desired       */
+  /* and sort resulting types into the content_seq structures */
+  for(ptr = ilup_tops->head; ptr != NULL; ptr = ptr->next) {
+       top_module =  build_basic_module_structure((Interface)ptr->data);
+       /* sort for forward defs only */
+       top_fwd_def_sort(top_module); 
+  }
+
+  /* Now convert the iluptype-form interface trees to instance form */
+   cvt_top =  cvt_interfaces(cvt_ctl, ilup_tops);
+   if(cvt_top == 0) exit(1);
+ 
+  /* Initialize generator                                        */ 
+  /* Value returned must be supplied to each generator invocation */
+  gen_ctl = (void *)initialize_gen(struct_type_count, stub_ctl);
+
+
+  /* Generate */
+  for(ptr = cvt_top->head; ptr != NULL; ptr = ptr->next) {
+
+    interface = (Instance *)ptr->data;
+
+   /* 10 just to avoid runaway on error */
+    for(j = 0; j<10 ;j++) {   
+      if(RuleSets[j].in_rule_file_name == NULL) break;
+      if(!produce_file(gen_ctl, &Functions[0], &PropDescs0[0],
+           &RuleSets[j], (Instance *)cvt_top->head->data))
+      exit(1); 
+    }
+ }
+ exit(0); 
+
+}
+
+    
+
+   
+   
+
+
+       

@@ -1,0 +1,77 @@
+README for the "multlang" example directory.
+[ $Id: README,v 1.8 1999/08/03 01:57:44 janssen Exp $
+ BeginILUCopyright
+
+ Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+ Unlimited use, reproduction, modification, and distribution of this
+ software and modified versions thereof is permitted.  Permission is
+ granted to make derivative works from this software or a modified
+ version thereof.  Any copy of this software, a modified version
+ thereof, or a derivative work must include both the above copyright
+ notice of Xerox Corporation and this paragraph.  Any distribution of
+ this software, a modified version thereof, or a derivative work must
+ comply with all applicable United States export control laws.  This
+ software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+ WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+ LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+ EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+ NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+ OF THE POSSIBILITY OF SUCH DAMAGES.
+
+ EndILUCopyright ]
+
+
+This directory contains a simple example of how to use ILU with two
+different programming languages in the same address space.  In this
+case, the program uses both ANSI C and Python in the same address
+space.  The Python module of the program knows how to square a number;
+the C module knows how to multiply two numbers (tough, eh?).  The C
+main() calls the Python object to obtain the square of a value, and
+the Python object calls back to the C code to actually do the
+necessary multiplication.
+
+NOTE:  for this example to work, you must have installed the Python
+libraries as part of building Python.  This is done by, during the Python
+installation, doing "make inclinstall" and "make libainstall".  If you
+have not installed the libraries, please:
+  - re-install Python, and include these inclinstall and libainstall steps;
+  - re-configure ILU
+  - re-build and re-install the ILU Python support (make Install)
+
+Once you have Python properly installed, you can try the example with
+the following steps:
+
+  % ilumkmf
+  % make
+  <various make commands omitted here...>
+  % ./multlang
+  Created Multiplier object <theMultiplierObject@Server1@...>
+  created Squarer object <theSquarerObject@Server2@...>
+  square of 21 is 441.
+  exception on multlang_Squarer_ObtainSquare(4294967283), "ilu:multlang.TooBig"
+  square of 65523 is 4293263529.
+  All calls behaved as expected.
+  %
+
+Note that the Python part of the program can be modified without
+relinking "multlang", since it is interpreted at runtime.  This
+suggests a useful way of progressively building a C or C++ program:
+start with most of the program written in a simple interpreted
+language such as Python while the exact functionality of the modules
+is being developed, and re-implement the object types in C one by one
+as their implementation becomes fixed, until some bare minimum of
+Python, or even none at all, is left in the program.
+
+The switch "-mt" can be specified to the program to have both C and
+Python run in threaded mode, using the Python thread library.  This
+makes little difference to the actual execution of the program, since
+same-address-space calls execute in the calling thread in any case.
+It is provide primarily to test this functionality.
+
+There's another version of this with Common Lisp and C++, but it seems
+almost impossible to, in a portable fashion, (1) link a shared library
+containing C++ code, and (2) describe how a C++ library is loaded into
+a Lisp.  So we haven't, so far, tried to finish it.

@@ -1,0 +1,302 @@
+/*
+BeginILUCopyright
+
+Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+Unlimited use, reproduction, modification, and distribution of this
+software and modified versions thereof is permitted.  Permission is
+granted to make derivative works from this software or a modified
+version thereof.  Any copy of this software, a modified version
+thereof, or a derivative work must include both the above copyright
+notice of Xerox Corporation and this paragraph.  Any distribution of
+this software, a modified version thereof, or a derivative work must
+comply with all applicable United States export control laws.  This
+software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+OF THE POSSIBILITY OF SUCH DAMAGES.
+  
+EndILUCopyright
+
+$Id: iluchoices.in,v 1.76 1999/08/12 04:43:31 janssen Exp $
+*/
+/* Chris Jacobi, January 13, 1999 10:02 am PST */
+
+/*============================================================*/
+/* Define to add support for debugging (-g on compile, DEBUG macro) */
+#undef ENABLE_DEBUGGING
+
+/*============================================================*/
+/* Define this to enable support for Solaris 2 threads in the kernel */
+#undef ILU_SOLARIS2_THREADS
+
+/* Define this to enable support for Posix threads in the kernel */
+#undef ILU_POSIX_THREADS
+
+/* Define this to enable support for DCE threads in the kernel */
+#undef ILU_DCE_THREADS
+
+/* Define this to enable support for Win32 threads in the kernel */
+#undef ILU_WIN32_THREADS
+
+/* Define this to enable support for IRIX sproc threads in the kernel */
+#undef ILU_IRIX_THREADS
+
+/* Define this if building Python, and if the installed Python supports threads */
+#undef ILU_PYTHON_HAS_THREADS
+
+/* Define this if building Perl, and if the installed Perl supports threads */
+#undef ILU_PERL_HAS_THREADS
+
+/*============================================================*/
+/* Define to add OMG IDL support (requires C++) */
+#undef ADD_IDL_SUPPORT
+
+/* Define to add OMG IDL support via Martin von Loewis's code */
+#undef ADD_DIRECT_OMG_IDL_SUPPORT
+
+/* Define this to add XML IDL support via the XML parser */
+#undef ILU_XMLIDL_SUPPORT
+
+/*============================================================*/
+/* Define to add support for VARIANT types (and CORBA `any')  */
+#undef ADD_VARIANT_SUPPORT
+
+/* Define this to provide support for Pickle format 2 */
+#undef ADD_PICKLE2_SUPPORT
+
+/* Define this to provide support for Pickle format 3 (used for w3ng) */
+#undef ADD_PICKLE3_SUPPORT
+
+/* Define this to provide support for type registration */
+#undef ADD_TYPE_REGISTRATION_SUPPORT
+
+/* Define this to add support for ILU fixed-point types */
+#undef ILU_FIXED_POINT_SUPPORT
+
+/* Define this to add support for ILU C bignum library */
+#undef ILU_BIGNUM_LIBRARY_SUPPORT
+
+/* Define this to enable building of a shared library version of the kernel */
+#undef ADD_KERNEL_SHARED_LIBRARY
+
+/* Define this to enable support for HTTP-ng-style object types */
+#undef ILU_HTTPNG_OBJECTS
+
+/* Define this to use the post-2.0alpha12 style of type UID hash algorithm */
+#undef ILU_TYPEUID_V2
+
+/* define this to include the XML parser library */
+#undef ILU_XML_PARSER_LIBRARY
+
+/* define this if ILU should use new keywords plain */
+#undef ILU_USE_NEW_KEYWORDS
+
+/* define this if the OS has nanosleep */
+#undef HAS_NANOSLEEP
+
+/* define this if -lposix4 must be used to get nanosleep */
+#undef ILU_NEEDS_POSIX4_FOR_NANOSLEEP
+
+/* define this if you are using the ILU testing scripts */
+#undef ILU_TESTING_SCRIPTS
+
+/* define this if you have a Python suitable for PythonTestScript() */
+#undef ILU_HAVE_TESTING_PYTHON
+
+/* Define this to enable support for aliased/optional reference types and disable
+   support for standard OPTIONAL */
+#undef ILU_REFERENCE_TYPES
+
+/* Define this to enable support for HTTP-ng-style object types */
+#undef ILU_HTTPNG_OBJECTS
+
+/*============================================================*/
+/* Define to add support for TIM (requires all kinds of things -- see configure.in) */
+#undef ADD_TIM_TOOLS
+
+/*============================================================*/
+/* Define to add support for the XView GUI toolkit */
+#undef ADD_XVIEW_SUPPORT
+
+/* Define to add support for the Xt GUI toolkit */
+#undef ADD_XT_SUPPORT
+
+/* Define this to add support for the Tk GUI toolkit */
+#undef ADD_TK_SUPPORT
+
+/*============================================================*/
+/* Define these to add support for various programming languages */
+
+#undef ADD_PYTHON_LANGUAGE
+#undef PYTHON_USES_SHARED_LIBRARIES_FOR_EXTENSIONS
+#undef PYTHON_MAJOR_VERSION
+#undef PYTHON_MINOR_VERSION
+#undef PYTHON_LIBRARIES_INSTALLED
+#undef ILU_CORBA_PYTHON_MAPPING
+
+#undef ADD_JAVA_LANGUAGE
+
+/* numeric */
+#undef ILUJAVA_M_MAJORVERSION
+
+/* numeric */
+#undef ILUJAVA_M_MINORVERSION
+
+/* for JDK1.2 beta x, rc x and final */
+#undef ILUJAVA_M_JDK12
+
+/* for JDK1.2 rc x and final */
+#undef ILUJAVA_M_JDK12POSTBETA
+
+/* if an include-old directory exists (note that this is about the directory, not the files) */
+#undef ILUJAVA_M_INCLUDEOLDEXISTS
+
+/* Define this if the core classes must be on classpath */
+#undef ILUJAVA_M_CORECLASSES_INCP
+
+/* Define this if the core classes must be on bootclasspath */
+#undef ILUJAVA_M_CORECLASSES_INBCP
+
+/* Define this if a -sourcepath switch is desired */
+#undef ILUJAVA_M_NEEDSOURCEPATH
+
+
+/* Define this if the native code should be generated twice, once for
+ * Java green threads and once for Java native threads.  Sadly there
+ * are differences in the jdk header files.  These differences disappear
+ * when using JNI; if ILUJAVA_M_JNI would be defined this
+ * symbol will be ignored.
+ * If this is not defineed, only one version is generated.
+ */
+#undef ILUJAVA_M_NATIVE_THREADS_EXTRA
+
+/* Define this if we only want to generate one Java version,
+ * but explicitely choose the one for Java native threads
+ * (see ILUJAVA_M_NATIVE_THREADS_EXTRA)
+ * (If neither of ILUJAVA_M_NATIVE_THREADS_EXTRA,
+ * ILUJAVA_M_NATIVE_THREADS_ONLY only gree thread
+ * support will be built.
+ */
+#undef ILUJAVA_M_NATIVE_THREADS_ONLY
+
+/* Define this to force the Java runtime to not use poll(2) */
+#undef ILUJAVA_M_DONTUSE_POLL
+
+/* Define this if the omg classes should be used from ilu
+ * Otherwise the omg classes are assumed to be on the classpath
+ */
+#undef ILUJAVA_M_GENERATE_OMG_CLASSES
+
+/* Define this if native methods should use JNI
+ * The earliest jdk where JNI has sufficient power to support ILU
+ * was jdk1.2-release-candidate-2
+ * This over-rides both, ILUJAVA_M_NATIVE_THREADS_EXTRA
+ * and ILUJAVA_M_NATIVE_THREADS_ONLY as with jni the
+ * jdk header differences according to thread system vanish. 
+ */
+#undef ILUJAVA_M_JNI
+
+/* Define this if an alternate Java package for CosNaming has
+ * been specified.
+ */
+#undef ILUJAVA_M_COSNAMING_PREFIX_DEFINED
+
+
+#undef ADD_COMMONLISP_LANGUAGE
+#undef LISP_HAS_THREADS
+#undef OLD_LISP_METHOD_NAMES
+
+#undef ADD_ILU_CPLUSPLUS_LANGUAGE
+#undef ADD_CORBA_CPLUSPLUS_LANGUAGE
+#undef ADD_CPLUSPLUS_SHARED_LIBRARY
+#undef CPLUSPLUS_LIBRARIES_SPECIFIED
+
+#undef ADD_C_LANGUAGE
+#undef ADD_C_SHARED_LIBRARY
+
+#undef ADD_GUILE_LANGUAGE
+
+#undef ADD_PERL_LANGUAGE
+
+/*============================================================*/
+/* Define these to configure simple binding */
+
+#undef ILU_BINDING_DIRECTORY
+
+#undef ILU_BINDING_REALM
+
+#undef ILU_BINDING_HOST
+
+#undef ILU_BINDING_PORT
+
+#undef ILU_BINDING_MCASTADDR
+
+#undef FULLY_QUALIFIED_DOMAIN_NAME
+
+/*============================================================*/
+/* Define these to add support for various RPC protocols */
+
+#undef ADD_SUNRPC_PROTOCOL
+
+#undef ADD_COURIER_PROTOCOL
+
+#undef ADD_HTTP_PROTOCOL
+
+#undef ADD_IIOP_PROTOCOL
+
+#undef ADD_W3NG_PROTOCOL
+
+#undef ADD_JAVARMI_PROTOCOL
+
+/*============================================================*/
+/* Define these to add support for various transports */
+
+#undef ADD_TCPSOCKET_TRANSPORT
+
+#undef ADD_UDPSOCKET_TRANSPORT
+
+#undef ADD_SUNRPCRM_TRANSPORT
+
+#undef ADD_SECURE_TRANSPORT
+
+#undef ADD_W3MUX_TRANSPORT
+
+#undef ADD_BATCHING_TRANSPORT
+
+#undef ILU_ZLIB_TRANSPORT
+
+#undef XEROX_FIREWALL_HANDLING
+
+/*============================================================*/
+/* define these to add support for various security protocols and namespaces */
+
+#undef USING_ILUGSS
+
+#undef INCLUDE_SSL_SECMECH
+
+/*============================================================*/
+/* Define this to indicate support for some Posix system calls */
+
+#undef _IS_POSIX
+
+/*============================================================*/
+/* Define this to indicate support for some BSD system calls */
+
+#undef _IS_BSD
+
+/* Define this if using the GNU libc header files */
+#undef ILU_USING_GLIBC
+
+/*============================================================*/
+/* Define this to indicate support for sockets for TCP and UDP */
+
+#undef _HAS_SOCKETS
+
+
+
+

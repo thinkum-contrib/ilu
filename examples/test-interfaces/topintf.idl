@@ -1,0 +1,18 @@
+
+ interface top1
+      {
+	    attribute long	l1;
+	    readonly attribute long l2;
+            struct s { short field; };
+             
+            long        m1(in long a);
+            long        m3(in s mystruct);
+
+      };
+
+interface top2 : top1
+        {
+           attribute long	l3;
+
+	    long	m2(in long a, out long b);
+          };

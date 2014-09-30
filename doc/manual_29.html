@@ -1,0 +1,777 @@
+<!-- This HTML file has been created by timdif2html 1.11
+     from manual.dif on 20 September 1999 -->
+
+<TITLE>ILU Reference Manual - ILU Minor Codes for System Exceptions</TITLE>
+<BODY TEXT=#000000 BGCOLOR=#ffffff>
+<P>Go to the <A HREF="manual_28.html">previous</A>, <A HREF="manual_30.html">next</A> section.<P>
+<H1><A NAME="SEC699" HREF="manual_toc.html#SEC699">ILU Minor Codes for System Exceptions</A></H1>
+<P>
+<H2><A NAME="SEC700" HREF="manual_toc.html#SEC700">Introduction</A></H2>
+<P>
+This document describes the ILU's vendor-specific minors codes used in CORBA system exceptions.
+<P>
+<A NAME="IDX901"></A>
+<H2><A NAME="SEC701" HREF="manual_toc.html#SEC701">Minor Codes for System Exception BAD_PARAM</A></H2>
+<UL>
+<P>
+<A NAME="IDX902"></A>
+<LI>
+ <CODE>ilu_bpm_duh</CODE>(1229717504, 0x494c0000) -- It should be pretty obvious.
+<A NAME="IDX903"></A>
+<LI>
+ <CODE>ilu_bpm_true</CODE>(1229717505, 0x494c0001) -- Attempting RPC on true server.
+<A NAME="IDX904"></A>
+<LI>
+ <CODE>ilu_bpm_asynch_unreliable</CODE>(1229717506, 0x494c0002) -- asynch method call on unreliable transport.
+<A NAME="IDX905"></A>
+<LI>
+ <CODE>ilu_bpm_late</CODE>(1229717507, 0x494c0003) -- called ilu_SetFoo too late.
+<A NAME="IDX906"></A>
+<LI>
+ <CODE>ilu_bpm_not_exported</CODE>(1229717508, 0x494c0004) -- asked to output object of server with no ports.
+<A NAME="IDX907"></A>
+<LI>
+ <CODE>ilu_bpm_tinfo</CODE>(1229717509, 0x494c0005) -- invalid transport info string.
+<A NAME="IDX908"></A>
+<LI>
+ <CODE>ilu_bpm_pinfo</CODE>(1229717510, 0x494c0006) -- invalid protocol info string.
+<A NAME="IDX909"></A>
+<LI>
+ <CODE>ilu_bpm_typeID</CODE>(1229717511, 0x494c0007) -- invalid type ID.
+<A NAME="IDX910"></A>
+<LI>
+ <CODE>ilu_bpm_OID</CODE>(1229717512, 0x494c0008) -- invalid object ID.
+<A NAME="IDX911"></A>
+<LI>
+ <CODE>ilu_bpm_SBH</CODE>(1229717513, 0x494c0009) -- bad SBH.
+<A NAME="IDX912"></A>
+<LI>
+ <CODE>ilu_bpm_URL</CODE>(1229717514, 0x494c000a) -- invalid URL.
+<A NAME="IDX913"></A>
+<LI>
+ <CODE>ilu_bpm_serverId</CODE>(1229717515, 0x494c000b) -- bad server ID string.
+<A NAME="IDX914"></A>
+<LI>
+ <CODE>ilu_bpm_networkAddr</CODE>(1229717516, 0x494c000c) -- bad network address or host name.
+<A NAME="IDX915"></A>
+<LI>
+ <CODE>ilu_bpm_connToDefault</CODE>(1229717517, 0x494c000d) -- default host appears where a definite one should.
+<A NAME="IDX916"></A>
+<LI>
+ <CODE>ilu_bpm_badPointer</CODE>(1229717518, 0x494c000e) -- attempt to address memory not in the process address space.
+<A NAME="IDX917"></A>
+<LI>
+ <CODE>ilu_bpm_fd</CODE>(1229717519, 0x494c000f) -- bad file descriptor.
+<A NAME="IDX918"></A>
+<LI>
+ <CODE>ilu_bpm_sequenceLimit</CODE>(1229717520, 0x494c0010) -- sequence too long for its limit.
+<A NAME="IDX919"></A>
+<LI>
+ <CODE>ilu_bpm_unionDiscSize</CODE>(1229717521, 0x494c0011) -- invalid discriminant size.
+<A NAME="IDX920"></A>
+<LI>
+ <CODE>ilu_bpm_unionDiscValue</CODE>(1229717522, 0x494c0012) -- discriminant value invalid for this union type.
+<A NAME="IDX921"></A>
+<LI>
+ <CODE>ilu_bpm_nil</CODE>(1229717523, 0x494c0013) -- NIL passed where not allowed.
+<A NAME="IDX922"></A>
+<LI>
+ <CODE>ilu_bpm_broken</CODE>(1229717524, 0x494c0014) -- not NIL, but contents look bad.
+<A NAME="IDX923"></A>
+<LI>
+ <CODE>ilu_bpm_closed</CODE>(1229717525, 0x494c0015) -- op invoked on closed something.
+<A NAME="IDX924"></A>
+<LI>
+ <CODE>ilu_bpm_small_buffer</CODE>(1229717526, 0x494c0016) -- callee needs larger buffer.
+<A NAME="IDX925"></A>
+<LI>
+ <CODE>ilu_bpm_string_null_char</CODE>(1229717527, 0x494c0017) -- octet 0 in `string' parm.
+<A NAME="IDX926"></A>
+<LI>
+ <CODE>ilu_bpm_threading</CODE>(1229717528, 0x494c0018) -- A proc appropriate only for single-threaded runtimes was called in a mult-threaded runtime -- or the other way around..
+<A NAME="IDX927"></A>
+<LI>
+ <CODE>ilu_bpm_prefix_type_violation</CODE>(1229717529, 0x494c0019) -- type in pickle doesn't satisfy prefix type condition on pickle being marshalled or unmarshalled..
+<A NAME="IDX928"></A>
+<LI>
+ <CODE>ilu_bpm_not_byte_type</CODE>(1229717530, 0x494c001a) -- expected byte type.
+<A NAME="IDX929"></A>
+<LI>
+ <CODE>ilu_bpm_not_boolean_type</CODE>(1229717531, 0x494c001b) -- expected boolean type.
+<A NAME="IDX930"></A>
+<LI>
+ <CODE>ilu_bpm_not_character_type</CODE>(1229717532, 0x494c001c) -- expected character type.
+<A NAME="IDX931"></A>
+<LI>
+ <CODE>ilu_bpm_not_shortcharacter_type</CODE>(1229717533, 0x494c001d) -- expected shortcharacter type.
+<A NAME="IDX932"></A>
+<LI>
+ <CODE>ilu_bpm_not_shortinteger_type</CODE>(1229717534, 0x494c001e) -- expected shortinteger type.
+<A NAME="IDX933"></A>
+<LI>
+ <CODE>ilu_bpm_not_integer_type</CODE>(1229717535, 0x494c001f) -- expected integer type.
+<A NAME="IDX934"></A>
+<LI>
+ <CODE>ilu_bpm_not_longinteger_type</CODE>(1229717536, 0x494c0020) -- expected longinteger type.
+<A NAME="IDX935"></A>
+<LI>
+ <CODE>ilu_bpm_not_shortcardinal_type</CODE>(1229717537, 0x494c0021) -- expected shortcardinal type.
+<A NAME="IDX936"></A>
+<LI>
+ <CODE>ilu_bpm_not_cardinal_type</CODE>(1229717538, 0x494c0022) -- expected cardinal type.
+<A NAME="IDX937"></A>
+<LI>
+ <CODE>ilu_bpm_not_longcardinal_type</CODE>(1229717539, 0x494c0023) -- expected longcardinal type.
+<A NAME="IDX938"></A>
+<LI>
+ <CODE>ilu_bpm_not_shortreal_type</CODE>(1229717540, 0x494c0024) -- expected shortreal type.
+<A NAME="IDX939"></A>
+<LI>
+ <CODE>ilu_bpm_not_real_type</CODE>(1229717541, 0x494c0025) -- expected real type.
+<A NAME="IDX940"></A>
+<LI>
+ <CODE>ilu_bpm_not_longreal_type</CODE>(1229717542, 0x494c0026) -- expected longreal type.
+<A NAME="IDX941"></A>
+<LI>
+ <CODE>ilu_bpm_not_object_type</CODE>(1229717543, 0x494c0027) -- expected object type.
+<A NAME="IDX942"></A>
+<LI>
+ <CODE>ilu_bpm_not_optional_type</CODE>(1229717544, 0x494c0028) -- expected optional type.
+<A NAME="IDX943"></A>
+<LI>
+ <CODE>ilu_bpm_not_alias_type</CODE>(1229717545, 0x494c0029) -- expected alias type.
+<A NAME="IDX944"></A>
+<LI>
+ <CODE>ilu_bpm_not_union_type</CODE>(1229717546, 0x494c002a) -- expected union type.
+<A NAME="IDX945"></A>
+<LI>
+ <CODE>ilu_bpm_invalid_union_arm_index</CODE>(1229717547, 0x494c002b) -- out of bounds.
+<A NAME="IDX946"></A>
+<LI>
+ <CODE>ilu_bpm_not_sequence_type</CODE>(1229717548, 0x494c002c) -- expected sequence type.
+<A NAME="IDX947"></A>
+<LI>
+ <CODE>ilu_bpm_not_array_type</CODE>(1229717549, 0x494c002d) -- expected array type.
+<A NAME="IDX948"></A>
+<LI>
+ <CODE>ilu_bpm_not_record_type</CODE>(1229717550, 0x494c002e) -- expected record type.
+<A NAME="IDX949"></A>
+<LI>
+ <CODE>ilu_bpm_invalid_record_field_index</CODE>(1229717551, 0x494c002f) -- invalid record field index.
+<A NAME="IDX950"></A>
+<LI>
+ <CODE>ilu_bpm_not_enumeration_type</CODE>(1229717552, 0x494c0030) -- expected enumeration type.
+<A NAME="IDX951"></A>
+<LI>
+ <CODE>ilu_bpm_invalid_enum_element_index</CODE>(1229717553, 0x494c0031) -- invalid enum element index.
+<A NAME="IDX952"></A>
+<LI>
+ <CODE>ilu_bpm_not_variant_type</CODE>(1229717554, 0x494c0032) -- expected variant type.
+<A NAME="IDX953"></A>
+<LI>
+ <CODE>ilu_bpm_invalid_variant_type</CODE>(1229717555, 0x494c0033) -- variant type is badly formed.
+<A NAME="IDX954"></A>
+<LI>
+ <CODE>ilu_bpm_not_string_type</CODE>(1229717556, 0x494c0034) -- expected string type.
+<A NAME="IDX955"></A>
+<LI>
+ <CODE>ilu_bpm_invalid_typekind</CODE>(1229717557, 0x494c0035) -- ilu_Type with bad "kind".
+<A NAME="IDX956"></A>
+<LI>
+ <CODE>ilu_bpm_invalid_method_index</CODE>(1229717558, 0x494c0036) -- out of bounds.
+<A NAME="IDX957"></A>
+<LI>
+ <CODE>ilu_bpm_invalid_argument_index</CODE>(1229717559, 0x494c0037) -- out of bounds.
+<A NAME="IDX958"></A>
+<LI>
+ <CODE>ilu_bpm_invalid_exception_index</CODE>(1229717560, 0x494c0038) -- out of bounds.
+<A NAME="IDX959"></A>
+<LI>
+ <CODE>ilu_bpm_not_sibling</CODE>(1229717561, 0x494c0039) -- non-sibling passed where sibling required.
+<A NAME="IDX960"></A>
+<LI>
+ <CODE>ilu_bpm_protocol_registered</CODE>(1229717562, 0x494c003a) -- attempt to register already-registered protocol.
+<A NAME="IDX961"></A>
+<LI>
+ <CODE>ilu_bpm_transport_registered</CODE>(1229717563, 0x494c003b) -- attempt to register already-registered transport.
+<A NAME="IDX962"></A>
+<LI>
+ <CODE>ilu_bpm_identity_type_registered</CODE>(1229717564, 0x494c003c) -- attempting to register already-registered identity type.
+<A NAME="IDX963"></A>
+<LI>
+ <CODE>ilu_bpm_bogus_raise</CODE>(1229717565, 0x494c003d) -- Method tried to raise an exception not in its RAISES list..
+<A NAME="IDX964"></A>
+<LI>
+ <CODE>ilu_bpm_some_raise</CODE>(1229717566, 0x494c003e) -- Method with empty exn list tried to raise an exn..
+<A NAME="IDX965"></A>
+<LI>
+ <CODE>ilu_bpm_short_char_codeset</CODE>(1229717567, 0x494c003f) -- unsupported short character code set.
+<A NAME="IDX966"></A>
+<LI>
+ <CODE>ilu_bpm_char_codeset</CODE>(1229717568, 0x494c0040) -- unsupported character code set.
+<A NAME="IDX967"></A>
+<LI>
+ <CODE>ilu_bpm_non_batching</CODE>(1229717569, 0x494c0041) -- flush called on non-batching conn.
+<A NAME="IDX968"></A>
+<LI>
+ <CODE>ilu_bpm_serialVsServer</CODE>(1229717570, 0x494c0042) -- ilu_Serializer used on wrong server.
+<A NAME="IDX969"></A>
+<LI>
+ <CODE>ilu_bpm_idTypePresent</CODE>(1229717571, 0x494c0043) -- passport already contains this identity type.
+<A NAME="IDX970"></A>
+<LI>
+ <CODE>ilu_bpm_serialConcurrent</CODE>(1229717572, 0x494c0044) -- bad case of ilu_Serializer used in concurrent calls.
+<A NAME="IDX971"></A>
+<LI>
+ <CODE>ilu_bpm_bad_character</CODE>(1229717573, 0x494c0045) -- this char not supported in this codeset.
+<A NAME="IDX972"></A>
+<LI>
+ <CODE>ilu_bpm_invalid_base</CODE>(1229717574, 0x494c0046) -- bad radix specified for string scan.
+<A NAME="IDX973"></A>
+<LI>
+ <CODE>ilu_bpm_divide_by_zero</CODE>(1229717575, 0x494c0047) -- zero passed as divisor.
+<A NAME="IDX974"></A>
+<LI>
+ <CODE>ilu_bpm_serialVsTransport</CODE>(1229717576, 0x494c0048) -- ilu_Serializer used with unreliable transport.
+<A NAME="IDX975"></A>
+<LI>
+ <CODE>ilu_bpm_muxBadEndpoint</CODE>(1229717577, 0x494c0049) -- bad endpoint specified in mux trans.
+<A NAME="IDX976"></A>
+<LI>
+ <CODE>ilu_bpm_mux_channel</CODE>(1229717578, 0x494c004a) -- bad channel specified in mux trans.
+<A NAME="IDX977"></A>
+<LI>
+ <CODE>ilu_bpm_not_collectible</CODE>(1229717579, 0x494c004b) -- non-collectible class used.
+<A NAME="IDX978"></A>
+<LI>
+ <CODE>ilu_bpm_surrogate</CODE>(1229717580, 0x494c004c) -- surrogate obj or server used where true required.
+<A NAME="IDX979"></A>
+<LI>
+ <CODE>ilu_bpm_badMallocPtr</CODE>(1229717581, 0x494c004d) -- attempt to free non-malloced storage.
+<A NAME="IDX980"></A>
+<LI>
+ <CODE>ilu_bpm_badTinfoIndex</CODE>(1229717582, 0x494c004e) -- invalid index into tinfo vector (too large).
+<A NAME="IDX981"></A>
+<LI>
+ <CODE>ilu_bpm_convProtocolExcn</CODE>(1229717583, 0x494c004f) -- converted ilu_ProtocolException_GarbageArguments.
+<A NAME="IDX982"></A>
+<LI>
+ <CODE>ilu_bpm_gssNameString</CODE>(1229717584, 0x494c0050) -- malformed gss namestring; missing namespace id?.
+</UL>
+<P>
+<A NAME="IDX983"></A>
+<H2><A NAME="SEC702" HREF="manual_toc.html#SEC702">Minor Codes for System Exception IMP_LIMIT</A></H2>
+<UL>
+<P>
+<A NAME="IDX984"></A>
+<LI>
+ <CODE>ilu_ilm_strlen</CODE>(1229717504, 0x494c0000) -- ILU will marshal only strings &#38; byte-sequences less than a certain length..
+<A NAME="IDX985"></A>
+<LI>
+ <CODE>ilu_ilm_nomst</CODE>(1229717505, 0x494c0001) -- When importing a surrogate, ILU requires that the importing program know some of the object's types, and that one of those known types is a subtype of all the other known types..
+<A NAME="IDX986"></A>
+<LI>
+ <CODE>ilu_ilm_max_protocols</CODE>(1229717506, 0x494c0002) -- too many protocols registered.
+<A NAME="IDX987"></A>
+<LI>
+ <CODE>ilu_ilm_max_transports</CODE>(1229717507, 0x494c0003) -- too many transports registered.
+<A NAME="IDX988"></A>
+<LI>
+ <CODE>ilu_ilm_max_identity_types</CODE>(1229717508, 0x494c0004) -- too many identity types registered.
+<A NAME="IDX989"></A>
+<LI>
+ <CODE>ilu_ilm_refcnt</CODE>(1229717509, 0x494c0005) -- refcount would overflow.
+<A NAME="IDX990"></A>
+<LI>
+ <CODE>ilu_ilm_max_union_arms</CODE>(1229717510, 0x494c0006) -- too many arms to a union (ILU only permits 32766).
+<A NAME="IDX991"></A>
+<LI>
+ <CODE>ilu_ilm_bad_type_for_protocol</CODE>(1229717511, 0x494c0007) -- this protocol does not support this type (some reasonable operation cannot be performed because of a bug in the CORBA spec which ILU faithfully implements).
+<A NAME="IDX992"></A>
+<LI>
+ <CODE>ilu_ilm_sub_protocol</CODE>(1229717512, 0x494c0008) -- a sub-protocol has been specified which is not supported.
+<A NAME="IDX993"></A>
+<LI>
+ <CODE>ilu_ilm_unsupportedPickleFormat</CODE>(1229717513, 0x494c0009) -- specified pickle format not supported.
+<A NAME="IDX994"></A>
+<LI>
+ <CODE>ilu_ilm_max_buffer_size</CODE>(1229717514, 0x494c000a) -- attempt to use a buffer for a sequence too long for it.
+<A NAME="IDX995"></A>
+<LI>
+ <CODE>ilu_ilm_unsupported_charset_encoding</CODE>(1229717515, 0x494c000b) -- specified character set encoding not supported.
+<A NAME="IDX996"></A>
+<LI>
+ <CODE>ilu_ilm_unsupported_language</CODE>(1229717516, 0x494c000c) -- specified string language not supported.
+<A NAME="IDX997"></A>
+<LI>
+ <CODE>ilu_ilm_unsupported_id_type</CODE>(1229717517, 0x494c000d) -- specified identity type not supported.
+<A NAME="IDX998"></A>
+<LI>
+ <CODE>ilu_ilm_bignum_size</CODE>(1229717518, 0x494c000e) -- bignum too large for use.
+<A NAME="IDX999"></A>
+<LI>
+ <CODE>ilu_ilm_corba_iiop_unions</CODE>(1229717519, 0x494c000f) -- some valid OMG IDL union typecodes cannot be marshalled with IIOP 1.0 or 1.1.
+<A NAME="IDX1000"></A>
+<LI>
+ <CODE>ilu_ilm_redirect_cross_protocol</CODE>(1229717520, 0x494c0010) -- attempt to redirect call to different RPC protocol.
+</UL>
+<P>
+<A NAME="IDX1001"></A>
+<H2><A NAME="SEC703" HREF="manual_toc.html#SEC703">Minor Codes for System Exception COMM_FAILURE</A></H2>
+<UL>
+<P>
+<A NAME="IDX1002"></A>
+<LI>
+ <CODE>ilu_cfm_socket_type</CODE>(1229717504, 0x494c0000) -- OS doesn't support sock type or protocol.
+<A NAME="IDX1003"></A>
+<LI>
+ <CODE>ilu_cfm_bad_address</CODE>(1229717505, 0x494c0001) -- local or remote addr not available.
+<A NAME="IDX1004"></A>
+<LI>
+ <CODE>ilu_cfm_connect_refused</CODE>(1229717506, 0x494c0002) -- remote end refused connection.
+<A NAME="IDX1005"></A>
+<LI>
+ <CODE>ilu_cfm_timeout</CODE>(1229717507, 0x494c0003) -- timeout.
+<A NAME="IDX1006"></A>
+<LI>
+ <CODE>ilu_cfm_nonblock</CODE>(1229717508, 0x494c0004) -- can't achieve non-blocking I/O.
+<A NAME="IDX1007"></A>
+<LI>
+ <CODE>ilu_cfm_connect_failed</CODE>(1229717509, 0x494c0005) -- some other, or unknown, reason.
+<A NAME="IDX1008"></A>
+<LI>
+ <CODE>ilu_cfm_eof</CODE>(1229717510, 0x494c0006) -- unexpected eof on connection.
+<A NAME="IDX1009"></A>
+<LI>
+ <CODE>ilu_cfm_protocol_sync_lost</CODE>(1229717511, 0x494c0007) -- unexpected bytes with no way to recover.
+<A NAME="IDX1010"></A>
+<LI>
+ <CODE>ilu_cfm_tr_non_boundaried</CODE>(1229717512, 0x494c0008) -- can't use this transport stack.
+<A NAME="IDX1011"></A>
+<LI>
+ <CODE>ilu_cfm_conn_lost</CODE>(1229717513, 0x494c0009) -- other or unknown reason.
+<A NAME="IDX1012"></A>
+<LI>
+ <CODE>ilu_cfm_resource_mgmt</CODE>(1229717514, 0x494c000a) -- closed due to need for FD.
+<A NAME="IDX1013"></A>
+<LI>
+ <CODE>ilu_cfm_convProtocolExcn</CODE>(1229717515, 0x494c000b) -- converted ilu_ProtocolException_LostConnection.
+<A NAME="IDX1014"></A>
+<LI>
+ <CODE>ilu_cfm_gcRegFailed</CODE>(1229717516, 0x494c000c) -- a GC callback failed.
+<A NAME="IDX1015"></A>
+<LI>
+ <CODE>ilu_cfm_pingFailed</CODE>(1229717517, 0x494c000d) -- a ping failed.
+</UL>
+<P>
+<A NAME="IDX1016"></A>
+<H2><A NAME="SEC704" HREF="manual_toc.html#SEC704">Minor Codes for System Exception INV_OBJREF</A></H2>
+<UL>
+<P>
+<A NAME="IDX1017"></A>
+<LI>
+ <CODE>ilu_iom_unknown</CODE>(1229717504, 0x494c0000) -- reason unknown or has no specific minor code.
+<A NAME="IDX1018"></A>
+<LI>
+ <CODE>ilu_iom_sbh</CODE>(1229717505, 0x494c0001) -- malformed SBH.
+<A NAME="IDX1019"></A>
+<LI>
+ <CODE>ilu_iom_ci</CODE>(1229717506, 0x494c0002) -- malformed contact info.
+<A NAME="IDX1020"></A>
+<LI>
+ <CODE>ilu_iom_pi</CODE>(1229717507, 0x494c0003) -- malformed protocol info.
+<A NAME="IDX1021"></A>
+<LI>
+ <CODE>ilu_iom_pc</CODE>(1229717508, 0x494c0004) -- unknown protocol class.
+<A NAME="IDX1022"></A>
+<LI>
+ <CODE>ilu_iom_ps</CODE>(1229717509, 0x494c0005) -- protocol-specific part invalid.
+<A NAME="IDX1023"></A>
+<LI>
+ <CODE>ilu_iom_ti</CODE>(1229717510, 0x494c0006) -- malformed transport info.
+<A NAME="IDX1024"></A>
+<LI>
+ <CODE>ilu_iom_tc</CODE>(1229717511, 0x494c0007) -- unknown transport class.
+<A NAME="IDX1025"></A>
+<LI>
+ <CODE>ilu_iom_ts</CODE>(1229717512, 0x494c0008) -- transport-specific part invalid.
+<A NAME="IDX1026"></A>
+<LI>
+ <CODE>ilu_iom_sid</CODE>(1229717513, 0x494c0009) -- malformed server ID.
+<A NAME="IDX1027"></A>
+<LI>
+ <CODE>ilu_iom_ih</CODE>(1229717514, 0x494c000a) -- malformed instance handle.
+<A NAME="IDX1028"></A>
+<LI>
+ <CODE>ilu_iom_bad_mstid</CODE>(1229717515, 0x494c000b) -- malformed MSTID.
+<A NAME="IDX1029"></A>
+<LI>
+ <CODE>ilu_iom_mstid_fail</CODE>(1229717516, 0x494c000c) -- can't resolve MSTID.
+<A NAME="IDX1030"></A>
+<LI>
+ <CODE>ilu_iom_nil</CODE>(1229717517, 0x494c000d) -- NIL object found in invalid context.
+<A NAME="IDX1031"></A>
+<LI>
+ <CODE>ilu_iom_bad_url_scheme</CODE>(1229717518, 0x494c000e) -- invalid scheme tag.
+<A NAME="IDX1032"></A>
+<LI>
+ <CODE>ilu_iom_tf</CODE>(1229717519, 0x494c000f) -- Transport class used in inappropriately filterly position..
+<A NAME="IDX1033"></A>
+<LI>
+ <CODE>ilu_iom_ior</CODE>(1229717520, 0x494c0010) -- invalid IIOP IOR.
+<A NAME="IDX1034"></A>
+<LI>
+ <CODE>ilu_iom_cant_connect</CODE>(1229717521, 0x494c0011) -- can't connect to server.
+<A NAME="IDX1035"></A>
+<LI>
+ <CODE>ilu_iom_svr_closed</CODE>(1229717522, 0x494c0012) -- server closed.
+<A NAME="IDX1036"></A>
+<LI>
+ <CODE>ilu_iom_type_nf</CODE>(1229717523, 0x494c0013) -- exist no inst.s of req'd type.
+<A NAME="IDX1037"></A>
+<LI>
+ <CODE>ilu_iom_meth_nf</CODE>(1229717524, 0x494c0014) -- receiver doesn't recognize method.
+<A NAME="IDX1038"></A>
+<LI>
+ <CODE>ilu_iom_inst_nf</CODE>(1229717525, 0x494c0015) -- instance doesn't exist.
+<A NAME="IDX1039"></A>
+<LI>
+ <CODE>ilu_iom_bad_single</CODE>(1229717526, 0x494c0016) -- can't exist due to singleton restr..
+<A NAME="IDX1040"></A>
+<LI>
+ <CODE>ilu_iom_wrong_type</CODE>(1229717527, 0x494c0017) -- instance doesn't have right type.
+<A NAME="IDX1041"></A>
+<LI>
+ <CODE>ilu_iom_short_char_codeset</CODE>(1229717528, 0x494c0018) -- unsupported short character code set.
+<A NAME="IDX1042"></A>
+<LI>
+ <CODE>ilu_iom_char_codeset</CODE>(1229717529, 0x494c0019) -- unsupported character code set.
+<A NAME="IDX1043"></A>
+<LI>
+ <CODE>ilu_iom_relocate_loop</CODE>(1229717530, 0x494c001a) -- relocate loop.
+<A NAME="IDX1044"></A>
+<LI>
+ <CODE>ilu_iom_conc_serial</CODE>(1229717531, 0x494c001b) -- serializer used when contact info is concurrent.
+<A NAME="IDX1045"></A>
+<LI>
+ <CODE>ilu_iom_CosNaming_NotFound</CODE>(1229717532, 0x494c001c) -- CosNaming returned NotFound.
+<A NAME="IDX1046"></A>
+<LI>
+ <CODE>ilu_iom_CosNaming_CannotProceed</CODE>(1229717533, 0x494c001d) -- CosNaming returned CannotProceed.
+<A NAME="IDX1047"></A>
+<LI>
+ <CODE>ilu_iom_CosNaming_InvalidName</CODE>(1229717534, 0x494c001e) -- CosNaming returned InvalidName.
+</UL>
+<P>
+<A NAME="IDX1048"></A>
+<H2><A NAME="SEC705" HREF="manual_toc.html#SEC705">Minor Codes for System Exception INTERNAL</A></H2>
+<UL>
+<P>
+<A NAME="IDX1049"></A>
+<LI>
+ <CODE>ilu_im_inv_mutex</CODE>(1229717504, 0x494c0000) -- some mutex was deemed "invalid".
+<A NAME="IDX1050"></A>
+<LI>
+ <CODE>ilu_im_broken</CODE>(1229717505, 0x494c0001) -- kernel data str broken -- NIL where shouldn't be.
+<A NAME="IDX1051"></A>
+<LI>
+ <CODE>ilu_im_unhandled</CODE>(1229717506, 0x494c0002) -- Unexpected ilu_Error type raised in MOP.
+<A NAME="IDX1052"></A>
+<LI>
+ <CODE>ilu_im_errno</CODE>(1229717507, 0x494c0003) -- syscall raised unexpected errno.
+<A NAME="IDX1053"></A>
+<LI>
+ <CODE>ilu_im_badKernelErr</CODE>(1229717508, 0x494c0004) -- kernel call returned undexpected major err code.
+<A NAME="IDX1054"></A>
+<LI>
+ <CODE>ilu_im_trBufSize</CODE>(1229717509, 0x494c0005) -- tc_get_output_buffer couldn't.
+<A NAME="IDX1055"></A>
+<LI>
+ <CODE>ilu_im_tInfoLen</CODE>(1229717510, 0x494c0006) -- tinfo too long.
+<A NAME="IDX1056"></A>
+<LI>
+ <CODE>ilu_im_badTypeKind</CODE>(1229717511, 0x494c0007) -- invalid ilu_TypeKind code for context.
+<A NAME="IDX1057"></A>
+<LI>
+ <CODE>ilu_im_callFail</CODE>(1229717512, 0x494c0008) -- an internal call failed.
+<A NAME="IDX1058"></A>
+<LI>
+ <CODE>ilu_im_badLocks</CODE>(1229717513, 0x494c0009) -- bad_locks maps to this case.
+<A NAME="IDX1059"></A>
+<LI>
+ <CODE>ilu_im_brokenLocks</CODE>(1229717514, 0x494c000a) -- broken_locks maps to this case.
+<A NAME="IDX1060"></A>
+<LI>
+ <CODE>ilu_im_inputBuffer</CODE>(1229717515, 0x494c000b) -- Input buffer expected but not found.
+<A NAME="IDX1061"></A>
+<LI>
+ <CODE>ilu_im_outputBuffer</CODE>(1229717516, 0x494c000c) -- Output buffer expected but not found.
+<A NAME="IDX1062"></A>
+<LI>
+ <CODE>ilu_im_endMessage</CODE>(1229717517, 0x494c000d) -- tc_end_message when no msg active.
+<A NAME="IDX1063"></A>
+<LI>
+ <CODE>ilu_im_endMessageDir</CODE>(1229717518, 0x494c000e) -- end_output_message_nonblock called during message input.
+<A NAME="IDX1064"></A>
+<LI>
+ <CODE>ilu_im_beginMessage</CODE>(1229717519, 0x494c000f) -- tc_begin_message when msg active.
+<A NAME="IDX1065"></A>
+<LI>
+ <CODE>ilu_im_bytesWithoutMsg</CODE>(1229717520, 0x494c0010) -- byte I/O outside message boundaries.
+<A NAME="IDX1066"></A>
+<LI>
+ <CODE>ilu_im_tcBytesDropped</CODE>(1229717521, 0x494c0011) -- for tc_end_message.
+<A NAME="IDX1067"></A>
+<LI>
+ <CODE>ilu_im_tcBug</CODE>(1229717522, 0x494c0012) -- TransportClass didn't meet contract.
+<A NAME="IDX1068"></A>
+<LI>
+ <CODE>ilu_im_tcInputSkipsBuff</CODE>(1229717523, 0x494c0013) -- a particular Trans'Class caller bug.
+<A NAME="IDX1069"></A>
+<LI>
+ <CODE>ilu_im_tcNotBoundaried</CODE>(1229717524, 0x494c0014) -- for b'd method of unb'd Trans'Class.
+<A NAME="IDX1070"></A>
+<LI>
+ <CODE>ilu_im_tcReliable</CODE>(1229717525, 0x494c0015) -- for unreliable call on reliable TC.
+<A NAME="IDX1071"></A>
+<LI>
+ <CODE>ilu_im_tcBadBuff</CODE>(1229717526, 0x494c0016) -- bad buffer given to Trans'Class proc.
+<A NAME="IDX1072"></A>
+<LI>
+ <CODE>ilu_im_protNonConcurrent</CODE>(1229717527, 0x494c0017) -- DelayInterp called on non-concurrent prot.
+<A NAME="IDX1073"></A>
+<LI>
+ <CODE>ilu_im_tcNoMsgHandle</CODE>(1229717528, 0x494c0018) -- for tc_end_message.
+<A NAME="IDX1074"></A>
+<LI>
+ <CODE>ilu_im_noHostName</CODE>(1229717529, 0x494c0019) -- unable to get a name for this host.
+<A NAME="IDX1075"></A>
+<LI>
+ <CODE>ilu_im_noHostIpAddr</CODE>(1229717530, 0x494c001a) -- unable to get IP addr for this host.
+<A NAME="IDX1076"></A>
+<LI>
+ <CODE>ilu_im_bufxpMisuse</CODE>(1229717531, 0x494c001b) -- bufxp caller violated contract.
+<A NAME="IDX1077"></A>
+<LI>
+ <CODE>ilu_im_typeMismatch</CODE>(1229717532, 0x494c001c) -- two stubs with different ideas.
+<A NAME="IDX1078"></A>
+<LI>
+ <CODE>ilu_im_typeIncomplete</CODE>(1229717533, 0x494c001d) -- type not completely constructed.
+<A NAME="IDX1079"></A>
+<LI>
+ <CODE>ilu_im_typeDuplicated</CODE>(1229717534, 0x494c001e) -- type multiply registered (same ID).
+<A NAME="IDX1080"></A>
+<LI>
+ <CODE>ilu_im_typeNameCollision</CODE>(1229717535, 0x494c001f) -- same name on different types.
+<A NAME="IDX1081"></A>
+<LI>
+ <CODE>ilu_im_dupForkProc</CODE>(1229717536, 0x494c0020) -- attempt to register ForkProc twice.
+<A NAME="IDX1082"></A>
+<LI>
+ <CODE>ilu_im_noForkProc</CODE>(1229717537, 0x494c0021) -- no way to fork an internal thread.
+<A NAME="IDX1083"></A>
+<LI>
+ <CODE>ilu_im_threading</CODE>(1229717538, 0x494c0022) -- confusion on whether threaded.
+<A NAME="IDX1084"></A>
+<LI>
+ <CODE>ilu_im_threadFork</CODE>(1229717539, 0x494c0023) -- fork failed.
+<A NAME="IDX1085"></A>
+<LI>
+ <CODE>ilu_im_threadIDSize</CODE>(1229717540, 0x494c0024) -- thread ID size too large for context.
+<A NAME="IDX1086"></A>
+<LI>
+ <CODE>ilu_im_threadAttribute</CODE>(1229717541, 0x494c0025) -- problem setting/getting thread attr.
+<A NAME="IDX1087"></A>
+<LI>
+ <CODE>ilu_im_tportRole</CODE>(1229717542, 0x494c0026) -- incoming vs. outgoing transport err.
+<A NAME="IDX1088"></A>
+<LI>
+ <CODE>ilu_im_check</CODE>(1229717543, 0x494c0027) -- internal consistency check failed.
+<A NAME="IDX1089"></A>
+<LI>
+ <CODE>ilu_im_badEnumValue</CODE>(1229717544, 0x494c0028) -- unexpected enumeration value.
+<A NAME="IDX1090"></A>
+<LI>
+ <CODE>ilu_im_pickleFormat</CODE>(1229717545, 0x494c0029) -- bad pointer found in pickle format pos.
+<A NAME="IDX1091"></A>
+<LI>
+ <CODE>ilu_im_ptrAlignment</CODE>(1229717546, 0x494c002a) -- mis-aligned pointer encountered.
+<A NAME="IDX1092"></A>
+<LI>
+ <CODE>ilu_im_tcCreate</CODE>(1229717547, 0x494c002b) -- unknown error in transport creation.
+<A NAME="IDX1093"></A>
+<LI>
+ <CODE>ilu_im_multiple_channels</CODE>(1229717548, 0x494c002c) -- in W3MUX, same chnl regd twice.
+<A NAME="IDX1094"></A>
+<LI>
+ <CODE>ilu_im_mux_max_credit</CODE>(1229717549, 0x494c002d) -- in W3MUX, local credit buildup.
+<A NAME="IDX1095"></A>
+<LI>
+ <CODE>ilu_im_badRelocVals</CODE>(1229717550, 0x494c002e) -- relocate proc returned odd results.
+<A NAME="IDX1096"></A>
+<LI>
+ <CODE>ilu_im_badRelocPinfo</CODE>(1229717551, 0x494c002f) -- relocate proc returned invalid pinfo value.
+<A NAME="IDX1097"></A>
+<LI>
+ <CODE>ilu_im_badRelocTinfo</CODE>(1229717552, 0x494c0030) -- relocate proc returned invalid tinfo value.
+<A NAME="IDX1098"></A>
+<LI>
+ <CODE>ilu_im_convPESuccess</CODE>(1229717553, 0x494c0031) -- attempt to convert ilu_ProtocolException_Success to an error.
+<A NAME="IDX1099"></A>
+<LI>
+ <CODE>ilu_im_invalidPE</CODE>(1229717554, 0x494c0032) -- attempt to convert invalid ilu_ProtocolException value to an error.
+</UL>
+<P>
+<A NAME="IDX1100"></A>
+<H2><A NAME="SEC706" HREF="manual_toc.html#SEC706">Minor Codes for System Exception MARSHAL</A></H2>
+<UL>
+<P>
+<A NAME="IDX1101"></A>
+<LI>
+ <CODE>ilu_mm_eom</CODE>(1229717504, 0x494c0000) -- attempted read past end of msg.
+<A NAME="IDX1102"></A>
+<LI>
+ <CODE>ilu_mm_alien_disc</CODE>(1229717505, 0x494c0001) -- unmarshalling discriminator of different server.
+<A NAME="IDX1103"></A>
+<LI>
+ <CODE>ilu_mm_bad_union_disc</CODE>(1229717506, 0x494c0002) -- invalid union discriminant value.
+<A NAME="IDX1104"></A>
+<LI>
+ <CODE>ilu_mm_bad_typekind</CODE>(1229717507, 0x494c0003) -- TypeCode received with invalid type kind value.
+<A NAME="IDX1105"></A>
+<LI>
+ <CODE>ilu_mm_wronglen</CODE>(1229717508, 0x494c0004) -- fixed length array came in with different length.
+<A NAME="IDX1106"></A>
+<LI>
+ <CODE>ilu_mm_sequenceLimit</CODE>(1229717509, 0x494c0005) -- attempt to read or write a sequence longer than its limit.
+<A NAME="IDX1107"></A>
+<LI>
+ <CODE>ilu_mm_badMagicNumber</CODE>(1229717510, 0x494c0006) -- bad message header magic number.
+<A NAME="IDX1108"></A>
+<LI>
+ <CODE>ilu_mm_versionMismatch</CODE>(1229717511, 0x494c0007) -- wrong version of message protocol.
+<A NAME="IDX1109"></A>
+<LI>
+ <CODE>ilu_mm_badInteger</CODE>(1229717512, 0x494c0008) -- signed or unsigned integer that doesn't fit position.
+<A NAME="IDX1110"></A>
+<LI>
+ <CODE>ilu_mm_badFloat</CODE>(1229717513, 0x494c0009) -- floating point value that doesn't fit position.
+<A NAME="IDX1111"></A>
+<LI>
+ <CODE>ilu_mm_dgramLimit</CODE>(1229717514, 0x494c000a) -- datagram (eg, UDP) size limit exceeded.
+<A NAME="IDX1112"></A>
+<LI>
+ <CODE>ilu_mm_badPickle</CODE>(1229717515, 0x494c000b) -- malformed pickle bytes.
+<A NAME="IDX1113"></A>
+<LI>
+ <CODE>ilu_mm_badTypeName</CODE>(1229717516, 0x494c000c) -- badly formed type name.
+<A NAME="IDX1114"></A>
+<LI>
+ <CODE>ilu_mm_protNoTypekind</CODE>(1229717517, 0x494c000d) -- this typekind not supported by this protocol.
+<A NAME="IDX1115"></A>
+<LI>
+ <CODE>ilu_mm_msgTypeUnknown</CODE>(1229717518, 0x494c000e) -- invalid message type received.
+<A NAME="IDX1116"></A>
+<LI>
+ <CODE>ilu_mm_utf2Len</CODE>(1229717519, 0x494c000f) -- UTF2 encoded string's length doesn't correspond to plain string length.
+<A NAME="IDX1117"></A>
+<LI>
+ <CODE>ilu_mm_noCharset</CODE>(1229717520, 0x494c0010) -- can't determine charset of string.
+<A NAME="IDX1118"></A>
+<LI>
+ <CODE>ilu_mm_cantConvertCharset</CODE>(1229717521, 0x494c0011) -- can't convert string to specified charset.
+<A NAME="IDX1119"></A>
+<LI>
+ <CODE>ilu_mm_mst_unreg</CODE>(1229717522, 0x494c0012) -- LSR can't make surrogate.
+<A NAME="IDX1120"></A>
+<LI>
+ <CODE>ilu_mm_fixedpoint_range</CODE>(1229717523, 0x494c0013) -- bounded fixedpoint value out-of-range.
+<A NAME="IDX1121"></A>
+<LI>
+ <CODE>ilu_mm_excn_id</CODE>(1229717524, 0x494c0014) -- Exception reply has bad excn indicator.
+<A NAME="IDX1122"></A>
+<LI>
+ <CODE>ilu_mm_enum_value</CODE>(1229717525, 0x494c0015) -- Value for enum out of range.
+<A NAME="IDX1123"></A>
+<LI>
+ <CODE>ilu_mm_unknown</CODE>(1229717526, 0x494c0016) -- Unknown marshalling error.
+<A NAME="IDX1124"></A>
+<LI>
+ <CODE>ilu_mm_url_quoted_char</CODE>(1229717527, 0x494c0017) -- Bad quoted hex char in URL form.
+<A NAME="IDX1125"></A>
+<LI>
+ <CODE>ilu_mm_no_val_for_nonopt_ref</CODE>(1229717528, 0x494c0018) -- no value for non-optional reference.
+</UL>
+<P>
+<A NAME="IDX1126"></A>
+<H2><A NAME="SEC707" HREF="manual_toc.html#SEC707">Minor Codes for System Exception BAD_TYPECODE</A></H2>
+<UL>
+<P>
+<A NAME="IDX1127"></A>
+<LI>
+ <CODE>ilu_btm_unknownType</CODE>(1229717504, 0x494c0000) -- reference to unknown (by this addr space) type.
+<A NAME="IDX1128"></A>
+<LI>
+ <CODE>ilu_btm_convNoSuchClass</CODE>(1229717504, 0x494c0000) -- converted ilu_ProtocolException_NoSuchClassAtServer.
+<A NAME="IDX1129"></A>
+<LI>
+ <CODE>ilu_btm_convVersionMismatch</CODE>(1229717504, 0x494c0000) -- converted ilu_ProtocolException_ClassVersionMismatch.
+</UL>
+<P>
+<A NAME="IDX1130"></A>
+<H2><A NAME="SEC708" HREF="manual_toc.html#SEC708">Minor Codes for System Exception BAD_OPERATION</A></H2>
+<UL>
+<P>
+<A NAME="IDX1131"></A>
+<LI>
+ <CODE>ilu_bom_noSuchOperationOnType</CODE>(1229717504, 0x494c0000) -- specified operation not defined on specified type.
+<A NAME="IDX1132"></A>
+<LI>
+ <CODE>ilu_bom_convProtocolExcn</CODE>(1229717505, 0x494c0001) -- converted ilu_ProtocolException_NoSuchMethodOnClass.
+</UL>
+<P>
+<A NAME="IDX1133"></A>
+<H2><A NAME="SEC709" HREF="manual_toc.html#SEC709">Minor Codes for System Exception NO_RESOURCES</A></H2>
+<UL>
+<P>
+<A NAME="IDX1134"></A>
+<LI>
+ <CODE>ilu_nrm_EMFILE</CODE>(1229717504, 0x494c0000) -- per-process descriptor table full.
+<A NAME="IDX1135"></A>
+<LI>
+ <CODE>ilu_nrm_ENFILE</CODE>(1229717505, 0x494c0001) -- system file table full.
+<A NAME="IDX1136"></A>
+<LI>
+ <CODE>ilu_nrm_ENOBUFS</CODE>(1229717506, 0x494c0002) -- insufficient buffer space avail.
+<A NAME="IDX1137"></A>
+<LI>
+ <CODE>ilu_nrm_fds</CODE>(1229717507, 0x494c0003) -- FD budget.
+<A NAME="IDX1138"></A>
+<LI>
+ <CODE>ilu_nrm_mux_sessions</CODE>(1229717508, 0x494c0004) -- Sessions on a single mux channel.
+<A NAME="IDX1139"></A>
+<LI>
+ <CODE>ilu_nrm_mux_channels</CODE>(1229717509, 0x494c0005) -- Channels available via mux in a single endpoint.
+<A NAME="IDX1140"></A>
+<LI>
+ <CODE>ilu_nrm_mlreg</CODE>(1229717510, 0x494c0006) -- main loop registrations.
+<A NAME="IDX1141"></A>
+<LI>
+ <CODE>ilu_nrm_mux_atom_id</CODE>(1229717511, 0x494c0007) -- no more atom values available.
+</UL>
+<P>
+<A NAME="IDX1142"></A>
+<H2><A NAME="SEC710" HREF="manual_toc.html#SEC710">Minor Codes for System Exception TRANSIENT</A></H2>
+<UL>
+<P>
+<A NAME="IDX1143"></A>
+<LI>
+ <CODE>ilu_tm_retry</CODE>(1229717504, 0x494c0000) -- stub should retry call (but didn't, if app sees this).
+</UL>
+<P>
+<H2><A NAME="SEC711" HREF="manual_toc.html#SEC711">Minor Codes for System Exception NO_MEMORY</A></H2>
+<P>
+The minor codes for system exception NO_MEMORY indicate how much
+memory was requested in the allocation operation that failed.  The exact correspondence between minor code and amount of memory requested can be read in the file <TT>`ILUHOME/doc/no_memory_minors.txt'</TT>.
+<P>
+<P>Go to the <A HREF="manual_28.html">previous</A>, <A HREF="manual_30.html">next</A> section.<P>

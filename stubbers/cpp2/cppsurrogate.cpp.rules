@@ -1,0 +1,1184 @@
+
+# BeginILUCopyright
+#
+# Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+#
+# Unlimited use, reproduction, modification, and distribution of this
+# software and modified versions thereof is permitted.  Permission is
+# granted to make derivative works from this software or a modified
+# version thereof.  Any copy of this software, a modified version
+# thereof, or a derivative work must include both the above copyright
+# notice of Xerox Corporation and this paragraph.  Any distribution of
+# this software, a modified version thereof, or a derivative work must
+# comply with all applicable United States export control laws.  This
+# software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+# WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+# PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+# LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+# EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+# NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+# OF THE POSSIBILITY OF SUCH DAMAGES.
+#
+# EndILUCopyright
+
+
+# TBD: OPTIONALS and fix strings(latter probably ok now) 
+R_surr_c(Interface i) (Object object)  -->
+
+  L_top(i.isl_name, F_vs_string())
+  R_surr_c_module(i, i.module_str)
+.
+
+R_surr_c_module(Interface i, Module m) (ContentElem ce) -->
+
+   R_surr_c_classes_and_nested: ce in m.content_sequence: (i, m, ce) 
+.
+
+R_surr_c_classes_and_nested(Interface i, Module m, ContentElem ce) --> 
+
+ { R_surr_c_object(ce.content, i)
+     [ce.content_type == "type" ce.content.supertype == NULL]
+ | R_surr_c_module(i, ce.content)
+     [ce.content_type == "module"]
+ | TRUE
+ }
+.
+
+R_surr_c_object(Object object, Interface i)
+   (Method m, Int mi, surr_obj_name, us_obj_name, obj_name, ipfx, mpfx, com) --> 
+
+   E_ [ surr_obj_name = F_full_side_name("surrogate", object) 
+        us_obj_name = F_underscore_name(object)   
+        obj_name = F_full_typeref(object) ] 
+
+   L_class_init(surr_obj_name, obj_name, us_obj_name)  
+
+   R_surr_c_method: m(mi) in object.methods:(m,mi,object,surr_obj_name, obj_name)
+
+   L_surr_obj_init(surr_obj_name, obj_name, object.name, com, ipfx, mpfx)  
+        [ipfx = F_full_prefix(i.module_str, 1)
+         mpfx = F_side_prefix("surrogate", object, 0)
+         [ [object.collectible == 1 com = "" ] | com = "//" ]     
+        ]
+.
+
+R_surr_c_method(Method method, Int mi,Object object,surr_obj_name, obj_name) -->
+
+   R_method_begin(method, surr_obj_name, obj_name)
+
+   L_method_surr_call(mi, obj_name) 
+
+   R_method_try(method, object)
+   
+  { R_exception_proc(method, surr_obj_name)
+          [method.exceptions != NULL] | TRUE}
+.
+
+
+L_top(iname, vs_string) -->
+
+// This file was automatically generated with ILU (version %vs_string%) tools
+// ILU is Copyright 1991-1999 Xerox Corporation, All Rights Reserved.
+// ILU information:  ftp://ftp.parc.xerox.com/pub/ilu/ilu.html.
+
+#include \"%iname%-cppsurrogate.hpp\"
+.
+
+L_class_init(surr_obj_name, obj_name, us_obj_name) -->
+
+// Static class initialization
+
+%surr_obj_name%_initializer
+     %surr_obj_name%_initializer::sm_the_surrogate_%us_obj_name%_initializer;
+int %surr_obj_name%::_initialized; 
+
+// %obj_name% surrogate methods 
+.
+
+L_surr_obj_init(surr_obj_name, obj_name, s_obj_name, com, ipfx, mpfx) -->
+
+/////////////////////////////////////////////////////////////////////////////
+
+// Initialize to use %obj_name% objects
+
+void
+%surr_obj_name%::iluInitialize () {
+        if (_initialized == 1)
+                return;
+        iluCppInternal::iluRegisterSurrogateCreator(
+                %obj_name%::iluGetILUClassRecord(),
+                %surr_obj_name%::create_surrogate
+                );
+
+        // if the object is 'COLLECTIBLE', the following line is uncommented
+        %com% iluCppInternal::iluEnsureGCCallback();
+
+        _initialized = 1;
+}
+
+// Create a %obj_name% surrogate
+ 
+iluObject*
+%surr_obj_name%::
+create_surrogate (iluKernelObject _kernel_object) {
+        %obj_name%* _new_object = new %surr_obj_name%();
+        _new_object->iluAssociateKernelObject(_kernel_object);
+        return _new_object;
+}
+ 
+// Force initialization of %obj_name% class upon load
+ 
+%surr_obj_name%_initializer::
+%mpfx%%s_obj_name%_initializer () {
+        ensure_instantiation();
+}
+ 
+void *
+%surr_obj_name%_initializer::
+ensure_instantiation () {
+        iluCppInternal::iluAddInitializationFunction(
+                &%ipfx%p_initialization_function_list,
+                %surr_obj_name%::iluInitialize);
+        return this;
+}
+.
+
+L_method_surr_call(Int mi, obj_name) --> 
+
+
+        iluCallStruct _call;
+        iluSurrogateCall _surrogate_call( &_call, %mi%, this, %obj_name%::iluGetILUClassRecord());
+.
+
+=======================================================================
+
+R_exception_proc(Method method, surr_obj_name)  
+   (cpfx, Exception ex, Exception ex1, Int exnumber, ex_name) -->
+
+   E_ [cpfx = F_corba_pfx()]
+   L_exception_proc_begin(method.name, surr_obj_name)
+
+   LP_(cpfx) "throw (%cpfx%SystemException" 
+
+   LP_:ex in method.exceptions:(ex_name) [ex_name = F_full_ref(ex) ]
+         ", %ex_name%" 
+
+   LP_() ") {"
+
+   L_begin_try()
+
+   R_exception_case: ex1(exnumber) in method.exceptions: (ex1, exnumber)
+
+   L_exception_proc_end(cpfx)
+.
+
+R_exception_case (Exception ex, Int exnumber) (Any extype, extypename) -->
+ 
+ L_exception_case_begin(exnumber, F_full_ref(ex)) 
+
+ E_ [  ex.type == NULL |
+      [ extype = F_ur_instance(ex.type)
+        extypename = F_ur_typename(ex.type) ]
+    ]
+ 
+
+ { E_ [ex.type == NULL]
+ | { 
+    # if record, each field is a member 
+    R_exception_record_value(ex.type) [ extypename == "Record"] 
+    |
+    R_field_ops(ex.type, "_m_value", "_m_value")
+    }
+ }
+
+ L_exception_case_end()
+.
+ 
+# Treats exception with member record like corba idl with multiple
+# members.
+# See if need record extract surrounds  
+R_exception_record_value(Record record) ( Argument f,  f_name, f_wrname) -->
+
+  R_field_ops: f in record.fields:(f.type, f_name, f_wrname)   
+         [ f_name = F_concat("_m_value.", f.name)
+           f_wrname = F_concat("_m_value_", f.name)
+         ]
+.
+
+R_field_ops(Any f_type, f_name, fmpx) ( Any e_type,  Any fof_type, Int fof_var, ad,
+   fof_typename, chtype, cast) -->
+
+  E_ [ fof_type = F_optional_ofurtype(f_type)
+       [ [ fof_type != NULL
+            e_type = fof_type fof_var = F_mbr_is_var(f_type) ]
+         | [ e_type = f_type fof_var = 0 ] ]
+     ]
+
+  # bracket optional ops with check presence
+  {
+   {E_ [ fof_type != NULL
+         fof_typename = F_full_mbr_typeref(fof_type)
+         ad = "*"
+         ]
+     L_optional_get(fmpx)
+     {L_optional_get_non_var(f_name, fof_typename) [ fof_var == 0]
+      | TRUE }
+   } 
+   | E_ [ e_type = f_type ad = ""]
+   }
+
+  R_field_wrap (f_type, e_type, f_name, fmpx, ad)
+  R_field_op(f_type, e_type, f_name, fmpx)
+
+ # if optional, complete
+ { { E_ [fof_type != NULL]
+     {  L_optional_get_end(f_name) [ fof_var == 0]
+      | L_optional_get_end_var(f_name, cast)
+        [ chtype = F_string_chartype(fof_type)
+          [ [chtype == "shortcharacter" cast = "(const iluShortCharacter *)"]
+            |[chtype == "character" cast = "(const iluCharacter *)"]
+            | cast = "" ]
+         ] 
+     }
+    }   
+  |  TRUE }
+.
+
+
+R_field_wrap( Any f_type, Any e_type, f_name, fmpx,  ad)(e_typekind)
+-->
+
+  E_ [ e_typekind = F_ur_typename(e_type) ]
+
+  {
+    { L_enum_wrap(f_name, fmpx, ad)
+       [ e_typekind == "Enumeration"]
+     |
+     L_boolean_wrap(f_name, fmpx, ad)
+       [e_typekind == "Boolean"]
+     |
+     L_character_wrap(f_name, fmpx, ad)
+       [ e_typekind == "Character"]
+    }
+    |
+    { E_ [ F_string_chartype(e_type) != NULL]
+      { { L_string_out_wrap("CString",f_name, fmpx)
+            [F_string_chartype(e_type) ==  "shortcharacter"]
+          | L_string_out_wrap("WString", f_name, fmpx)
+           [F_string_chartype(e_type) ==  "character"]
+          | L_bytes_out_wrap(f_name, fmpx)
+           [F_string_chartype(e_type) ==  "byte"]
+       }
+      }
+     }
+    | TRUE
+  }
+.
+
+# ftype is the base type, etype is the effective type, and may be
+# an optional type
+R_field_op(Any ftype, Any etype, f_name, fmpx)
+        (ftypekind, ftname, etypekind, fieldname, fun_name,
+         chftype, longtype, h, op, opname) -->
+  E_ [ ftypekind = F_ur_typename(ftype)
+       etypekind = F_ur_typename(etype)
+       chftype = F_string_chartype(etype)
+       # some compiler problem, at least with sunpro,
+       # sometimes requires disambiguation for long types
+       longtype = F_ilu_long_name(etype, 1) 
+       op = ">>" opname = "input"]
+ 
+  {  L_(op, fmpx)
+        [ etypekind == "Enumeration" | etypekind == "Boolean"
+         | etypekind == "Character" | chftype != NULL ]
+        "                           _call %op% %fmpx%_wrap;"
+ 
+    | {
+       E_ [ etypekind == "Array"
+           fun_name = F_ur_pfxd_name(opname, etype) ]
+      {
+       L_(opname, fun_name, f_name)
+           [ftypekind == "Optional"] 
+          "                          %fun_name%(_call, &(_exception.%f_name%.out());"
+      | L_(opname, fun_name, f_name)
+          "                          %fun_name%(_call, _exception.%f_name%);"
+      }
+    }
+    |
+     L_(op, f_name, h)
+       [  [ etypekind == "Record" | etypekind == "Union"
+          | etypekind == "Sequence" | etypekind == "Pickle"
+          | etypekind == "Object"]
+         [ [ftypekind == "Optional"
+              etypekind != "Object" etypekind != "Pickle"
+              h = "->self()" ]   
+            | h = "" ]]
+        "                           _call %op% _exception.%f_name%%h%;"
+    | 
+     L_except_basic(op, f_name, longtype, "")
+       [ ftypekind != "Optional" ]
+     | L_except_basic(op, f_name, longtype, "*")
+       [ ftypekind == "Optional" ]
+  }
+.
+
+L_except_basic(op, f_name, longtype, ast) -->
+#ifdef __SUNPROC_CC
+                          _call %op% %longtype% %ast%_exception.%f_name%;
+#else
+                          _call %op% %ast% _exception.%f_name%;
+#endif
+.
+
+L_exception_proc_begin(method_name, surr_obj_name) -->
+
+
+void
+%surr_obj_name%::
+_throw_%method_name%_exception (iluCardinal _exception_index, iluSurrogateCall& _call)
+.
+
+L_begin_try() -->
+     
+
+   try {
+          switch(_exception_index) {  
+.
+L_exception_case_begin(Int exnumber, ext_ex_name) -->
+
+                case %exnumber%: {
+                        %ext_ex_name% _exception;
+.
+L_exception_case_end() -->
+                        throw(_exception);
+                      };
+.
+L_exception_proc_end(cpfx) -->
+
+                default: {
+                          %cpfx%UNKNOWN _exception;
+                          throw(_exception);
+                         };
+           }; //end switch
+
+     } // end try
+     catch (%cpfx%SystemException& _exception) {
+                 _call.iluSetErrorType(_exception.exception_kind());
+                 _exception._raise();
+     }
+ }
+.
+L_enum_wrap(fname, mpx, ad) -->
+                         iluEnumWrapper %mpx%_wrap(
+                         (iluDummyEnum &) %ad%_exception.%fname%);
+.
+L_boolean_wrap(fname, mpx, ad) -->
+                         iluBoolWrapper %mpx%_wrap(
+                               (ILUCPP_BOOL &) %ad%_exception.%fname%);
+.
+L_character_wrap(fname, mpx, ad) -->
+                         iluCharacterWrapper %mpx%_wrap(
+                                (iluShortCardinal &) %ad%_exception.%fname%);
+.
+L_optional_get(mpx) -->
+                         iluOptionalWrapper %mpx%_opt_wrap;
+                          _call >> %mpx%_opt_wrap;
+                          if(%mpx%_opt_wrap.m_present) {
+.
+L_optional_get_non_var(fname, opttypename) -->
+                          if(_exception.%fname% == ILUCPP_NULL)
+                               _exception.%fname% = new %opttypename%;
+
+.
+L_optional_get_end(fname) -->
+                          }
+                          else {
+                               _exception.%fname% = ILUCPP_NULL;
+                          }
+.
+
+L_optional_get_end_var(fname, cast) -->
+                          }
+                          else {
+                               _exception.%fname% = %cast% ILUCPP_NULL;
+                          }
+
+.
+           
+L_string_out_wrap(wrname, fname, mpx) -->
+                          iluCardinal         %mpx%_length;
+                          ilu%wrname%Wrapper  %mpx%_wrap( 
+                               _exception.%fname%.iluStringVarReference(),
+                               %mpx%_length);
+.
+L_bytes_out_wrap(fname, mpx) -->
+                         iluCardinal         %mpx%_length;
+                         iluBytesWrapper  %mpx%_wrap( 
+                          _exception.%fname%->self(), %mpx%_length);
+.
+                 
+
+# side-name for optionals gets "const_" in in arg names   
+=====================================================================
+ 
+# in args, uses ur types of latinstring, unicode strings??
+# essentially same as in cpp.hpp.rules, but with references to
+# argument types not relative toany module. 
+R_method_begin(Method op, surr_obj_name, obj_name)
+   (Int i, Argument arg, Argument arg1, Int lastix, Any tt1, any tt2,
+   rtntype, rtnsfx, argtype, argpfx, argsfx, enditem, cpfx, ex_name,
+   Exception ex, op_name) -->
+ 
+  E_ [ op_name = F_external_method_name(op.name, op.isl_name) ]
+ 
+  {
+   L_noreturn_begin (surr_obj_name, op_name)
+         [ op.returntype == NULL lastix = F_last_index(op.arguments) ]
+   |
+   L_method_begin(surr_obj_name, rtntype, rtnsfx, op_name)
+     [ [ [F_ur_typename(op.returntype) != "Optional"
+           rtntype = F_full_rel_typeref(op.returntype, "")] |
+           rtntype = F_full_rel_typeref(op.returntype, "") ]
+         rtnsfx =  F_arg_sfx(op.returntype, "Return")
+         lastix = F_last_index(op.arguments) ]
+  }
+ 
+   R_method_arg :arg(i) in op.arguments: (arg, i, lastix)
+
+   LP_(cpfx) [cpfx = F_corba_pfx()] 
+     "         ) throw (%cpfx%SystemException" 
+
+   LP_:ex in op.exceptions:(ex_name) [ex_name = F_full_ref(ex) ]
+         ", %ex_name%" 
+
+   LP_() ") {"
+
+   {
+   L_sibling_check:arg1 in op.arguments: (arg1.name)
+      [  arg1.sibling == 1
+         [arg1.direction == "In" | arg1.direction == "Out"]
+          F_ur_typename(arg1.type) == "Object" ] 
+   | TRUE }
+.
+
+#            [ [chtype = F_string_chartype(arg.type) 
+#                 chtype != NULL chtype != "byte" ]
+R_method_arg(Argument arg, Int i, Int lastix)
+   (argpfx, argtype, Any opttype, Any urtype,argsfx, enditem,
+     chtype,  const_str_name) -->
+
+     E_ [
+         argpfx = F_arg_pfx(arg.type, arg.direction)
+         argsfx = F_arg_sfx(arg.type, arg.direction)
+         argtype = F_full_rel_typeref(arg.type, "")
+         urtype =  F_ur_instance(arg.type)
+         chtype = F_string_chartype(arg.type)
+         [ [ i != lastix  enditem = ","] | enditem = "" ]
+         ] 
+
+     {
+      L_arg_stringin (const_str_name, arg.name, enditem)  
+          [
+              [  [ chtype != NULL chtype != "byte" 
+                   urtype.name != "CString" ] 
+               | [ F_ur_typename(arg.type) == "Optional" 
+                  urtype = F_ur_instance(arg.type)
+                 F_ur_typename(urtype.oftype) != "Object"] 
+               ]
+             arg.direction == "In" 
+             const_str_name = F_full_pfxd_name("const", arg.type)] |
+      L_method_arg(argpfx, argtype, argsfx, arg.name, enditem) 
+      }
+.
+
+
+L_sibling_check(arg_name) -->
+
+
+                  // check for sibling
+                  if (! iluInSameServer(%arg_name%)) {
+                  // raise BAD_PARAM exception
+                  CORBA(BAD_PARAM) bad_param_not_a_sibling;
+                  throw(bad_param_not_a_sibling);
+                  }
+.
+
+# CHECK strings and optional scalars 
+L_method_arg (argpfx, argtype, argsfx, argname, enditem) -->
+          %argpfx%%argtype%%argsfx%  %argname%%enditem%
+.
+
+L_arg_stringin(const_str_name, argname, enditem) -->
+          %const_str_name%    %argname%%enditem%
+.
+
+L_method_begin(surr_obj_name, rtntype, rtnsfx, opname) -->
+
+
+%rtntype%%rtnsfx% 
+%surr_obj_name%::
+%opname% (
+.
+
+L_noreturn_begin(surr_obj_name, opname) -->
+
+
+void
+%surr_obj_name%::
+%opname% (
+.
+
+L_method_surr_call(obj_name) --> 
+
+     iluCallStruct _call;
+     iluSurrogateCall _surrogate_call(
+                 &_call, 0, this, %obj_name%::iluGetILUClassRecord());
+.
+
+=====================================================================
+
+# should "should retry call" test be emitted even if asynch?i
+R_method_try(Method method, Object object) -->
+
+   L_method_try()  
+
+   R_method_try_decls(method, object)
+
+   R_try_do(method, object)
+
+   L_try_end(F_corba_pfx())
+.
+
+L_method_try() -->
+
+        try {
+.
+
+L_try_end(cpfx) -->    
+
+   } // end try
+   catch(%cpfx%SystemException& _exception) {
+      _surrogate_call.iluSetErrorType(_exception.exception_kind());
+      _exception._raise();
+   }
+}
+.
+
+==============================================================
+
+R_method_try_decls(Method method, Object object) (Argument arg)  -->
+
+  { R_arg_decl_a(method.returntype, "return_value",  "Return", object) 
+           [method.returntype != NULL]
+   | TRUE }
+
+   # just testing comments within rules (just added)
+   L_discriminator() 
+
+   { L_exception_number_decl() [method.exceptions != NULL] | TRUE }
+
+   R_arg_decl_a: arg in method.arguments: (arg.type, arg.name, arg.direction,
+                object) 
+
+.
+
+# for optionals, define o_.. types, and wrappers for base types if necessary 
+# but don't allocate outputs
+R_arg_decl_a(Any arg_type, arg_name, dir, Object object)
+      ( Any opt_oftype, Any opttype) -->
+
+{
+  {
+   E_ [ F_ur_typename(arg_type) == "Optional"  
+        opttype = F_ur_instance(arg_type) 
+        opt_oftype = opttype.oftype]
+   R_arg_decl(arg_type, arg_name, dir, object, 0) 
+    R_arg_decl(opt_oftype, arg_name, dir, object, 0) 
+   }
+  |  
+    R_arg_decl(arg_type, arg_name, dir, object, 1) 
+ }  
+.
+
+
+
+# for optionals, declar the argument and the optional wrapper 
+# so recursive
+R_arg_decl(Any arg_type, arg_name, dir, Object object, Int allocok)
+       ( arg_kind, cpfx, arg_typename, wrtype, chtype, Any opt_oftype) --> 
+ 
+  E_ [ arg_kind = F_ur_typename(arg_type) 
+       cpfx = F_corba_pfx() 
+       arg_typename = F_full_typeref(arg_type) ]
+   { 
+      { E_[arg_kind == "Enumeration"]
+       {L_simple_decl (arg_typename, arg_name) [dir == "Return"]| TRUE}  
+        L_enum_wrap_arg(arg_name)
+      }
+      |
+      { E_ [arg_kind == "Boolean"]
+         { L_simple_decl (arg_typename, arg_name) [dir == "Return"]| TRUE}  
+         L_simple_wrap_arg("Bool", arg_name) 
+      }
+      |
+      { E_ [arg_kind == "Character"]
+         { L_simple_decl (arg_typename, arg_name) [dir == "Return"]| TRUE}  
+         L_simple_wrap_arg("Character", arg_name) 
+      }
+      |
+      { E_ [chtype = F_string_chartype(arg_type) 
+            chtype != NULL
+            [ [ chtype == "shortcharacter" wrtype = "CString"] 
+            | [ chtype == "character" wrtype = "WString" ] 
+            # [ chtype == "byte" wrtype = "Bytes" ]
+            ]
+          ]
+        {
+         L_string_return(arg_typename, wrtype) [dir == "Return"] 
+         |L_string_out(arg_name, wrtype)    [dir == "Out"]  
+         |L_xstring_in(arg_typename, arg_name, wrtype) [ dir == "In" 
+                         chtype == "shortcharacter"] 
+         |L_bytestring_in (arg_name , wrtype)
+                [ dir == "In" chtype == "byte"]
+         |L_xstring_inout(arg_name, wrtype)[ dir == "InOut"
+                          chtype =="shortcharacter"]
+         |L_bytestring_inout(arg_name, wrtype)[ dir == "InOut"
+                          chtype =="byte"]
+         |L_wstring_in(arg_typename, arg_name)         [dir == "In"] 
+         |L_wstring_inout(arg_name)      [dir == "InOut"] 
+         }
+      }
+      | 
+      { E_ [arg_kind == "Object"]
+        { L_object_return(arg_typename, arg_name)
+                [dir == "Return"| dir == "Out" ] 
+        | L_object_arg(arg_typename, arg_name) 
+        }
+      }
+      |
+      { E_ [arg_kind == "Array"]
+        { L_array_return(arg_typename) [dir == "Return" ] 
+          | L_array_out(arg_typename, arg_name)        
+             [ dir == "Out"  F_varlen_type(arg_type.oftype) == 1]
+          | TRUE }
+      }
+      | 
+      { E_ [arg_kind == "Optional"]   
+        {   L_opt_out(arg_name) [ dir == "Out"] 
+          | L_opt_inout(arg_name) [ dir == "InOut"] 
+          | L_opt_in(arg_typename, arg_name) [ dir == "In" ]
+          | L_opt_return(arg_typename)
+        }
+      }
+      |
+      { E_ [ F_varlen_type(arg_type) != 0 allocok == 1 ]
+        {L_varlen_return(arg_typename) [dir == "Return"  ] |
+        L_varlen_out(arg_typename, arg_name) [dir == "Out" ] |
+        TRUE }
+      } 
+      | 
+      L_simple_decl(arg_typename, arg_name) [dir == "Return"]
+      |
+      TRUE 
+  }
+.
+
+L_opt_in(arg_typename, arg_name) -->
+          iluOptionalWrapper   o_%arg_name%(CONST_CAST(%arg_typename%, %arg_name%));
+.
+L_opt_inout(arg_name) -->
+          iluOptionalWrapper   o_%arg_name%(%arg_name%);
+.
+L_opt_out(arg_name) -->
+          iluOptionalWrapper   o_%arg_name%(%arg_name%);
+.
+L_opt_return(typename) -->
+          %typename%      p_return_value;  
+          iluOptionalWrapper  o_return_value;
+.
+
+
+# to give name to return value
+L_simple_decl(typename, arg_name) -->
+          %typename%       %arg_name%;    
+.
+
+L_simple_wrap_arg(kind, arg_name) -->
+          ilu%kind%Wrapper      _%arg_name%(%arg_name%);
+.
+
+L_enum_wrap_arg(arg_name)  --> 
+          iluEnumWrapper        _%arg_name%((iluDummyEnum &) %arg_name%);
+.
+
+L_object_return(typename, arg_name) -->
+          iluObjectWrapper _%arg_name%(ILUCPP_FALSE, %typename%::iluGetILUClassRecord()); 
+.
+
+L_object_arg(typename, arg_name) -->
+          iluObjectWrapper _%arg_name%(%arg_name%, ILUCPP_FALSE, ( %arg_name% ? ILUCPP_NULL : %typename%::iluGetILUClassRecord())); 
+.
+
+# cw is C or W
+L_string_return(typename, wr) -->
+          %typename%       return_value;
+          iluCardinal       return_length;
+          ilu%wr%Wrapper   _return_value(return_value, return_length);
+.
+
+L_string_out(arg_name, wr) -->
+          iluCardinal         %arg_name%_length;
+          ilu%wr%Wrapper     _%arg_name%(%arg_name%, %arg_name%_length);
+.
+
+L_xstring_in(arg_typename, arg_name, wr) -->
+          iluCardinal       %arg_name%_length =
+                  strlen(%arg_name%);
+          ilu%wr%Wrapper _%arg_name%(%arg_name%, %arg_name%_length);
+.
+
+L_xstring_inout(arg_name,wr) -->
+          iluCardinal       %arg_name%_length = strlen(%arg_name%);
+          ilu%wr%Wrapper _%arg_name%(%arg_name%, %arg_name%_length,
+                             ILUCPP_DELETE_ON_INPUT);
+.
+L_bytestring_in(arg_name, wr) -->
+          iluCardinal       %arg_name%_length = %arg_name%.length();
+          ilu%wr%Wrapper _%arg_name%(%arg_name%->self(), %arg_name%_length);
+.
+
+L_bytestring_inout(arg_name,wr) -->
+          iluCardinal       %arg_name%_length = %arg_name%.length();
+          ilu%wr%Wrapper _%arg_name%(%arg_name%->self(), %arg_name%_length,
+                             ILUCPP_DELETE_ON_INPUT);
+.
+
+L_wstring_in(arg_typename, arg_name) -->
+          iluCardinal      %arg_name%_length =
+                    iluCppRuntime::iluCharacterStringLength(%arg_name%);
+          iluWStringWrapper _%arg_name%( %arg_name%, %arg_name%_length);
+.
+
+L_wstring_inout(arg_name) -->
+          iluCardinal       %arg_name%_length = 
+                    iluCppRuntime::iluCharacterStringLength(%arg_name%);
+          iluWStringWrapper _%arg_name%(%arg_name%, %arg_name%_length,
+                     ILUCPP_DELETE_ON_INPUT);
+.
+
+L_varlen_return(typename) -->
+          %typename%*  p_return_value = new(%typename%);  
+.
+
+L_varlen_out(typename, arg_name) -->
+          %arg_name% =  new %typename%;          
+.
+
+L_array_return(typename) -->
+          %typename%_slice*  p_return_value = %typename%_alloc();   
+.
+
+L_array_out(typename, arg_name) -->
+          %arg_name% = %typename%_alloc();
+.
+L_seq_in(typename, arg_name) -->
+          iluSequenceWrapper  _%arg_name%(%arg_name%->length); 
+.
+
+L_exception_number_decl() -->
+          iluCardinal       _exception_number;
+.
+
+L_discriminator() -->
+          iluObjectWrapper   _discriminator(*this, ILUCPP_TRUE);
+.
+
+
+======================================================================
+
+R_try_do(Method method, Object object) (Argument arg, Argument arg1) -->
+
+   L_do_begin() 
+
+   R_do_arg_emit_op:arg in method.arguments: (arg, object, "size")
+          [arg.direction == "In" | arg.direction == "InOut"]
+          
+
+   L_do_mid1()
+
+   R_do_arg_emit_op:arg1 in method.arguments: (arg1, object, "send")
+               [arg1.direction == "In" | arg1.direction == "InOut"]
+
+   L_do_mid2()
+
+   {L_do_get_reply() [method.asynch == 0]  | TRUE }
+
+   L_do_end_() 
+
+   L_do_retry()
+
+   {R_reply_related(method, object) [method.asynch == 0] | TRUE }
+.
+
+R_do_arg_emit_op(Argument arg, Object object, op) -->
+      
+   R_do_arg_op(arg.type, arg.name, arg.direction, object, op) 
+.
+
+L_do_begin() -->
+
+          do {
+
+             // Size arguments
+             if (_surrogate_call.iluNeedsSizing()) {
+                 _surrogate_call += _discriminator;
+.
+
+L_do_mid1() -->
+
+            };
+
+            // Send request
+              _surrogate_call << iluRequestMode;
+              _surrogate_call << _discriminator;
+.
+
+L_do_mid2() -->
+              _surrogate_call << iluRequestSentMode;
+
+            // Note: If asynchronous call, end of try block here. 
+.
+
+L_do_end_() -->
+
+         } //end do 
+.
+
+L_do_get_reply()--> 
+             
+            // Get reply 
+             _surrogate_call << iluGetReplyMode;
+.
+
+L_do_retry() --> 
+             
+         while(_surrogate_call.iluShouldRetryCall());
+
+.
+=====================================================================
+# do optionals
+# op is size or send or get or clean
+# clean for object returns also returns
+# dir is In or InOut or Out or Return
+R_do_arg_op(Any arg_type, arg_name, dir, Object object, op) 
+    (Any opttype, arg_kind, fpfx, cpfx, s_array_name, const, us,
+     ext_typename, apfx, oftypekind, oftypename, arg_name1) --> 
+
+  E_ [arg_kind = F_ur_typename(arg_type) 
+      cpfx = F_corba_pfx() ]
+
+  {
+    { E_ [arg_kind == "Array"]  
+      E_ [ fpfx = F_full_prefix(arg_type, 0) 
+           s_array_name = F_ur_property(arg_type, "name")
+           [ [dir == "In"  const = "const_"] | const = ""] 
+         ]
+      { L_do_array_arg_size(arg_name, fpfx, s_array_name, const)	
+                         [ op == "size" ] |
+        L_do_array_arg_send(arg_name, fpfx, s_array_name, const)	
+                         [ op == "send"] |
+        L_do_array_arg_get(fpfx, arg_type.name, arg_name, "")
+                   [ op == "get" dir != "Return"] | 
+        L_do_array_arg_get(fpfx, arg_type.name, arg_name, "p_") 
+                   [ op == "get" dir == "Return"] | 
+        L_do_array_clean(fpfx, s_array_name, arg_name, const, "")
+              [op == "clean"  dir != "Return"] |
+        L_do_array_clean(fpfx, s_array_name, arg_name, const, "p_") 
+             [ op == "clean"  dir == "Return"]
+      } 
+    }
+    | { E_ [ arg_kind == "Optional" 
+             opttype = F_ur_instance(arg_type)
+             oftypekind = F_ur_typename(opttype.oftype)
+             oftypename = F_full_ur_typeref(opttype.oftype)
+            [ [ oftypekind == "Object" apfx = "_" ] | apfx = "*"] 
+            [ [ dir == "Return" arg_name1 = "p_return_value"]
+               | arg_name1  =arg_name]
+       ]
+       { 
+           L_do_optional_size(arg_name, apfx) [ op == "size" ]
+         | L_do_optional_send(arg_name, apfx) [ op == "send" ] 
+         |
+         { 
+          L_do_optional_get_begin(arg_name) [ op == "get" ]
+          { 
+             L_do_optional_get_object(arg_name, oftypename, arg_name1)
+               [oftypekind == "Object"]
+           | L_do_optional_get_array(arg_name, oftypename, arg_name1, fpfx)
+               [ oftypekind == "Array"]  
+           | L_do_optional_get_scalar_wrapped (arg_name, oftypename, arg_name1)
+                 [ oftypekind == "Enumeration" |
+                     oftypekind == "Boolean" |
+                    oftypekind == "ShortCharacter" |  
+                    F_string_chartype(arg_type) != NULL ]
+            | L_do_optional_get_scalar(arg_name, oftypename, arg_name1)
+              [  F_ur_builtin(arg_type.oftype) == 1] 
+            | L_do_optional_get_varlen(arg_name, oftypename, arg_name1)
+                  [ F_varlen_type(arg_type.oftype) == 1]
+            | L_do_optional_get_other(arg_name, oftypename, arg_name1) 
+           } 
+           L_do_optional_get_end(arg_name1)
+         }
+       }
+    }
+    | 
+    { E_ [ arg_kind == "Enumeration" | arg_kind == "Boolean" |
+           arg_kind == "ShortCharacter" |  
+           [F_string_chartype(arg_type) != NULL 
+              F_string_chartype(arg_type) != "byte"]
+           | arg_kind == "Object" ]
+      { L_do_arg_size(arg_name, "_") [op == "size"] |
+        L_do_arg_send(arg_name, "_") [op == "send"] |
+        L_do_arg_get(arg_name, "_")  [op == "get" ] 
+      }
+    }
+    |       
+    { E_ [arg_kind == "Object" op == "clean" 
+            ext_typename = F_full_typeref(arg_type) ]
+       {
+        L_do_object_arg_final(ext_typename, arg_name)  
+         [ dir == "InOut" | dir == "Out" ]
+         | L_do_object_return(ext_typename, arg_name)
+          [ dir == "Return"]
+         | TRUE
+       }
+     }
+    |
+    { E_ [arg_kind == "Pickle" | F_varlen_type(arg_type) == 1 ] 
+     
+      { L_do_arg_size(arg_name, "") [op == "size"] |
+        L_do_arg_send(arg_name, "") [op == "send"] |
+        { E_[ op == "get"] 
+          { L_do_any_out_alloc(arg_name, cpfx)
+              [dir == "Out" arg_kind == "Pickle"]  | TRUE }
+          { L_do_arg_get(arg_name, "*p_") [dir == "Return"] |  
+            L_do_arg_get(arg_name, "") [dir == "InOut"] |
+            L_do_arg_get(arg_name, "*") [dir == "Out"]
+          } 
+        } | 
+        { L_do_arg_clean_in(arg_name, "")
+            [op == "clean" [ dir == "In" | dir == "InOut" ] ] |
+          L_do_arg_clean_out(arg_name, "")
+              [op == "clean"  dir == "Out"] |
+          L_do_arg_clean_out(arg_name, "p_")
+              [op == "clean"  dir == "Return"]
+        } 
+       }
+    } 
+    |
+    { L_do_arg_size(arg_name, "") [op == "size"] |
+      L_do_arg_send(arg_name, "") [op == "send"] |
+      L_do_arg_get(arg_name, "") [ op == "get"]  
+    }
+  }
+.
+L_do_object_arg_final(ext_typename, arg_name) -->
+      %arg_name% = (%ext_typename%_ptr)_%arg_name%.m_pv_iluobject;
+.
+L_do_object_return(ext_typename, arg_name) -->
+    
+      return  (%ext_typename%_ptr)_%arg_name%.m_pv_iluobject;
+.
+L_do_array_arg_size(arg_name, fpfx, s_array_name, const) -->
+                %fpfx%size_%const%%s_array_name%(
+                        _surrogate_call, %arg_name%);
+.
+L_do_array_arg_send(arg_name, fpfx, s_array_name, const) --> 
+                %fpfx%output_%const%%s_array_name%(
+                      _surrogate_call, %arg_name%);
+.
+L_do_array_arg_get(fpfx, arg_typename, arg_name, us) --> 
+         %fpfx%input_%arg_typename%(_surrogate_call, %us%%arg_name%);
+.
+L_do_arg_size(arg_name, us) -->
+                 _surrogate_call += %us%%arg_name%;
+.
+L_do_arg_send(arg_name, us) -->
+              _surrogate_call << %us%%arg_name%;
+.
+L_do_arg_get(arg_name, us) -->
+         _surrogate_call >> %us%%arg_name%; 
+.
+L_do_any_out_alloc(arg_name, cpfx) -->
+              %arg_name% = new %cpfx%Any;
+.
+L_do_optional_size(arg_name, apfx) -->
+                _surrogate_call += o_%arg_name%; 
+                if(o_%arg_name%.m_present)
+                   _surrogate_call += %apfx%%arg_name%;
+.   
+L_do_optional_send(arg_name, apfx) -->
+               _surrogate_call << o_%arg_name%; 
+               if(o_%arg_name%.m_present)
+                  _surrogate_call << %apfx%%arg_name%;
+.   
+
+L_do_optional_get_begin(arg_name) -->
+         _surrogate_call >> o_%arg_name%; 
+         if(o_%arg_name%.m_present) {
+.
+
+L_do_optional_get_end(arg_name1) -->
+         }
+         else %arg_name1% = ILUCPP_NULL;
+.
+
+L_do_optional_get_object(arg_name, oftypename, arg_name1) -->
+              _surrogate_call >> _%arg_name%;
+              %arg_name1% = (%oftypename%_ptr) _%arg_name%.m_pv_iluobject;
+.
+
+L_do_optional_get_scalar(arg_name, oftypename, arg_name1) -->
+              %arg_name1% = new %oftypename%;
+             _surrogate_call >> *%arg_name1%; 
+.
+
+L_do_optional_get_scalar_wrapped(arg_name, oftypename, arg_name1) -->
+             _surrogate_call >> _%arg_name%; 
+.
+
+L_do_optional_get_array(arg_name, oftypename, arg_name1, fpfx) -->
+                %fpfx%input_%oftypename%(_surrogate_call, %arg_name1%);
+.
+L_do_optional_get_varlen(arg_name, oftypename, arg_name1) -->
+              %arg_name1% = new %oftypename%;
+              _surrogate_call >> *%arg_name1%;
+.
+L_do_optional_get_nonbuiltin_wrapped(arg_name, oftypename, arg_name1) --> 
+              _surrogate_call >> _%arg_name%
+.
+L_do_optional_get_other(arg_name, oftypename, arg_name1 ) -->
+              _surrogate_call >> _%arg_name%;
+.
+             
+
+#may not need us
+L_do_arg_clean_in(arg_name, us) -->
+         %us%%arg_name%.iluSurrogateSideCleanup(); 
+.
+L_do_arg_clean_out(arg_name, us) -->
+         %us%%arg_name%->iluSurrogateSideCleanup(); 
+.
+L_do_array_clean(fpfx, s_array_name, arg_name, const, us) -->
+          %fpfx%%const%%s_array_name%_iluSurrogateSideCleanup(%us%%arg_name%);
+.
+
+=====================================================================
+# for object returns, clean and return together ?? 
+R_reply_related(Method method, Object object)
+        (Argument arg, Argument arg1, rtn_kind,return_val_name)-->
+
+    {L_forward_exception(method.name) [method.exceptions != NULL]| TRUE}
+
+    {
+     { E_ [method.returntype != NULL 
+           rtn_kind = F_ur_typename(method.returntype) ] 
+          
+       E_ [ 
+           [
+            [ [ F_string_chartype(method.returntype) != NULL 
+               F_string_chartype(method.returntype) != "byte"] |
+              | rtn_kind == "Object"]
+              return_val_name = "return_value"
+           ]
+          |
+          [
+            [ F_varlen_type(method.returntype) == 1 |
+              rtn_kind == "Array"|
+              rtn_kind == "Pickle"| rtn_kind == "Optional"]
+              return_val_name = "p_return_value"
+           ]  
+          | return_val_name = "return_value"
+          ]
+
+        R_do_arg_op(method.returntype, "return_value", "Return", object,
+                   "get") 
+      } | TRUE }
+       
+      R_do_arg_op:arg in method.arguments:(arg.type, arg.name,
+                  arg.direction, object, "get") [ arg.direction != "In"]
+
+      L_() ""
+      R_do_arg_op:arg1 in method.arguments:(arg1.type, arg1.name,
+                   arg1.direction,object, "clean")  
+           [F_contains_object(arg1.type)== 1
+            F_ur_typename(arg1.type) != "Pickle"]   
+
+   {
+      { E_ [method.returntype != NULL]
+        { R_do_arg_op(method.returntype, "return_value", "Return", object,
+              "clean") 
+             [ F_contains_object(method.returntype) == 1
+               F_ur_typename(method.returntype) != "Pickle"]   
+
+          | TRUE }
+        { L_return_value(return_val_name) [rtn_kind != "Object"] | TRUE}
+       }
+     | TRUE }
+.
+
+L_forward_exception(meth_name) -->
+     
+         if(_surrogate_call.iluExceptionPresent(_exception_number))
+              _throw_%meth_name%_exception(_exception_number-1, _surrogate_call);
+
+.
+
+L_return_value(return_value) -->
+
+          return %return_value%;
+.
+
+L_init_for_class(obj_name) -->
+
+
+      // Initialize this class
+
+      static void IluInitialize();
+
+      // Function to create a surrogate for a %obj_name% object
+
+      static iluObject* create_surrogate(iluKernelObject);
+
+    private:
+
+      // Exception forwarding (if any)
+
+.
+
+L_forward_exception_begin(method_name) -->
+ 
+      static void _throw_%method_name%_exception
+          (iluCardinal exception index, iluSurrogateCall&)
+.
+
+L_class_end() --> 
+
+
+      static int _initialized;
+
+  };
+.
+
+L_class_initializer(mpfx, s_obj_name,  us_obj_name) -->
+
+  // class initializer
+  class %mpfx%%s_obj_name%_initializer {
+    public:
+      %mpfx%%s_obj_name%_initializer ();
+      int ensure_instantiation ();
+      static %mpfx%%s_obj_name%_initializer sm_the_surrogate_%s_obj_name%_initializer;
+  };
+.
+

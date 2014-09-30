@@ -1,0 +1,1439 @@
+%!PS-Adobe-2.0
+%%Creator: dvipsk 5.58c Copyright 1986, 1994 Radical Eye Software
+%%Title: /var/tmp/tape/doc/@21281.2.dvi
+%%Pages: 43
+%%PageOrder: Ascend
+%%BoundingBox: 0 0 612 792
+%%DocumentFonts: Times-Bold Courier Times-Roman Courier-Oblique
+%%EndComments
+%DVIPSCommandLine: /import/tex-latex2e/bin/dvips
+%+ /var/tmp/tape/doc/@21281.2.dvi -o /var/tmp/tape/doc/@21281.2.ps
+%DVIPSParameters: dpi=300, compressed, comments removed
+%DVIPSSource:  TeX output 1999.09.20:1557
+%%BeginProcSet: texc.pro
+/TeXDict 250 dict def TeXDict begin /N{def}def /B{bind def}N /S{exch}N
+/X{S N}B /TR{translate}N /isls false N /vsize 11 72 mul N /hsize 8.5 72
+mul N /landplus90{false}def /@rigin{isls{[0 landplus90{1 -1}{-1 1}
+ifelse 0 0 0]concat}if 72 Resolution div 72 VResolution div neg scale
+isls{landplus90{VResolution 72 div vsize mul 0 exch}{Resolution -72 div
+hsize mul 0}ifelse TR}if Resolution VResolution vsize -72 div 1 add mul
+TR[matrix currentmatrix{dup dup round sub abs 0.00001 lt{round}if}
+forall round exch round exch]setmatrix}N /@landscape{/isls true N}B
+/@manualfeed{statusdict /manualfeed true put}B /@copies{/#copies X}B
+/FMat[1 0 0 -1 0 0]N /FBB[0 0 0 0]N /nn 0 N /IE 0 N /ctr 0 N /df-tail{
+/nn 8 dict N nn begin /FontType 3 N /FontMatrix fntrx N /FontBBox FBB N
+string /base X array /BitMaps X /BuildChar{CharBuilder}N /Encoding IE N
+end dup{/foo setfont}2 array copy cvx N load 0 nn put /ctr 0 N[}B /df{
+/sf 1 N /fntrx FMat N df-tail}B /dfs{div /sf X /fntrx[sf 0 0 sf neg 0 0]
+N df-tail}B /E{pop nn dup definefont setfont}B /ch-width{ch-data dup
+length 5 sub get}B /ch-height{ch-data dup length 4 sub get}B /ch-xoff{
+128 ch-data dup length 3 sub get sub}B /ch-yoff{ch-data dup length 2 sub
+get 127 sub}B /ch-dx{ch-data dup length 1 sub get}B /ch-image{ch-data
+dup type /stringtype ne{ctr get /ctr ctr 1 add N}if}B /id 0 N /rw 0 N
+/rc 0 N /gp 0 N /cp 0 N /G 0 N /sf 0 N /CharBuilder{save 3 1 roll S dup
+/base get 2 index get S /BitMaps get S get /ch-data X pop /ctr 0 N ch-dx
+0 ch-xoff ch-yoff ch-height sub ch-xoff ch-width add ch-yoff
+setcachedevice ch-width ch-height true[1 0 0 -1 -.1 ch-xoff sub ch-yoff
+.1 sub]/id ch-image N /rw ch-width 7 add 8 idiv string N /rc 0 N /gp 0 N
+/cp 0 N{rc 0 ne{rc 1 sub /rc X rw}{G}ifelse}imagemask restore}B /G{{id
+gp get /gp gp 1 add N dup 18 mod S 18 idiv pl S get exec}loop}B /adv{cp
+add /cp X}B /chg{rw cp id gp 4 index getinterval putinterval dup gp add
+/gp X adv}B /nd{/cp 0 N rw exit}B /lsh{rw cp 2 copy get dup 0 eq{pop 1}{
+dup 255 eq{pop 254}{dup dup add 255 and S 1 and or}ifelse}ifelse put 1
+adv}B /rsh{rw cp 2 copy get dup 0 eq{pop 128}{dup 255 eq{pop 127}{dup 2
+idiv S 128 and or}ifelse}ifelse put 1 adv}B /clr{rw cp 2 index string
+putinterval adv}B /set{rw cp fillstr 0 4 index getinterval putinterval
+adv}B /fillstr 18 string 0 1 17{2 copy 255 put pop}for N /pl[{adv 1 chg}
+{adv 1 chg nd}{1 add chg}{1 add chg nd}{adv lsh}{adv lsh nd}{adv rsh}{
+adv rsh nd}{1 add adv}{/rc X nd}{1 add set}{1 add clr}{adv 2 chg}{adv 2
+chg nd}{pop nd}]dup{bind pop}forall N /D{/cc X dup type /stringtype ne{]
+}if nn /base get cc ctr put nn /BitMaps get S ctr S sf 1 ne{dup dup
+length 1 sub dup 2 index S get sf div put}if put /ctr ctr 1 add N}B /I{
+cc 1 add D}B /bop{userdict /bop-hook known{bop-hook}if /SI save N @rigin
+0 0 moveto /V matrix currentmatrix dup 1 get dup mul exch 0 get dup mul
+add .99 lt{/QV}{/RV}ifelse load def pop pop}N /eop{SI restore userdict
+/eop-hook known{eop-hook}if showpage}N /@start{userdict /start-hook
+known{start-hook}if pop /VResolution X /Resolution X 1000 div /DVImag X
+/IE 256 array N 0 1 255{IE S 1 string dup 0 3 index put cvn put}for
+65781.76 div /vsize X 65781.76 div /hsize X}N /p{show}N /RMat[1 0 0 -1 0
+0]N /BDot 260 string N /rulex 0 N /ruley 0 N /v{/ruley X /rulex X V}B /V
+{}B /RV statusdict begin /product where{pop product dup length 7 ge{0 7
+getinterval dup(Display)eq exch 0 4 getinterval(NeXT)eq or}{pop false}
+ifelse}{false}ifelse end{{gsave TR -.1 .1 TR 1 1 scale rulex ruley false
+RMat{BDot}imagemask grestore}}{{gsave TR -.1 .1 TR rulex ruley scale 1 1
+false RMat{BDot}imagemask grestore}}ifelse B /QV{gsave newpath transform
+round exch round exch itransform moveto rulex 0 rlineto 0 ruley neg
+rlineto rulex neg 0 rlineto fill grestore}B /a{moveto}B /delta 0 N /tail
+{dup /delta X 0 rmoveto}B /M{S p delta add tail}B /b{S p tail}B /c{-4 M}
+B /d{-3 M}B /e{-2 M}B /f{-1 M}B /g{0 M}B /h{1 M}B /i{2 M}B /j{3 M}B /k{
+4 M}B /w{0 rmoveto}B /l{p -4 w}B /m{p -3 w}B /n{p -2 w}B /o{p -1 w}B /q{
+p 1 w}B /r{p 2 w}B /s{p 3 w}B /t{p 4 w}B /x{0 S rmoveto}B /y{3 2 roll p
+a}B /bos{/SS save N}B /eos{SS restore}B end
+%%EndProcSet
+%%BeginProcSet: texps.pro
+TeXDict begin /rf{findfont dup length 1 add dict begin{1 index /FID ne 2
+index /UniqueID ne and{def}{pop pop}ifelse}forall[1 index 0 6 -1 roll
+exec 0 exch 5 -1 roll VResolution Resolution div mul neg 0 0]/Metrics
+exch def dict begin Encoding{exch dup type /integertype ne{pop pop 1 sub
+dup 0 le{pop}{[}ifelse}{FontMatrix 0 get div Metrics 0 get div def}
+ifelse}forall Metrics /Metrics currentdict end def[2 index currentdict
+end definefont 3 -1 roll makefont /setfont load]cvx def}def
+/ObliqueSlant{dup sin S cos div neg}B /SlantFont{4 index mul add}def
+/ExtendFont{3 -1 roll mul exch}def /ReEncodeFont{/Encoding exch def}def
+end
+%%EndProcSet
+TeXDict begin 40258431 52099146 1000 300 300
+(/var/tmp/tape/doc/@21281.2.dvi) @start /Fa 135[19 3[10
+15 3[19 19 4[10 3[17 19 26[12 31[12 12 40[{}11 37.500000
+/Times-Roman rf /Fb 134[36 36 1[36 40 24 28 32 1[40 36
+40 60 20 2[20 2[24 32 40 32 1[36 11[52 48 3[44 56 52
+68 48 56 36 28 56 56 44 48 52 52 48 52 12[36 36 36 36
+2[18 46[{}41 72.000000 /Times-Bold rf /Fc 134[25 25 36
+25 28 17 19 22 1[28 25 28 41 14 28 17 14 28 25 17 22
+28 22 28 25 9[50 1[36 33 28 2[30 39 2[33 39 1[19 2[30
+33 1[36 33 13[25 25 25 25 25 1[12 17 45[{}44 50.000000
+/Times-Bold rf /Fd 134[25 2[25 25 25 25 25 1[25 25 25
+25 25 2[25 25 2[25 25 25 25 25 12[25 13[25 12[25 25 25
+25 25 25 25 25 25 25 1[25 25 6[25 38[{}33 41.666668 /Courier-Oblique
+rf /Fe 134[23 23 1[23 23 13 18 15 23 23 23 23 35 13 23
+13 13 23 23 15 20 23 20 23 20 13[25 6[28 2[15 4[33 21[11
+15 45[{.167 SlantFont}30 45.624989 /Times-Roman rf /Ff
+4 106 df<EB01FE903807FF8090381E01E0903878007801E0131CD80180130648C77E00
+06EC018048EC00C0A2481560481530A3481518A348150CA900601518A36C1530A36C1560
+6C15C0A26CEC01806CEC03006C6C1306D800E0131C0178137890381E01E0903807FF80D9
+01FEC7FC262B7DA02D>13 D<EA03C0EA0FF0EA1FF8EA3FFCEA7FFEA2B5FCA6EA7FFEA2EA
+3FFCEA1FF8EA0FF0EA03C010127D9317>15 D<134013C0EA0180A3EA0300A31206A35AA2
+5AA35AA35AA35AA21260A37EA37EA37EA27EA37EA3EA0180A3EA00C013400A2E7CA112>
+104 D<12C0A21260A37EA37EA37EA27EA37EA3EA0180A3EA00C0A2EA0180A3EA0300A312
+06A35AA25AA35AA35AA35AA20A2E7DA112>I E /Fg 133[20 23
+23 33 23 23 13 18 15 23 23 23 23 35 13 23 13 13 23 23
+15 20 23 20 23 20 15 2[15 1[15 1[33 33 43 1[33 28 25
+30 1[25 33 33 40 28 33 18 15 33 33 25 28 33 30 30 33
+1[20 1[26 1[13 13 23 23 23 23 23 23 23 23 23 23 13 11
+15 11 1[23 15 15 15 5[15 33[{}75 45.624989 /Times-Roman
+rf /Fh 130[25 1[25 25 25 25 25 25 25 25 25 25 25 25 25
+25 25 25 25 25 25 25 25 25 25 25 25 25 25 25 25 1[25
+25 25 25 25 25 25 25 25 25 25 25 25 25 25 25 25 25 1[25
+25 25 25 25 25 25 25 25 25 25 1[25 25 25 25 25 25 25
+25 25 25 25 25 25 25 25 25 25 25 25 25 25 25 25 25 1[25
+1[25 25 34[{}86 41.666668 /Courier rf /Fi 134[30 1[43
+30 33 20 23 27 1[33 30 33 50 17 33 20 17 33 30 20 27
+33 27 33 30 11[43 40 33 2[37 47 43 56 40 1[30 23 1[47
+2[43 1[40 8[30 30 30 30 30 30 30 30 30 30 1[15 46[{}47
+59.999973 /Times-Bold rf /Fj 134[43 1[62 1[48 29 33 38
+2[43 48 1[24 2[24 48 43 5[43 11[62 57 3[53 3[57 2[33
+7[62 6[29 58[{}20 86.416626 /Times-Bold rf end
+%%EndProlog
+%%BeginSetup
+%%Feature: *Resolution 300dpi
+TeXDict begin
+
+%%EndSetup
+%%Page: 1 1
+1 0 bop 0 693 a Fj(Using)22 b(ILU)h(with)e(Python:)f(A)i(Tutorial)p
+0 744 1950 17 v 0 2075 a Fi(Bill)14 b(Janssen)h Fh
+(<janssen@parc.xerox.com>)0 2274 y Fg(Formatted)c(20)g(September)h
+(1999.)0 2473 y(Copyright)208 2472 y(c)196 2473 y Ff(\015)g
+Fg(1995)e(Xerox)h(Corporation)0 2536 y(All)f(Rights)h(Reserved.)p
+0 2570 1950 9 v eop
+%%Page: 1 2
+1 1 bop 1927 -58 a Fg(1)0 183 y Fi(0.1)30 b(Introduction)62
+320 y Fg(This)9 b(tutorial)f(will)g(show)h(how)g(to)g(use)g(the)g(ILU)h
+(system)f(with)f(the)h(programming)g(language)g(Python,)g(both)g(as)g
+(a)h(way)0 382 y(of)f(developing)e(software)i(libraries,)g(and)g(as)g
+(a)h(way)f(of)g(building)e(distributed)g(systems.)j(In)f(an)g(extended)
+g(example,)h(we'll)0 445 y(build)j(an)i(ILU)g(module)f(that)g
+(implements)h(a)g(simple)f(four-function)f(calculator,)j(capable)f(of)f
+(addition,)h(subtraction,)0 507 y(multiplication,)g(and)h(division.)24
+b(It)17 b(will)e(signal)g(an)h(error)h(if)f(the)g(user)g(attempts)f(to)
+h(divide)f(by)h(zero.)27 b(The)16 b(example)0 569 y(demonstrates)11
+b(how)g(to)g(specify)g(the)h(interface)g(for)g(the)f(module;)g(how)g
+(to)h(implement)f(the)g(module)h(in)f(Python;)f(how)i(to)0
+632 y(use)h(that)g(implementation)f(as)h(a)h(simple)f(library;)g(how)g
+(to)g(provide)f(the)h(module)g(as)g(a)h(remote)g(service;)g(how)f(to)g
+(write)0 694 y(a)j(client)f(of)g(that)g(remote)h(service;)i(and)d(how)g
+(to)g(use)h(subtyping)d(to)i(extend)g(an)h(object)e(type)h(and)h
+(provide)e(different)0 756 y(versions)f(of)h(a)g(module.)20
+b(We'll)14 b(also)g(demonstrate)f(how)h(to)f(use)h(OMG)h(IDL)f(with)f
+(ILU,)h(and)g(discuss)f(the)h(notion)e(of)0 818 y(network)e(garbage)i
+(collection.)62 955 y(Each)e(of)h(the)f(programs)g(and)g(files)f
+(referenced)i(in)f(this)f(tutorial)g(is)g(available)h(as)g(a)h
+(complete)f(program)g(in)g(a)g(separate)0 1018 y(appendix)g(to)h(this)f
+(document;)g(parts)h(of)g(programs)g(are)h(quoted)e(in)h(the)g(text)f
+(of)h(the)g(tutorial.)p eop
+%%Page: 2 3
+2 2 bop 1927 -58 a Fg(2)0 183 y Fi(0.2)30 b(Specifying)13
+b(the)i(Interface)62 326 y Fg(Our)i(first)g(task)g(is)f(to)h(specify)g
+(more)h(exactly)e(what)h(it)g(is)g(we're)h(trying)e(to)g(provide.)29
+b(A)17 b(typical)g(four-function)0 388 y(calculator)9
+b(lets)g(a)h(user)g(enter)g(a)g(value,)g(then)f(press)g(an)h(operation)
+f(key,)h(either)f Fh(+)p Fg(,)i(-,)f(/,)h(or)e(*,)i(then)e(enter)h
+(another)f(number,)0 451 y(then)k(press)h(=)f(to)h(actually)e(have)i
+(the)g(operation)e(happen.)19 b(There's)14 b(usually)e(a)i(CLEAR)g
+(button)f(to)g(press)g(to)h(reset)f(the)0 513 y(state)e(of)g(the)g
+(calculator.)g(We)g(want)g(to)g(provide)f(something)g(like)g(that.)62
+655 y(We'll)15 b(recast)g(this)f(a)h(bit)f(more)h(formally)g(as)g(the)f
+Fe(interface)k Fg(of)d(our)f(module;)i(that)e(is,)i(the)f(way)f(the)h
+(module)f(will)0 718 y(appear)i(to)g(clients)e(of)i(its)f
+(functionality.)23 b(The)16 b(interface)g(typically)e(describes)h(a)h
+(number)g(of)g(function)f(calls)g(which)0 780 y(can)h(be)f(made)h(into)
+e(the)h(module,)h(listing)d(their)i(arguments)g(and)g(return)g(types,)h
+(and)f(describing)e(their)i(effects.)24 b(ILU)0 842 y(uses)11
+b Fe(object-oriented)16 b Fg(interfaces,)c(in)g(which)f(the)h
+(functions)e(in)i(the)f(interface)i(are)f(grouped)f(into)g(sets,)h
+(each)h(of)f(which)0 905 y(applies)e(to)h(an)g Fe(object)g(type)p
+Fg(.)g(These)f(functions)g(are)i(called)f Fe(methods)p
+Fg(.)62 1047 y(For)17 b(example,)g(we)f(can)h(think)d(of)i(the)g
+(calculator)f(as)h(an)g(object)g(type,)h(with)e(several)h(methods:)j
+(Add,)e(Subtract,)0 1110 y(Multiply,)12 b(Divide,)h(Clear,)i(etc.)j
+(ILU)13 b(provides)f(a)h(standard)g(notation)e(to)i(write)f(this)g
+(down)h(with,)g(called)g Fe(ISL)18 b Fg(\(which)0 1172
+y(stands)12 b(for)h(``Interface)i(Specification)d(Language''\).)17
+b(ISL)d(is)f(a)g(declarative)g(language)g(which)f(can)i(be)f(processed)
+g(by)0 1234 y(computer)d(programs.)h(It)f(allows)g(you)f(to)h(define)g
+(object)g(types)f(\(with)g(methods\),)i(other)e(non-object)g(types,)h
+(exceptions,)0 1296 y(and)h(constants.)62 1439 y(The)g(interface)h(for)
+f(our)g(calculator)g(would)f(be)h(written)f(in)h(ISL)g(as:)120
+1582 y Fh(INTERFACE)24 b(Tutorial;)120 1681 y(EXCEPTION)g
+(DivideByZero;)120 1781 y(TYPE)h(Calculator)f(=)g(OBJECT)170
+1831 y(METHODS)220 1881 y(SetValue)g(\(v)h(:)f(REAL\),)220
+1930 y(GetValue)g(\(\))h(:)f(REAL,)220 1980 y(Add)g(\(v)h(:)g(REAL\),)
+220 2030 y(Subtract)f(\(v)h(:)f(REAL\),)220 2080 y(Multiply)g(\(v)h(:)f
+(REAL\),)220 2130 y(Divide)g(\(v)h(:)g(REAL\))f(RAISES)g(DivideByZero)g
+(END)170 2180 y(END;)62 2403 y Fg(This)14 b(defines)f(an)i(interface)f
+Fh(Tutorial)p Fg(,)h(an)f(exception)f Fh(DivideByZero)p
+Fg(,)i(and)f(an)g(object)g(type)g Fh(Calculator)p Fg(.)0
+2465 y(Let's)d(consider)f(these)h(one)g(by)g(one.)62
+2608 y(The)16 b(interface,)i Fh(Tutorial)p Fg(,)f(is)f(a)g(way)g(of)h
+(grouping)d(a)j(number)f(of)g(type)g(and)f(exception)h(definitions.)24
+b(This)15 b(is)0 2670 y(important)c(to)h(prevent)g(collisions)e
+(between)i(names)h(defined)f(by)g(one)g(group)g(and)g(names)h(defined)f
+(by)g(another)g(group.)p eop
+%%Page: 3 4
+3 3 bop 1927 -58 a Fg(3)0 183 y(For)13 b(example,)h(suppose)d(two)h
+(different)h(people)f(had)g(defined)g(two)g(different)h(object)f
+(types,)g(with)g(different)h(methods,)0 246 y(but)f(both)g(called)h
+Fh(Calculator)p Fg(!)k(It)c(would)f(be)h(impossible)e(to)i(tell)f
+(which)g(calculator)h(was)g(meant.)k(By)d(defining)d(the)0
+308 y Fh(Calculator)f Fg(object)h(type)g(within)e(the)i(scope)g(of)g
+(the)g Fh(Tutorial)g Fg(interface,)g(this)f(confusion)g(can)h(be)h
+(avoided.)62 453 y(The)20 b(exception,)g Fh(DivideByZero)p
+Fg(,)h(is)e(a)h(formal)g(name)g(for)g(a)g(particular)f(kind)f(of)i
+(error,)i(division)17 b(by)i(zero.)0 515 y(Exceptions)f(in)g(ILU)i(can)
+f(specify)g(an)h Fe(exception-value)d(type)p Fg(,)22
+b(as)d(well,)i(which)e(means)h(that)e(real)i(errors)f(of)h(that)0
+578 y(kind)e(have)h(a)g(value)f(of)h(the)g(exception-value)e(type)i
+(associated)f(with)f(them.)35 b(This)18 b(allows)g(the)g(error)i(to)e
+(contain)0 640 y(useful)12 b(information)f(about)h(why)g(it)g(might)f
+(have)i(come)g(about.)i(However,)e Fh(DivideByZero)e
+Fg(is)h(a)h(simple)f(exception,)0 702 y(and)23 b(has)h(no)f
+(exception-value)f(type)h(defined.)48 b(We)23 b(should)f(note)h(that)g
+(the)g(full)g(name)h(of)g(this)e(exception)h(is)0 764
+y Fh(Tutorial.DivideByZero)p Fg(,)12 b(but)h(for)g(this)f(tutorial)g
+(we'll)h(simply)f(call)h(our)g(exceptions)f(and)h(types)f(by)h(their)g
+(short)0 827 y(name.)62 972 y(The)e(object)g(type,)g
+Fh(Calculator)g Fg(\(again,)g(really)g Fh(Tutorial.Calculator)p
+Fg(\),)f(is)h(a)h(set)f(of)g(six)f(methods.)h(Two)g(of)0
+1034 y(those)e(methods,)g Fh(SetValue)g Fg(and)g Fh(GetValue)p
+Fg(,)g(allow)g(us)g(to)g(enter)g(a)h(number)f(into)g(the)g(calculator)g
+(object,)g(and)g(``read'')0 1097 y(the)14 b(number.)22
+b(Note)14 b(that)g Fh(SetValue)g Fg(takes)g(a)h(single)e(argument,)j
+Fe(v)p Fg(,)g(of)e(type)g Fh(REAL)p Fg(.)22 b Fh(REAL)14
+b Fg(is)g(a)h(built-in)d(ISL)j(type,)0 1159 y(denoting)9
+b(a)j(64-bit)d(floating)h(point)f(number.)j(Built-in)d(ISL)j(types)e
+(are)i(things)d(like)h Fh(INTEGER)h Fg(\(32-bit)e(signed)h(integer\),)0
+1221 y Fh(BYTE)h Fg(\(8-bit)g(unsigned)e(byte\),)i(and)h
+Fh(CHARACTER)e Fg(\(16-bit)g(Unicode)h(character\).)i(Other)e(more)g
+(complicated)g(types)f(are)0 1283 y(built)f(up)g(from)i(these)f(simple)
+f(types)h(using)e(ISL)j Fe(type)e(constructors)p Fg(,)g(such)h(as)g
+Fh(SEQUENCE)h(OF)p Fg(,)f Fh(RECORD)p Fg(,)h(or)f Fh(ARRAY)h(OF)p
+Fg(.)62 1429 y(Note)19 b(also)f(that)h Fh(SetValue)f
+Fg(does)h(not)f(return)h(a)g(value,)i(and)e(neither)g(do)f
+Fh(Add)p Fg(,)k Fh(Subtract)p Fg(,)e Fh(Multiply)p Fg(,)h(or)0
+1491 y Fh(Divide)p Fg(.)11 b(Rather,)g(when)f(you)g(want)g(to)f(see)i
+(what)f(the)g(current)g(value)g(of)h(the)f(calculator)f(is,)i(you)e
+(must)h(call)g Fh(GetValue)p Fg(,)0 1553 y(a)16 b(method)f(which)f(has)
+i(no)f(arguments,)h(but)f(which)f(returns)h(a)h Fh(REAL)f
+Fg(value,)h(which)f(is)g(the)g(value)g(of)h(the)f(calculator)0
+1615 y(object.)c(This)f(is)h(an)g(arbitrary)g(decision)f(on)g(our)h
+(part;)g(we)g(could)g(have)g(written)f(the)h(interface)g(differently,)g
+(say)g(as)120 1761 y Fh(TYPE)25 b(NotOurCalculator)e(=)i(OBJECT)170
+1811 y(METHODS)220 1860 y(SetValue)f(\(\))h(:)f(REAL,)220
+1910 y(Add)g(\(v)h(:)g(REAL\))f(:)h(REAL,)220 1960 y(Subtract)f(\(v)h
+(:)f(REAL\))h(:)g(REAL,)220 2010 y(Multiply)f(\(v)h(:)f(REAL\))h(:)g
+(REAL,)220 2060 y(Divide)f(\(v)h(:)g(REAL\))f(:)h(REAL)f(RAISES)h
+(DivideByZero)e(END)170 2109 y(END;)0 2338 y Fg(--)12
+b(but)e(we)h(didn't.)62 2483 y(Our)17 b(list)f(of)h(methods)f(on)g
+Fh(Calculator)h Fg(is)f(bracketed)h(by)f(the)h(two)f(keywords)g
+Fh(METHODS)g Fg(and)h Fh(END)p Fg(,)i(and)d(the)0 2545
+y(elements)e(are)h(separated)g(from)g(each)g(other)f(by)g(commas.)22
+b(This)13 b(is)h(pretty)g(standard)f(in)h(ISL:)h(elements)f(of)g(a)h
+(list)f(are)0 2608 y(separated)f(by)h(commas;)h(the)e(keyword)g
+Fh(END)g Fg(is)g(used)g(when)g(an)h(explicit)e(list-end)g(marker)i(is)f
+(needed)h(\(but)f(not)g(when)0 2670 y(it's)g(not)h(necessary,)h(as)f
+(in)g(the)g(list)f(of)h(arguments)g(to)g(a)g(method\);)h(the)f(list)f
+(often)h(begins)f(with)g(some)h(keyword,)h(like)p eop
+%%Page: 4 5
+4 4 bop 1927 -58 a Fg(4)0 183 y Fh(METHODS)p Fg(.)24
+b(The)16 b Fe(raises)f(clause)j Fg(\(the)e(list)e(of)i(exceptions)e
+(which)h(a)h(method)f(might)g(raise\))g(of)h(the)f(method)h
+Fh(Divide)0 246 y Fg(provides)10 b(another)h(example)g(of)g(a)h(list,)e
+(this)g(time)h(with)f(only)h(one)g(member,)h(introduced)e(by)h(the)g
+(keyword)f Fh(RAISES)p Fg(.)62 386 y(Another)17 b(standard)f(feature)i
+(of)f(ISL)h(is)f(separating)f(a)i(name,)i(like)d Fh(v)p
+Fg(,)i(from)f(a)f(type,)i(like)e Fh(REAL)p Fg(,)i(with)d(a)i(colon)0
+448 y(character.)12 b(For)g(example,)f(constants)f(are)i(defined)f
+(with)f(syntax)g(like)120 589 y Fh(CONSTANT)24 b(Zero)h(:)g(INTEGER)f
+(=)h(0;)0 808 y Fg(Definitions,)9 b(of)i(interface,)h(types,)f
+(constants,)f(and)h(exceptions,)f(are)i(terminated)f(with)f(a)h
+(semicolon.)62 949 y(We)i(should)e(expand)h(our)g(interface)h(a)g(bit)e
+(by)h(adding)g(more)h(documentation)e(on)h(what)g(our)g(methods)g
+(actually)f(do.)0 1011 y(We)i(can)f(do)g(this)f(with)h(the)g
+Fe(docstring)g Fg(feature)h(of)g(ISL,)g(which)e(allows)g(the)h(user)h
+(to)e(add)i(arbitrary)f(text)f(to)h(object)g(type)0 1074
+y(definitions)d(and)i(method)g(definitions.)e(Using)h(this,)g(we)h(can)
+h(write)120 1214 y Fh(INTERFACE)24 b(Tutorial;)120 1314
+y(EXCEPTION)g(DivideByZero)170 1364 y("this)g(error)h(is)f(signalled)g
+(if)h(the)g(client)f(of)h(the)g(Calculator)e(calls)120
+1414 y(the)i(Divide)f(method)g(with)h(a)g(value)f(of)h(0";)120
+1513 y(TYPE)g(Calculator)f(=)g(OBJECT)170 1563 y(COLLECTIBLE)170
+1613 y(DOCUMENTATION)g("4-function)f(calculator")170
+1663 y(METHODS)220 1712 y(SetValue)h(\(v)h(:)f(REAL\))h("Set)f(the)h
+(value)f(of)h(the)g(calculator)f(to)g(`v'",)220 1762
+y(GetValue)g(\(\))h(:)f(REAL)50 b("Return)24 b(the)h(value)f(of)h(the)f
+(calculator",)220 1812 y(Add)g(\(v)h(:)g(REAL\))149 b("Adds)24
+b(`v')h(to)g(the)f(calculator's)g(value",)220 1862 y(Subtract)g(\(v)h
+(:)f(REAL\))h("Subtracts)f(`v')g(from)h(the)g(calculator's)e(value",)
+220 1912 y(Multiply)h(\(v)h(:)f(REAL\))h("Multiplies)f(the)g
+(calculator's)g(value)g(by)h(`v'",)220 1961 y(Divide)f(\(v)h(:)g
+(REAL\))f(RAISES)g(DivideByZero)g(END)269 2011 y("Divides)h(the)f
+(calculator's)g(value)g(by)h(`v'")170 2061 y(END;)0 2280
+y Fg(Note)11 b(that)g(we)h(can)f(use)h(the)f Fh(DOCUMENTATION)f
+Fg(keyword)h(on)g(object)g(types)g(to)g(add)g(documentation)f(about)h
+(the)g(object)0 2342 y(type,)18 b(and)e(can)h(simply)e(add)i
+(documentation)e(strings)g(to)h(the)g(end)h(of)f(exception)g(and)g
+(method)g(definitions.)25 b(These)0 2405 y(docstrings)10
+b(are)i(passed)g(on)f(to)h(the)f(Python)g(docstring)f(system,)i(so)g
+(that)f(they)g(are)i(available)e(at)h(runtime)f(from)i(Python.)0
+2467 y(Documentation)d(strings)f(cannot)i(currently)f(be)h(used)g(for)h
+(non-object)d(types.)62 2608 y(ILU)17 b(provides)f(a)h(program,)i
+Fh(islscan)p Fg(,)f(which)e(can)h(be)g(used)f(to)h(check)g(the)g
+(syntax)e(of)i(an)g(ISL)g(specification.)0 2670 y Fh(islscan)11
+b Fg(parses)g(the)g(specification)e(and)i(summarizes)h(it)e(to)h
+(standard)f(output:)p eop
+%%Page: 5 6
+5 5 bop 1927 -58 a Fg(5)120 183 y Fh(\045)25 b Fd(islscan)f
+(Tutorial.isl)120 233 y Fh(Interface)g("Tutorial",)g(imports)g("ilu")
+170 283 y({defined)g(on)h(line)f(1)195 333 y(of)g(file)h
+(/tmp/tutorial/Tutorial.isl)d(\(Fri)j(Jan)g(27)f(09:41:12)g(1995\)})120
+432 y(Types:)170 482 y(real)572 b({<built-in>,)24 b(referenced)g(on)h
+(10)f(11)h(12)g(13)g(14)f(15})120 582 y(Classes:)170
+632 y(Calculator)422 b({defined)24 b(on)h(line)g(17})220
+681 y(methods:)269 731 y(SetValue)g(\(v)f(:)h(real\);)647
+b({defined)24 b(10,)h(id)g(1})319 781 y("Set)g(the)f(value)h(of)g(the)f
+(calculator)g(to)h(`v'")269 831 y(GetValue)g(\(\))f(:)h(real;)672
+b({defined)24 b(11,)h(id)g(2})319 881 y("Return)g(the)f(value)h(of)f
+(the)h(calculator")269 930 y(Add)g(\(v)g(:)g(real\);)771
+b({defined)24 b(12,)h(id)g(3})319 980 y("Adds)g(`v')f(to)h(the)g
+(calculator's)e(value")269 1030 y(Subtract)i(\(v)f(:)h(real\);)647
+b({defined)24 b(13,)h(id)g(4})319 1080 y("Subtracts)f(`v')h(from)f(the)
+h(calculator's)f(value")269 1130 y(Multiply)h(\(v)f(:)h(real\);)647
+b({defined)24 b(14,)h(id)g(5})319 1180 y("Multiplies)f(the)h
+(calculator's)f(value)g(by)h(`v'")269 1229 y(Divide)g(\(v)g(:)f(real\))
+h({DivideByZero};)322 b({defined)24 b(16,)h(id)g(6})319
+1279 y("Divides)f(the)h(calculator's)f(value)g(by)h(`v'")220
+1329 y(documentation:)269 1379 y("4-function)f(calculator")220
+1429 y(unique)g(id:)50 b(ilu:cigqcW09P1FF98gYVOhf5XxGf15)120
+1528 y(Exceptions:)170 1578 y(DivideByZero)372 b({defined)24
+b(on)h(line)g(5,)f(refs)h(15})120 1628 y(\045)0 1840
+y(islscan)7 b Fg(simply)g(lists)g(the)g(types)g(defined)h(in)f(the)h
+(interface,)h(separating)d(out)i(object)f(types)g(\(which)g(it)g(calls)
+h(``classes''\),)0 1902 y(the)k(exceptions,)g(and)g(the)g(constants.)h
+(Note)f(that)f(for)i(the)f Fh(Calculator)f Fg(object)h(type,)g(it)g
+(also)g(lists)f(something)f(called)0 1964 y(its)h Fe(unique)f(id)p
+Fg(.)j(This)e(is)g(a)h(160-bit)e(number)i(\(expressed)f(in)h(base)f
+(64\))h(that)f(ILU)h(assigns)e(automatically)g(to)i(every)f(type,)0
+2026 y(as)j(a)g(way)g(of)g(distinguish)o(ing)d(them.)19
+b(While)14 b(it)f(might)g(interesting)f(to)h(know)g(that)h(it)f(exists)
+g(\(:-\),)i(the)e(ILU)h(user)g(never)0 2089 y(has)d(know)g(what)g(it)g
+(is;)g Fh(islscan)g Fg(supplies)e(it)i(for)h(the)f(convenience)g(of)h
+(the)f(ILU)g(implementors,)g(who)g(sometimes)h(do)0 2151
+y(have)f(to)g(know)f(it.)p eop
+%%Page: 6 7
+6 6 bop 1927 -58 a Fg(6)0 183 y Fi(0.3)30 b(Implementing)13
+b(the)i(True)g(Module)62 330 y Fg(After)d(we've)g(defined)g(an)g
+(interface,)h(we)f(then)f(need)h(to)g(supply)e(an)i(implementation)e
+(of)i(our)g(module.)i(Implemen-)0 392 y(tations)c(can)i(be)g(done)f(in)
+g(any)h(language)f(supported)f(by)h(ILU.)h(Which)f(language)g(you)g
+(choose)g(often)h(depends)e(on)i(what)0 455 y(sort)j(of)g(operations)f
+(have)h(to)g(be)g(performed)h(in)f(implementing)f(the)g(specific)h
+(functions)f(of)h(the)g(module.)23 b(Different)0 517
+y(languages)11 b(have)h(specific)g(advantages)g(and)g(disadvantages)e
+(in)i(different)g(areas.)j(Another)d(consideration)e(is)i(whether)0
+579 y(you)i(wish)g(to)h(use)f(the)h(implementation)e(mainly)i(as)g(a)g
+(library,)g(in)g(which)f(case)h(it)g(should)e(probably)h(be)h(done)f
+(in)g(the)0 642 y(same)h(language)f(as)h(the)g(rest)f(of)h(your)f
+(applications,)g(or)h(mainly)f(as)h(a)g(remote)h(service,)g(in)e(which)
+g(case)h(the)g(specific)0 704 y(implementation)10 b(language)g(is)h
+(less)f(important.)62 851 y(We'll)e(demonstrate)g(an)h(implementation)d
+(of)j(the)f Fh(Calculator)g Fg(object)f(type)h(in)g(Python,)g(which)g
+(is)g(one)g(of)g(the)h(most)0 913 y(capable)g(of)h(all)f(the)g
+(ILU-supported)e(languages.)j(This)e(is)h(just)f(a)i(matter)f(of)h
+(defining)e(a)h(Python)g(class,)g(corresponding)f(to)0
+975 y(the)j Fh(Tutorial.Calculator)f Fg(type.)i(Before)h(we)e(do)h
+(that,)f(though,)f(we'll)i(explain)e(how)h(the)g(names)h(and)g
+(signatures)0 1038 y(of)f(the)g(Python)f(functions)g(are)i(arrived)f
+(at.)0 1335 y Fc(0.3.1)26 b(What)14 b(the)g(Interface)h(Looks)g(Like)g
+(in)g(Python)62 1482 y Fg(For)g(every)f(programming)g(language)f
+(supported)g(by)h(ILU,)g(there)h(is)e(a)i(standard)e
+Fe(mapping)j Fg(defined)d(from)i(ISL)g(to)0 1544 y(that)c(programming)h
+(language.)g(This)f(mapping)g(defines)g(what)h(ISL)g(type)f(names,)i
+(exception)e(names,)h(method)g(names,)0 1606 y(and)f(so)g(on)g(look)f
+(like)g(in)h(that)g(programming)f(language.)62 1753 y(The)17
+b(mapping)g(for)g(Python)f(is)h(straightforward.)28 b(For)18
+b(type)f(names,)i(such)e(as)g Fh(Tutorial.Calculator)p
+Fg(,)g(the)0 1816 y(Python)h(name)h(of)g(the)f(ISL)h(type)f
+Fh(Interface.Name)g Fg(is)g Fh(Interface.Name)p Fg(,)h(with)f(any)g
+(hyphens)g(replaced)h(by)0 1878 y(underscores.)e(That)c(is,)h(the)f
+(name)g(of)h(the)f(interface)g(in)g(ISL)h(becomes)f(the)g(name)h(of)f
+(the)h(module)e(in)h(Python.)k(So)c(the)0 1940 y(name)g(of)f(our)g
+Fh(Calculator)f Fg(type)g(in)h(Python)f(would)g(be)h
+Fh(Tutorial.Calculator)p Fg(,)f(which)g(is)h(really)g(the)f(name)i(of)0
+2002 y(a)f(Python)e(class.)62 2149 y(The)17 b(Python)e(mapping)h(for)h
+(a)g(method)f(name)i(such)e(as)h Fh(SetValue)f Fg(is)g(the)g(method)g
+(name,)j(with)d(any)g(hyphens)0 2212 y(replaced)k(by)g(underscores.)38
+b(The)21 b(return)f(type)f(of)i(this)e(Python)g(method)h(is)g(whatever)
+g(is)f(specified)h(in)g(the)g(ISL)0 2274 y(specification)10
+b(for)j(the)e(method,)i(or)f Fh(None)g Fg(if)g(no)f(type)h(is)f
+(specified.)j(The)e(arguments)f(for)h(the)g(Python)f(method)h(are)g
+(the)0 2336 y(same)i(as)g(specified)f(in)g(the)h(ISL;)f(their)g(types)g
+(are)i(the)e(Python)g(types)f(corresponding)g(to)i(the)f(ISL)h(types,)g
+Fe(except)k Fg(that)0 2398 y(one)12 b(extra)g(argument)f(is)h(added)f
+(to)g(the)h(beginning)e(of)i(each)g(Python)f(version)g(of)h(an)g(ISL)g
+(method;)f(it)g(is)h(an)g Fe(instance)h Fg(of)0 2461
+y(the)e(object)g(type)f(on)h(which)g(the)g(method)g(is)g(defined.)g(An)
+g(instance)g(is)f(simply)h(a)g(value)g(of)h(that)e(type.)i(Thus)e(the)h
+(Python)0 2523 y(method)g(corresponding)e(to)i(our)g(ISL)g
+Fh(SetValue)g Fg(would)f(have)h(the)g(prototype)f(signature)195
+2670 y Fh(def)24 b(SetValue)h(\(self,)f(v\):)p eop
+%%Page: 7 8
+7 7 bop 1927 -58 a Fg(7)62 183 y(Similarly,)11 b(the)g(signatures)f
+(for)h(the)g(other)g(methods,)g(in)f(Python,)h(are)195
+320 y Fh(def)24 b(GetValue)h(\(self\):)195 420 y(def)f(Add)h(\(self,)f
+(v\):)195 519 y(def)g(Subtract)h(\(self,)f(v\):)195 619
+y(def)g(Multiply)h(\(self,)f(v\):)195 719 y(def)g(Divide)h(\(self,)f
+(v\):)0 930 y Fg(Note)10 b(that)f(even)i(though)d(the)i
+Fh(Divide)g Fg(method)g(can)h(raise)f(an)g(exception,)g(the)g
+(signature)f(looks)g(like)h(those)f(of)i(the)f(other)0
+993 y(methods.)19 b(This)13 b(is)g(because)h(the)f(normal)h(Python)f
+(exception)g(signalling)e(mechanism)j(is)f(used)h(to)f(signal)g
+(exceptions)0 1055 y(back)18 b(to)f(the)g(caller.)31
+b(The)18 b(mapping)f(of)g(exception)g(names)h(is)f(similar)g(to)g(the)h
+(mapping)f(used)g(for)h(types.)30 b(So)17 b(the)0 1117
+y(exception)10 b Fh(Tutorial.DivideByZero)f Fg(would)h(also)h(have)g
+(the)g(name)h Fh(Tutorial.DivideByZero)p Fg(,)e(in)g(Python.)62
+1254 y(One)15 b(way)h(to)f(see)g(what)g(all)g(the)g(Python)f(names)i
+(for)f(an)h(interface)f(look)g(like)f(is)h(to)g(run)g(the)g(program)h
+Fh(python-)0 1316 y(stubber)p Fg(.)11 b(This)e(program)h(reads)h(an)f
+(ISL)h(file,)f(and)g(generates)g(the)g(necessary)g(Python)g(code)g(to)g
+(support)e(that)i(interface)0 1379 y(in)15 b(Python.)24
+b(One)15 b(of)h(the)f(files)g(generated)h(is)f(`)p Fe(Interface)p
+Fh(.py)p Fg(',)i(which)e(contains)g(the)g(definitions)e(of)j(all)f(the)
+g(Python)0 1441 y(types)10 b(for)i(that)e(interface.)120
+1578 y Fh(\045)25 b Fd(python-stubber)e(Tutorial.isl)120
+1628 y Fh(client)h(stubs)h(for)f(interface)g("Tutorial")g(to)h
+(Tutorial.py)f(...)120 1678 y(server)g(stubs)h(for)f(interface)g
+("Tutorial")g(to)h(Tutorial__skel.py)e(...)120 1727 y(\045)p
+eop
+%%Page: 8 9
+8 8 bop 1927 -58 a Fg(8)0 183 y Fc(0.3.2)26 b(Building)13
+b(the)i(Implementation)62 320 y Fg(To)23 b(provide)g(an)g
+(implementation)f(of)h(our)g(interface,)k(we)d Fe(subclass)f
+Fg(the)h(generated)f(Python)f(class)h(for)g(our)0 382
+y Fh(Calculator)10 b Fg(class:)120 519 y Fh(#)25 b(CalculatorImpl.py)
+120 619 y(import)f(Tutorial,)g(Tutorial__skel)120 719
+y(class)g(Calculator)g(\(Tutorial__skel.Calculator\):)319
+818 y(def)h(__init__)f(\(self\):)519 868 y(self.the_value)f(=)i(0.0)319
+968 y(def)g(SetValue)f(\(self,)g(v\):)519 1018 y(self.the_value)f(=)i
+(v)319 1117 y(def)g(GetValue)f(\(self\):)519 1167 y(return)g
+(self.the_value)319 1267 y(def)h(Add)g(\(self,)f(v\):)519
+1316 y(self.the_value)f(=)i(self.the_value)f(+)g(v)319
+1416 y(def)h(Subtract)f(\(self,)g(v\):)519 1466 y(self.the_value)f(=)i
+(self.the_value)f(-)g(v)319 1566 y(def)h(Multiply)f(\(self,)g(v\):)519
+1615 y(self.the_value)f(=)i(self.the_value)f(*)g(v)319
+1715 y(def)h(Divide)f(\(self,)h(v\):)519 1765 y(try:)718
+1815 y(self.the_value)e(=)i(self.the_value)f(/)h(v)519
+1864 y(except)f(ZeroDivisionError:)718 1914 y(raise)g
+(Tutorial.DivideByZero)62 2126 y Fg(Each)7 b(instance)g(of)g(a)g
+Fh(CalculatorImpl.Calcul)o(ator)g Fg(ob)o(ject)g(i)o(nherit)o(s)g(from)
+g Fh(Tutorial)o(__skel.Cal)o(culator)p Fg(,)0 2188 y(which)14
+b(in)g(turn)h(inherits)e(from)i Fh(Tutorial.Calculator)p
+Fg(.)21 b(Each)15 b(has)g(an)g(instance)f(variable)g(called)g
+Fh(the_value)p Fg(,)0 2250 y(which)i(maintains)g(a)i(running)e(total)g
+(of)h(the)g(`accumulator')g(for)g(that)f(instance.)29
+b(We)17 b(can)h(create)f(an)g(instance)g(of)g(a)0 2313
+y Fh(Tutorial.Calculator)10 b Fg(object)g(by)h(simply)f(calling)g
+Fh(CalculatorImpl.Calculator\(\))p Fg(.)p eop
+%%Page: 9 10
+9 9 bop 1927 -58 a Fg(9)62 183 y(So,)12 b(a)g(very)f(simple)f(program)i
+(to)e(use)h(the)g Fh(Tutorial)g Fg(module)g(might)f(be)h(the)g
+(following:)120 372 y Fh(#)25 b(simple1.py,)f(a)h(simple)f(program)g
+(that)h(demonstrates)e(the)i(use)g(of)f(the)120 422 y(#)50
+b(Tutorial)24 b(true)g(module)h(as)f(a)h(library.)120
+472 y(#)120 522 y(#)g(run)f(this)h(with)g(the)f(command)g("python)h
+(simple1.py)f(NUMBER)g([NUMBER...]")120 571 y(#)120 671
+y(import)g(Tutorial,)g(CalculatorImpl,)g(string,)g(sys)120
+771 y(#)h(A)g(simple)f(program:)120 820 y(#)50 b(1\))f(make)25
+b(an)g(instance)f(of)g(Tutorial.Calculator)120 870 y(#)50
+b(2\))f(add)25 b(all)g(the)f(arguments)g(by)h(invoking)f(the)h(Add)f
+(method)120 920 y(#)50 b(3\))f(print)25 b(the)f(resultant)g(value.)120
+1020 y(def)h(main)f(\(argv\):)319 1119 y(c)h(=)g
+(CalculatorImpl.Calculator\(\))319 1169 y(if)g(not)g(c:)519
+1219 y(error\("Couldn't)e(create)h(calculator"\))319
+1319 y(#)h(clear)g(the)f(calculator)g(before)g(using)h(it)319
+1418 y(c.SetValue)f(\(0.0\))319 1518 y(#)h(now)g(loop)f(over)h(the)f
+(arguments,)g(adding)h(each)f(in)h(turn)f(*/)319 1618
+y(for)h(arg)g(in)f(argv[1:]:)519 1667 y(v)g(=)h(string.atof\(arg\))519
+1717 y(c.Add)f(\(v\))319 1817 y(#)h(and)g(print)f(the)h(result)319
+1916 y(print)g("the)f(sum)h(is",)f(c.GetValue\(\))319
+1966 y(sys.exit\(0\))120 2066 y(main\(sys.argv\))0 2381
+y Fg(This)10 b(program)i(would)e(be)h(compiled)f(and)h(run)g(as)h
+(follows:)120 2570 y Fh(\045)25 b Fd(python)f(simple1.py)g(34.9)h
+(45.23111)f(12)120 2620 y Fh(the)h(sum)f(is)h(92.13111)120
+2670 y(\045)p eop
+%%Page: 10 11
+10 10 bop 1905 -58 a Fg(10)0 183 y(This)10 b(is)h(a)g(completely)f
+(self-contained)g(use)h(of)g(the)g Fh(Tutorial)f Fg(implementation;)g
+(when)g(a)i(method)f(is)f(called,)h(it)g(is)f(the)0 246
+y(true)h(method)f(that)h(is)f(invoked.)g(The)h(use)g(of)g(ILU)g(in)g
+(this)f(program)h(adds)f(some)h(overhead)g(in)g(terms)g(of)g(included)f
+(code,)0 308 y(but)g(has)h(almost)g(the)g(same)h(performance)g(as)f(a)g
+(version)g(of)g(this)f(program)h(that)g(does)g(not)f(use)h(ILU.)0
+515 y Fc(0.3.3)26 b(Checking)14 b(for)g(Exceptions)62
+652 y Fg(Suppose,)f(instead)e(of)i(the)f Fh(Add)g Fg(method,)h(we'd)g
+(called)f(the)g Fh(Divide)g Fg(method.)j(In)e(that)f(case,)h(we)g
+(might)f(have)g(had)0 715 y(to)g Fe(handle)h Fg(a)g Fh(DivideByZero)e
+Fg(exception;)g(that)g(is,)h(notice)f(the)h(exception)f(and)h(do)f
+(something)g(sensible.)h(We)h(do)e(this)0 777 y(by)g(establishing)d(a)k
+(handler)f(for)g(the)g(exception:)319 914 y Fh(...)319
+964 y(#)25 b(now)g(loop)f(over)h(the)f(arguments,)g(Dividing)h(by)f
+(each)h(in)f(turn)h(*/)319 1063 y(try:)519 1113 y(for)f(arg)h(in)f
+(argv[2:]:)718 1163 y(v)h(=)f(string.atof\(arg\))718
+1213 y(c.Divide)g(\(v\))319 1263 y(except:)519 1312 y(print)g
+('exception)g(signalled:)49 b(')25 b(+)f(str\(sys.exc_type\))519
+1362 y(sys.exit\(1\))319 1412 y(...)0 1624 y Fg(And)11
+b(here's)g(an)g(example)h(of)f(what)g(we)g(get)g(when)g(it)f(runs:)120
+1761 y Fh(\045)25 b Fd(python)f(simple2.py)g(12345)h(6)f(7)h(8)g(9)120
+1810 y Fh(the)g(sum)f(is)h(4.08234126984)120 1860 y(\045)g
+Fd(python)f(simple2.py)g(12345)h(6)f(0)h(8)g(9)120 1910
+y Fh(exception)f(signalled:)49 b(Tutorial:)24 b(DivideByZero)62
+2122 y Fg(Actually,)14 b(every)f(method)h(may)g(return)f(an)h
+(exception,)f(as)h(there)g(are)g(a)g(number)g(of)g(standard)e(system)i
+(exceptions)0 2184 y(which)g(may)g(be)h(signalled)d(even)i(by)g
+(methods)g(which)f(have)h(no)g(declared)h(exceptions.)k(So)c(we)f
+(should)f(check)h(every)0 2246 y(method)d(to)f(see)i(if)f(it)g
+(succeeded,)g(even)g(simple)g(ones)g(like)f Fh(GetValue)p
+Fg(.)p eop
+%%Page: 11 12
+11 11 bop 1905 -58 a Fg(11)0 183 y Fi(0.4)30 b(Providing)13
+b(the)i(True)f(Module)h(as)h(a)f(Network)f(Service)62
+320 y Fg(Now)e(let's)g(see)g(what's)g(involved)e(in)i(providing)e(the)i
+(calculator)g(functionality)e(as)i(a)g(network)g(service.)i(Basically,)
+0 382 y(there)d(are)h(three)f(things)f(to)h(look)f(at:)37
+519 y Ff(\017)30 b Fg(providing)9 b(a)j(``factory'')f(to)g(build)f
+(calculator)g(objects;)37 594 y Ff(\017)30 b Fg(publishing)8
+b(the)j(name)h(of)f(the)g(factory;)g(and)37 669 y Ff(\017)30
+b Fg(writing)10 b(a)h(server)h(program.)0 876 y Fc(0.4.1)26
+b(Using)14 b(Factories)i(to)f(Build)f(Objects)62 1013
+y Fg(When)c(one)g(program)g(uses)f(code)h(from)h(another)e(address)g
+(space,)i(it)f(has)f(to)h(get)f(its)g(hands)h(on)f(an)h(instance)f(of)h
+(an)g(ILU)0 1076 y(object,)h(to)g(be)h(able)f(to)g(call)g(methods.)h
+(In)f(our)g(library)g(application,)f(we)i(simply)e(made)i(a)g(call)f
+(into)g(the)g(true)g(module,)h(to)0 1138 y(create)i(an)f(instance)g(of)
+g(the)g(calculator)g(object.)k(In)c(the)g(networked)f(world,)h(we)h
+(need)f(to)g(do)g(the)g(same)h(kind)e(of)h(thing,)0 1200
+y(but)f(this)g(time)h(the)g(call)f(into)g(the)h(true)g(module)f(has)h
+(to)g(be)g(a)g(method)f(on)h(an)g(object)f(type.)17 b(In)c(short,)g(we)
+g(need)g(to)f(have)0 1263 y(some)f(object)g(type)f(which)h(exports)f(a)
+i(method)e(something)g(like)170 1400 y Fh(CreateCalculator)23
+b(\(\))i(:)g(Calculator)62 1611 y Fg(There)16 b(are)g(several)g(ways)f
+(to)h(provide)e(this.)24 b(The)16 b(standard)f(way)g(of)h(doing)e(it)h
+(is)h(to)f(add)g(an)h(object)f(type)g(to)g(our)0 1673
+y Fh(Tutorial)f Fg(interface,)h(which)e(contains)g(this)g(method.)20
+b(This)14 b(kind)f(of)h(object)f(type)h(is)g(sometimes)f(called)h(a)h
+Fe(factory)p Fg(,)0 1736 y(because)9 b(it)f(exists)g(only)g(in)g(order)
+h(to)f(build)g(instances)f(of)i(other)g(object)f(types.)h(We'll)g(add)g
+(the)f(following)f(type)h(definition)0 1798 y(to)j(our)g(`)p
+Fh(Tutorial.isl)p Fg(':)120 1935 y Fh(TYPE)25 b(Factory)f(=)h(OBJECT)
+170 1985 y(METHODS)220 2035 y(CreateCalculator)e(\(\))i(:)g(Calculator)
+170 2084 y(END;)62 2296 y Fg(Then)19 b(we)h(need)f(to)g(provide)f(an)i
+(implementation)d(of)j(the)f Fh(Factory)g Fg(object)f(type,)k(just)c
+(as)h(we)h(did)e(with)g(the)0 2358 y Fh(Calculator)10
+b Fg(type:)p eop
+%%Page: 12 13
+12 12 bop 1905 -58 a Fg(12)120 183 y Fh(import)24 b(Tutorial,)g
+(Tutorial__skel,)g(CalculatorImpl)120 283 y(class)g(Factory)h
+(\(Tutorial__skel.Factory\):)319 382 y(#)g(have)g(the)f(__init__)g
+(method)h(take)f(handle)h(and)f(server)h(args)319 432
+y(#)g(so)g(that)f(we)h(can)g(control)f(which)g(ILU)h(kernel)f(server)h
+(is)f(used,)319 482 y(#)h(and)g(what)f(the)h(instance)f(handle)g(of)h
+(the)g(Factory)f(object)g(on)319 532 y(#)h(that)g(server)f(is.)49
+b(This)25 b(allows)f(us)h(to)g(control)f(the)h(object)f(ID)319
+582 y(#)h(of)g(the)f(new)h(Factory)f(instance.)319 681
+y(def)h(__init__\(self,)e(handle=None,)h(server=None\):)519
+731 y(self.IluInstHandle)f(=)i(handle)519 781 y(self.IluServer)e(=)i
+(server)319 881 y(def)g(CreateCalculator)e(\(self\):)519
+930 y(return)h(\(CalculatorImpl.Calculator\(\)\))0 1148
+y Fg(Now,)13 b(to)g(provide)f(other)h(programs)g(a)g(way)g(of)g
+(creating)g(calculator)f(objects,)h(we'll)g(just)e(create)j(just)e(one)
+h(instance)f(of)0 1210 y Fh(Tutorial.Factory)p Fg(,)e(and)g(let)g
+(programs)g(call)g(the)g Fh(CreateCalculator)f Fg(method)h(on)g(that)g
+(at)g(will,)g(to)g(obtain)f(new)0 1272 y(calculator)i(objects.)0
+1504 y Fc(0.4.2)26 b(Publishing)14 b(a)h(Well-Known)e(Instance)62
+1643 y Fg(The)e(question)e(then)h(arises,)g(how)g(does)g(a)h(program)g
+(that)f(wants)g(to)g(use)g(the)h Fh(Factory)f Fg(object)g(get)g(its)g
+(hands)g(on)g(that)0 1706 y(one)j(well-known)f(instance?)k(The)e
+(answer)f(is)g(to)f(use)h(the)g Fe(simple)g(binding)h
+Fg(system)e(built)g(into)g(ILU.)i(Simple)f(binding)0
+1768 y(allows)d(a)h(program)g(acting)f(as)h(a)g(``server'')h(to)e
+Fe(publish)j Fg(the)e(location)e(of)i(a)g(well-known)e(object,)i(and)g
+(allows)e(programs)0 1830 y(acting)h(as)i(``clients'')e(of)h(that)g
+(server)g(to)g(look)f(up)h(the)g(location,)f(given)h(the)g(object's)f
+(name.)62 1970 y(The)16 b(name)h(of)f(an)h(ILU)f(object)f(instance)h
+(has)g(two)f(parts,)i(which)f(are)h(the)f Fe(instance)f(handle)j
+Fg(of)e(the)g(object,)h(and)0 2032 y(the)12 b(name)i(of)f(its)f
+Fe(kernel)g(server)p Fg(,)i(called)e(the)h Fe(server)g(ID)p
+Fg(.)g(\(The)g(kernel)f(server)h(is)f(a)i(data)e(structure)g
+(maintained)g(by)g(the)0 2094 y(ILU)g(kernel)f(which)g(takes)h(care)g
+(of)g(all)g(communication)e(between)i(different)f(address)h(spaces.\))h
+(These)f(two)f(combined)0 2157 y(must)g(form)h(a)f(universally)f
+(unique)g(ID)h(for)h(the)f(object.)g(Usually)f(you)h(can)g(simply)f
+(let)h(the)g(ILU)g(system)g(choose)g(names)0 2219 y(for)i(your)g
+(objects)f(automatically,)h(in)f(which)h(case)g(it)g(takes)g(care)h(to)
+e(choose)h(names)g(which)g(will)f(never)h(conflict)f(with)0
+2281 y(names)g(in)g(use)f(by)h(others.)h(However,)f(for)g(objects)f
+(which)g(we)i(wish)e(to)g(publish,)g(we)h(need)g(to)f(specify)g(what)h
+(the)g(name)0 2344 y(of)f(an)g(object)g(will)f(be,)i(so)e(that)h(users)
+g(of)g(the)g(well-known)e(object)i(can)g(find)g(it.)62
+2483 y(When)h(working)f(with)f(the)i(Python)f(programming)h(language,)f
+(this)g(act)h(of)g(explicitly)e(specifying)g(an)i(object)g(name)0
+2545 y(is)f(divided)f(into)g(two)h(steps.)g(First,)h(we)f(create)h(a)g
+(kernel)f(server)h(with)e(a)i(specified)f(server)g(ID.)h(Secondly,)f
+(we)h(create)g(an)0 2608 y(instance)g(of)h(an)g(object)g(on)f(this)g
+(new)h(server,)h(with)e(a)i(specified)e(instance)g(handle.)k(Together,)
+d(the)g(server)g(ID)h(and)e(the)0 2670 y(instance)e(handle)h(form)h
+(the)e(name)i(of)g(the)e(instance.)p eop
+%%Page: 13 14
+13 13 bop 1905 -58 a Fg(13)62 183 y(For)25 b(instance,)i(we)d(might)g
+(use)f(a)i(server)f(ID)h(of)f Fh(Tutorial.)p Fe(domain)s
+Fg(,)i(where)f Fe(domain)h Fg(is)e(your)g(Internet)0
+246 y(domain)14 b(\(typically)f(something)f(like)i Fe(department)p
+Fh(.)p Fe(company)p Fh(.com)p Fg(,)g(or)h Fe(department)p
+Fh(.)p Fe(univerity)p Fh(.edu)p Fg(\).)j(This)13 b(serves)0
+308 y(to)i(distinguis)o(h)d(your)j(server)g(from)g(other)g(servers)g
+(on)f(the)h(net.)23 b(Then)14 b(we)h(can)h(use)e(a)i(simple)e(instance)
+g(handle,)i(like)0 370 y Fh(theFactory)p Fg(.)25 b(The)15
+b(name,)j(or)e Fe(object)f(ID)p Fg(,)i(of)f(this)e(object)h(would)g
+(then)g(be)h Fh(theFactory@Tutorial.)p Fe(domain)s Fg(,)0
+432 y(where)11 b Fe(domain)j Fg(would)c(vary)h(from)g(place)g(to)g
+(place.)h(Note)e(that)h(this)f(implies)g(that)g(only)g(one)h(instance)f
+(of)h(this)f(object)h(is)0 495 y(going)g(to)g(exist)g(in)g(the)h(whole)
+f(domain.)i(If)f(you)f(have)h(many)g(people)f(using)g(different)g
+(versions)g(of)h(this)e(object)h(in)h(your)0 557 y(domain,)e(you)e
+(should)g(introduce)g(more)i(qualifiers)e(in)h(the)g(server)g(ID)h(so)f
+(that)f(your)h(kernel)g(server)h(can)f(be)h(distinguis)o(hed)0
+619 y(from)i(that)e(run)h(by)g(others.)0 827 y Fc(0.4.3)26
+b(The)15 b(Server)g(Program)62 964 y Fg(Given)c(this)f(information,)g
+(we)h(can)h(now)e(write)h(a)h(complete)f(program)g(that)f(will)g(serve)
+i(as)f(a)g(provider)g(of)g(calculator)0 1026 y(objects)h(to)h(other)g
+(programs.)18 b(It)13 b(will)f(create)i(a)g(single)e
+Fh(Factory)h Fg(instance)f(with)g(a)i(well-known)e(name,)i(publish)e
+(that)0 1088 y(instance,)f(then)f(hang)h(out)f(servicing)g(methods)h
+(invoked)f(on)h(its)f(objects.)g(Here's)i(what)f(it)f(looks)g(like:)120
+1225 y Fh(#)25 b(server.py)f(--)h(a)f(program)h(that)f(runs)h(a)g
+(Tutorial.Calculator)e(server)120 1275 y(#)120 1375 y(import)h(ilu,)h
+(FactoryImpl,)f(sys)120 1474 y(def)h(main\(argv\):)319
+1574 y(if)g(\(len\(argv\))f(<)h(2\):)519 1624 y(print)f("Usage:)49
+b(python)24 b(server.py)h(SERVER-ID")519 1674 y(sys.exit\(1\))319
+1773 y(#)g(Create)f(a)h(kernel)g(server)f(with)g(appropriate)g(server)h
+(ID,)f(which)319 1823 y(#)50 b(is)25 b(passed)f(in)h(as)f(the)h(first)g
+(argument)319 1923 y(theServer)f(=)h(ilu.CreateServer)f(\(argv[1]\))319
+2022 y(#)h(Now)g(create)f(an)h(instance)f(of)h(a)f(Factory)h(object)f
+(on)h(that)f(server,)319 2072 y(#)50 b(with)25 b(the)f(instance)g
+(handle)h("theFactory")319 2172 y(theFactory)f(=)h(FactoryImpl.Factory)
+e(\("theFactory",)h(theServer\))319 2271 y(#)h(Now)g(make)f(the)h
+(Factory)f(object)g("well-known")g(by)h(publishing)f(it.)319
+2371 y(theFactory.IluPublish\(\))319 2471 y(#)h(Now)g(we)f(print)h(the)
+f(string)h(binding)f(handle)g(\(the)h(object's)f(name)h(plus)319
+2521 y(#)g(its)g(location\))f(of)g(the)h(new)g(instance.)319
+2620 y(print)g("Factory)f(instance)g(published.")319
+2670 y(print)h("Its)f(SBH)h(is)g('")f(+)h(theFactory.IluSBH\(\))e(+)i
+("'.")p eop
+%%Page: 14 15
+14 14 bop 1905 -58 a Fg(14)319 233 y Fh(handle)25 b(=)f
+(ilu.CreateLoopHandle\(\))319 283 y(ilu.RunMainLoop)g(\(handle\))120
+432 y(main\(sys.argv\))62 644 y Fg(When)11 b(we)h(run)e(this)h
+(program,)g(we'll)g(see)g(something)f(like:)120 781 y
+Fh(\045)25 b Fd(python)f(server.py)g(Tutorial.)p Fe(dept.company.com)k
+Fd(&)120 831 y Fh(Factory)c(instance)g(published.)120
+881 y(Its)h(SBH)f(is)h('theFactory@Tutorial.)p Fe(dept.company.com)s
+Fh(@)p Fe(somegibberish)t Fh('.)120 930 y(\045)0 1142
+y Fg(This)11 b(indicates)h(that)f(the)h(object)g(known)f(as)i
+Fh(theFactory@Tutorial.)p Fe(dept.company.com)h Fg(is)d(being)h
+(exported)g(in)0 1204 y(a)j(particular)f(way,)h(which)f(is)g(encoded)g
+(in)g(the)g Fe(somegibberish)j Fg(part)e(of)f(the)g(string)f(binding)g
+(handle.)21 b(Your)14 b(specific)0 1267 y(numbers)d(will)f(vary,)h(but)
+g(it)g(should)e(look)h(similar.)p eop
+%%Page: 15 16
+15 15 bop 1905 -58 a Fg(15)0 183 y Fi(0.5)30 b(Using)15
+b(the)g(Network)f(Service)62 320 y Fg(Given)20 b(that)f(someone)h(has)g
+(exported)f(a)h(module)g(as)g(a)h(network)e(service,)j(by)e(publishing)
+d(the)j(location)f(of)h(a)0 382 y(well-known)9 b(instance)h(of)i(an)f
+(object)f(type,)h(a)g(potential)e(client)i(of)g(that)f(module)h(can)g
+(then)f(use)h(the)g(module)f(by)h(binding)0 445 y(to)e(that)g
+(well-known)f(instance.)i(It)g(does)f(this)f(by)h(calling)g(the)g
+(standard)g(ILU)h(routine)e Fh(ilu.LookupObject\(\))p
+Fg(,)h(which)0 507 y(takes)h(the)h(name)g(and)g(type)f(of)h(an)g
+(instance,)f(and)h(attempts)f(to)g(find)g(that)h(instance)e(on)i(the)f
+(net.)h(The)g(name)h(of)e(the)h(object)0 569 y(is)i(specified)g(as)h(a)
+g(pair)f(of)h(strings,)f(the)g Fe(server)h(ID)j Fg(of)d(the)g(object's)
+e Fe(kernel)i(server)p Fg(,)h(and)e(the)g Fe(instance)g(handle)j
+Fg(of)d(the)0 632 y(object)d(on)h(that)g(kernel)g(server.)62
+769 y(So,)i(in)f(our)g(first)g(example,)h(we)f(could)g(replace)g(the)g
+(call)h(to)e Fh(Create_Tutorial_Calculator)f Fg(with)i(a)g(routine)0
+831 y(that)g(calls)g Fh(ilu.LookupObject\(\))g Fg(to)g(find)g(the)g
+(factory,)i(then)e(creates)h(an)g(instance)f(of)h(a)g
+Fh(Calculator)p Fg(.)i(The)e(full)0 893 y(code)h(of)h(the)f(revised)g
+(example,)i(`)p Fh(simple3.py)p Fg(',)f(is)f(available)f(as)i
+Ff(h)p Fg(undefined)p Ff(i)d Fg([simple3.py],)j(page)g
+Ff(h)p Fg(undefined)p Ff(i)p Fg(,)0 955 y(but)10 b(here's)i(what)f(the)
+f(new)i(code)f(for)g(obtaining)e(an)i(instance)g(of)g(a)h
+Fh(Calculator)e Fg(looks)g(like:)120 1092 y Fh(def)25
+b(Get_Tutorial_Calculator)d(\(factoryObjectSID,)i(factoryObjectIH\):)
+319 1192 y(#)h(We)g(have)f(to)h(call)g(ilu.LookupObject\(\))e(with)h
+(the)h(object)f(ID)h(of)319 1242 y(#)g(the)g(factory)f(object,)g(and)h
+(the)f(``type'')h(of)f(the)h(object)f(we're)h(looking)319
+1292 y(#)g(for,)g(which)f(is)h(always)f(available)g(as)h
+(MODULE.TYPENAME)319 1391 y(f)g(=)g(ilu.LookupObject)e
+(\(factoryObjectSID,)h(factoryObjectIH,)f(Tutorial.Factory\))319
+1441 y(if)i(not)g(f:)519 1491 y(print)f("Can't)g(find)h
+(Tutorial.Factory)e(instance)h(")h(+)g(factory-)120 1541
+y(ObjectSID)f(+)h(factoryObjectIH)519 1590 y(sys.exit\(1\))319
+1640 y(c)g(=)g(f.CreateCalculator\(\))319 1690 y(return)g(\(c\))62
+1902 y Fg(We)12 b(then)e(can)i(use)f(the)g Fh(simple3)f
+Fg(program:)120 2039 y Fh(\045)25 b Fd(python)f(simple3.py)g(Tutorial.)
+p Fe(dept.company.com)j Fd(theFactory)d(1)h(2)g(3)g(4)g(5)g(6)120
+2089 y Fh(the)g(sum)f(is)h(2.10000)120 2138 y(\045)p
+eop
+%%Page: 16 17
+16 16 bop 1905 -58 a Fg(16)0 183 y Fi(0.6)30 b(Subtyping)15
+b(and)h(Other)e(ISL)h(Types)62 327 y Fg(ILU)f(ISL)h(contains)e(support)
+f(for)j(a)f(number)g(of)g(types)g(other)f(than)h(object)f(types)h(and)g
+Fh(REAL)p Fg(.)20 b(The)14 b(primitive)f(ISL)0 389 y(types)d(include)f
+(16,)i(32,)g(and)f(64)g(bit)g(signed)g(and)g(unsigned)f(integers,)h
+(bytes,)g(8)h(and)f(16)g(bit)g(characters,)i(a)f(boolean)e(type,)0
+451 y(and)14 b(32,)g(64,)g(and)g(128)f(bit)g(floating)f(point)h(types.)
+18 b(A)c(number)g(of)f(type)h(constructors)e(allow)h(specification)f
+(of)i(arrays,)0 514 y(sequences,)d(records,)h(unions,)e(and)h
+(enumerations,)g(as)g(well)g(as)g(object)g(types.)g(The)g(ISL)h
+Fh(OPTIONAL)f Fg(type)g(constructor)0 576 y(provides)i(an)h(implicit)e
+(union)h(of)h(some)g(type)f(with)g Fh(NULL)p Fg(,)i(which)e(is)g
+(useful)g(for)h(building)e(recursive)h(data)h(structures)0
+638 y(such)d(as)g(linked)f(lists)g(or)h(binary)f(trees.)62
+782 y(To)17 b(illustrate)e(some)i(of)f(these)h(types,)g(we'll)f(extend)
+h(the)f Fh(Tutorial.Calculator)f Fg(type.)28 b(Many)17
+b(real-world)0 844 y(desktop)11 b(calculators)h(include)f(a)i
+Fe(register)f(tape)p Fg(,)h(a)g(printed)e(listing)g(of)h(all)g(the)g
+(operations)g(that)f(have)i(been)f(performed,)0 906 y(with)j(a)g
+(display)g(of)g(what)g(the)h(value)f(of)g(the)h(calculator)f(was)g
+(after)h(each)g(operation.)24 b(We'll)15 b(add)g(a)h(register)f(tape)h
+(to)0 968 y Fh(Tutorial.Calculator)p Fg(.)62 1112 y(We)d(could)f(do)g
+(it)h(by)f(adding)g(a)h(new)f(method)g(to)h Fh(Tutorial.Calculator)p
+Fg(,)f(called)g Fh(GetTape)p Fg(.)k(Unfortunately,)0
+1174 y(this)g(would)g(break)h(our)g(existing)f(code,)j(because)e(it)f
+(would)g(change)h(the)g Fh(Tutorial.Calculator)f Fg(object)g(type,)0
+1237 y(and)d(existing)e(compiled)h(clients)g(wouldn't)f(be)i(able)g(to)
+f(recognize)h(the)g(new)f(object)g(type.)17 b(Instead,)c(we'll)f
+(extend)g(the)0 1299 y(object)g(type)h(by)g Fe(subtyping)r
+Fg(;)e(that)h(is,)i(by)e(creating)h(a)g(new)g(object)g(type)f(which)h
+(uses)f Fh(Tutorial.Calculator)g Fg(as)h(a)0 1361 y Fe(supertype)p
+Fg(,)g(but)f(adds)h(new)g(methods)f(of)h(its)f(own.)17
+b(This)12 b(subtype)f(will)h(actually)g(have)h(two)g(types;)g(both)f
+(its)g(own)g(new)0 1423 y(type,)f(and)f Fh(Tutorial.Calculator)p
+Fg(.)g(We'll)g(also)g(define)g(a)h(subtype)e(of)i(the)f
+Fh(Tutorial.Factory)f Fg(type,)i(to)f(allow)0 1486 y(us)j(to)f(create)i
+(new)e(instances)g(of)h(the)g(new)g Fh(Calculator)f Fg(subtype.)j
+(Finally,)e(we'll)g(define)f(a)i(new)f(module)f(interface)0
+1548 y(for)f(the)g(new)g(types,)g(so)g(that)f(we)i(don't)e(have)h(to)g
+(modify)g(the)g Fh(Tutorial)f Fg(interface.)62 1691 y(First,)h(let's)g
+(define)g(the)g(necessary)g(type)g(to)f(represent)h(the)g(operations)f
+(performed)i(on)e(the)h(calculator:)120 1835 y Fh(INTERFACE)24
+b(Tutorial2)g(IMPORTS)g(Tutorial)h(END;)120 1935 y(TYPE)g(OpType)f(=)h
+(ENUMERATION)220 1984 y(SetValue,)f(Add,)g(Subtract,)g(Multiply,)g
+(Divide)h(END;)120 2084 y(TYPE)g(Operation)f(=)g(RECORD)220
+2134 y(op)g(:)h(OpType,)220 2184 y(value)f(:)h(REAL,)220
+2233 y(accumulator)f(:)g(REAL)170 2283 y(END;)120 2383
+y(TYPE)h(RegisterTape)e(=)i(SEQUENCE)f(OF)h(Operation;)62
+2608 y Fg(The)13 b(enumerated)g(type)f Fh(OpType)g Fg(defines)g(an)h
+(abstract)f(type)g(with)g(five)g(possible)f(values.)k(The)e(type)f
+Fh(Operation)0 2670 y Fg(defines)h(a)h(record)f(type)g(\(in)h(Python,)f
+(a)h(dictionary\))e(with)g(3)i(fields:)g(the)g Fe(op)h
+Fg(field,)f(which)e(tells)h(us)g(which)g(of)g(the)g(five)p
+eop
+%%Page: 17 18
+17 17 bop 1905 -58 a Fg(17)0 183 y(possible)9 b(calculator)g
+(operations)g(was)i(performed,)g(the)f Fe(value)j Fg(field,)d(which)g
+(tells)f(us)h(the)g(value)g(of)h(the)f(operand)g(for)g(the)0
+246 y(operation,)h(and)g(the)g Fe(accumulator)k Fg(field,)d(which)f
+(tells)f(us)h(what)g(the)h(value)f(of)g(the)h(calculator)f(was)g(after)
+h(the)f(operation)0 308 y(had)i(been)f(performed.)17
+b(Finally,)c(the)f Fh(Operation)h Fg(type)f(is)g(a)h(simple)f
+(sequence,)i(or)f(list,)f(of)h Fh(Operation)p Fg(.)i(Note)e(that)0
+370 y Fh(Tutorial2)c Fe(import)t Fg(s)g Fh(Tutorial)p
+Fg(;)g(that)g(is,)h(it)f(allows)g(the)g(use)h(of)f(the)h
+Fh(Tutorial)f Fg(types,)g(exceptions,)g(and)g(constants,)0
+432 y(in)i(the)g(specifications)e(in)i Fh(Tutorial2)p
+Fg(.)62 569 y(Now)g(we)g(define)g(the)g(new)g(object)g(types)f(\(in)h
+(the)g(same)h(file\):)120 706 y Fh(TYPE)25 b(TapeCalculator)e(=)i
+(OBJECT)f(COLLECTIBLE)170 756 y(SUPERTYPES)g(Tutorial.Calculator)f(END)
+170 806 y(DOCUMENTATION)h("4)g(function)g(calculator)g(with)h(register)
+f(tape")170 856 y(METHODS)220 906 y(GetTape)g(\(\))h(:)f(RegisterTape)
+170 955 y(END;)120 1055 y(TYPE)h(Factory)f(=)h(OBJECT)f(SUPERTYPES)g
+(Tutorial.Factory)f(END)170 1105 y(METHODS)220 1155 y
+(CreateTapeCalculator)g(\(\))h(:)h(TapeCalculator)170
+1204 y(END;)0 1416 y Fg(The)c Fh(SUPERTYPES)g Fg(attribute)e(of)j(an)f
+(object)g(type)f(may)i(take)f(multiple)f(object)g(type)h(names,)k(so)20
+b(ISL)i(supports)0 1478 y(multiple)e(inheritance.)40
+b(The)21 b Fh(Tutorial2.TapeCalculator)e Fg(type)h(will)g(now)g
+(support)g(the)h(six)f(methods)g(of)0 1541 y Fh(Tutorial.Calculator)p
+Fg(,)10 b(as)h(well)g(as)g(its)f(own)h(method,)g Fh(GetTape)p
+Fg(.)62 1678 y(We)22 b(then)f(need)h(to)f(provide)f(an)i
+(implementation)e(for)i Fh(Tutorial2.TapeCalculator)d
+Fg(\(see)j Ff(h)p Fg(undefined)p Ff(i)0 1740 y Fg
+([TapeCalculatorImpl.py],)29 b(page)c Ff(h)p Fg(undefined)p
+Ff(i)f Fg(for)h(the)g(actual)g(code\).)54 b(We)26 b(modify)f(each)h
+(method)e(on)h(the)0 1802 y Fh(TapeCalculator)10 b Fg(object)h(to)f
+(record)i(its)e(invocation,)g(and)h(add)g(a)g(slot)f(to)h(hold)f(the)h
+(contents)f(of)h(the)g(`tape'.)p eop
+%%Page: 18 19
+18 18 bop 1905 -58 a Fg(18)62 183 y(We)12 b(also)e(provide)h(an)g
+(implementation)f(for)h Fh(Tutorial2.Factory)p Fg(:)120
+320 y Fh(import)24 b(Tutorial2,)g(Tutorial2__skel,)g
+(TapeCalculatorImpl)120 420 y(class)g(Factory)h
+(\(Tutorial2__skel.Factory\):)319 519 y(#)g(have)g(the)f(__init__)g
+(method)h(take)f(handle)h(and)f(server)h(args)319 569
+y(#)g(so)g(that)f(we)h(can)g(control)f(which)g(ILU)h(kernel)f(server)h
+(is)f(used,)319 619 y(#)h(and)g(what)f(the)h(instance)f(handle)g(of)h
+(the)g(Factory)f(object)g(on)319 669 y(#)h(that)g(server)f(is.)49
+b(This)25 b(allows)f(us)h(to)g(control)f(the)h(object)f(ID)319
+719 y(#)h(of)g(the)f(new)h(Factory)f(instance.)319 818
+y(def)h(__init__\(self,)e(handle=None,)h(server=None\):)519
+868 y(self.IluInstHandle)f(=)i(handle)519 918 y(self.IluServer)e(=)i
+(server)319 1018 y(def)g(CreateCalculator)e(\(self\):)519
+1067 y(return)h(\(TapeCalculatorImpl.TapeCalculator\(\))o(\))319
+1167 y(CreateTapeCalculator)f(=)i(CreateCalculator)0
+1379 y Fg(Note)7 b(that)g(both)g(t)o(he)g Fh(Tutorial)o(2.Factory.)o
+(CreateCalcu)o(lator)g Fg(and)f Fh(Tutorial2)o(.Factory.Cr)o
+(eateTapeCa)o(lculator)0 1441 y Fg(methods)11 b(create)g(and)h(return)f
+(instances)f(of)h Fh(Tutorial2.TapeCalculator)p Fg(.)f(This)g(is)h
+(valid,)g(because)g(instances)f(of)0 1503 y Fh
+(Tutorial2.TapeCalculator)f Fg(are)j(also)f(instances)f(of)h
+Fh(Tutorial.Calculator)p Fg(.)62 1640 y(Now)c(we)g(modify)g(`)p
+Fh(server.py)p Fg(')g(to)g(create)g(an)g(in)o(stan)o(ce)g(of)g
+Fh(Tutorial2)o(.Factory)p Fg(,)e(instead)i(of)g Fh(Tutorial.Factory)p
+Fg(,)0 1703 y(and)17 b(to)f(initialize)f(the)i Fh(Tutorial2)f
+Fg(true-side)g(code)h(\(See)h Ff(h)p Fg(undefined)p Ff(i)d
+Fg([server2.py],)k(page)e Ff(h)p Fg(undefined)p Ff(i)e
+Fg(for)i(the)0 1765 y(actual)11 b(code\).)62 1902 y(Finally,)35
+b(see)c Ff(h)p Fg(undefined)p Ff(i)d Fg([simple4.py],)35
+b(page)c Ff(h)p Fg(undefined)p Ff(i)p Fg(,)j(for)d(an)f(example)h(of)f
+(a)h(client)f(of)g(the)0 1964 y Fh(TapeCalculator)10
+b Fg(type.)62 2101 y(Note)h(that)f(one)g(nice)h(result)f(of)h(this)e
+(approach)i(to)f(versioning)f(is)h(that)h(old)f(clients,)g(which)g
+(know)g(nothing)f(about)g(the)0 2163 y(new)g Fh(TapeCalculator)f
+Fg(class,)h(or)h(about)e(the)h(whole)f Fh(Tutorial2)h
+Fg(interface)g(in)g(general,)h(will)e(continue)f(to)i(function,)0
+2226 y(since)15 b(every)g(instance)f(of)h Fh(Tutorial2.TapeCalculator)f
+Fg(is)g(also)h(an)g(instance)f(of)h Fh(Tutorial.Calculator)p
+Fg(,)0 2288 y(and)c(every)g(instance)g(of)g Fh(Tutorial2.Factory)f
+Fg(is)g(also)h(an)g(instance)g(of)g Fh(Tutorial.Factory)p
+Fg(.)p eop
+%%Page: 19 20
+19 19 bop 1905 -58 a Fg(19)0 183 y Fi(0.7)30 b(Using)15
+b(OMG)f(IDL)i(with)f(ILU)62 372 y Fg(ILU)22 b(also)e(supports)g(the)h
+(use)g(of)h(the)f(interface)g(definition)f(language)g(OMG)i(IDL,)g
+(defined)f(by)g(the)g(Object)0 434 y(Management)g(Group)f(\(OMG\))h
+(for)g(their)f(Common)h(Object)f(Request)h(Broker)g(Architecture)f
+(\(CORBA\).)i(OMG)0 496 y(IDL)15 b(uses)f(a)i(C)p Fh(++)p
+Fg(-like)e(syntax,)i(so)e(it)h(may)g(be)g(easier)h(for)f(Python)f(and)h
+(C)p Fh(++)g Fg(programmers)h(to)e(use)h(than)g(ILU)f(ISL.)0
+559 y(Unfortunately,)8 b(CORBA)h(doesn't)f(include)g(some)h(of)g(the)f
+(concepts)g(in)g(ILU,)h(such)g(as)f(garbage)h(collection)f(for)g
+(transient)0 621 y(objects,)k(or)h Fh(OPTIONAL)f Fg(types,)g(so)g(not)g
+(every)h(ILU)f(interface)h(can)g(be)f(expressed)g(in)g(OMG)h(IDL,)g
+(but)f(many)h(of)f(them)0 683 y(can.)g(For)f(example,)h(here)g(is)e
+(the)h(OMG)h(IDL)f(version)f(of)h(the)g Fh(Tutorial)g
+Fg(interface:)120 872 y Fh(module)24 b(Tutorial)h({)170
+971 y(exception)f(DivideByZero)g({};)170 1071 y(interface)g(Calculator)
+g({)220 1121 y(//)g(Set)h(the)g(value)f(of)h(the)f(calculator)g(to)h
+(`v')220 1170 y(void)f(SetValue)g(\(in)h(double)f(v\);)220
+1220 y(//)g(Return)h(the)f(value)h(of)f(the)h(calculator)220
+1270 y(double)f(GetValue)g(\(\);)220 1320 y(//)g(Adds)h(`v')g(to)f(the)
+h(calculator's)f(value)220 1370 y(void)g(Add)h(\(in)f(double)h(v\);)220
+1420 y(//)f(Subtracts)g(`v')h(from)g(the)f(calculator's)g(value)220
+1469 y(void)g(Subtract)g(\(in)h(double)f(v\);)220 1519
+y(//)g(Multiplies)g(the)h(calculator's)f(value)g(by)h(`v')220
+1569 y(void)f(Multiply)g(\(in)h(double)f(v\);)220 1619
+y(//)g(Divides)h(the)f(calculator's)g(value)g(by)h(`v')220
+1669 y(void)f(Divide)h(\(in)f(double)g(v\))h(raises)g
+(\(DivideByZero\);)170 1718 y(};)170 1818 y(interface)f(Factory)g({)220
+1868 y(//)g(Create)h(and)f(return)h(an)f(instance)h(of)f(a)h
+(Calculator)f(object)220 1918 y(Calculator)g(CreateCalculator\(\);)170
+1967 y(};)120 2017 y(};)62 2332 y Fg(This)10 b(can)i(be)f(used)g(with)f
+(the)h Fh(python-stubber)p Fg(:)120 2521 y Fh(\045)25
+b Fd(python-stubber)e(Tutorial.idl)120 2570 y Fh(client)h(stubs)h(for)f
+(interface)g("Tutorial")g(to)h(Tutorial.py)f(...)120
+2620 y(server)g(stubs)h(for)f(interface)g("Tutorial")g(to)h
+(Tutorial__skel.py)e(...)120 2670 y(\045)p eop
+%%Page: 20 21
+20 20 bop 1905 -58 a Fg(20)62 183 y(This)11 b(will)g(be)g(a)h(bit)f
+(slower)g(than)h(running)e(the)h Fh(python-stubber)g
+Fg(on)g(the)h(equivalent)e(ISL)i(file,)g(as)g(the)f(program)0
+246 y(works)e(by)h(converting)f(the)h(OMG)g(IDL)g(into)f(ISL,)i(then)e
+(compiling)g(from)h(the)g(ISL)h(description.)e(OMG)h(IDL)g(interfaces)0
+308 y(can)h(be)h(checked)f(by)g(running)f(the)g(OMG)i(IDL-to-ILU)e(ISL)
+i(converter,)f Fh(idl2isl)p Fg(,)g(directly:)120 445
+y Fh(\045)25 b Fd(idl2isl)f(Tutorial.idl)120 495 y Fh(INTERFACE)g
+(Tutorial;)120 594 y(EXCEPTION)g(DivideByZero;)120 644
+y(TYPE)h(Calculator)f(=)g(OBJECT)h(OPTIONAL)319 694 y(METHODS)519
+744 y(SetValue)f(\(v)g(:)h(REAL\),)519 793 y(GetValue)f(\(\))g(:)h
+(REAL,)519 843 y(Add)f(\(v)h(:)g(REAL\),)519 893 y(Subtract)f(\(v)g(:)h
+(REAL\),)519 943 y(Multiply)f(\(v)g(:)h(REAL\),)519 993
+y(Divide)f(\(v)h(:)f(REAL\))718 1043 y(RAISES)g(DivideByZero)g(END)319
+1092 y(END;)120 1142 y(TYPE)h(Factory)f(=)h(OBJECT)f(OPTIONAL)319
+1192 y(METHODS)519 1242 y(CreateCalculator)f(\(\))i(:)f(Calculator)319
+1292 y(END;)120 1341 y(\045)62 1553 y Fg(You)14 b(will)g(notice)f(that)
+h(the)h(ISL)f(interface)h(generated)g(by)f Fh(idl2isl)g
+Fg(is)g(a)h(bit)e(different,)j(in)e(that)g(the)g(object)g(type)0
+1615 y(modifier)h Fh(OPTIONAL)g Fg(is)g(used)g(in)g(the)g(description)f
+(of)h(the)g Fh(Calculator)g Fg(and)g Fh(Factory)g Fg(types.)24
+b(This)14 b(is)h(because)0 1678 y(CORBA)g(has)e(the)h(notion)e(that)i
+(any)g(object)f(type)g(instance)g(passed)h(as)g(a)g(parameter)h(or)f
+(return)f(value)h(\(or)g(field)g(in)f(an)0 1740 y(array,)h(or)f
+(element)h(of)f(a)g(sequence,)h(etc.\))j(may)d(be)f Fh(None)p
+Fg(,)g(instead)f(of)i(being)e(a)h(valid)f(instance)h(pointer.)j(Thus,)d
+(when)0 1802 y(working)d(with)h(OMG)g(IDL)h(descriptions)d(of)j(your)f
+(interfaces,)h(it)f(is)g(necessary)g(to)g(check)h(the)f(return)g(type)g
+(of)h(methods)0 1864 y(like)17 b Fh(Tutorial.Factory.CreateCalculator)e
+Fg(to)i(see)h(that)g(a)g(valid)f(object)g(reference)i(has)e(been)h
+(returned,)0 1927 y(before)g(using)f(the)h(object.)32
+b(ISL)19 b(allows)e(you)g(to)h(have)g(these)g(CORBA-style)g(objects,)h
+(by)f(using)f(the)h Fh(OPTIONAL)0 1989 y Fg(modifier)d(in)f(the)g
+(declaration)g(of)h(an)g(object)f(type,)h(but)g(it)f(also)g(allows)g
+(object)g(pointers)f(which)h(can't)h(be)g Fh(None)p Fg(.)22
+b(By)0 2051 y(default)11 b(ILU)g(object)f(instances)g(may)i(not)e(be)h
+Fh(None)p Fg(.)62 2188 y(The)g(OMG)h(IDL)f(version)f(of)h
+Fh(Tutorial2)g Fg(can)g(be)g(found)g(in)g Ff(h)p Fg(undefined)p
+Ff(i)e Fg([Tutorial2.idl],)h(page)h Ff(h)p Fg(undefined)p
+Ff(i)p Fg(.)0 2408 y Fi(0.8)30 b(Transient)14 b(and)h(Permanent)f
+(Objects)62 2545 y Fg(Keen-eyed)h(readers)f(will)g(have)g(seen)g(that)g
+(the)g Fh(Calculator)g Fg(type)g(in)g(`)p Fh(Tutorial.isl)p
+Fg(')f(is)h(marked)h(with)e(the)0 2608 y(modifier)g Fh(COLLECTIBLE)p
+Fg(,)g(while)f(the)g Fh(Factory)h Fg(type)f(is)h(not.)j(ILU)c
+(differentiates)g(between)h(two)f(kinds)g(of)h(objects,)0
+2670 y(which)d(we)i(call)f Fe(transient)j Fg(and)d Fe(permanent)p
+Fg(.)p eop
+%%Page: 21 22
+21 21 bop 1905 -58 a Fg(21)62 183 y(Transient)17 b(objects)g(are)h
+(typically)e(created)i(for)g(a)h(specific)e(use,)j(and)d(typically)f
+(have)i(a)g(fixed)g(lifetime.)31 b(They)0 246 y(often)12
+b(have)g(state)f(associated)h(with)f(them.)j(They)e(are)h(frequently)e
+(used)g(to)h(represent)g(some)g(ongoing)f(computation)f(or)0
+308 y(operation.)62 445 y(Permanent)17 b(objects)f(are)h(usually)e
+(expected)i(to)f(be)h(around)f(forever)h(\(or)f(until)g(some)g
+(activity)f(not)h(captured)h(by)0 507 y(a)h(programming)g(concept)f
+(terminates\).)32 b(Permanent)18 b(objects)f(are)i(often)e(gateways)g
+(to)h(some)g(sort)f(of)h(service,)i(or)0 569 y(represent)13
+b(some)f(external)h(piece)g(of)f(data,)i(such)e(as)h(a)g(cell)f(in)h(a)
+g(spreadsheet,)g(or)f(a)h(file)g(on)f(a)h(disk)f(somewhere.)17
+b(They)0 632 y(are)d(often)f(stateless;)g(when)g(they)f(do)h(have)h
+(state,)f(it)g(is)g(typically)e(backed)j(by)f(some)g(form)h(of)f
+(stable)g(storage,)g(as)h(they)0 694 y(have)d(to)g(be)g(available)g
+(across)g(crashes)g(of)g(their)g(server)g(program.)62
+831 y(ILU)18 b(provides)e(an)h(automatic)g(system)g(for)g
+Fe(distributed)e(garbage)j(collection)g Fg(of)g(transient)e(objects;)j
+(that)d(is,)j(of)0 893 y(removing)11 b(them)h(from)h(everyone's)e
+(address)g(space)h(when)g(everyone)f(is)h(done)f(with)g(them.)i(This)e
+(uses)g(the)h(underlying)0 955 y(garbage)i(collection)f(techniques)g
+(of)h(the)g(particular)g(programming)g(language)g(being)f(used.)20
+b(With)14 b(Python,)g(the)g(ILU)0 1018 y(garbage)k(collector)e(works)h
+(in)g(conjunction)f(with)g(the)i(Python)e(collector;)k(with)d(ANSI)g
+(C,)i(we)f(use)f(the)g(extremely)0 1080 y(primitive)8
+b(collector)h(provided)f(for)i(C;)f(that)g(is,)h(when)f(the)g(process)g
+(terminates,)h(the)f(objects)g(are)h(collected.)g(To)f(indicate)0
+1142 y(to)h(ILU)g(that)f(a)i(particular)f(object)f(type)h(is)f(to)h(be)
+g(treated)g(as)h(transient,)e(you)h(mark)g(the)g(object)g(type)g
+(specification,)f(in)g(the)0 1204 y(ISL,)j(with)e(the)h(keyword)f
+Fh(COLLECTIBLE)p Fg(.)62 1341 y(For)h(permanent)g(objects,)g(like)f
+(the)g Fh(Tutorial.Factory)g Fg(object)g(type,)h(the)f(ILU)h(Python)f
+(support)f(will)h(maintain)0 1404 y(a)i(reference)g(to)f(the)g
+(instance,)f(preventing)g(the)h(Python)f(collector)h(from)g(collecting)
+f(it.)p eop
+%%Page: 22 23
+22 22 bop 1905 -58 a Fg(22)0 183 y Fi(0.9)30 b(Using)15
+b(ILU)g(with)g(Tkinter)62 343 y Fg(Python)j(comes)h(with)f(a)h(module)f
+(called)h Fh(Tkinter)p Fg(,)h(which)e(is)g(an)h(interface)g(to)f(John)g
+(Ousterhout's)f(Tk)h(user)0 405 y(interface)13 b(system.)k(When)c(you)f
+(use)h(both)f(ILU)h(and)g(Tkinter)f(together)h(in)f(a)i(program,)g(you)
+e(should)g(call)h(the)g Fh(ilu_tk)0 468 y Fg(main)19
+b(loop)g(to)f(block)h(and)g(dispatch)f(requests,)i(instead)e(of)i(the)f
+Fh(ilu)g Fg(main)g(loop.)35 b(To)19 b(illustrate)e(this,)j(here)g(is)f
+(a)0 530 y(version)c(of)g(the)h Fh(server2.py)f Fg(program)h(which)e
+(puts)h(up)g(a)h(Tk)g(button.)23 b(When)15 b(the)h(user)f(presses)h
+(the)f(button,)g(the)0 592 y(server)f(exits.)19 b(Notice)13
+b(that)g(instead)g(of)h(calling)f Fh(ilu.RunMainLoop\(\))f
+Fg(to)h(block)g(indefinitely,)g(the)h(program)g(calls)0
+655 y Fh(ilu_tk.RunMainLoop\(\))p Fg(.)27 b(This)16 b(call)h(allows)f
+(both)g(Tk)h(and)f(ILU)h(events)f(to)h(be)g(handled)f(when)h(neither)f
+(a)h(Tk)0 717 y(callback)11 b(nor)g(an)g(ILU)g(method)g(call)g(is)g
+(active.)120 877 y Fh(#)25 b(server3.py)f(--)h(a)f(program)h(that)f
+(runs)h(a)f(Tutorial.Calculator)g(server)120 927 y(#)50
+b(Puts)24 b(up)h(a)g(Tk)g(button)f(to)h(kill)f(it)h(with.)120
+1026 y(#)g(import)f(the)h(ilu_tk)f(module)g(first,)h(so)g(that)120
+1076 y(#)g(initialization)e(happens)i(in)f(the)h(right)f(order:)120
+1126 y(import)g(ilu_tk)120 1225 y(#)h(now)f(import)h(the)f(other)h
+(modules...)120 1275 y(import)f(ilu,)h(FactoryImpl2,)f(sys,)g(Tkinter)
+120 1375 y(def)h(main\(argv\):)319 1474 y(def)g(quit\(\):)519
+1524 y(sys.exit\(0\))319 1624 y(if)g(\(len\(argv\))f(<)h(2\):)519
+1674 y(print)f("Usage:)49 b(python)24 b(server3.py)g(SERVER-ID")519
+1724 y(sys.exit\(1\))319 1823 y(theServer)g(=)h(ilu.CreateServer)f
+(\(argv[1]\))319 1873 y(theFactory)g(=)h(FactoryImpl2.Factory)e
+(\("theFactory",)h(theServer\))319 1923 y(theFactory.IluPublish\(\))319
+2022 y(#)h(Now)g(we)f(put)h(up)g(a)g(Tk)f(button)h(so)f(that)h(the)g
+(user)f(can)h(kill)f(the)319 2072 y(#)50 b(server)24
+b(by)h(pressing)f(the)h(button)319 2172 y(f)g(=)g(Tkinter.Frame\(\))e
+(;)i(Tkinter.Pack.config\(f\))319 2222 y(b)g(=)g(Tkinter.Button)e(\(f,)
+i({'text')f(:)h(theFactory.IluObjectID\(\),\\)917 2271
+y('command':)f(quit}\))319 2321 y(b.pack)h(\({'side':)f('left',)g
+('fill':)g('both'}\))319 2421 y(#)h(Then)g(we)f(wait)h(in)g(the)f
+(ilu_tk)h(mainloop,)f(instead)g(of)h(either)319 2471
+y(#)50 b(the)25 b(ILU)f(mainloop)g(or)h(the)g(Tkinter)f(mainloop)319
+2570 y(ilu_tk.RunMainLoop\(\))p eop
+%%Page: 23 24
+23 23 bop 1905 -58 a Fg(23)120 183 y Fh(main\(sys.argv\))p
+eop
+%%Page: 24 25
+24 24 bop 0 -58 a Fg(Appendix)10 b(A:)g(General)i(ILU)f(Info)1339
+b(24)0 183 y Fb(Appendix)14 b(A)36 b(General)14 b(ILU)h(Info)62
+370 y Fg(The)g(Inter-Language)e(Unification)g(system)h(\(ILU\))h(is)f
+(a)g(multi-language)f(object)h(interface)h(system.)21
+b(The)14 b(object)0 432 y(interfaces)9 b(provided)g(by)g(ILU)h(hide)f
+(implementation)f(distinctions)e(between)k(different)f(languages,)g
+(between)h(different)0 495 y(address)g(spaces,)h(and)g(between)g
+(operating)e(system)i(types.)f(ILU)h(can)g(be)g(used)f(to)h(build)e
+(multi-lingual)g(object-oriented)0 557 y(libraries)17
+b(\()p Fh(")p Fg(class)g(libraries)p Fh(")p Fg(\))h(with)e
+(well-specified)h(language-independent)e(interfaces.)32
+b(It)18 b(can)g(also)f(be)h(used)g(to)0 619 y(implement)12
+b(distributed)d(systems.)k(It)f(can)g(also)g(be)g(used)f(to)h(define)g
+(and)f(document)h(interfaces)g(between)f(the)h(modules)0
+681 y(of)f(non-distributed)d(programs.)62 818 y(The)19
+b(2.0)f(release)h(of)g(ILU)g(contains)e(support)g(for)i(the)f
+(programming)g(languages)g(ANSI)h(C,)g(C)p Fh(++)p Fg(,)i(Modula-3,)0
+881 y(Python,)15 b(and)g(Common)g(Lisp.)21 b(It)15 b(has)f(been)h
+(installed)e(on)h(many)h(flavors)f(of)h(UNIX,)g(including)d(SPARC)k
+(machines)0 943 y(running)f(SunOS)g(4.1.3)i(and)e(Solaris)h(2,)h(SGI)f
+(MIPS)i(machines)d(running)g(IRIX)i(5.2,)g(Intel)e(486)h(machines)g
+(running)0 1005 y(Linux)c(1.1.78,)i(DEC)f(Alpha)f(machines)h(with)f
+(OSF/1,)i(IBM)g(RS/6000)e(machines)h(running)f(AIX,)h(and)g(HP)g
+(machines)0 1067 y(running)j(HP/UX.)i(It)g(runs)f(on)h(Microsoft)f
+(Windows)g(3.1,)i(Windows)e(95,)i(and)f(Windows)e(NT)i(environments.)30
+b(It)0 1130 y(supports)14 b(both)h(threaded)g(and)h(non-threaded)f
+(operation.)24 b(Since)16 b(one)g(of)g(the)f(implementation)g(goals)g
+(of)h(ILU)f(is)h(to)0 1192 y(maximize)e(compatibility)d(with)i
+(existing)f(open)h(standards,)g(ILU)h(provides)e(support)g(for)i(use)g
+(of)f(the)h(OMG)f(CORBA)0 1254 y(IDL)c(interface)h(description)d
+(language,)i(and)g(can)h(be)f(thought)e(of)j(as)f(a)h(CORBA)g(ORB)f
+(system)g(\(though)f(with)g(omissions)0 1316 y(from)k(and)f(extensions)
+e(to)i(the)g(CORBA)h(spec\).)g(As)f(another)f(result,)h(ILU)g(includes)
+f(a)i(self-contained)e(implementation)0 1379 y(of)h(ONC)h(RPC.)62
+1516 y(ILU)f(is)g(available)f(free)i(from)g Fh
+(ftp://ftp.parc.xerox.com/pub/ilu/ilu.htm)o(l)p Fg(.)p
+eop
+%%Page: 25 26
+25 25 bop 0 -58 a Fg(Appendix)10 b(B:)h(Tutorial.isl)1457
+b(25)0 183 y Fb(Appendix)14 b(B)36 b(Tutorial.isl)120
+370 y Fh(INTERFACE)24 b(Tutorial;)120 470 y(EXCEPTION)g(DivideByZero)
+170 519 y("this)g(error)h(is)f(signalled)g(if)h(the)g(client)f(of)h
+(the)g(Calculator)e(calls)120 569 y(the)i(Divide)f(method)g(with)h(a)g
+(value)f(of)h(0";)120 669 y(TYPE)g(Calculator)f(=)g(OBJECT)h
+(COLLECTIBLE)170 719 y(DOCUMENTATION)f("4-function)f(calculator")170
+769 y(METHODS)220 818 y(SetValue)h(\(v)h(:)f(REAL\))h("Set)f(the)h
+(value)f(of)h(the)g(calculator)f(to)g(`v'",)220 868 y(GetValue)g(\(\))h
+(:)f(REAL)50 b("Return)24 b(the)h(value)f(of)h(the)f(calculator",)220
+918 y(Add)g(\(v)h(:)g(REAL\))149 b("Adds)24 b(`v')h(to)g(the)f
+(calculator's)g(value",)220 968 y(Subtract)g(\(v)h(:)f(REAL\))h
+("Subtracts)f(`v')g(from)h(the)g(calculator's)e(value",)220
+1018 y(Multiply)h(\(v)h(:)f(REAL\))h("Multiplies)f(the)g(calculator's)g
+(value)g(by)h(`v'",)220 1067 y(Divide)f(\(v)h(:)g(REAL\))f(RAISES)g
+(DivideByZero)g(END)269 1117 y("Divides)h(the)f(calculator's)g(value)g
+(by)h(`v'")170 1167 y(END;)120 1267 y(TYPE)g(Factory)f(=)h(OBJECT)170
+1316 y(METHODS)220 1366 y(CreateCalculator)e(\(\))i(:)g(Calculator)170
+1416 y(END;)p eop
+%%Page: 26 27
+26 26 bop 0 -58 a Fg(Appendix)10 b(C:)h(CalculatorImpl.py)1327
+b(26)0 183 y Fb(Appendix)14 b(C)36 b(CalculatorImpl.py)120
+370 y Fh(import)24 b(Tutorial,)g(Tutorial__skel)120 470
+y(class)g(Calculator)g(\(Tutorial__skel.Calculator\):)319
+569 y(def)h(__init__)f(\(self\):)519 619 y(self.the_value)f(=)i(0.0)319
+719 y(def)g(SetValue)f(\(self,)g(v\):)519 769 y(self.the_value)f(=)i(v)
+319 868 y(def)g(GetValue)f(\(self\):)519 918 y(return)g(self.the_value)
+319 1018 y(def)h(Add)g(\(self,)f(v\):)519 1067 y(self.the_value)f(=)i
+(self.the_value)f(+)g(v)319 1167 y(def)h(Subtract)f(\(self,)g(v\):)519
+1217 y(self.the_value)f(=)i(self.the_value)f(-)g(v)319
+1316 y(def)h(Multiply)f(\(self,)g(v\):)519 1366 y(self.the_value)f(=)i
+(self.the_value)f(*)g(v)319 1466 y(def)h(Divide)f(\(self,)h(v\):)519
+1516 y(try:)718 1566 y(self.the_value)e(=)i(self.the_value)f(/)h(v)519
+1615 y(except)f(ZeroDivisionError:)718 1665 y(raise)g
+(Tutorial.DivideByZero)p eop
+%%Page: 27 28
+27 27 bop 0 -58 a Fg(Appendix)10 b(D:)g(FactoryImpl.py)1376
+b(27)0 183 y Fb(Appendix)14 b(D)36 b(FactoryImpl.py)120
+370 y Fh(import)24 b(Tutorial,)g(Tutorial__skel,)g(CalculatorImpl)120
+470 y(class)g(Factory)h(\(Tutorial__skel.Factory\):)319
+569 y(#)g(have)g(the)f(__init__)g(method)h(take)f(handle)h(and)f
+(server)h(args)319 619 y(#)g(so)g(that)f(we)h(can)g(control)f(which)g
+(ILU)h(kernel)f(server)h(is)f(used,)319 669 y(#)h(and)g(what)f(the)h
+(instance)f(handle)g(of)h(the)g(Factory)f(object)g(on)319
+719 y(#)h(that)g(server)f(is.)49 b(This)25 b(allows)f(us)h(to)g
+(control)f(the)h(object)f(ID)319 769 y(#)h(of)g(the)f(new)h(Factory)f
+(instance.)319 868 y(def)h(__init__\(self,)e(handle=None,)h
+(server=None\):)519 918 y(self.IluInstHandle)f(=)i(handle)519
+968 y(self.IluServer)e(=)i(server)319 1067 y(def)g(CreateCalculator)e
+(\(self\):)519 1117 y(return)h(\(CalculatorImpl.Calculator\(\)\))p
+eop
+%%Page: 28 29
+28 28 bop 0 -58 a Fg(Appendix)10 b(E:)g(simple1.py)1461
+b(28)0 183 y Fb(Appendix)14 b(E)36 b(simple1.py)120 370
+y Fh(#)25 b(simple1.py,)f(a)h(simple)f(program)g(that)h(demonstrates)e
+(the)i(use)g(of)f(the)120 420 y(#)50 b(Tutorial)24 b(true)g(module)h
+(as)f(a)h(library.)120 470 y(#)120 519 y(#)g(run)f(this)h(with)g(the)f
+(command)g("python)h(simple1.py)f(NUMBER)g([NUMBER...]")120
+569 y(#)120 669 y(import)g(Tutorial,)g(CalculatorImpl,)g(string,)g(sys)
+120 769 y(#)h(A)g(simple)f(program:)120 818 y(#)50 b(1\))f(make)25
+b(an)g(instance)f(of)g(Tutorial.Calculator)120 868 y(#)50
+b(2\))f(add)25 b(all)g(the)f(arguments)g(by)h(invoking)f(the)h(Add)f
+(method)120 918 y(#)50 b(3\))f(print)25 b(the)f(resultant)g(value.)120
+1018 y(def)h(main)f(\(argv\):)319 1117 y(c)h(=)g
+(CalculatorImpl.Calculator\(\))319 1167 y(if)g(not)g(c:)519
+1217 y(error\("Couldn't)e(create)h(calculator"\))319
+1316 y(#)h(clear)g(the)f(calculator)g(before)g(using)h(it)319
+1416 y(c.SetValue)f(\(0.0\))319 1516 y(#)h(now)g(loop)f(over)h(the)f
+(arguments,)g(adding)h(each)f(in)h(turn)f(*/)319 1615
+y(for)h(arg)g(in)f(argv[1:]:)519 1665 y(v)g(=)h(string.atof\(arg\))519
+1715 y(c.Add)f(\(v\))319 1815 y(#)h(and)g(print)f(the)h(result)319
+1914 y(print)g("the)f(sum)h(is",)f(c.GetValue\(\))319
+1964 y(sys.exit\(0\))120 2064 y(main\(sys.argv\))p eop
+%%Page: 29 30
+29 29 bop 0 -58 a Fg(Appendix)10 b(F:)h(simple2.py)1463
+b(29)0 183 y Fb(Appendix)14 b(F)36 b(simple2.py)120 370
+y Fh(#)25 b(simple2.py,)f(a)h(simple)f(program)g(that)h(demonstrates)e
+(the)i(use)g(of)f(the)120 420 y(#)50 b(Tutorial)24 b(true)g(module)h
+(as)f(a)h(library.)120 470 y(#)120 519 y(#)g(run)f(this)h(with)g(the)f
+(command)g("python)h(simple1.py)f(NUMBER)g([NUMBER...]")120
+569 y(#)120 669 y(import)g(Tutorial,)g(CalculatorImpl,)g(string,)g(sys)
+120 769 y(#)h(A)g(simple)f(program:)120 818 y(#)50 b(1\))f(make)25
+b(an)g(instance)f(of)g(Tutorial.Calculator)120 868 y(#)50
+b(2\))f(add)25 b(all)g(the)f(arguments)g(by)h(invoking)f(the)h(Add)f
+(method)120 918 y(#)50 b(3\))f(print)25 b(the)f(resultant)g(value.)120
+1018 y(def)h(main)f(\(argv\):)319 1117 y(c)h(=)g
+(CalculatorImpl.Calculator\(\))319 1167 y(if)g(not)g(c:)519
+1217 y(error\("Couldn't)e(create)h(calculator"\))319
+1316 y(#)h(clear)g(the)f(calculator)g(before)g(using)h(it)319
+1416 y(if)g(\(len\(sys.argv\))f(<)g(2\):)519 1466 y(c.SetValue)f
+(\(0.0\))319 1516 y(else:)519 1566 y(c.SetValue)g
+(\(string.atof\(argv[1]\)\))319 1665 y(#)i(now)g(loop)f(over)h(the)f
+(arguments,)g(Dividing)h(by)f(each)h(in)f(turn)h(*/)319
+1765 y(try:)519 1815 y(for)f(arg)h(in)f(argv[2:]:)718
+1864 y(v)h(=)f(string.atof\(arg\))718 1914 y(c.Divide)g(\(v\))319
+1964 y(except:)519 2014 y(print)g('exception)g(signalled:)49
+b(')25 b(+)f(str\(sys.exc_type\))519 2064 y(sys.exit\(1\))319
+2163 y(#)h(and)g(print)f(the)h(result)319 2263 y(print)g("the)f(sum)h
+(is",)f(c.GetValue\(\))319 2313 y(sys.exit\(0\))120 2412
+y(main\(sys.argv\))p eop
+%%Page: 30 31
+30 30 bop 0 -58 a Fg(Appendix)10 b(G:)g(server.py)1490
+b(30)0 183 y Fb(Appendix)14 b(G)36 b(server.py)120 370
+y Fh(#)25 b(server.py)f(--)h(a)f(program)h(that)f(runs)h(a)g
+(Tutorial.Calculator)e(server)120 420 y(#)120 519 y(import)h(ilu,)h
+(FactoryImpl,)f(sys)120 619 y(def)h(main\(argv\):)319
+719 y(if)g(\(len\(argv\))f(<)h(2\):)519 769 y(print)f("Usage:)49
+b(python)24 b(server.py)h(SERVER-ID")519 818 y(sys.exit\(1\))319
+918 y(#)g(Create)f(a)h(kernel)g(server)f(with)g(appropriate)g(server)h
+(ID,)f(which)319 968 y(#)50 b(is)25 b(passed)f(in)h(as)f(the)h(first)g
+(argument)319 1067 y(theServer)f(=)h(ilu.CreateServer)f(\(argv[1]\))319
+1167 y(#)h(Now)g(create)f(an)h(instance)f(of)h(a)f(Factory)h(object)f
+(on)h(that)f(server,)319 1217 y(#)50 b(with)25 b(the)f(instance)g
+(handle)h("theFactory")319 1316 y(theFactory)f(=)h(FactoryImpl.Factory)
+e(\("theFactory",)h(theServer\))319 1416 y(#)h(Now)g(make)f(the)h
+(Factory)f(object)g("well-known")g(by)h(publishing)f(it.)319
+1516 y(theFactory.IluPublish\(\))319 1615 y(#)h(Now)g(we)f(print)h(the)
+f(string)h(binding)f(handle)g(\(the)h(object's)f(name)h(plus)319
+1665 y(#)g(its)g(location\))f(of)g(the)h(new)g(instance.)319
+1765 y(print)g("Factory)f(instance)g(published.")319
+1815 y(print)h("Its)f(SBH)h(is)g('")f(+)h(theFactory.IluSBH\(\))e(+)i
+("'")319 1914 y(handle)g(=)f(ilu.CreateLoopHandle\(\))319
+1964 y(ilu.RunMainLoop)g(\(handle\))120 2114 y(main\(sys.argv\))p
+eop
+%%Page: 31 32
+31 31 bop 0 -58 a Fg(Appendix)10 b(H:)g(simple3.py)1456
+b(31)0 183 y Fb(Appendix)14 b(H)36 b(simple3.py)120 379
+y Fh(#)25 b(simple3.py)f(--)h(a)f(simple)h(client)f(program)g(that)h
+(finds)f(the)h(Calculator)f(Factory,)120 428 y(#)75 b(creates)24
+b(a)h(calculator,)f(and)g(adds)h(up)f(its)h(arguments)f(as)h(before)120
+478 y(#)120 528 y(#)g(to)g(run:)49 b(python)24 b(simple4.py)g(ARG)h
+([ARG...])120 628 y(import)f(Tutorial,)g(ilu,)h(sys,)f(string)120
+727 y(#)h(We)g(define)f(a)h(new)f(routine,)g
+("Get_Tutorial_Calculator",)f(which)120 777 y(#)i(finds)f(the)h
+(tutorial)f(factory,)g(then)h(creates)f(a)h(new)f(Calculator)120
+827 y(#)h(object)f(for)h(us.)120 927 y(def)g(Get_Tutorial_Calculator)d
+(\(factoryObjectID\):)319 1026 y(#)j(We)g(have)f(to)h(call)g
+(ilu.LookupObject\(\))e(with)h(the)h(object)f(ID)h(of)319
+1076 y(#)g(the)g(factory)f(object,)g(and)h(the)f(``type'')h(of)f(the)h
+(object)f(we're)h(looking)319 1126 y(#)g(for,)g(which)f(is)h(always)f
+(available)g(as)h(MODULE.TYPENAME)319 1225 y(f)g(=)g(ilu.LookupObject)e
+(\(factoryObjectID,)h(Tutorial.Factory\))319 1275 y(if)h(not)g(f:)519
+1325 y(print)f("Can't)g(find)h(Tutorial.Factory)e(instance)h(")h(+)g
+(factoryObjectID)519 1375 y(sys.exit\(1\))319 1425 y(c)g(=)g
+(f.CreateCalculator\(\))319 1474 y(return)g(\(c\))120
+1574 y(def)g(main)f(\(argv\):)319 1674 y(#)h(A)g(simple)f(program:)319
+1724 y(#)50 b(1\))g(make)24 b(an)h(instance)f(of)h(Tutorial.Calculator)
+319 1773 y(#)50 b(2\))g(add)24 b(all)h(the)f(arguments)h(by)f(invoking)
+g(the)h(Add)g(method)319 1823 y(#)50 b(3\))g(print)24
+b(the)h(resultant)f(value.)319 1923 y(if)h(\(len\(argv\))f(<)h(2\):)519
+1973 y(print)f("Usage:)49 b(python)24 b(simple3.py)g(FACTORY-OBJECT-ID)
+g(NUMBER)120 2022 y([NUMBER...]\\n",)519 2072 y(sys.exit\(1\))319
+2172 y(c)h(=)g(Get_Tutorial_Calculator\(argv[1]\))319
+2222 y(if)g(not)g(c:)519 2271 y(print)f("Couldn't)g(create)g
+(calculator")519 2321 y(sys.exit\(1\))319 2421 y(#)h(clear)g(the)f
+(calculator)g(before)g(using)h(it)319 2521 y(c.SetValue)f(\(0.0\))319
+2620 y(#)h(now)g(loop)f(over)h(the)f(arguments,)g(adding)h(each)f(in)h
+(turn)p eop
+%%Page: 32 33
+32 32 bop 0 -58 a Fg(Appendix)10 b(H:)g(simple3.py)1456
+b(32)319 183 y Fh(for)25 b(arg)g(in)f(argv[2:]:)519 233
+y(v)g(=)h(string.atof)f(\(arg\))519 283 y(c.Add)g(\(v\))319
+382 y(#)h(and)g(print)f(the)h(result)319 482 y(print)g("the)f(sum)h(is)
+g(")f(+)h(str\(c.GetValue\(\)\))319 582 y(sys.exit)f(\(0\);)120
+731 y(main\(sys.argv\))p eop
+%%Page: 33 34
+33 33 bop 0 -58 a Fg(Appendix)10 b(I:)h(Tutorial2.isl)1449
+b(33)0 183 y Fb(Appendix)14 b(I)36 b(Tutorial2.isl)120
+370 y Fh(INTERFACE)24 b(Tutorial2)g(IMPORTS)g(Tutorial)h(END;)120
+470 y(TYPE)g(OpType)f(=)h(ENUMERATION)220 519 y(SetValue,)f(Add,)g
+(Subtract,)g(Multiply,)g(Divide)h(END;)120 619 y(TYPE)g(Operation)f(=)g
+(RECORD)220 669 y(op)g(:)h(OpType,)220 719 y(value)f(:)h(REAL,)220
+769 y(accumulator)f(:)g(REAL)170 818 y(END;)120 918 y(TYPE)h
+(RegisterTape)e(=)i(SEQUENCE)f(OF)h(Operation;)120 1018
+y(TYPE)g(TapeCalculator)e(=)i(OBJECT)f(COLLECTIBLE)170
+1067 y(SUPERTYPES)g(Tutorial.Calculator)f(END)170 1117
+y(DOCUMENTATION)h("4)g(function)g(calculator)g(with)h(register)f(tape")
+170 1167 y(METHODS)220 1217 y(GetTape)g(\(\))h(:)f(RegisterTape)170
+1267 y(END;)120 1366 y(TYPE)h(Factory)f(=)h(OBJECT)f(SUPERTYPES)g
+(Tutorial.Factory)f(END)170 1416 y(METHODS)220 1466 y
+(CreateTapeCalculator)g(\(\))h(:)h(TapeCalculator)170
+1516 y(END;)p eop
+%%Page: 34 35
+34 34 bop 0 -58 a Fg(Appendix)10 b(J:)g(TapeCalculatorImpl.py)1249
+b(34)0 183 y Fb(Appendix)14 b(J)36 b(TapeCalculatorImpl.py)120
+370 y Fh(import)24 b(Tutorial,)g(Tutorial2,)g(Tutorial2__skel)120
+470 y(class)g(TapeCalculator)g(\(Tutorial2__skel.TapeCalculator\):)319
+569 y(def)h(__init__)f(\(self\):)519 619 y(self.value)f(=)i(0.0)519
+669 y(self.tape)f(=)g([])319 769 y(def)h(SetValue)f(\(self,)g(v\):)519
+818 y(global)g(value)519 868 y(self.value)f(=)i(v)519
+918 y(self.tape.append\({'op')d(:)j(Tutorial2.OpType__SetValue,)e
+('value')120 968 y(:)i(v,)g('accumulator')e(:)i(self.value}\))319
+1067 y(def)g(GetValue)f(\(self\):)519 1117 y(return)g(self.value)319
+1217 y(def)h(Add)g(\(self,)f(v\):)519 1267 y(self.value)f(=)i
+(self.value)f(+)h(v)519 1316 y(self.tape.append\({'op')d(:)j
+(Tutorial2.OpType__Add,)e('value')h(:)120 1366 y(v,)h('accumulator')e
+(:)i(self.value}\))319 1516 y(def)g(Subtract)f(\(self,)g(v\):)519
+1566 y(self.value)f(=)i(self.value)f(-)h(v)519 1615 y
+(self.tape.append\({'op')d(:)j(Tutorial2.OpType__Subtract,)e('value')
+120 1665 y(:)i(v,)g('accumulator')e(:)i(self.value}\))319
+1815 y(def)g(Multiply)f(\(self,)g(v\):)519 1864 y(self.value)f(=)i
+(self.value)f(*)h(v)519 1914 y(self.tape.append\({'op')d(:)j
+(Tutorial2.OpType__Multiply,)e('value')120 1964 y(:)i(v,)g
+('accumulator')e(:)i(self.value}\))319 2114 y(def)g(Divide)f(\(self,)h
+(v\):)519 2163 y(try:)718 2213 y(self.value)f(=)h(self.value)f(/)g(v)
+519 2263 y(except)g(ZeroDivisionError:)718 2313 y(raise)g
+(Tutorial.DivideByZero)519 2363 y(self.tape.append\({'op')e(:)j
+(Tutorial2.OpType__Divide,)e('value')120 2412 y(:)i(v,)g('accumulator')
+e(:)i(self.value}\))319 2512 y(def)g(GetTape)f(\(self\):)519
+2562 y(return)g(\(self.tape\))p eop
+%%Page: 35 36
+35 35 bop 0 -58 a Fg(Appendix)10 b(K:)g(FactoryImpl2.py)1353
+b(35)0 183 y Fb(Appendix)14 b(K)36 b(FactoryImpl2.py)120
+370 y Fh(import)24 b(Tutorial2,)g(Tutorial2__skel,)g
+(TapeCalculatorImpl)120 470 y(class)g(Factory)h
+(\(Tutorial2__skel.Factory\):)319 569 y(#)g(have)g(the)f(__init__)g
+(method)h(take)f(handle)h(and)f(server)h(args)319 619
+y(#)g(so)g(that)f(we)h(can)g(control)f(which)g(ILU)h(kernel)f(server)h
+(is)f(used,)319 669 y(#)h(and)g(what)f(the)h(instance)f(handle)g(of)h
+(the)g(Factory)f(object)g(on)319 719 y(#)h(that)g(server)f(is.)49
+b(This)25 b(allows)f(us)h(to)g(control)f(the)h(object)f(ID)319
+769 y(#)h(of)g(the)f(new)h(Factory)f(instance.)319 868
+y(def)h(__init__\(self,)e(handle=None,)h(server=None\):)519
+918 y(self.IluInstHandle)f(=)i(handle)519 968 y(self.IluServer)e(=)i
+(server)319 1067 y(def)g(CreateCalculator)e(\(self\):)519
+1117 y(return)h(\(TapeCalculatorImpl.TapeCalculator\(\))o(\))319
+1217 y(CreateTapeCalculator)f(=)i(CreateCalculator)p
+eop
+%%Page: 36 37
+36 36 bop 0 -58 a Fg(Appendix)10 b(L:)g(server2.py)1472
+b(36)0 183 y Fb(Appendix)14 b(L)36 b(server2.py)120 370
+y Fh(#)25 b(server2.py)f(--)h(a)f(program)h(that)f(runs)h(a)f
+(Tutorial2.TapeCalculator)f(factory)120 420 y(#)120 519
+y(import)h(ilu,)h(FactoryImpl2,)f(sys)120 619 y(def)h(main\(argv\):)319
+719 y(if)g(\(len\(argv\))f(<)h(2\):)519 769 y(print)f("Usage:)49
+b(python)24 b(server2.py)g(SERVER-ID")519 818 y(sys.exit\(1\))319
+918 y(theServer)g(=)h(ilu.CreateServer)f(\(argv[1]\))319
+968 y(theFactory)g(=)h(FactoryImpl2.Factory)e(\("theFactory",)h
+(theServer\))319 1067 y(#)h(Now)g(make)f(the)h(Factory)f(object)g
+("well-known")g(by)h(publishing)f(it.)319 1167 y
+(theFactory.IluPublish\(\))319 1267 y(#)h(Now)g(we)f(print)h(the)f
+(string)h(binding)f(handle)g(\(the)h(object's)f(name)h(plus)319
+1316 y(#)g(its)g(location\))f(of)g(the)h(new)g(instance.)319
+1416 y(print)g("Factory2)f(instance)g(published.")319
+1466 y(print)h("Its)f(SBH)h(is)g('")f(+)h(theFactory.IluSBH\(\))e(+)i
+("'")319 1566 y(handle)g(=)f(ilu.CreateLoopHandle)f(\(\);)319
+1615 y(ilu.RunMainLoop)h(\(handle\))120 1765 y(main\(sys.argv\))p
+eop
+%%Page: 37 38
+37 37 bop 0 -58 a Fg(Appendix)10 b(M:)h(simple4.py)1448
+b(37)0 183 y Fb(Appendix)14 b(M)36 b(simple4.py)120 379
+y Fh(#)25 b(simple4.py)f(--)h(a)f(simple)h(client)f(program)g(that)h
+(finds)f(the)h(TapeCalculator)e(Factory,)120 428 y(#)75
+b(creates)24 b(a)h(calculator,)f(and)g(provides)g(a)h(simple)g
+(interactive)e(calculator)120 478 y(#)120 528 y(#)i(to)g(run:)49
+b(python)24 b(simple4.py)g(ARG)h([ARG...])120 628 y(import)f
+(Tutorial2,)g(ilu,)h(sys,)f(string)120 727 y(#)h(We)g(define)f(a)h(new)
+f(routine,)g("Get_Tutorial_Calculator",)f(which)120 777
+y(#)i(finds)f(the)h(tutorial)f(factory,)g(then)h(creates)f(a)h(new)f
+(Calculator)120 827 y(#)h(object)f(for)h(us.)120 927
+y(def)g(Get_Tutorial_Calculator)d(\(factoryObjectID\):)170
+1026 y(#)j(We)f(have)h(to)g(call)f(ilu.LookupObject\(\))f(with)i(the)g
+(object)f(ID)h(of)170 1076 y(#)g(the)f(factory)h(object,)f(and)g(the)h
+(``type'')f(of)h(the)g(object)f(we're)g(looking)170 1126
+y(#)h(for,)f(which)h(is)f(always)h(available)f(as)g(MODULE.TYPENAME)170
+1225 y(f)h(=)f(ilu.LookupObject)g(\(factoryObjectID,)f
+(Tutorial2.Factory\))170 1275 y(if)i(not)f(f:)220 1325
+y(print)g("Can't)g(find)h(Tutorial.Factory)e(instance)i(")f(+)h
+(factoryObjectID)220 1375 y(sys.exit\(1\))170 1425 y(c)g(=)f
+(f.CreateTapeCalculator\(\))170 1474 y(return)g(\(c\))120
+1624 y(opname)g(=)h(['SetValue',)f('Add',)g('Subtract',)g('Divide',)g
+('Multiply'])120 1724 y(def)h(Print_Tape)f(\(tape\):)170
+1823 y(#)h(print)f(out)h(the)f(Calculator)g(tape)h(nicely)170
+1923 y(for)f(op)h(in)g(tape:)220 1973 y(print)f(")50
+b(\045s\(\045f\))24 b(=>)h(\045f")f(\045)h(\(opname[op['op']],)f
+(op['value'],)f(op['accumulator']\))120 2072 y(def)i(main)f(\(argv\):)
+170 2172 y(if)h(\(len\(argv\))f(<)g(2\):)220 2222 y(print)g("Usage:)49
+b(python)25 b(simple3.py)f(FACTORY-OBJECT-ID)f(NUMBER)h
+([NUMBER...]\\n",)220 2271 y(sys.exit\(1\))170 2371 y(c)h(=)f
+(Get_Tutorial_Calculator\(argv[1]\))170 2421 y(if)h(not)f(c:)220
+2471 y(print)g("Couldn't)g(create)g(calculator")220 2521
+y(sys.exit\(1\))170 2620 y(#)h(clear)f(the)h(calculator)f(before)g
+(using)g(it)p eop
+%%Page: 38 39
+38 38 bop 0 -58 a Fg(Appendix)10 b(M:)h(simple4.py)1448
+b(38)170 183 y Fh(newval)24 b(=)h(0.0)170 233 y(c.SetValue)f
+(\(newval\))170 333 y(quitflag)g(=)h(0)170 432 y(while)f(not)h
+(quitflag:)220 532 y(sys.stdout.write\("\045.5f\\n>)d(")j(\045)g
+(newval\))220 582 y(sys.stdout.flush\(\))220 681 y(line)f(=)h
+(sys.stdin.readline\(\))220 781 y(if)f(\(not)h(line\):)269
+831 y(sys.exit\(0\))220 930 y(try:)269 980 y(if)g(\(line[0])f(==)h
+('\\n'\):)319 1030 y(pass)269 1080 y(elif)g(\(line[0])f(==)h('+'\):)319
+1130 y(val)g(=)g(string.atof\(line[1:-1]\))319 1180 y(c.Add\(val\))269
+1229 y(elif)g(\(line[0])f(==)h('-'\):)319 1279 y(val)g(=)g
+(string.atof\(line[1:-1]\))319 1329 y(c.Subtract\(val\))269
+1379 y(elif)g(\(line[0])f(==)h('*'\):)319 1429 y(val)g(=)g
+(string.atof\(line[1:-1]\))319 1478 y(c.Multiply\(val\))269
+1528 y(elif)g(\(line[0])f(==)h('/'\):)319 1578 y(val)g(=)g
+(string.atof\(line[1:-1]\))319 1628 y(c.Divide\(val\))269
+1678 y(elif)g(\(line[0])f(==)h('q'\):)319 1727 y(quitflag)f(=)h(1)269
+1777 y(elif)g(\(line[0])f(==)h('c'\):)319 1827 y(c.SetValue\(0.0\))269
+1877 y(elif)g(\(line[0])f(==)h('t'\):)319 1927 y(Print_Tape)f(\()h
+(c.GetTape\(\))f(\))269 1977 y(else:)319 2026 y(print)h("Invalid)f
+(operation)g(<")h(+)f(line[:-1])h(+)f(">")319 2076 y(print)h("Valid)f
+(ops)h(are)f(+,)h(-,)g(*,)f(/,)h(tape,)g(clear,)f(quit")269
+2176 y(newval)h(=)g(c.GetValue\(\))220 2275 y(except:)269
+2325 y(print)g("Operation)f(<\045s>)g(signals)h(error)f(<\045s>.")g
+(\045)h(\(line[:-1],)f(sys.exc_type\))170 2425 y(sys.exit\(0\))120
+2574 y(main\(sys.argv\))p eop
+%%Page: 39 40
+39 39 bop 0 -58 a Fg(Appendix)10 b(N:)g(Tutorial.idl)1450
+b(39)0 183 y Fb(Appendix)14 b(N)36 b(Tutorial.idl)120
+370 y Fh(module)24 b(Tutorial)h({)170 470 y(exception)f(DivideByZero)g
+({};)170 569 y(interface)g(Calculator)g({)220 669 y(//)g(Set)h(the)g
+(value)f(of)h(the)f(calculator)g(to)h(`v')220 719 y(void)f(SetValue)g
+(\(in)h(double)f(v\);)220 769 y(//)g(Return)h(the)f(value)h(of)f(the)h
+(calculator)220 818 y(double)f(GetValue)g(\(\);)220 868
+y(//)g(Adds)h(`v')g(to)f(the)h(calculator's)f(value)220
+918 y(void)g(Add)h(\(in)f(double)h(v\);)220 968 y(//)f(Subtracts)g(`v')
+h(from)g(the)f(calculator's)g(value)220 1018 y(void)g(Subtract)g(\(in)h
+(double)f(v\);)220 1067 y(//)g(Multiplies)g(the)h(calculator's)f(value)
+g(by)h(`v')220 1117 y(void)f(Multiply)g(\(in)h(double)f(v\);)220
+1167 y(//)g(Divides)h(the)f(calculator's)g(value)g(by)h(`v')220
+1217 y(void)f(Divide)h(\(in)f(double)g(v\))h(raises)g
+(\(DivideByZero\);)170 1267 y(};)170 1366 y(interface)f(Factory)g({)220
+1466 y(//)g(Create)h(and)f(return)h(an)f(instance)h(of)f(a)h
+(Calculator)f(object)220 1516 y(Calculator)g(CreateCalculator\(\);)170
+1566 y(};)120 1615 y(};)p eop
+%%Page: 40 41
+40 40 bop 0 -58 a Fg(Appendix)10 b(O:)g(Tutorial2.idl)1427
+b(40)0 183 y Fb(Appendix)14 b(O)36 b(Tutorial2.idl)120
+370 y Fh(#include)24 b("Tutorial.idl")120 470 y(module)g(Tutorial2)g({)
+170 569 y(enum)g(OpType)h({)g(SetValue,)f(Add,)g(Subtract,)g(Multiply,)
+g(Divide)h(};)170 669 y(struct)f(Operation)g({)220 719
+y(OpType)g(op;)220 769 y(double)g(value;)220 818 y(double)g
+(accumulator;)170 868 y(};)170 968 y(typedef)g(sequence<Operation>)f
+(RegisterTape;)170 1067 y(//)i(A)f(four)h(function)f(calculator)g(with)
+h(a)f(register)h(tape)170 1117 y(interface)f(TapeCalculator)f(:)i
+(Tutorial::Calculator)e({)220 1217 y(RegisterTape)g(GetTape)i(\(\);)170
+1267 y(};)170 1366 y(//)g(A)f(factory)h(that)f(produces)g
+(TapeCalculators)170 1416 y(interface)g(Factory)g(:)h
+(Tutorial::Factory)e({)220 1516 y(TapeCalculator)g
+(CreateTapeCalculator)g(\(\);)170 1566 y(};)120 1615
+y(};)p eop
+%%Page: 41 42
+41 41 bop 0 -58 a Fg(Appendix)10 b(P:)h(server3.py)1474
+b(41)0 183 y Fb(Appendix)14 b(P)36 b(server3.py)120 370
+y Fh(#)25 b(server3.py)f(--)h(a)f(program)h(that)f(runs)h(a)f
+(Tutorial.Calculator)g(server)120 420 y(#)50 b(Puts)24
+b(up)h(a)g(Tk)g(button)f(to)h(kill)f(it)h(with.)120 519
+y(import)f(ilu,)h(FactoryImpl2,)f(sys,)g(Tkinter,)g(ilu_tk)120
+619 y(def)h(main\(argv\):)319 719 y(def)g(quit\(\):)519
+769 y(sys.exit\(0\))319 868 y(if)g(\(len\(argv\))f(<)h(2\):)519
+918 y(print)f("Usage:)49 b(python)24 b(server3.py)g(SERVER-ID")519
+968 y(sys.exit\(1\))319 1067 y(theServer)g(=)h(ilu.CreateServer)f
+(\(argv[1]\))319 1117 y(theFactory)g(=)h(FactoryImpl2.Factory)e
+(\("theFactory",)h(theServer\))319 1167 y(theFactory.IluPublish\(\))319
+1267 y(#)h(Now)g(we)f(put)h(up)g(a)g(Tk)f(button)h(so)f(that)h(the)g
+(user)f(can)h(kill)f(the)319 1316 y(#)50 b(server)24
+b(by)h(pressing)f(the)h(button)319 1416 y(f)g(=)g(Tkinter.Frame\(\))e
+(;)i(Tkinter.Pack.config\(f\))319 1466 y(b)g(=)g(Tkinter.Button)e(\(f,)
+i({'text')f(:)h(theFactory.IluObjectID\(\),\\)917 1516
+y('command':)f(quit}\))319 1566 y(b.pack)h(\({'side':)f('left',)g
+('fill':)g('both'}\))319 1665 y(#)h(Then)g(we)f(wait)h(in)g(the)f
+(ilu_tk)h(mainloop,)f(instead)g(of)h(either)319 1715
+y(#)50 b(the)25 b(ILU)f(mainloop)g(or)h(the)g(Tkinter)f(mainloop)319
+1815 y(ilu_tk.RunMainLoop\(\))120 1964 y(main\(sys.argv\))p
+eop
+%%Page: 42 43
+42 42 bop 0 -58 a Fg(Index)11 b(of)g(Concepts)1571 b(42)0
+183 y Fb(Index)15 b(of)f(Concepts)62 430 y Fa(\(Index)9
+b(is)g(nonexistent\))p eop
+%%Trailer
+end
+userdict /end-hook known{end-hook}if
+%%EOF

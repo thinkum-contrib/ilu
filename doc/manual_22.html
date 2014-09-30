@@ -1,0 +1,224 @@
+<!-- This HTML file has been created by timdif2html 1.11
+     from manual.dif on 20 September 1999 -->
+
+<TITLE>ILU Reference Manual - The TIM Documentation Language</TITLE>
+<BODY TEXT=#000000 BGCOLOR=#ffffff>
+<P>Go to the <A HREF="manual_21.html">previous</A>, <A HREF="manual_23.html">next</A> section.<P>
+<H1><A NAME="SEC618" HREF="manual_toc.html#SEC618">The TIM Documentation Language</A></H1>
+<P>
+This document describes the TIM documentation language that the documentation for
+ILU is written in.  It is not necessary to be familiar with TIM to
+use ILU; you will only need to know TIM if you wish to use it to
+write or modify documentation.
+<P>
+TIM is essentially a superset of the GNU texinfo language,
+version 2.
+It adds several features such as support for pictures and URLs, but its most important extension is to provide
+domain-specific markup commands to allow adding arbitrary meta-information to
+Texinfo documents.  You should be familiar with the basic
+Texinfo system first.  Documentation on Texinfo is supplied
+with the ILU distribution; you should be able to find it in the files
+<TT>`ILUSRC/doc/texinfo2.ps'</TT>.
+<P>
+<H2><A NAME="SEC619" HREF="manual_toc.html#SEC619">Introduction</A></H2>
+<P>
+Both TIM and Texinfo input files contain text `marked up' with document
+markup commands.  These commands are similar to LaTeX commands, except that they
+start with an at-sign character rather than a backslash.  They 
+contain  meta-information about the area of the text to which they apply.
+For example:
+<PRE>
+  A kernel server @dfn{export}s its objects by making them available
+  to other modules.  It may do so via one or more @dfn{port}s, which are
+  abstractly a tuple of (@metavar{rpc protocol}, @metavar{transport type},
+  @metavar{transport address}).  For example, a typical port might
+  provide access to a kernel server's objects via @code{(@protocol{Sun RPC},
+  @transport{TCP/IP}, UNIX port 2076)}.  Another port on the
+  same kernel server might provide access to the objects via
+  @code{(@protocol{Xerox Courier}, @transport{XNS SPP}, XNS port 1394)}.
+</PRE>
+When formatted, this paragraph would look like
+<BLOCKQUOTE>
+A kernel server <I>export</I>s its objects by making them available
+to other modules.  It may do so via one or more <I>port</I>s, which are
+abstractly a tuple of (<VAR>rpc protocol</VAR>, <VAR>transport type</VAR>,
+<VAR>transport address</VAR>).  For example, a typical port might
+provide access to a kernel server's objects
+via <CODE>(<CODE>Sun RPC</CODE>, <CODE>TCP/IP</CODE>, UNIX port 2076)</CODE>.  Another port on the
+same kernel server might provide access to the objects via
+<CODE>(<CODE>Xerox Courier</CODE>, <CODE>XNS SPP</CODE>, XNS port 1394)</CODE>.
+</BLOCKQUOTE>
+<P>
+There are two
+kinds of markup commands:  without arguments or with arguments.  The commands without
+arguments always span some portion of the document, so we call them <I>span commands</I>.  They may be nested, but may not
+overlap.  There are two forms of span commands, <I>style commands</I> and <I>format commands</I>.
+The style commands mark some section of the text, typically a short sequence of text, with a
+single attribute, which may be either a semantic tag like <CODE>important</CODE>, or a formatting style
+like <CODE>italic</CODE>.  The format commands apply a similar tag to a block of the input; they begin
+with a single line containing <CODE>@<VAR>attribute</VAR></CODE>, and end with a single line containing
+<CODE>@end <VAR>attribute</VAR></CODE>.  Style commands may be nested in a block command, but block
+commands should not be nested in style commands.
+<P>
+Markup commands with arguments always take a single line.  The line begins with <CODE>@<VAR>attribute</VAR></CODE>,
+followed by whitespace, followed by the arguments, separated by whitespace.  If there is whitespace in
+an argument, the argument is surrounded with braces, as in <BR>   <CODE>@deffun {struct foo} Bar ( arg )</CODE>
+<P>
+<H2><A NAME="SEC620" HREF="manual_toc.html#SEC620">Extensions to GNU Texinfo</A></H2>
+<P>
+TIM removes the need to begin every file with <CODE>\input texinfo</CODE>,
+and to end every file with <CODE>@bye</CODE>.  These lines are added automatically by
+TIM as needed.  This allows a file to define both a stand-alone
+document, and to be included as a section in some larger document.
+<P>
+<H3><A NAME="SEC621" HREF="manual_toc.html#SEC621">TIM Domain-Independent Format</A></H3>
+<P>
+TIM domain-independent format (<I>DIF</I>) is basically Texinfo with four new built-in commands.  They are:
+<P>
+<UL>
+<LI>
+<CODE>@url</CODE>, a style command, is used to mark World Wide Web URL forms that appear
+in the text.
+<LI>
+<CODE>@picture</CODE>, a command with arguments, is used to include an Encapsulated Postscript picture
+into the document.  It takes two arguments, the name of the file, and a caption for the picture.  The caption
+may be omitted.
+<LI>
+<CODE>@ttitalic</CODE>, a style command, is used to indicate that this span should be rendered in an italic typewriter font, if available.
+<LI>
+<CODE>@timmacro</CODE>, a command with arguments, allows the user to define domain-specific markup commands.  The two arguments are the macro name, and the macro's replacement in vanilla DIF.
+</UL>
+<P>
+<H3><A NAME="SEC622" HREF="manual_toc.html#SEC622">Defining Domain-Specific Markup Commands With @timmacro</A></H3>
+<P>
+[ TBD ]
+<P>
+<H2><A NAME="SEC623" HREF="manual_toc.html#SEC623">TIM Tools</A></H2>
+<P>
+ILU provides a program called <CODE>tim</CODE> to turn TIM files
+into either PostScript, text, or GNU Info files.  It is
+invoked as
+<P>
+<CODE>     tim <VAR>output-format</VAR> [ -s <VAR>flag</VAR> ] [ -m <VAR>macros</VAR> ] [ -o <VAR>output-file</VAR> ] [ <VAR>input-file</VAR>.tim ]</CODE>
+<P>
+where <VAR>output-format</VAR> must be either <B>-p</B> for Postscript output, <B>-i</B> for GNU Info output,
+<B>-d</B> for TIM DIF output, <B>-t</B> for plain text output, 
+and <B>-x</B> for vanilla GNU Texinfo output.
+<P>
+In addition, the switch <B>-v</B>
+can be specified to cause the <CODE>tim</CODE> script to output information about
+progress, the switch <B>-m <VAR>macro-file-name</VAR></B> may be specified to
+have <CODE>tim</CODE> pre-load a file of <CODE>@timmacro</CODE> macros, the switch <B>-s</B> may
+be specified to set various TexInfo conditional flags, and the switch
+<B>-o <VAR>output-file-name</VAR></B> may used to specify the output file.  If no input
+file is specified, <CODE>tim</CODE> reads from the standard input.  If no output file
+is specified, <CODE>tim</CODE> writes to the standard output.
+<P>
+<CODE>tim</CODE> is a script written in the Python script language,
+so you will need to have <CODE>Python</CODE> installed to use it.  See the
+ILU installation instructions for a location from which <CODE>Python</CODE>
+can be FTP'ed.  The script uses the GNU programs <CODE>texindex</CODE> and
+<CODE>makeinfo</CODE>, along with <CODE>TeX</CODE> and <CODE>dvips</CODE>, so it is necessary
+to have all four of those programs installed to use <CODE>tim</CODE>.
+<P>
+Another program called <CODE>timdif2html</CODE> can be used to turn TIM DIF
+files into World Wide Web HTML.  See the end of the <CODE>timdif2html</CODE>
+script for instructions on how to use it.  It in turn uses the script <CODE>eps2gif</CODE>,
+which requires having <CODE>ghostscript</CODE> built with a GIF driver.  Both <CODE>timdif2html</CODE>
+and <CODE>eps2gif</CODE> are Perl scripts, so the Perl interpreter <CODE>perl</CODE>
+must be installed to use them.
+<P>
+<H2><A NAME="SEC624" HREF="manual_toc.html#SEC624">Markup Commands used with ILU</A></H2>
+<P>
+The file <TT>`<VAR>ILUSRC</VAR>/doc/ilu-macros.tim'</TT> defines the following TIM markup commands
+that are used with the ILU documentation:
+<P>
+<UL>
+<LI>
+<CODE>@var</CODE> is used to indicate a regular programming language variable.  The term <CODE>@metavar</CODE>
+is used to mark meta-variables.
+</UL>
+<P>
+TIM also extends texinfo by adding the following markup:
+<P>
+<UL>
+<LI>
+<CODE>@C</CODE> is used to mark artifacts of the C language, e.g., <CODE>@C{#define}</CODE>.
+<LI>
+<CODE>@C++</CODE> is used to mark artifacts of the C++ language, e.g., <CODE>@C++{#define}</CODE>.
+<LI>
+<CODE>@class</CODE> is used to mark names of object classes.
+<LI>
+<CODE>@command</CODE> is used to mark user input, such as a user-typed shell command, when it occurs
+in the normal flow of text.  The term <CODE>@userinput</CODE> is used when the user input occurs
+within a <CODE>@transcript</CODE> section.
+<LI>
+<CODE>@codeexample</CODE> is used to mark code that is excerpted in the style of a texinfo <CODE>example</CODE>.
+The term <CODE>@codeexample</CODE> should appear on a line by itself, before the text of the code, and the
+terms <CODE>@end codeexample</CODE> should appear on a line by itself, at the end of the text of the code.
+<LI>
+<CODE>@cl</CODE> is used to mark artifacts of the Common Lisp language,
+e.g., <CODE>@cl{defmacro}</CODE>.
+<LI>
+<CODE>@constant</CODE> can be used to mark constant names and values that appear in the text.
+<LI>
+<CODE>@exception</CODE> is used to mark names of exceptions.
+<LI>
+<CODE>@fn</CODE> is used to mark function names that occur in the text.
+<LI>
+<CODE>@interface</CODE> is used to mark interface names.
+<LI>
+<CODE>@isl</CODE> is used to mark artifacts of the ILU ISL language, e.g. <CODE>@isl{SIBLING}</CODE>.
+<LI>
+<CODE>@java</CODE> is used to mark artifacts of the Java language, e.g. <CODE>@java{class Foo;}</CODE>.
+<LI>
+<CODE>@kwd</CODE> is used to mark keywords that occur in the text.
+<LI>
+<CODE>@language</CODE> is used to mark names of computer or human languages.
+<LI>
+<CODE>@m3</CODE> is used to mark artifacts of the Modula-3 language, e.g. <CODE>@m3{INTERFACE Foo;}</CODE>.
+<LI>
+<CODE>@macro</CODE> is used to mark names of macros that occur in the text.
+<LI>
+<CODE>@message</CODE> is used to mark in-line text that is a message a program may write to its output.
+<LI>
+<CODE>@metavar</CODE> is used to mark meta-variables.
+<LI>
+<CODE>@method</CODE> is used to mark method names.
+<LI>
+<CODE>@module</CODE> is used to denote module names for those languages
+which support them, such as Common Lisp package names, or Java
+package names.
+<LI>
+<CODE>@parm</CODE> is used to mark parameter names.
+<LI>
+<CODE>@picture</CODE> is used to include a file containing encapsulated Postscript
+of a diagram or picture.  It should appear on a line, followed by the name of the file containing the picture, followed
+by a newline.  We find the InterViews tool <CODE>idraw</CODE> works well in creating
+diagrams in the form of encapsulated Postscript.
+<LI>
+<CODE>@program</CODE> is used to mark program names that occur in the text.
+<LI>
+<CODE>@protocol</CODE> is used to mark names of ILU RPC protocols.
+<LI>
+<CODE>@symbol</CODE> is used to mark names of symbols in Makefiles or object files.
+<LI>
+<CODE>@system</CODE> is used to mark system names that occur in the text.
+<LI>
+<CODE>@switch</CODE> is used to mark command-line switches or options to programs.
+<LI>
+<CODE>@transcript</CODE> is used to mark an example that is a dialog between a user and a program.
+The term <CODE>@transcript</CODE> should appear on a line by itself, before the text of the dialog, and the
+terms <CODE>@end transcript</CODE> should appear on a line by itself, at the end of the dialog.
+The term <CODE>@userinput</CODE> may be used within a transcript.
+<LI>
+<CODE>@transport</CODE> is used to mark the names of ILU data transport systems.
+<LI>
+<CODE>@type</CODE> is used to mark the names of programming language types.
+<LI>
+<CODE>@url</CODE> is used to mark World Wide Web urls.
+<LI>
+<CODE>@userinput</CODE> is used to mark text typed by the user in a transcript section.
+</UL>
+<P>
+<P>Go to the <A HREF="manual_21.html">previous</A>, <A HREF="manual_23.html">next</A> section.<P>

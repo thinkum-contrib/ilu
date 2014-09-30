@@ -1,0 +1,1877 @@
+@setfilename ilu-cpp2.info
+@settitle Using ILU with CORBA 2.0 C++
+@ifset ilucopyright
+BeginILUCopyright
+
+Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+Unlimited use, reproduction, modification, and distribution of this
+software and modified versions thereof is permitted.  Permission is
+granted to make derivative works from this software or a modified
+version thereof.  Any copy of this software, a modified version
+thereof, or a derivative work must include both the above copyright
+notice of Xerox Corporation and this paragraph.  Any distribution of
+this software, a modified version thereof, or a derivative work must
+comply with all applicable United States export control laws.  This
+software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+OF THE POSSIBILITY OF SUCH DAMAGES.
+  
+EndILUCopyright
+@end ifset
+@ifclear largerdoc
+@include ilu-macros.tim
+
+@defcodeindex ft
+@defcodeindex vt
+@defcodeindex et
+@defcodeindex mt
+@defcodeindex tt
+@defcodeindex dt
+
+@syncodeindex dt ft
+@syncodeindex vt ft
+@syncodeindex et ft
+@syncodeindex mt ft
+@syncodeindex tt ft
+
+@syncodeindex pg cp
+@syncodeindex tp ft
+
+@titlepage
+@title Using ILU with CORBA 2.0 C++
+@author Dan Larner @code{<larner@@parc.xerox.com>}
+@sp
+Typeset @today{}
+@sp
+Copyright @copyright{} 1993--97 Xerox Corporation@*
+All Rights Reserved.
+@end titlepage
+@ifinfo
+@node Top, ILU with CORBA 2.0 C++,(dir),(dir)
+@top Using ILU with CORBA 2.0 C++
+@end ifinfo
+@end ifclear
+
+@quotation
+@i{We do understand the pressing desire for C++ support, and the work going
+on here, getting the actual CORBA mind-warped mapping implemented, is
+truly impressive.  Imagine a darkened roomful of programmers, twenty or
+perhaps thirty.  Each sits before a trio of screens.  On the left screen
+is a Visual C++ environment; in the middle, Emacs with g++; on the
+right, the SunPro tools with C++ mode enabled.  A communal coffee urn by
+the door feeds individual IV drips in each programmer's left arm;
+precious aged Jolt cola trickles into the right arm.  At the front of
+the room, a huge projected screen flashes an endless slide show
+emphasizing the differences between the underscore, nested-class, and
+namespace versions of the CORBA mapping (all mutually
+non-inter-portable); a garish neon sign on the left wall points up the
+non-inter-portable differences between compilers with exception support
+and those without; nasty muttered whispers from the programmers convey
+rumors about the differences between environments without RTTI and those
+having it.  On the right side of the room are two small shrines, with
+votive candles burning to light the images of Bjarne Stroustrup and
+Steve Vinoski.  Next to the projector screen in front, a pair of
+Makefile experts sit on stools, valiantly struggling to devise tests and
+configuration switches for the individual compiler defects detected and
+announced in a continuous stream by the mapping implementors.  Squeezed
+into the corner are another pair, visiting philosophers from a German
+university, attempting to devise a coherent metaphysical framework for
+the seemingly impossible memory management dicta in the mapping spec. 
+Smoke from their pipes mingles with that coming from the candles,
+drifting up to the low ceiling and almost obscuring the giant mechanized
+whip at the back of the room, connected directly to an SMTP server. 
+Each incoming query about the expected release date of free ILU C++
+support causes the lashes to crack down again, with horrible results...}
+
+@i{Did I mention we're looking for more volunteers to help with the work?}
+
+[mail sent to the ILU mailing list, 14 February 1997]
+@end quotation
+
+@section Introduction
+
+
+This chapter describes the use of @system{ILU} with @language{C++} in a manner compliant with
+the @system{CORBA} 2.0 @language{C++} language mapping specification. (see @url{http://www.omg.org/corba/corbiiop.htm})
+The use of @system{ILU}'s original @language{C++} support is deprecated.
+
+Any function or type which is not part of the @system{CORBA} 2.0 specification has
+the prefix 'ilu'.  It should be understood that use of 'ilu' prefixed
+functionality is not portable to other (non-@system{ILU}) @system{CORBA} implementations.
+
+Some arguments or return values of functions (e.g. char*) have storage
+management requirements.  Basically this revolves around whether the caller
+retains or gets ownership of the parameter and is therefore responsible for
+eventually releasing it, or if @system{ILU} takes or retains ownership, where it
+will be released at @system{ILU}'s discretion.  Any function parameter that becomes
+owned by @system{ILU} is marked with the comment /* ILUowned */ Any return value (or
+'out' parameter) that remains under the ownership of @system{ILU} is similarly
+marked.  Anything not so marked is not @system{ILU}'s responsibility.
+
+Note that @system{ILU} support for @language{C++} does rely on having
+argument prototypes, all @language{C++} library functions, and the
+capabilities of the @language{C++} pre-processor.
+
+
+@section  Mapping ILU ISL to C++
+
+
+The @system{CORBA} 2.0 @language{C++} chapters 15 though 18 describes the mapping of OMG @language{IDL}
+to @language{C++}.  For those elements of @language{ISL} for which there is a direct counterpart
+in @language{IDL}, the @language{ISL} component is mapped just as the @language{IDL} component is.  Those
+@language{ISL} concepts with no @language{IDL} counterpart (marked with a '@kwd{-}' in the table below)
+have a mapping separately described in a following section.
+
+@subsection ISL to IDL Correspondences
+@cindex ISL to IDL Correspondences for CORBA 2.0 C++
+
+@example
+
+     ISL                    IDL
+     -------------------------------------
+     INTEGER                long
+     SHORT INTEGER          short
+     LONG INTEGER           -
+     CARDINAL               unsigned long
+     SHORT CARDINAL         unsigned short
+     LONG CARDINAL          -
+     BYTE                   octet
+     BOOLEAN                boolean
+     REAL                   double
+     SHORT REAL             float
+     LONG REAL              -
+     CHARACTER              -
+     SHORT CHARACTER        char
+     PICKLE                 Any
+     ARRAY                  array
+     SEQUENCE               sequence
+     RECORD                 struct
+     UNION                  union
+     OPTIONAL               -
+     ENUMERATION            enum
+     OBJECT                 object
+     CString                string
+     SEQUENCE OF CHARACTER  -
+     EXCEPTION              -, exception
+     INTERFACE              module
+
+@end example
+
+
+@subsection ISL Specific Mappings
+@cindex ISL Specific Mappings for CORBA 2.0 C++
+
+The following table describes the mappings for @language{ISL} types that have no @language{IDL} counterparts.
+The @language{C++} column gives the mapping modulo indirection and/or 'const' qualification dictated
+by parameter directionality (i.e., IN vs OUT vs INOUT vs return values).
+
+@example
+
+     ISL                    C++
+     --------------------------------------------------------------
+     LONG INTEGER           iluLongInteger
+     LONG CARDINAL          iluLongCardinal
+     LONG REAL              iluLongReal
+     CHARACTER              iluCharacter
+     OPTIONAL X             X* for operation parameters;
+                            'managed X*' for embedded types.
+     SEQUENCE OF CHARACTER  iluCharacter*
+     EXCEPTION              @language{ISL} exceptions map to a subclass of
+                            CORBA::UserException with a _value() 
+                            member function which returns a value of 
+                            the type associated with the exception.
+                            Exceptions defined in @language{IDL} and
+                            processed by the @system{ILU} idl translator 
+                            have the standard CORBA mapping.
+
+@end example
+
+
+
+@subsection Correspondence between C++ Types and Kernel Types
+@cindex  Correspondence between C++ Types and Kernel Type
+
+To provide a consistent naming scheme, in many cases, a type defined in 
+the @system{ILU} kernel has been typedeffed to appear in @language{C++} 
+as the corresponding type name without the intervening underscore, and 
+with the following letter capitalized, e.g. typedef ilu_cardinal iluCardinal;
+
+
+
+@subsection C++ Classes Produced for an Object
+@cindex C++ Classes Produced for an Object for CORBA 2.0 C++
+
+The mapping for an @language{ISL} Object 'A' produces 3 @language{C++} classes:
+
+@enumerate
+@item
+The A @language{C++} class, which has pure virtual member function declarations for
+each of A's methods.  For each @language{ISL} Object supertype Si of @language{ISL} Object A, the
+@language{C++} class A 'public virtual' inherits from the Si @language{C++} class. If the @language{ISL}
+Object A has no supertypes, the A class 'public virtual' inherits from the
+iluObject class. [NOTE that an object described in @language{IDL} will implicity
+inherit from CORBA::Object (which in turn inherits from iluObject).  The @system{ILU} idl translator
+automatically adds ilu.CORBA-Object as a SUPERTYPE.]  This basically creates a 
+@language{C++} class hierarchy that is isomorphic to the @language{ISL} object type hierarchy, 
+with each method being declared pure virtual.  We refer to this hierarchy as the 'abstract object
+hierarchy'.
+
+@item
+The A_surrogate @language{C++} class, which has virtual member function
+declarations for each of @language{ISL} Object A's non inherited methods. These member
+functions transfer requests to the true object. For each @language{ISL} Object
+supertype Si of @language{ISL} Object A, the @language{C++} class A_surrogate 'public virtual'
+inherits from the Si_surrogate @language{C++} class, and then 'public virtual'
+inherits from the @language{C++} class A. (If the @language{ISL} Object A has no supertypes, the
+A_surrogate class 'public virtual' inherits only from the @language{C++} class A.)
+This basically creates a @language{C++} 'surrogate object hierarchy' that is
+isomorphic to the abstract object type hierarchy, with the addition that
+each X_surrogate class also inherits from its counterpart in the 'abstract
+object hierarchy'.
+
+@item
+An A_var @language{C++} class as prescribed by the @system{CORBA} @language{C++} mapping.
+
+@end enumerate
+
+This mapping allows servers to be developed that do not contain surrogate
+stub code (if they don't need it), and also prevents the situation where a
+server method override is forgotten, resulting in surrogate stub code being
+called as it it were 'true' code.
+
+For each @language{ISL} Object 'A' for which a true side implementation is to be
+developed, the true side implementer should define a class A_impl that
+inherits virtually from the @language{C++} class A, and implements the actual true
+methods as member functions (in whatever manner is appropriate). The
+implementer is free to use delegation, implementation inheritance, whatever
+- the only restriction is that if a class B_impl inherits implementation
+from a class X, and class X inherits from a class in the abstract object
+hierarchy, (e.g. when X is A_impl), then X's inheritance from the abstract
+object hierarchy must be 'public virtual'.
+
+Each produced @language{C++} class e.g. A, will have a constructor 
+@deftypefn {C++} constructor A ( char* @metavar{pc_instance_handle}, ilu_Server& @metavar{r_an_ilu_server} = iluServer::GetDefaultServer(),	ILUCPP_BOOL @metavar{b_within_object_table} = ILUCPP_FALSE ) : iluObject (  @metavar{A::m_ILUClassRecord}, @metavar{pc_instance_handle}, @metavar{r_an_ilu_server}, @metavar{b_within_object_table}).
+@end deftypefn
+
+@subsection Misc. Mapping Details
+@cindex Mapping Details for CORBA 2.0 C++
+
+
+@subsubsection Unions
+@cindex Unions for CORBA 2.0 C++
+
+In @language{IDL}, Union arms all have names, in @language{ISL}, the names may not be specified.
+If a name isn't specified for an arm, the name the stubber produces is the 
+arm's typename, prefixed with '_', and suffixed with '_arm'.
+
+For example, 
+@codeexample
+TYPE someuniontype = short cardinal UNION	
+        bar = 0, 1 END,   
+        integer = DEFAULT	
+END;
+@end codeexample
+
+would produce the @language{C++} names _bar_arm, and _integer_arm to reference the
+bar and integer arms.
+
+@subsubsection Optionals
+@cindex Optionals for CORBA 2.0 C++
+For procedure parameters, an @language{ISL} @kwd{OPTIONAL} type maps either to the same @language{C++} type as its base
+type, if that base type is represented with an @language{C++} pointer type, or to a pointer to that base type,
+if it is not represented with a @language{C++} pointer type.
+
+Additionally, all @kwd{OPTIONAL} types @metavar{T} have an associated
+@language{C++} @metavar{T}_var.
+
+For non-parameters (i.e., @kwd{RECORD} members, @kwd{ARRAY} and @kwd{SEQUENCE} elements) an
+@language{ISL} @kwd{OPTIONAL} type maps to a 'managed pointer', analagous to the mapping
+for non-parameter @language{ISL} @kwd{OBJECT} (@system{CORBA} @kwd{interface}) and
+@language{ISL} @kwd{SEQUENCE OF SHORT CHARACTER} (@system{CORBA} @kwd{string}). (This
+'managed pointer' behaves similarly to @metavar{T}_var; however, @system{CORBA} does
+not allow compliant applications to use 'managed pointer' types directly, as the actual
+type is implementation-specific)
+
+The following @language{ISL} and @language{C++} code fragments illustrate:
+
+@example
+
+     @language{ISL}
+
+	TYPE SomeType   = @metavar{...}
+	TYPE MyOptional = OPTIONAL SomeType;
+
+	TYPE MyRec = RECORD
+	     member: MyOptional
+	END;
+
+	TYPE MyArray = ARRAY OF 10 MyOptional;
+
+
+     @language{C++}
+
+	 @metavar{...}
+
+     MyRec          myRec;
+	 MyArray        myArray;
+	 SomeType       st;
+	 SomeType*      stPtr;
+	 MyOptional     myOptional;  // MyOptional is equivalent to SomeType*
+	 MyOptional_var stVar;
+
+	 @metavar{...}
+
+	 myRec.member = myArray[0];        // free old myRec.member, deep copy
+	 myArray[1]   = stVar;             // free old myArray[1], deep copy
+	 myRec.member = stPtr;             // free old myRec.member, assume ownership
+	 myRec.member = myOptional;        // free old myRec.member, assume ownership
+
+	 myRec.member = &st;               // ILLEGAL - can't free &st
+	 myRec.member = new SomeType(st);  // OK; free old myRec.member, assume ownership
+
+	 stPtr = myArray[2];               // Simple pointer assignment, no copy
+	 stVar = myRec.member;             // free old stVar, deep copy
+
+@end example
+
+The lifetime of @C{recA.member} and each @C{myArray[@metavar{n}]} are tied to recA
+and myArray, respectively; when an optional-containing variable goes out of scope
+or is destroyed, its optional members/elements are freed. Thus, the assignment
+@C{myRec.member = &st} in the example above is illegal and can lead to calamitous
+results when an attempt is made to free &st.
+
+
+@subsubsection Overloading problems for @metavar{T}_vars.
+@cindex Overloading problems for @metavar{T}_vars.
+
+Some compilers diagnose overloading errors for client and server code
+using @metavar{T}_vars as method arguments, even if no such errors are
+present.  The @system{ILU} C++ mappings for structured types
+(unions, records, and sequences) provide a means of bypassing this
+problem if it occurs, using the form @metavar{T}_var->self(). 
+This usage should be avoided unless absolutely necessary, as continued
+support is not guaranteed. 
+
+Similar problems for @metavar{T}_vars
+representing arrays can usually be avoided by references to the address of
+the first member of the array.  For example, if @C{A} is an array,
+and references to @C{A_var} give overloading problems, replacing those  
+references with ones to &@C{A_var[0]} usually solves the problems.  
+If it does not, the methods @C{A_var.in()} and @C{A_var.out()},
+returning, respectively, const @C{A_var_slice*} and @C{A_var_slice*}
+can also be used.
+
+
+@subsubsection Exceptions
+@cindex Exceptions
+
+An exception defined directly in @language{ISL} maps to a subclass of
+CORBA::UserException, that has a _value() member function which returns a value of the type associated with the exception.
+							
+							
+@subsubsection ISL Asynchronous Methods
+@cindex ISL Asynchronous Methods
+
+In @language{IDL}, methods may be @kwd{ASYCHRONOUS}.  Asynchronous methods cannot have 
+return values or raise exceptions.  Hence, they result in a @language{C++} 
+member function declared to return void.
+
+
+
+@subsubsection ISL Functional Methods
+@cindex ISL Functional Methods
+
+In @language{IDL}, methods may be @kwd{FUNCTIONAL}.  In the @language{C++} mapping,
+@kwd{FUNCTIONAL} is ignored.   The ability to create custom C++ surrogates allows
+the implementation to decide what and how caching may be implemented on any
+method, as well as perform any other sorts of message 'filtering'.
+
+
+@subsubsection ISL Collectible Objects
+@cindex ISL Collectible Objects
+
+An @language{ISL} object being declared @kwd{COLLECTIBLE} has no effect on the
+mapping per-se.  It will however cause @system{ILU} to adjust an object's reference
+count based on interest or dis-interest from clients.
+
+
+@subsubsection Inheritance from CORBA::Object
+@cindex Inheritence from CORBA::Object
+
+If an @language{ISL} Object A has no supertypes, the A class 'public virtual' inherits 
+from the iluObject class.  An object described in @language{IDL} will implicity
+inherit from CORBA::Object (which in turn inherits from iluObject).  (The 
+@system{ILU} idl translator
+automatically adds ilu.CORBA-Object as a SUPERTYPE.)  So, if you define an object in 
+@language{ISL}, and do not explicitly declare ilu.CORBA-Object as a SUPERTYPE, you will
+not have the member functions of CORBA::Object available since you do not inherit from it.
+
+
+
+@subsubsection Portability and Mapping Variations
+@cindex Portability and Mapping Variations for CORBA 2.0 C++
+
+The @system{CORBA} 2.0 @language{C++} mapping allows for variations in the mapping depending on
+the @language{C++} compilers support for Name Spaces, Exception Handling, and Run-Time
+Type information.
+
+The @system{ILU} @system{CORBA} 2.0 @language{C++} mapping implementation assumes that the @language{C++} compiler
+supports exceptions.  We also assume that the compiler supports RTTI should
+someone want to do narrowing within the exception hierarchy. [Given that
+@system{ILU} does not provide a Dynamic Invocation Interface, there's no real need to
+narrow exceptions anyway.]
+
+During the configuration phase of @system{ILU} installation (or for Windows, per the
+definitions in @file{@metavar{ILUSRC}/runtime/kernel/iluwin.h}) a determination is made as to
+whether or not to use namespaces, nested classes or underscores for @language{IDL}
+modules, based on the @language{C++} compiler in use.  This can also be
+explicitly set using the
+configuration option --with-cplusplus-mapping= switch to config, or on Windows, by manually editing
+@file{@metavar{ILUSRC}/runtime/kernel/iluwin.h} before building @system{ILU}.]  This
+results in a @language{C++} runtime and  @language{C++} stubber that is constructed with 
+one the selected approaches in mind.  
+
+Based on our knowledge (as of the date of this writing), of the degree of support/bugs 
+for namespaces and nested classes, the following describes the @language{IDL} module mapping 
+based on compiler:
+
+
+@language{C++} Compiler	Module Mapping
+@example
+
+     Compiler                 Mapping
+     ---------------------------------------
+     Microsoft Visual C++     underscores
+     SunPro                   nested classes
+     Gnu                      nested classes
+
+@end example
+
+
+
+Because of possible variations in compiler support for Booleans, 
+CORBA(Boolean) is defined as ILUCPP_BOOL, where ILUCPP_BOOL is
+defined as either an int (with ILUCPP_TRUE and ILUCPP_FALSE #defined as
+1 and 0), or as a bool (with ILUCPP_TRUE and ILUCPP_FALSE #defined as
+true and false).  
+	
+
+@section Concepts
+
+
+@subsection Servers and Ports
+@cindex Servers and Ports for CORBA 2.0 C++
+
+In @system{ILU} there is a concept of an 'server object'.
+In the kernel this is the ilu_Server, which in the @language{C++}
+runtime is encapsulated asn an @C++{iluServer} object.  This 'server'
+effectively forms a 'scope' in which true objects reside. This is why
+for example, and object lookup requires both the 'server' ID,
+and the object's instance handle - both are needed to uniquely
+denote an object.
+
+Now a server has some number of 'ports'.  A port is basically a
+means of communicating with the objects inside a server, using a
+particular combination of protocol and transport.  For example, 
+when create an @C++{iluServer}, the constructor for @C++{iluServer} automatically
+adds a port for the communication protocol and transport specified
+as constructor arguments.  We can call @C++{iluServer::iluAddPort} to have additional
+ports added.  For example we may want to be able to communicate
+with the objects using @protocol{sunrpc} over @protocol{tcp/ip}, as well as @protocol{http} over
+@protocol{tcp/ip}.  The iluServer has a notion of a default port.  This is initially
+one as specified during construction, but this can be changed 
+if when calling @C++{iluServer::iluAddPort} we specify that this should become
+the default port.  The default port is the one used when we ask for
+contact information for an object - that is, if we get the string
+binding handle for an object, the contact information in that 
+string will reflect the default server port.
+
+
+
+@subsection Object Tables
+@cindex Object Tables for CORBA 2.0 C++
+
+True objects may either be created ahead of time, or on an 'as needed' basis, i.e. when 
+a call comes in involving them.  The 'as needed' situation is made possible by 'object tables'.  
+An @C++{iluServer} may have associated with it (at construction time) an @C++{iluObjectTable} object.
+When a call comes involving an object in that @C++{iluServer} that the @system{ILU} doesn't already
+know about, the @C++{iluObjectTable} object's  @C++{iluObjectOfInstanceHandle} gets
+called.  It is the job of this function to create and return a new object 
+with that instance handle. How it does this is specific to your application - 
+it may read object state off a disk for example.  In any event, one thing this
+function must do is ensure that when it calls the true objects constructor, that
+it sets the constructor's b_within_object_table argument to true.  (Otherwise,
+internal locking constraints will be violated).  While in the @C++{iluObjectOfInstanceHandle}
+function, the associated @C++{iluServer}'s lock is held, and if the resulting object is expected to be 
+of a COLLECTIBLE type, the global kernel mutex "gcmu" is also held.  The fact that these locks
+are held somewhat restricts what an application can do inside this mapping procedure. 
+
+
+
+@subsection Threading
+@cindex Threading for CORBA 2.0 C++
+
+The @system{ILU} @language{C++} support may be initialized to run in either
+threaded or non-threaded mode.  In non threaded mode, a call to @C++{iluServer::iluRun}
+member function results in a call to @system{ILU}'s 'mainloop'.  The mainloop
+basically sits waiting for an incoming request.  When one comes in, the request is
+invoked.  If the implementation of the invoked method makes a call to some other
+remote object, the mainloop is recursively entered while awaiting a reply.  This
+allows additional requeste to come in and get serviced, preventing deadlock.
+
+When intialized to run in threaded mode,  @system{ILU} will run one thread
+for each incoming connection.  Note that there may be multiple connections
+for a particular port (either from different clients, or from the
+same client who needed another connection because all the ones it had
+so far were busy at the time). In the case of a non-concurrent protocol
+(sunrpc, http, courier), the connection thread receives an incoming
+request, processes it itself, and then waits for the next request.
+In the case of a concurrent protocol (csunrpc, iiop), the connnection
+thread receives an incoming request, spawns a worker thread to carry
+out the request, and immediately goes back to waiting for more incoming
+requests.
+
+The @system{ILU} @language{C++} provides no special concurrency control for
+methods in your objects (to do so would be presumptive on our part).
+The method implementor must put appropriate locking in place if it is possible
+that multiple threads (or recursive mainloop invocations) might be running 
+'in' an object simultaneously.
+
+
+
+
+@subsection Custom Surrogates
+@cindex Custom Surrogates for CORBA 2.0 C++
+
+A surrogate is an object that is used to represent a remote object.  When a
+method is invoked on a surrogate, the methods implementation in the surrogate
+transfers the call to the true object, and returns the result of this call,
+thus providing location transparency.  There are times however when it is
+useful to have the surrogate's method implementation do more than just
+forward the call to the true object.  An application may want a surrogate 
+method implementation that caches the results of calls (potentially reducing 
+network overhead), perform transformations on arguments, output diagnostic 
+information, or whatever.
+
+To facilitate this, the @system{ILU} @language{C++} support allows an implementation
+to supply a function that is called when a surrogate for a particular object
+type is needed.  The function @C++{iluCppRuntime::iluSetSurrogateCreator} 
+tells the @language{C++} runtime what function to call when a surrogate for an
+object of the specified class is needed.  This allows an
+implementation to subclass off a surrogate class, and write a new
+surrogate creation function that creates an instance of this new
+subclass.  Call @C++{iluCppRuntime::iluSetSurrogateCreator} after you've performed
+initialization, but before you do any operations which might create a
+surrogate of the specified class.  It basically overwrites the default
+surrogate creation function set up by the surrogate stubs. It returns
+the old surrogate creator function, or @constant{NULL} if was previously no
+surrogate creator for that class.
+
+A surrogate creator function should at the minimum create an instance of a surrogate, call
+the instances member function iluAssociateKernelObject passing the
+@C++{iluKernelObject}, and then return a pointer to the new instance.
+
+
+@subsection String Binding Handle Manipulation
+@cindex String Binding Handle Manipulation for CORBA 2.0 C++
+
+A String Binding Handle is a textual representation of an object reference.
+It contains the object's server id, instance id, information about how to
+contact the object, as well as other information.  @system{ILU} @language{C++} provides
+the functions @C++{iluCppRuntime::iluFormSBH}, @C++{iluCppRuntime::iluFormSBHUsingContactInfo}, 
+and @C++{iluCppRuntime::iluParseSBH} for constructing and parsing string binding handles.
+An object may be obtained from a string binding handle using @C++{iluObject::iluStringToObject}
+and the string bindign handle of an object may be obtained by calling the @C++{iluObjectToString}
+member function.
+
+
+@subsection Simple Binding
+@cindex Simple Binding for CORBA 2.0 C++
+
+When creating a service, there needs to be some way for clients to find out
+about the service.  @system{ILU} @language{C++} provides a simple mechanism
+to achieve this.  Objects may be published, looked up, and their publications 
+withdrawn using the appropriate member functions (@C++{iluPublish}, @C++{iluLookup}, 
+@C++{iluWithdraw}).
+
+
+
+
+@subsection Object Activation
+@cindex Object Activation for CORBA 2.0 C++
+
+An true object is initially 'Active', which means that its @language{ISL} (or @language{IDL}
+as the case may be) defined methods may be invoked on it from outside its
+process (or from another language within that same process).  An object may be 
+made unavailable to outside calls, i.e. marked 'inactive'
+by calling its iluDeactivate member function. It may may be reactivated by
+calling its iluActivate member function.
+
+An object is initially available from the outside until it is deactivated
+Objects that are involved in a call (i.e. sent or received as
+arguments, or the object the method is being invoked on) need to be
+protected from deletion for the duration of that involvement (for
+example, you don't want some thread deleting a true object when it's
+currently the target of a method call).  The @language{C++} runtime keeps track
+of what objects are involved in a call, and will attempt to prevent
+them from being deleted until the call is completed.
+
+The application programmer needs to assist in this by calling, in the
+most specific destructor, iluDeactivate (inherited virtually from
+@C++{iluObject}).  iluDeactivate blocks any further incoming calls involving
+the object, and wait for any ongoing calls using the object to
+complete.  Next the destructor should perform any object specific
+cleanup.  Finally, the destructor in @C++{iluObject} will break the
+association between the kernel object and this object, allowing the
+kernel object to be potentially freed.
+
+
+ 
+@subsection Security
+@cindex Security for CORBA 2.0 C++
+
+
+A client may set the Passport to be used on outgoing calls by creating
+and setting up an @C++{iluPassport,} and then passing the passport in a call
+to iluPassport::iluSetPassport.  This sets the passport to be used in
+the thread that made the call - i.e. @C++{iluPassport} are on a per thread
+basis.  Note that before your thread exits, you should either call
+iluSetPassport(@constant{NULL}), or delete the @C++{iluPassport} in use (assuming it's
+only in use for a single thread).  The @C++{iluPassport} (if any) currently
+setup for a thread can be retrieved by calling
+iluPassport::iluGetPassport.
+
+A Server may obtain the @C++{iluPassport} of the caller (if any) of a
+method by using the iluPassport::iluGetCallerPassport() function.
+
+A @C++{iluServer} may be constructed to use a particular identity by specifying a 
+@C++{iluPassport} as a constructor argument.  This identity is used to identify
+the principal offering the service.
+ 
+
+@subsection Static Initialization
+@cindex Static Initialization for CORBA 2.0 C++
+
+The @language{C++} Runtime normally relies on the static initializers in the
+files that the stubber generates to place initialization functions onto internal lists
+so that they will be invoked when the application calls iluCppRuntime::Initialize.
+However, it is not guaranteed by the ANSI @language{C++} that static initializers
+are called upon the loading of a compilation unit.  We have only had a
+report of one compiler that did not run the static initializers at load time
+(in fact, it was reported that it did not run them ever! - bug!?).  We have
+observed static initialization at load time in Visual C++, SunPro and GNU compilers.
+In the event that you end up using a compiler that does not call the static
+initializers at load time, you can use the stubber defined initialization 
+macros that are generated in the common header file for each interface.
+
+(It should be pointed out that the @system{CORBA} 2.0 @language{C++} Runtime 
+does not suffer from the static initializer issues that plagued @system{ILU}'s
+original C++ support.  No @system{ILU} calls are actually made until 
+iluCppRuntime::iluInitialize is called, allowing one to set up different
+mainloops, etc.)
+
+
+
+@section Building an Application
+@cindex Building an Application for CORBA 2.0 C++
+
+
+@subsection Running the Stubber
+@cindex Running the Stubber for CORBA 2.0 C++
+
+	
+To generate @system{CORBA} 2.0 @language{C++} stubs from an @language{ISL} file, use the
+program @language{cpp2-stubber}.  The stubber has the following usage:
+@pindex cpp2-stubber
+
+@codeexample
+
+     Usage: cpp2-stubber Islfile [ISLFILE ...]
+
+@end codeexample
+
+The stubber produces code using whatever the mapping (underscores, nexted classes, 
+or namespaces) that was found appropriate during the configuration phase 
+of @system{ILU} installation (see "Portability and Mapping Variations").
+
+
+
+@subsection Stubber Generated Files
+@cindex Stubber Generated Files for CORBA 2.0 C++
+
+For an interface @isl{Foo} the stubber generates:
+
+@file{Foo-cpp.hpp} which contains the classes for the abstract object hierarchy,
+as well as any other declarations needed by both client and server.
+
+@file{Foo-cpp.cpp}, which contains any definitions needed by both client and
+server
+
+@file{Foo-cppsurrogate.hpp} which contains the classes for the surrogate object
+hierarchy, as well as any other declarations needed just by a client. This
+file #includes Foo-cpp.hpp
+
+@file{Foo-cppsurrogate.cpp}, which contains any definitions needed just by a
+client. This file #includes Foo-cppsurrogate.hpp
+
+@file{Foo-cpptrue.hpp} which contains any declarations needed just by a
+server. This file #includes Foo-cpp.hpp
+
+@file{Foo-cpptrue.cpp}, which contains any definitions needed just by a
+server. This file #includes Foo-cpptrue.hpp. All header files use the usual
+#ifdef method to prevent multiple inclusions.
+
+A client only will #include Foo-cppsurrogate.hpp, and link with @file{Foo-cpp.o}
+and @file{Foo-cppsurrogate.o}
+
+A server only will #include Foo-cpptrue.hpp, and link with @file{Foo-cpp.o} and
+@file{Foo-cpptrue.o}
+
+A client and server will #include Foo-cpptrue.hpp, #include
+Foo-cppsurrogate.hpp, and and link with @file{Foo.o}, @file{Foo-cpptrue.o}, and
+@file{Foo-cppsurrogate.o}
+
+
+
+
+
+
+
+
+@subsection Server Basics
+@cindex Server Basics for CORBA 2.0 C++
+
+The basic steps in creating a simple server application are as follows
+(assuming we have a @language{ISL} file called  @file{foo.isl}, describing an interface 'foo'
+with an object type 'bar'):
+
+@enumerate
+@item
+Run the @language{C++} stubber on @file{foo.isl}, e.g. cpp2-stubber foo.isl
+
+@item
+In your implementation file, e.g.  @file{servermain.cpp},
+include the true side header file, e.g. #include "foo-cpptrue.hpp".
+
+@item
+Define an implementation class that inherits public virtual from foo::bar.
+e.g.  
+@codeexample
+	class foo_bar_impl : public virtual foo(bar) @{ ... @};
+@end codeexample
+
+@item
+In the implementation class, provide a constructor that receives an instance
+handle and an @C++{iluServer} as arguments, and calls the @C++{iluObject} constructor
+appropriately, e.g.
+
+@codeexample
+	foo_bar_impl::foo_bar_impl(char* pc_instance_handle, iluServer& r_an_ilu_server) : 
+		iluObject(iluGetILUClassRecord(), pc_instance_handle, r_an_ilu_server) @{@}
+@end codeexample
+
+@item
+In the implementation class declaration, declare a virtual destructor.
+	e.g. virtual  foo_bar_impl::~foo_bar_impl();
+
+@item
+Define the virtual destructor of the implementation class that (at the minimum) makes a 
+call to iluDeactivate as the first thing it does, e.g. 
+
+@codeexample
+	  foo_bar_impl::~foo_bar_impl() @{
+		  iluDeactivate();
+		  // other app specific things that may need to be done
+	  @}
+@end codeexample
+
+@item
+In the implementation class declaration, declare the virtual member functions that
+will implement the method(s), e.g. 
+
+@codeexample
+	virtual CORBA(Boolean) zap( CORBA(Long)  inarg, CORBA(Octet)&  inoutarg, CORBA(Double)& outarg ) 
+		throw (CORBA(SystemException), foo(zapexception));
+@end codeexample
+	  
+@item
+Define the virtual member functions that implement the method(s), e.g. 
+
+@codeexample
+	CORBA(Boolean) foo_bar_impl::zap( CORBA(Long)  inarg,
+		  CORBA(Octet)&  inoutarg,
+		  CORBA(Double)& outarg ) 
+		  throw (CORBA(SystemException), foo(zapexception)) @{
+		  // do whatever must be done
+		  @}
+@end codeexample
+
+
+@item
+In for example 'main()', Call the runtime initialization function, passing an argument specifying
+whether or not to set up for threaded operation, e.g. 
+
+@codeexample
+		// Set up the runtime for threaded operation
+		iluCppRuntime::iluInitialize(ILUCPP_TRUE);
+@end codeexample
+
+
+@item
+Create an @C++{iluServer}. e.g. 
+
+@codeexample
+	iluServer server ("MyFooBarServerOnMyHost");
+@end codeexample	
+
+
+@item
+Create a true object in that server, e.g. 
+
+@codeexample
+	p_true_foo_bar = new foo_bar_impl("foo_bar_instance_0", server);		
+@end codeexample
+
+
+@item
+Publish the true foo::bar object, e.g. 
+
+@codeexample
+	p_true_foo_bar->iluPublish() 
+@end codeexample
+
+@item
+Run the server, e.g. 
+
+@codeexample
+ 	server.iluRun();
+@end codeexample
+
+
+@item
+Compile your server application code, @file{foo-cpp.cpp} and @file{foo-cpptrue.cpp},
+and link the resulting object files with the @language{C++} runtime library (@file{libilu-cpp2.a} 
+on @system{UNIX}, and @file{ilucpp2.lib} on @system{Win32}) and the
+@system{ILU} kernel library (@file{lib.a} 
+on @system{UNIX}, and @file{ilu32.lib} on @system{Win32}).
+
+@end enumerate
+
+
+
+@subsection Client Basics
+@cindex Client Basics for CORBA 2.0 C++
+
+
+The basic steps in creating a simple client application are as follows
+(assuming we have a @language{ISL} file called @file{foo.isl}, describing an interface 'foo'
+with an object type 'bar'):
+
+@enumerate
+@item
+Run the @language{C++} stubber on foo.isl, e.g.  cpp2-stubber foo.isl
+
+@item
+In your implementation file, e.g.  @file{clientmain.cpp},
+include the surrogate side header file, e.g. #include "foo-cppsurrogate.hpp".
+
+@item
+In for example 'main()', call the runtime initialization function, passing an argument specifying
+whether or not to set up for threaded operation, e.g. 
+
+@codeexample
+	// Set up the runtime for threaded operation
+	iluCppRuntime::iluInitialize(ILUCPP_TRUE);
+@end codeexample
+
+@item
+Lookup an object, e.g. 
+
+@codeexample
+
+	foo(bar_var) mybar_var = foo(bar)::iluLookup ("foo_bar_instance_0", "MyFooBarServerOnMyHost");
+
+@end codeexample
+
+
+@item
+Invoke a method, e.g. 
+
+@codeexample
+	try @{ 
+		bool_return_value = mybar_var->zap(inarg, inoutarg, outarg);
+	@}
+	catch (const foo(zapexception)& the_exception) @{ 
+		/* do whatever */ 
+	@}
+	catch (const CORBA(SystemException)& the_exception) @{ 
+		/* do whatever */ 
+	@}
+	catch (...) @{ 
+		/* do whatever */ 
+	@}
+	
+@end codeexample
+
+@item
+Compile your client application code, @file{foo-cpp.cpp} and @file{foo-cppsurrogate.cpp},
+and link the resulting object files with the @language{C++} runtime library (@file{libilu-cpp2.a} 
+on @system{UNIX}, and @file{ilucpp2.lib} on @system{Win32}) and the
+@system{ILU} kernel library (@file{lib.a} 
+on @system{UNIX}, and @file{ilu32.lib} on @system{Win32}).
+
+@end enumerate
+
+
+@section Relevant examples
+@cindex Relevant examples for CORBA 2.0 C++
+
+The @system{ILU} examples directory contains two examples that use the @system{CORBA} 2.0 @language{C++} mapping.
+See cpp2foo, and test1.  The cpp2foo example illustrates a lot: object tables; collectible; custom surrogates;
+lookups; anys; return, in, inout, and out of most types; use of _vars; and more;
+
+
+
+@section Runtime Classes
+@cindex Runtime Classes for CORBA 2.0 C++
+
+
+
+@subsection Overview
+
+The classes of interest to the application programmer are listed
+below.  Nearly all non-static member functions are virtual to allow 
+creative overrides (at your own risk of course).
+
+
+@C++{iluCppRuntime} - Abstract class that provides various static member
+functions that the application can use to control the runtime's
+behavior.
+
+@C++{iluServer} - Provides the @language{C++} view of a kernel server object.
+
+@C++{iluObject} - The most base class for all @system{ILU} @language{C++} objects.  All objects inherit either 
+directly or indirectly from this class.
+
+@C++{iluObjectTable} - An abstract @language{C++} class for developers to derive from
+to provide Object Tables.
+
+@C++{iluPassport} - encapsulates ilu_Passport functionality
+
+@C++{iluGSS} - encapsulates GSS functionality
+
+@C++{iluMainLoop} - An abstract base class for developers to derive from to
+create their own main loop.
+
+@C++{iluWString_var} Class - analog to CORBA(String_var) only for @system{ILU} Characters
+
+(See @file{@metavar{ILUSRC}/runtime/cpp2/ilu.hpp} and @file{@metavar{ILUSRC}/runtime/cpp2/corba.hpp} for more complete descriptions.)
+
+
+
+
+
+
+@subsection iluCppRuntime
+@cindex iluCppRuntime, CORBA 2.0 C++
+
+
+An Abstract class that provides various static member functions that
+the application can use to control the runtime's behavior.
+@C++{iluCppRuntime} is not meant to ever be subclassed.
+
+
+
+@subsubsection iluCppRuntime - Initialization Related 
+@cindex iluCppRuntime Initialization, CORBA 2.0 C++
+
+
+@deftypefn {C++} {static void} iluCppRuntime::iluInitialize ( ILUCPP_BOOL @metavar{b_use_native_threads} = @constant{ILUCPP_FALSE} )
+@end deftypefn
+
+Initializes the @language{C++} runtime for use.  Also calls all the functions 
+(typically interface initialization functions in generated stubs) that are on the 
+@language{C++} Runtime's initialization function list (see iluCppRuntime::iluAddInitializationFunction).
+
+iluCppRuntime::iluInitialize's use depends on your use of threading:
+
+@enumerate
+	
+@item
+No threading at all - just call iluCppRuntime::iluInitialize().
+
+@item
+Using @system{ILU}'s native operating system (OS) thread support - call 
+iluCppRuntime::iluInitialize(ILUCPP_TRUE).
+
+@item
+Your own thread package - call iluCppRuntime::iluSetForkProcedure, 
+iluCppRuntime::iluSetNonNativeThreadIDFunction
+then call the @system{ILU} kernel functions ilu_SetWaitTech, and ilu_SetLockTech
+appropriately, call iluMainLoop::iluSetMainLoop, then call iluCppRuntime::iluInitialize().
+
+@end enumerate
+
+
+
+@deftypefn {C++} {static void} iluCppRuntime::iluAddInitializationFunction ( iluPFunctionInitializer @metavar{pf_initialize} )
+@end deftypefn
+
+Adds an initialization function onto the runtime's list of (typically
+interface initialization) functions to call when
+iluCppRuntime::iluInitialize is called.   iluPFunctionInitializer is
+typedeffed as 
+
+@deftypefn {C++} {void (*} iluPFunctionInitializer ) ( )
+@end deftypefn
+
+
+@deftypefn {C++} {static void}  iluCppRuntime::iluSetNonNativeThreadIDFunction ( iluNonNativeThreadIDFunction @metavar{p_thread_id_function} )
+@end deftypefn
+
+When running non-native threaded, this should be called (before
+initialization) set to the function that will return a thread unique
+@C++{iluCardinal} id of the current thread.  iluNonNativeThreadIDFunction is
+typedeffed as 
+
+@deftypefn {C++} {iluCardinal (*} iluNonNativeThreadIDFunction )( ) 
+@end deftypefn
+
+
+
+
+@deftypefn {C++} {static iluPFunctionSurrogateCreator} iluCppRuntime::iluSetSurrogateCreator ( iluClass @metavar{surrogate_class}, iluPFunctionSurrogateCreator @metavar{pfunction_surrogate_creator} )
+@end deftypefn
+
+Tells the @language{C++} runtime what function to call when a surrogate for an
+object of the specified class is needed.  This allows an
+implementation to subclass off a surrogate class, and write a new
+surrogate creation function that creates an instance of this new
+subclass.  This more specialized surrogate might do message filtering,
+caching, monitoring, etc. Call this function after you've performed
+initialization, but before you do any operations which might create a
+surrogate of the specified class.  It basically overwrites the default
+surrogate creation function set up by the surrogate stubs. It returns
+the old surrogate creator function, or @constant{NULL} if was previously no
+surrogate creator for that class (note: @constant{NULL} return should not really
+happen unless a mistake or something clever is being done - this means
+you've added a new node to the surrogate creator function list).
+iluPFunctionSurrogateCreator is typedeffed as 
+
+@deftypefn {C++} {iluObject* (*} iluPFunctionSurrogateCreator ) ( iluKernelObject). 
+@end deftypefn
+
+A surrogate creator function should at the minimum create an instance of a surrogate, call
+the instances member function iluAssociateKernelObject passing the
+@C++{iluKernelObject,} and then return a pointer to the new instance.
+
+
+
+@deftypefn {C++} {static void} iluCppRuntime::iluSetForkProcedure ( iluForkProc @metavar{pfunction_fork_procedure} )
+@end deftypefn
+
+If your using your own threads package call this before calling the
+@system{ILU} kernel functions ilu_SetWaitTech, etc. and pass a pointer to
+your function that forks a thread.  iluForkProc is typedeffed as
+
+@deftypefn {C++} {iluBoolean (*} iluForkProc ) ( void (*pfunction_procedure) (void* @metavar{pv_argument}), void* @metavar{pv_argument}, ILU_ERRS((no_memory, no_resources, internal)) * @metavar{p_error} )
+@end deftypefn
+
+
+
+@subsubsection iluCppRuntime - Character Utilities
+@cindex iluCppRuntime - Character Utilities, CORBA 2.0 C++
+
+
+
+@deftypefn {C++} {static iluCardinal} iluCppRuntime::iluCharacterStringLength ( const iluCharacter* @metavar{p_chars} )
+@end deftypefn
+
+Returns the length of the @C++{iluCharacter} string
+
+
+
+@deftypefn {C++} {static iluCharacter*} iluCppRuntime::iluCharacterStringCopy ( iluCharacter* @metavar{p_chars_destination}, const iluCharacter* @metavar{p_chars_source} )
+@end deftypefn
+
+Copies the source @C++{iluCharacter} string to the destination, returns the
+destination.
+
+
+@deftypefn {C++} {static iluCharacter*} iluCppRuntime::iluCharacterStringDuplicate ( const iluCharacter* @metavar{p_chars_source} )
+@end deftypefn
+
+Returns a duplicate of the source @C++{iluCharacter} string
+	
+
+
+
+@deftypefn {C++} {static ILUCPP_BOOL} iluCppRuntime::iluCharacterStringEqual ( const iluCharacter* @metavar{p_chars_one}, const iluCharacter* @metavar{p_chars_two} )
+@end deftypefn
+
+Returns true if strings are the same, else false.
+
+
+
+@deftypefn {C++} {static iluCharacter*} iluCppRuntime::iluCharStringFromShortCharString ( const iluShortCharacter* @metavar{pc_shortchars} )
+@end deftypefn
+
+Returns a new @C++{iluCharacter} string filled in from the @C++{iluShortCharacter} 
+string.
+
+
+
+
+@deftypefn {C++} {static ILUCPP_BOOL} iluCppRuntime::iluCharStringShortCharStringEqual ( const iluCharacter* @metavar{pc_chars}, const iluShortCharacter* @metavar{pc_shortchars} )
+@end deftypefn
+
+Returns true if the @C++{iluCharacter} string matches the @C++{iluShortCharacter} 
+string.
+
+@subsubsection iluCppRuntime - String Binding Handle Utilities
+@cindex iluCppRuntime - String Binding Handle Utilities, CORBA 2.0 C++
+
+@deftypefn {C++} {static char*} iluCppRuntime::iluFormSBH ( const char* @metavar{pc_serverid}, const char* @metavar{pc_instance_handle}, iluClass @metavar{the_ilu_class}, iluProtocolInfo @metavar{pc_protocol_type} = ((iluProtocolInfo) NULL), iluTransportInfo @metavar{transport_info} = ((iluTransportInfo) NULL) )
+@end deftypefn
+
+@deftypefn {C++} {static char*} iluCppRuntime::iluFormSBHUsingContactInfo ( const char* @metavar{pc_serverid}, const char* @metavar{pc_instance_handle}, iluClass @metavar{the_ilu_class},  const char* @metavar{p_str_encodedContactInfo} = NULL )
+@end deftypefn
+
+Use these to form a string binding handle from relevant parts, if protocol and/or transport info 
+are NULL, current defaults are used. For iluFormSBHUsingContactInfo, p_str_encodedContactInfo is 
+as would be obtained from iluParseSBH.
+
+@deftypefn {C++} {static ILUCPP_BOOL} iluCppRuntime::iluParseSBH ( iluCString  @metavar{str_encodedSBH}, iluCString*   @metavar{p_str_plainInstanceHandle} = NULL, iluCString*   @metavar{p_str_plainServerID} = NULL, iluCString*   @metavar{p_str_plainMstid} = NULL, iluCString*   @metavar{p_str_encodedContactInfo} = NULL, iluCardinal*  @metavar{p_card_encodedContactInfoLen} = NULL, ILUCPP_BOOL*  @metavar{p_b_malloced_contact_info} = NULL) )
+@end deftypefn
+
+
+Parse a string binding handle, returning whichever elements are
+specified by passing in non-NIL pointers.  Caller retains ownership of URL 
+argument.  If p_str_plainInstanceHandle != NIL, ownership of
+*p_str_plainInstanceHandle is passed to caller iff successful.  Similarly for
+p_str_plainServerID and p_str_plainMstid. *p_str_encodedContactInfo is set to point
+into the given URL (The whole sequence of contact info is returned in 
+*p_str_encodedContactInfo) , and *p_card_encodedContactInfoLen is set to the
+length of the contact info substring; the next character is left unmolested.
+If the p_b_malloced_contact_info out parameter is true, then caller must arrange to free it.
+
+
+@subsubsection iluCppRuntime - File Descriptor Budget
+@cindex iluCppRuntime -  File Descriptor Budget, CORBA 2.0 C++
+
+
+@deftypefn {C++} {static iluCardinal} iluCppRuntime::iluGetFDBudget ( )
+@end deftypefn
+
+@deftypefn {C++} {static iluCardinal} iluCppRuntime::iluSetFDBudget ( iluCardinal @metavar{card_size} )
+@end deftypefn
+
+Get and set @system{ILU} file descriptor budget. iluSetFDBudget returns the
+new budget. Because @system{ILU} may open multiple connections to a server,
+we need some policy for when to close them.  That policy is this: the
+application gives the ILU kernel a "File Descriptor Budget" (initally 16).
+The ILU kernel promises to use no more than this many File Descriptors at
+once.Off the top of this budget we take FDs needed for serving (one per
+listening socket and one per accept).  The remainder is allocated to
+outgoing connections (over transports that use FDs --- ie, not inmemory).
+When we want to consume a new FD, and there's no room left in the budget,
+we go looking for an idle outgoing connection (one with no outstanding
+calls) to close.  All idle outgoing connections are kept in a doubly-linked
+list, ordered by when the connection went idle (most recently at the
+front).
+
+
+
+@subsubsection iluCppRuntime - Memory  Management
+@cindex iluCppRuntime - Memory  Management, CORBA 2.0 C++
+
+
+@deftypefn {C++} {static void} iluCppRuntime::iluFree ( void* @metavar{pv}  /* ILUowned */ )
+@end deftypefn
+Use this to free things returned by @system{ILU}
+
+
+@deftypefn {C++} {static void*} iluCppRuntime::iluMalloc ( iluCardinal @metavar{card_size} )
+@end deftypefn
+
+You can use this to malloc things from @system{ILU}.
+
+
+
+@subsection iluServer 
+@cindex iluServer, CORBA 2.0 C++
+
+@C++{iluServer} provides a the @language{C++} view of a kernel server object.
+@C++{iluServers} cannot be copied or assigned. 
+
+
+@subsubsection iluServer - Setup and Destruction
+@cindex iluServer - Setup and Destruction, CORBA 2.0 C++
+
+	
+@deftypefn {C++} constructor iluServer::iluServer ( char* @metavar{pc_server_id} = @constant{NULL}, iluObjectTable* @metavar{p_object_table} = @constant{NULL} /* ILUowned */ , char * @metavar{pc_protocol_type} = @constant{NULL}, iluTransportInfo @metavar{transport_info} = @constant{NULL}, iluPassport* @metavar{p_passport} = @constant{NULL}, ILUCPP_BOOL @metavar{b_addport} = @constant{ILUCPP_TRUE})
+@end deftypefn
+	
+Constructor - If no pc_server_id is specified, one is automatically created based on
+based on time, hostname, and process id.  If p_object_table is @constant{NULL}, a default
+object table implementation is used.  If @metavar{b_addport} is @C++{ILUCPP_TRUE}, a port is created and added to the 
+server using the specified protocol and transport, and becomes the default
+port of the server.  pc_protocol_type and transport_info default to whatever 
+the default protocol and transport are currently set to. Caller owns pc_server_id
+p_object_table, pc_protocol_type, transport_info, and p_passport. p_passport points 
+to an @C++{iluPassport,} defaulted to @constant{NULL} -  this passport containing an @system{ILU} GSS identity, 
+which is used as the identity of the principal offering the service, and put into the 
+connection information in the string binding handle of objects on that server.
+
+
+	
+
+@deftypefn {C++} {virtual} iluServer::~iluServer ( )
+@end deftypefn
+
+Destructor - basically destroys the kernel server and breaks
+all associations between kernel objects in this server and 
+their language specific objects.  Indirectly also deletes any
+@C++{iluObjectTable} used with this iluServer.
+	
+	
+
+
+@deftypefn {C++} {virtual void} iluServer::iluAddPort (char* @metavar{pc_protocol_type}, iluTransportInfo @metavar{transport_info}, ILUCPP_BOOL @metavar{b_become_default_port} = @constant{ILUCPP_FALSE}, iluPassport* @metavar{p_passport} = @constant{NULL}, ILUCPP_BOOL @metavar{b_public} = @constant{ILUCPP_TRUE} )
+	
+Adds another port to an existing server If b_become_default_port is 
+@constant{ILUCPP_TRUE} the new port will become the default port for this server.
+p_passport points to an @C++{iluPassport,} defaulted to @constant{NULL}. this passport containing 
+an @system{ILU} GSS identity, which is used as the identity of the principal offering the 
+service, and put into the connection information in the string binding handle 
+of objects on that server.   If @metavar{b_public} is @constant{ILUCPP_TRUE}, 
+the cinfo of the port will be included in string binding handles for objects of this
+server; if @constant{ILUCPP_FALSE}, the cinfo will not be included.  Caller owns the arguments.
+
+@end deftypefn
+
+@deftypefn {C++} {virtual void} iluServer::iluRun ( int* @metavar{p_i_stop_on_non_zero} = @constant{NULL} )
+
+This runs the main, outer loop of an iluServer. It never returns
+if p_i_stop_on_non_zero isn't supplied, else it returns when 
+*p_i_stop_on_non_zero is non zero. If you're running threaded
+this routine simply goes into a sleep loop,
+
+@end deftypefn
+
+@subsubsection iluServer - Controlling Cinfo
+@cindex iluServer - Controlling Cinfo, CORBA 2.0 C++
+
+The Cinfo of a server is the information about protocols and transports that are added
+to the string binding handle of an object.  This can be controlled with the @metavar{b_public}
+parameter to @method{iluAddPort}, and also with the two methods @method{iluGetCInfo} and
+@method{iluAddCInfo}.  This can be used to implement a scheme in which a dummy server process
+exports a server, but relocates connection requests to that server to another server process.
+The first server (call it the @dfn{manager}) creates a server with a relocate procedure (this server
+must be written in C or Python; the CORBA C++ runtime does not yet support relocate procedures).
+When it receives a connection request, it starts the real server (call it the worker), or finds
+an already started one.  The worker
+creates a server with the same server id as that started by the manager, but with no ports.
+It calls @method{iluAddCInfo} using the manager's cinfo, so that objects exported by the worker
+will have the same cinfo as the manager.
+The worker then adds a private port, and calls @method{iluGetCInfo} to find the cinfo of this
+port.  It sends the cinfo back to the manager, which in turn sends it back to the client, which
+re-connects to the worker.  Any objects the worker creates and sends back to the client will have
+the manager's cinfo, so any re-connects later will go through the same dance.
+
+@deftypefn {C++} {virtual ILUCPP_BOOL} iluServer::iluGetCInfo ( {iluProtocolInfo *} @metavar{pp_pinfo}, {iluTransportInfo *} @metavar{pp_tinfo}, ILUCPP_BOOL b_public = @constant{ILUCPP_FALSE})
+
+@method{iluGetCInfo} returns the native cinfo of one of the server's ports.  If @metavar{b_public}
+is @constant{ILUCPP_TRUE}, it will return the cinfo of the first public port; otherwise it will
+return the cinfo of the first private port.  It returns @constant{ILUCPP_TRUE} if a port of
+the specified type was found, @constant{ILUCPP_FALSE} if not.  The caller owns the returned
+pinfo and tinfo, and is responsible for freeing them.
+
+@end deftypefn
+
+@deftypefn {C++} {virtual void} iluServer::iluAddCInfo ( {const iluProtocolInfo} @metavar{p_pinfo}, {const iluTransportInfo} @metavar{p_tinfo} )
+
+@method{iluAddCInfo} adds the specified pinfo and tinfo to the cinfo which will be
+used for any string binding handles of objects exported through this server.
+The caller retains ownership of the arguments.
+
+@end deftypefn
+
+@subsubsection iluServer - Default Accessors
+@cindex iluServer - Default Accessors, CORBA 2.0 C++
+
+
+@deftypefn {C++} {static char*} iluServer::iluGetDefaultProtocol ( )
+@end deftypefn
+
+@deftypefn {C++} {static void} iluServer::iluSetDefaultProtocol ( char* @metavar{pc_new_default_protocol} )
+@end deftypefn
+
+Get and set the default protocol used when adding a port on a 
+@C++{iluServer} - initialized to whatever is set to be the default
+in the kernel (found in @file{@metavar{ILUSRC}/runtime/kernel/iluconf.h}
+ or @file{@metavar{ILUSRC}/runtime/kernel/iluwin.h})
+	
+	
+	
+	
+@deftypefn {C++} {static const iluTransportInfo} iluServer::iluGetDefaultTransport ( )
+@end deftypefn
+
+@deftypefn {C++} {static void} iluServer::iluSetDefaultTransport ( iluTransportInfo @metavar{ppc_new_default_transport_info} )
+@end deftypefn
+
+Get and set the default transports used when adding a port on a 
+@C++{iluServer}  - initialized to whatever is set to be the default
+in the kernel (found in @file{@metavar{ILUSRC}/runtime/kernel/iluconf.h}
+or @file{@metavar{ILUSRC}/runtime/kernel/iluwin.h})
+Callee owns pc_new_default_transport_info.
+	
+	
+
+
+@deftypefn {C++} {static iluServer@ampnr{}} iluServer::iluGetDefaultServer ( )
+Returns the default @C++{iluServer}, creating one if need be.
+@end deftypefn
+
+
+
+
+@deftypefn {C++} {static iluServer*} iluServer::iluSetDefaultServer ( iluServer& @metavar{new_default_server} )
+Sets the default @C++{iluServer,} returns old default, which is @constant{NULL} if no default currently is set.
+@end deftypefn
+	
+
+
+
+
+@subsection iluObject
+@cindex iluObject, CORBA 2.0 C++
+
+
+The most base class for all @system{ILU} @language{C++} objects.  All objects inherit either 
+directly or indirectly from  @C++{iluObject}.  All non-static member functions are virtual
+to allow creative overrides (at your own risk of course).  @C++{iluObjects}
+cannot be copied or assigned.
+
+
+@subsubsection iluObject - Creation and Destruction
+@cindex iluObject - Creation and Destruction, CORBA 2.0 C++
+
+
+@deftypefn {C++} constructor iluObject::iluObject ( iluClass @metavar{the_Class}, char* @metavar{pc_instance_handle} = @constant{NULL}, iluServer& @metavar{the_server} = iluServer::iluGetDefaultServer(), ILUCPP_BOOL @metavar{b_within_object_table} = ILUCPP_FALSE )
+@end deftypefn
+
+ Constructor - This constructor must be called (only) from the constructors
+ for true objects.  
+ 
+ For example, in an implementation of a foo::bar :
+
+@codeexample
+ foo_bar_impl(char* @metavar{pc_instance_handle}, iluServer& r_an_ilu_server, CORBA(Boolean) b_within_object_table = ILUCPP_FALSE :
+          iluObject(iluGetILUClassRecord(), pc_instance_handle, r_an_ilu_server, b_within_object_table) @{@}	
+@end codeexample
+
+If no instance handle is specified, then the value of a monotonicaly
+increasing, @C++{iluServer} specific counter will be used to generate one.  
+If no server is specified, then the default server will be used. 
+(The default server is generated automatically if needed, and has the
+an id based on time, hostname, and process id.)  Caller owns pc_instance_handle.
+The new object has a reference count of 1.  If b_within_object_table is true, 
+then it is assumed the object is being created inside an iluObjectTable's 
+iluObjectOfInstanceHandle function, meaning that the locks on the server should 
+not be modified.
+
+
+@deftypefn {C++} {static iluObject*} iluObject::iluStringToObject ( char* @metavar{pc_string_binding_handle} )
+Given a string binding handle (e.g. as obtained from iluObjectToString)
+returns an iluObject* for that object, with the reference count incremented.
+@end deftypefn
+
+
+
+@deftypefn {C++} {virtual} iluObject::~iluObject ( )
+Destructor ensures that this object is completely disassociated from the @system{ILU} kernel 
+The most specific destructor of an object should call iluDeactivate
+on the object to block any further incoming calls, and wait for any 
+ongoing calls to complete.  Next it should perform any object specific
+cleanup.  Finally, the destructor in @C++{iluObject} will break the association
+between the kernel object and this object, allowing the kernel object
+to be potentially freed.
+@end deftypefn
+
+
+
+@deftypefn {C++} {virtual void} iluObject::iluDeactivate ( )
+Ensures this object is not available from the outside. This must
+be the first thing called by the most specific destructor of an 
+object. If if isn't, then the potential exists (in multithread case) 
+for a call to come in for an object that's in the middle of
+destruction - a bad thing!  This function blocks until there are
+zero ongoing calls.
+@end deftypefn
+
+
+
+@deftypefn {C++} {virtual void} iluObject::iluKernelObjectUnlinked ( )
+Called by iluUnlinkKernelObject - you can override this virtual 
+function in your objects to do whatever you like when the association
+between your object and the kernel object is broken - e.g. delete yourself
+The implementation in @C++{iluObject} deletes this.
+@end deftypefn
+
+
+
+
+
+@subsubsection iluObject - Object Publication
+@cindex iluObject - Object Publication, CORBA 2.0 C++
+
+
+@deftypefn {C++} {virtual ILUCPP_BOOL} iluObject::iluPublish ( )
+Publishes binding information for this object in the binding service
+Has no effect on object reference count.
+@end deftypefn
+
+
+
+@deftypefn {C++} {virtual ILUCPP_BOOL} iluObject::iluWithdraw ( )
+
+Removes binding information for this object from the binding service
+Has no effect on object reference count.
+
+@end deftypefn
+
+
+
+@deftypefn {C++} {static void*} iluObject::iluLookup (char* @metavar{pc_instance_handle}, char* @metavar{pc_server_id}, iluClass @metavar{the_class} )
+@end deftypefn
+
+Used by stubber generated iluLookup functions in derived classes to 
+lookup an object in the binding service based on its instance and server id
+and class. Increments reference count of object.  To Lookup objects
+of type T, use the T::iluLookup(char* @metavar{pc_instance_handle}, char* pc_server_id;
+function produced by the stubber. 
+For example:
+
+@codeexample
+mybar_var =  foo(bar)::iluLookup("foo_instance_0", pc_serverid )
+@end codeexample
+
+
+
+
+
+@subsubsection iluObject - Accessors
+@cindex iluObject - Accessors, CORBA 2.0 C++
+
+
+@deftypefn {C++} {virtual iluServer*} iluObject::iluGetServer ( )
+Returns pointer to the iluServer that this object resides in.
+@end deftypefn
+
+
+@deftypefn {C++} {virtual const char* /* ILUowned */} iluObject::iluId ( )
+Returns the objects instance id.
+@end deftypefn
+
+
+
+@deftypefn {C++} {virtual const char* /* ILUowned */} iluObject::iluServerId ( )
+Returns the id of the objects ILU Server.
+@end deftypefn
+
+
+
+
+@subsubsection iluObject - Informational
+@cindex iluObject - Informational, CORBA 2.0 C++
+
+
+@deftypefn {C++} {virtual iluCString}	iluObject::iluObjectToString ( )
+
+Returns the @system{ILU} string binding handle for the object.
+Caller get ownership of the string
+
+@end deftypefn
+
+@deftypefn {C++} {ILUCPP_BOOL}	iluObject::iluIsCollectibleObject ( )
+
+Returns true if the object is of a collectible class.
+
+@end deftypefn
+
+
+
+@deftypefn {C++} {virtual iluCString}	iluObject::iluObjectToIORString ( )
+
+Returns a string which is the object's name and contact information
+as specified by the CORBA IIOP spec - caller gets ownership of the string.
+May return NULL if the object is not exported through an @protocol{IIOP} ilu_Port.
+(Available only when  @protocol{IIOP} support is configured into @system{ILU}.)
+
+@end deftypefn
+
+
+@deftypefn {C++} {virtual iluCString}	iluObject::iluObjectToURLString ( )
+
+Returns a string which is the object's name and contact information
+as specified by an  @protocol{HTTP} URL - caller gets ownership of the string.
+May return NULL if the object is not exported through an @protocol{HTTP} ilu_Port
+(Available only when  @protocol{HTTP} support is configured into @system{ILU}.)
+
+@end deftypefn
+
+
+@deftypefn {C++} {ILUCPP_BOOL} iluObject::iluPing ()
+
+Returns @constant{ILUCPP_TRUE} if the true object exists, and the process
+serving it can be contacted, otherwise  @constant{ILUCPP_FALSE}.
+
+@end deftypefn
+
+
+@deftypefn {C++} {ILUCPP_BOOL} iluObject::_is_equivalent (iluObject* p_obj)
+Returns @constant{ILUCPP_TRUE} if the two objects denote the same thing.
+@end deftypefn
+
+
+@deftypefn {C++} {ILUCPP_BOOL} iluObject::iluInSameServer (iluObject* p_obj)
+
+Returns @constant{ILUCPP_TRUE} if the two objects are in the same @system{ILU} server.
+Used, for example, to determine if objects are SIBLINGS.
+
+@end deftypefn
+
+
+@deftypefn {C++} {virtual const char*	/* ILUowned */}	iluObject::iluClassName ( )
+@end deftypefn
+
+@deftypefn {C++} {virtual const char*	/* ILUowned */}	iluObject::iluClassId   ( )
+@end deftypefn
+
+Return the @system{ILU} class name and type id - primarily informational use.
+
+
+@subsubsection iluObject - Reference Counting
+@cindex iluObject - Reference Counting, CORBA 2.0 C++
+
+
+@deftypefn {C++} {virtual void} iluObject::iluIncrementReferenceCount ( )
+@end deftypefn
+
+@deftypefn {C++} {virtual void} iluObject::iluDecrementReferenceCount ( )
+@end deftypefn
+
+Reference count operations - when an object is first created, it has
+a reference count of one.  If the reference count ever goes to zero,
+delete is called on this.  @system{CORBA} compliant apps (where objects derive
+from CORBA::Object) should use the duplicate and release functionality
+defined in the @system{CORBA} specification.
+
+
+@deftypefn {C++} {virtual iluCardinal} iluObject::iluGetReferenceCount ( )
+@end deftypefn
+Returns what the current reference count is.
+
+
+@deftypefn {C++} {static iluObject*}  iluObject::_duplicate (iluObject* @metavar{p_obj})
+@end deftypefn
+Increments the reference count on the object and returns it.  Returns NULL if
+passed NULL.
+
+
+@deftypefn {C++} {static iluObject*}  iluObject::_narrow (iluObject* @metavar{p_obj})
+@end deftypefn
+Effectively casts the object pointer to an iluObject*.
+
+
+
+@subsection iluObjectTable
+@cindex iluObjectTable, CORBA 2.0 C++
+
+
+An abstract @language{C++} class for developers to derive from to
+provide Object Tables.  Object tables cannot be copied or assigned.  
+Besides doing whatever application specific things might need to be 
+done in the constructor and destructor, a class derived from @C++{iluObjectTable} 
+must provide the iluObjectOfInstanceHandle virtual member function.
+
+
+@deftypefn {C++} {virtual iluObject*} iluObjectTable::iluObjectOfInstanceHandle (iluCString @metavar{pc_instance_handle} /* ILUowned */) = 0;
+@end deftypefn
+
+Called by @system{ILU} to create and return a new @C++{iluObject}* with the specified instance 
+handle.  @system{ILU} retains ownership of pc_instance_handle - i.e. copy it if you need
+want to hang on to it. Note that when in this function, you are 'inside'  the object's server - 
+i.e. you hold the locks on the server - this means that when you create the object, you must 
+specify the 3rd argument to the object's constructor (b_within_object_table) as true.
+
+@deftypefn {C++} {virtual iluServer*} iluObjectTable::iluGetServer ();
+@end deftypefn
+
+Returns the pointer to the iluServer this object table is associated with.
+
+
+@deftypefn {C++} {virtual} iluObjectTable::~iluObjectTable ( )
+@end deftypefn
+
+Do whatever destroying the Object Table needs to do to free up resources, etc.
+It gets called when the @C++{iluServer} it's associated with it is shut down.
+
+	
+
+
+
+@subsection iluPassport
+@cindex iluPassport, CORBA 2.0 C++
+
+
+Encapsulates @C++{ilu_Passport} functionality
+
+
+@deftypefn {C++} constructor iluPassport::iluPassport ( iluIdentityInfo @metavar{p_identity_info} = @constant{NULL} )
+@end deftypefn
+
+Constructor - creates and returns a passport, optionally containing the specified identity.
+
+
+@deftypefn {C++} {virtual} iluPassport::~iluPassport ( )
+@end deftypefn
+
+Destructor - frees any associated identities in addition to freeing the passport
+
+
+
+@deftypefn {C++} {static iluPassport*} iluPassport::iluGetPassport ( )
+@end deftypefn
+
+@deftypefn {C++} {static iluPassport*} iluPassport::iluSetPassport (iluPassport* @metavar{p_passport} )
+@end deftypefn
+
+Get and set the passport being used for outgoing calls - in the multi-threaded case, this is per-thread
+Set returns the old @C++{iluPassport}.  Note that before your thread exits, you should either call 
+iluSetPassport(@constant{NULL}), or delete the @C++{iluPassport} in use (assuming it's only in use for a single thread).
+
+
+
+@deftypefn {C++} {static iluPassport* /* ILUowned */} iluPassport::iluGetCallerPassport ( )
+@end deftypefn
+
+Get the passport of the caller.
+
+
+@deftypefn {C++} {virtual void} iluPassport::iluAddIdentity ( iluIdentityInfo @metavar{p_identity_info} /* ILUowned */ )
+@end deftypefn
+
+Adds identity to Passport.  Only one identity of each type is allowed.
+
+
+
+@deftypefn {C++} {virtual iluIdentityInfo /* ILUowned */} iluPassport::iluFindIdentity ( iluIdentityType @metavar{p_identity_type} )
+@end deftypefn
+
+Returns identity of specified type, if present else @constant{NULL}
+
+
+
+@deftypefn {C++} {static iluIdentityInfo} iluPassport::iluCopyIdentity ( iluIdentityInfo @metavar{p_identity_info} )
+@end deftypefn
+
+Returns a copy of the passed identity
+
+
+
+@deftypefn {C++} {ilu_Passport /* ILUowned */} iluPassport::iluGetIluPassport ()
+@end deftypefn
+
+Returns the (kernel) ilu_Passport
+
+
+
+@subsection iluGSS
+@cindex iluGSS, CORBA 2.0 C++
+
+
+Encapsulates GSS functionality - only defined when @system{ILU} is configured
+with secure transport.
+
+
+@deftypefn {C++} {static iluIdentityInfo} iluGSS::iluAcquireGSSIdentity ( gss_cred_id_t @metavar{gss_credential} )
+@end deftypefn
+
+@deftypefn {C++} {static ILUCPP_BOOL} iluGSS::iluDecodeGSSIdentity ( iluIdentityInfo @metavar{p_identity_info}, gss_name_t* @metavar{p_name}, iluFineTime* @metavar{p_good_till_time},gss_OID @metavar{mechanism}, ILUCPP_BOOL* @metavar{p_b_local}, iluCardinal* @metavar{p_card_flags} )
+@end deftypefn
+
+@metavar{p_identity_info} - input; retain; info to decode 
+@metavar{p_name} - output; name in identity 
+@metavar{p_good_till_time} - output; good-till
+@metavar{mechanism} - input; actual mechanism desired; optional 
+@metavar{p_b_local} - if TRUE, local; otherwise remote 
+@metavar{p_card_flags} - connection flags, as in gss_inquire_context 
+
+
+
+@deftypefn {C++} {static gss_cred_id_t} iluGSS::iluAcquireGSSCredForName ( char* @metavar{pc_name}, iluCardinal @metavar{card_lifetime}, gss_OID @metavar{mechanism}, ILUCPP_BOOL @metavar{b_accept_only} )
+@end deftypefn
+
+@deftypefn {C++} {static iluCString} iluGSS::iluGSSNameToString ( gss_name_t @metavar{name} )
+@end deftypefn
+
+
+
+
+@subsection iluMainLoop
+@cindex iluMainLoop, CORBA 2.0 C++
+
+Subclass from the @C++{iluMainLoop} class if you want to have your
+own version of the main loop. @C++{iluMainLoops} cannot be copied or assigned. 
+A single threaded application should supply all functions.  
+An application making use of @system{ILU}'s OS multi-threaded
+operation should not use a different mainloop.  If you're using your
+own thread package, you must supply all functions, and see the comment
+for iluCppRuntime::iluInitialize
+
+
+@deftypefn {C++} {virtual void} iluMainLoop::iluRun ( int* @metavar{p_i_stop_on_non_zero} ) = 0;
+@end deftypefn
+
+Runs the main loop until *p_i_stop_on_non_zero is non-zero.
+
+
+
+@deftypefn {C++} {virtual void} iluMainLoop::iluExit ( int*  @metavar{p_i_stop_on_non_zero} ) = 0;
+@end deftypefn
+
+Causes the main loop to exit
+
+
+
+
+@deftypefn {C++} {virtual ILUCPP_BOOL} iluMainLoop::iluRegisterInputHandler (int @metavar{i_fd}, void (* @metavar{pfunction_input_handler} )(int @metavar{i_fd}, void* @metavar{pv_input_handler_arg} ), void*  @metavar{pv_input_handler_arg} ) = 0;
+@end deftypefn
+		
+Input Handlers - When there is input activity on the file descriptor 
+i_fd, the mainloop will call the registered handler procedure
+pfunction_input_handler, passing it i_fd and pv_input_handler_arg as arguments.
+Returns @constant{ILUCPP_FALSE} if it can't do it's job due to some resource limitation.
+
+
+
+
+@deftypefn {C++} {virtual ILUCPP_BOOL} iluMainLoop::iluUnregisterInputHandler ( int @metavar{i_fd}, void (** @metavar{ppfunction_input_handler} )(int @metavar{i_fd}, void* @metavar{pv_input_handler_arg} ), void**  @metavar{ppv_input_handler_arg} ) = 0;
+@end deftypefn
+	
+Returns @constant{ILUCPP_FALSE} if input on i_fd was being handled, else @constant{ILUCPP_TRUE}.
+Sets function and arg ptrs to what they were if anything.
+
+
+@deftypefn {C++} {virtual ILUCPP_BOOL} iluMainLoop::iluRegisterOutputHandler (int @metavar{i_fd}, void (* @metavar{pfunction_output_handler} )(int @metavar{i_fd}, void*  @metavar{pv_output_handler_arg} ), void* @metavar{pv_output_handler_arg} ) = 0;
+@end deftypefn
+	
+Output Handlers - When it is possible to perform output on the file descriptor 
+i_fd, the mainloop will call the registered handler procedure
+pfunction_output_handler, passing it i_fd and pv_output_handler_arg as arguments.
+
+
+
+@deftypefn {C++} {virtual ILUCPP_BOOL} iluMainLoop::iluUnregisterOutputHandler (int @metavar{i_fd}, void (** @metavar{ppfunction_output_handler} )(int @metavar{i_fd}, void*  @metavar{pv_output_handler_arg} ), void** @metavar{ppv_output_handler_arg} ) = 0;
+@end deftypefn
+
+Returns @constant{ILUCPP_FALSE} if output on i_fd had a handler, else @constant{ILUCPP_TRUE}
+Sets function and arg ptrs to what they were if anything.
+
+
+
+@deftypefn {C++} {virtual iluAlarm} iluMainLoop::iluCreateAlarm ( ) = 0;
+@end deftypefn
+
+Creates an alarm.  An alarm is an active object which can be set to 
+asynchronously invoke a procedure with an argument at a specified time.
+An alarm may be something like a pointer to a
+structure that has some internal structure, but from the point of
+view of an alarm user, it's just a handle that is used to specify
+a particular alarm to be set or cleared.
+
+
+ 
+@deftypefn {C++} {virtual void} iluMainLoop::iluSetAlarm (iluAlarm @metavar{the_alarm}, iluFineTime @metavar{alarm_time},  void (*@metavar{pfunction_alarm_handler})(void* @metavar{pv_alarm_handler_arg}), void* @metavar{pv_alarm_handler_arg} ) = 0;
+@end deftypefn
+	
+Sets up an alarm to call the handler procedure pfunction_alarm_handler,
+passing it pv_alarm_handler_arg as an argument, when the alarm_time
+occurs.
+	
+	
+	
+@deftypefn {C++} {virtual void} iluMainLoop::iluClearAlarm ( iluAlarm @metavar{the_alarm} ) = 0;
+@end deftypefn
+
+Cancels the alarm (effectively sets the alarm time to infinity).
+
+
+
+@deftypefn {C++} {virtual void} iluMainLoop::iluDestroyAlarm ( iluAlarm @metavar{the_alarm} ) = 0;
+@end deftypefn
+	
+Destroys the alarm (if alarm is set, does not invoke).
+
+
+
+@deftypefn {C++} {static void} iluMainLoop::iluSetFineTimeFromNow ( ilu_FineTime* @metavar{p_finetime}, ilu_integer @metavar{i_secs}, ilu_cardinal @metavar{i_msecs} )
+@end deftypefn
+
+Utility function to set the pointed to ilu_FineTime to a time i_secs + i_msecs in the future
+
+
+
+@deftypefn {C++} {static void} iluMainLoop::iluSetMainLoop ( iluMainLoop* @metavar{p_mainloop_instance} )
+@end deftypefn
+
+@deftypefn {C++} {static iluMainLoop*} iluMainLoop::iluGetMainLoop ( )
+@end deftypefn
+
+Setting the Main Loop to be used - Call iluSetMainLoop set your mainloop as the one for @system{ILU} to use.
+It should called before any @system{ILU} initialization.
+
+
+
+
+@deftypefn {C++} {static iluAlarm} iluMainLoop::iluDefaultLoopCreateAlarm ( )
+@end deftypefn
+
+@deftypefn {C++} {static void} iluMainLoop::iluDefaultLoopSetAlarm ( iluAlarm @metavar{the_alarm}, iluFineTime @metavar{alarm_time}, void (* @metavar{pfunction_alarm_handler} )(void* @metavar{pv_alarm_handler_arg} ), void* @metavar{pv_alarm_handler_arg} )
+@end deftypefn
+
+@deftypefn {C++} {static void} iluMainLoop::iluDefaultLoopClearAlarm ( iluAlarm @metavar{the_alarm} )
+@end deftypefn
+
+@deftypefn {C++} {static void} iluMainLoop::iluDefaultLoopDestroyAlarm ( iluAlarm @metavar{the_alarm} )
+@end deftypefn
+	
+When you haven't set the main loop (i.e. you're using @system{ILU}'s default
+loop), you can call these functions to create, set and unset alarms.
+(If you set your own main loop, just call its alarm functions.)
+
+
+
+
+@section CORBA 2.0 C++ Considerations
+@cindex CORBA 2.0 C++ Considerations
+
+
+
+@subsection ORB_init
+
+The @system{CORBA} @C++{ORB_init} function may be called instead of @C++{iluCppRuntime::iluInitialize} 
+(which @C++{ORB_init} calls internally).  The orb identifier passed to @C++{ORB_init} should be 
+@constant{"ilu"}.  If the command line argument  @constant{-iluthreaded} is present in the command 
+line arguments passed to @C++{ORB_init}, then @system{ILU} will be run in threaded mode, otherwise 
+@system{ILU} will run single-threaded.
+

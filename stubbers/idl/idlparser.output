@@ -1,0 +1,5207 @@
+
+Grammar
+rule 1    specification -> definition_list
+rule 2    definition -> type_dcl ';'
+rule 3    definition -> const_dcl ';'
+rule 4    definition -> except_dcl ';'
+rule 5    definition -> interface ';'
+rule 6    definition -> module ';'
+rule 7    definition -> value ';'
+rule 8    definition -> pragma
+rule 9    module -> MODULE IDENT '{' definition_list '}'
+rule 10   definition_list -> definition
+rule 11   definition_list -> definition_list definition
+rule 12   interface -> interface_dcl
+rule 13   interface -> forward_dcl
+rule 14   interface_dcl -> interface_header '{' interface_body '}'
+rule 15   forward_dcl -> opt_abstract INTERFACE IDENT
+rule 16   opt_abstract ->		/* empty */
+rule 17   opt_abstract -> ABSTRACT
+rule 18   interface_header -> opt_abstract INTERFACE IDENT
+rule 19   interface_header -> opt_abstract INTERFACE IDENT ':' scoped_name_list
+rule 20   interface_body ->		/* empty */
+rule 21   interface_body -> export_list
+rule 22   export -> type_dcl ';'
+rule 23   export -> const_dcl ';'
+rule 24   export -> except_dcl ';'
+rule 25   export -> attr_dcl ';'
+rule 26   export -> op_dcl ';'
+rule 27   export_list -> export
+rule 28   export_list -> export_list export
+rule 29   scoped_name -> IDENT
+rule 30   scoped_name -> SCOPE IDENT
+rule 31   scoped_name -> scoped_name SCOPE IDENT
+rule 32   scoped_name_list -> scoped_name
+rule 33   scoped_name_list -> scoped_name_list ',' scoped_name
+rule 34   value -> value_dcl
+rule 35   value -> value_abs_dcl
+rule 36   value -> value_box_dcl
+rule 37   value -> value_forward_dcl
+rule 38   value_forward_dcl -> VALUETYPE IDENT
+rule 39   value_forward_dcl -> ABSTRACT VALUETYPE IDENT
+rule 40   value_box_dcl -> VALUETYPE IDENT type_spec
+rule 41   value_abs_dcl -> ABSTRACT VALUETYPE IDENT opt_value_inheritance_spec '{' interface_body '}'
+rule 42   value_dcl -> value_header '{' value_element_list '}'
+rule 43   value_header -> VALUETYPE IDENT opt_value_inheritance_spec
+rule 44   value_header -> CUSTOM VALUETYPE IDENT opt_value_inheritance_spec
+rule 45   opt_value_inheritance_spec -> opt_value_inheritance_base
+rule 46   opt_value_inheritance_spec -> opt_value_inheritance_base SUPPORTS scoped_name_list
+rule 47   opt_value_inheritance_base ->		/* empty */
+rule 48   opt_value_inheritance_base -> ':' opt_truncatable scoped_name_list
+rule 49   opt_truncatable ->		/* empty */
+rule 50   opt_truncatable -> TRUNCATABLE
+rule 51   value_element_list ->		/* empty */
+rule 52   value_element_list -> value_element_list value_element
+rule 53   value_element -> export
+rule 54   value_element -> state_member
+rule 55   value_element -> init_dcl
+rule 56   state_member -> private_public type_spec declarators ';'
+rule 57   private_public -> PRIVATE
+rule 58   private_public -> PUBLIC
+rule 59   init_dcl -> FACTORY IDENT '(' opt_init_param_dcl_list ')' ';'
+rule 60   opt_init_param_dcl_list ->		/* empty */
+rule 61   opt_init_param_dcl_list -> init_param_dcl_list
+rule 62   init_param_dcl_list -> init_param_dcl
+rule 63   init_param_dcl_list -> init_param_dcl_list ',' init_param_dcl
+rule 64   init_param_dcl -> IN param_type_spec simple_declarator
+rule 65   const_dcl -> CONST const_type IDENT '=' const_expr
+rule 66   const_type -> integer_type
+rule 67   const_type -> char_type
+rule 68   const_type -> wide_char_type
+rule 69   const_type -> boolean_type
+rule 70   const_type -> octet_type
+rule 71   const_type -> floating_pt_type
+rule 72   const_type -> string_type
+rule 73   const_type -> wide_string_type
+rule 74   const_type -> fixed_pt_const_type
+rule 75   const_type -> scoped_name
+rule 76   const_expr -> or_expr
+rule 77   or_expr -> xor_expr
+rule 78   or_expr -> or_expr '|' xor_expr
+rule 79   xor_expr -> and_expr
+rule 80   xor_expr -> xor_expr '^' and_expr
+rule 81   and_expr -> shift_expr
+rule 82   and_expr -> and_expr '&' shift_expr
+rule 83   shift_expr -> add_expr
+rule 84   shift_expr -> shift_expr LSHIFT add_expr
+rule 85   shift_expr -> shift_expr RSHIFT add_expr
+rule 86   add_expr -> mult_expr
+rule 87   add_expr -> add_expr '+' mult_expr
+rule 88   add_expr -> add_expr '-' mult_expr
+rule 89   mult_expr -> unary_expr
+rule 90   mult_expr -> mult_expr '*' unary_expr
+rule 91   mult_expr -> mult_expr '/' unary_expr
+rule 92   mult_expr -> mult_expr '%' unary_expr
+rule 93   unary_expr -> unary_operator primary_expr
+rule 94   unary_expr -> primary_expr
+rule 95   unary_operator -> '+'
+rule 96   unary_operator -> '-'
+rule 97   unary_operator -> '~'
+rule 98   primary_expr -> scoped_name
+rule 99   primary_expr -> literal
+rule 100  primary_expr -> '(' const_expr ')'
+rule 101  literal -> INTEGER_L
+rule 102  literal -> string_literal
+rule 103  literal -> CHAR_L
+rule 104  literal -> FIXED_PT_L
+rule 105  literal -> FLOAT_L
+rule 106  literal -> boolean_literal
+rule 107  boolean_literal -> BOOL_TRUE
+rule 108  boolean_literal -> BOOL_FALSE
+rule 109  positive_const_int -> const_expr
+rule 110  string_literal -> STRING_L
+rule 111  string_literal -> string_literal STRING_L
+rule 112  type_dcl -> TYPEDEF type_declarator
+rule 113  type_dcl -> struct_type
+rule 114  type_dcl -> union_type
+rule 115  type_dcl -> enum_type
+rule 116  type_dcl -> NATIVE simple_declarator
+rule 117  type_declarator -> type_spec declarators
+rule 118  type_spec -> simple_type_spec
+rule 119  type_spec -> constr_type_spec
+rule 120  simple_type_spec -> base_type_spec
+rule 121  simple_type_spec -> template_type_spec
+rule 122  simple_type_spec -> scoped_name
+rule 123  base_type_spec -> floating_pt_type
+rule 124  base_type_spec -> integer_type
+rule 125  base_type_spec -> char_type
+rule 126  base_type_spec -> wide_char_type
+rule 127  base_type_spec -> boolean_type
+rule 128  base_type_spec -> octet_type
+rule 129  base_type_spec -> object_type
+rule 130  base_type_spec -> any_type
+rule 131  base_type_spec -> value_base_type
+rule 132  template_type_spec -> sequence_type
+rule 133  template_type_spec -> string_type
+rule 134  template_type_spec -> wide_string_type
+rule 135  template_type_spec -> fixed_pt_type
+rule 136  constr_type_spec -> struct_type
+rule 137  constr_type_spec -> union_type
+rule 138  constr_type_spec -> enum_type
+rule 139  declarators -> declarator
+rule 140  declarators -> declarators ',' declarator
+rule 141  declarator -> simple_declarator
+rule 142  declarator -> complex_declarator
+rule 143  simple_declarator -> IDENT
+rule 144  complex_declarator -> array_declarator
+rule 145  floating_pt_type -> FLOAT_T
+rule 146  floating_pt_type -> DOUBLE_T
+rule 147  integer_type -> signed_int
+rule 148  integer_type -> unsigned_int
+rule 149  signed_int -> signed_long_int
+rule 150  signed_int -> signed_short_int
+rule 151  signed_int -> signed_long_long_int
+rule 152  signed_long_long_int -> LONG_T LONG_T
+rule 153  signed_long_int -> LONG_T
+rule 154  signed_short_int -> SHORT_T
+rule 155  unsigned_int -> unsigned_long_int
+rule 156  unsigned_int -> unsigned_short_int
+rule 157  unsigned_int -> unsigned_long_long_int
+rule 158  unsigned_long_long_int -> UNSIGNED_T LONG_T LONG_T
+rule 159  unsigned_long_int -> UNSIGNED_T LONG_T
+rule 160  unsigned_short_int -> UNSIGNED_T SHORT_T
+rule 161  char_type -> CHAR_T
+rule 162  wide_char_type -> WCHAR_T
+rule 163  boolean_type -> BOOLEAN_T
+rule 164  octet_type -> OCTET_T
+rule 165  any_type -> ANY_T
+rule 166  object_type -> OBJECT_T
+rule 167  value_base_type -> VALUEBASE
+rule 168  struct_type -> STRUCT IDENT '{' member_list '}'
+rule 169  member_list -> member
+rule 170  member_list -> member_list member
+rule 171  member -> type_spec declarators ';'
+rule 172  union_type -> UNION IDENT SWITCH '(' switch_type_spec ')' '{' switch_body '}'
+rule 173  switch_type_spec -> integer_type
+rule 174  switch_type_spec -> char_type
+rule 175  switch_type_spec -> wide_char_type
+rule 176  switch_type_spec -> boolean_type
+rule 177  switch_type_spec -> octet_type
+rule 178  switch_type_spec -> enum_type
+rule 179  switch_type_spec -> scoped_name
+rule 180  switch_body -> case
+rule 181  switch_body -> switch_body case
+rule 182  case -> case_label_list element_spec ';'
+rule 183  case_label_list -> case_label
+rule 184  case_label_list -> case_label_list case_label
+rule 185  case_label -> CASE const_expr ':'
+rule 186  case_label -> DEFAULT ':'
+rule 187  element_spec -> type_spec declarator
+rule 188  enum_type -> ENUM IDENT '{' enumerator_list '}'
+rule 189  enumerator_list -> enumerator
+rule 190  enumerator_list -> enumerator_list ',' enumerator
+rule 191  enumerator -> IDENT
+rule 192  sequence_type -> SEQUENCE '<' simple_type_spec ',' positive_const_int '>'
+rule 193  sequence_type -> SEQUENCE '<' simple_type_spec '>'
+rule 194  string_type -> STRING_T '<' positive_const_int '>'
+rule 195  string_type -> STRING_T
+rule 196  wide_string_type -> WSTRING_T '<' positive_const_int '>'
+rule 197  wide_string_type -> WSTRING_T
+rule 198  array_declarator -> IDENT fixed_array_size
+rule 199  array_declarator -> array_declarator fixed_array_size
+rule 200  fixed_array_size -> '[' positive_const_int ']'
+rule 201  attr_dcl -> opt_readonly ATTRIBUTE param_type_spec simple_declarator
+rule 202  attr_dcl -> attr_dcl ',' simple_declarator
+rule 203  opt_readonly ->		/* empty */
+rule 204  opt_readonly -> READONLY
+rule 205  except_dcl -> EXCEPTION IDENT '{' opt_member_list '}'
+rule 206  opt_member_list ->		/* empty */
+rule 207  opt_member_list -> member_list
+rule 208  op_dcl -> opt_op_attr op_type_spec IDENT parameter_dcls opt_raises_expr opt_context_expr
+rule 209  opt_op_attr ->		/* empty */
+rule 210  opt_op_attr -> ONEWAY
+rule 211  op_type_spec -> param_type_spec
+rule 212  op_type_spec -> VOID_T
+rule 213  parameter_dcls -> '(' param_dcl_list ')'
+rule 214  parameter_dcls -> '(' ')'
+rule 215  param_dcl_list -> param_dcl
+rule 216  param_dcl_list -> param_dcl_list ',' param_dcl
+rule 217  param_dcl -> param_attribute param_type_spec simple_declarator
+rule 218  param_attribute -> IN
+rule 219  param_attribute -> OUT
+rule 220  param_attribute -> INOUT
+rule 221  opt_raises_expr ->		/* empty */
+rule 222  opt_raises_expr -> RAISES '(' scoped_name_list ')'
+rule 223  opt_context_expr ->		/* empty */
+rule 224  opt_context_expr -> CONTEXT '(' string_literal_list ')'
+rule 225  string_literal_list -> string_literal
+rule 226  string_literal_list -> string_literal_list ',' string_literal
+rule 227  param_type_spec -> base_type_spec
+rule 228  param_type_spec -> string_type
+rule 229  param_type_spec -> wide_string_type
+rule 230  param_type_spec -> fixed_pt_type
+rule 231  param_type_spec -> scoped_name
+rule 232  fixed_pt_type -> FIXED '<' positive_const_int ',' positive_const_int '>'
+rule 233  fixed_pt_const_type -> FIXED
+rule 234  pragma -> PRAGMA_VERSION
+rule 235  pragma -> PRAGMA_ID
+rule 236  pragma -> PRAGMA_PREFIX
+
+Terminals, with rules where they appear
+
+$ (-1)
+'%' (37) 92
+'&' (38) 82
+'(' (40) 59 100 172 213 214 222 224
+')' (41) 59 100 172 213 214 222 224
+'*' (42) 90
+'+' (43) 87 95
+',' (44) 33 63 140 190 192 202 216 226 232
+'-' (45) 88 96
+'/' (47) 91
+':' (58) 19 48 185 186
+';' (59) 2 3 4 5 6 7 22 23 24 25 26 56 59 171 182
+'<' (60) 192 193 194 196 232
+'=' (61) 65
+'>' (62) 192 193 194 196 232
+'[' (91) 200
+']' (93) 200
+'^' (94) 80
+'{' (123) 9 14 41 42 168 172 188 205
+'|' (124) 78
+'}' (125) 9 14 41 42 168 172 188 205
+'~' (126) 97
+error (256)
+IDENT (258) 9 15 18 19 29 30 31 38 39 40 41 43 44 59 65 143 168 172
+    188 191 198 205 208
+BOOL_FALSE (259) 108
+BOOL_TRUE (260) 107
+CHAR_L (261) 103
+FLOAT_L (262) 105
+INTEGER_L (263) 101
+STRING_L (264) 110 111
+FIXED_PT_L (265) 104
+ONEWAY (266) 210
+VOID_T (267) 212
+IN (268) 64 218
+OUT (269) 219
+INOUT (270) 220
+PRAGMA_ID (271) 235
+PRAGMA_VERSION (272) 234
+PRAGMA_PREFIX (273) 236
+ANY_T (274) 165
+ATTRIBUTE (275) 201
+BOOLEAN_T (276) 163
+CASE (277) 185
+CHAR_T (278) 161
+CONST (279) 65
+CONTEXT (280) 224
+DEFAULT (281) 186
+DOUBLE_T (282) 146
+ENUM (283) 188
+EXCEPTION (284) 205
+FIXED (285) 232 233
+FLOAT_T (286) 145
+INTERFACE (287) 15 18 19
+LONG_T (288) 152 153 158 159
+LSHIFT (289) 84
+MODULE (290) 9
+OBJECT_T (291) 166
+NATIVE (292) 116
+OCTET_T (293) 164
+RAISES (294) 222
+READONLY (295) 204
+RSHIFT (296) 85
+SCOPE (297) 30 31
+SEQUENCE (298) 192 193
+SHORT_T (299) 154 160
+STRING_T (300) 194 195
+STRUCT (301) 168
+SWITCH (302) 172
+TYPEDEF (303) 112
+UNION (304) 172
+UNSIGNED_T (305) 158 159 160
+WCHAR_T (306) 162
+WSTRING_T (307) 196 197
+ABSTRACT (308) 17 39 41
+CUSTOM (309) 44
+FACTORY (310) 59
+PRIVATE (311) 57
+PUBLIC (312) 58
+SUPPORTS (313) 46
+TRUNCATABLE (314) 50
+VALUEBASE (315) 167
+VALUETYPE (316) 38 39 40 41 43 44
+
+Nonterminals, with rules where they appear
+
+specification (83)
+    on left: 1
+definition (84)
+    on left: 2 3 4 5 6 7 8, on right: 10 11
+module (85)
+    on left: 9, on right: 6
+definition_list (86)
+    on left: 10 11, on right: 1 9 11
+interface (87)
+    on left: 12 13, on right: 5
+interface_dcl (88)
+    on left: 14, on right: 12
+forward_dcl (89)
+    on left: 15, on right: 13
+opt_abstract (90)
+    on left: 16 17, on right: 15 18 19
+interface_header (91)
+    on left: 18 19, on right: 14
+interface_body (92)
+    on left: 20 21, on right: 14 41
+export (93)
+    on left: 22 23 24 25 26, on right: 27 28 53
+export_list (94)
+    on left: 27 28, on right: 21 28
+scoped_name (95)
+    on left: 29 30 31, on right: 31 32 33 75 98 122 179 231
+scoped_name_list (96)
+    on left: 32 33, on right: 19 33 46 48 222
+value (97)
+    on left: 34 35 36 37, on right: 7
+value_forward_dcl (98)
+    on left: 38 39, on right: 37
+value_box_dcl (99)
+    on left: 40, on right: 36
+value_abs_dcl (100)
+    on left: 41, on right: 35
+value_dcl (101)
+    on left: 42, on right: 34
+value_header (102)
+    on left: 43 44, on right: 42
+opt_value_inheritance_spec (103)
+    on left: 45 46, on right: 41 43 44
+opt_value_inheritance_base (104)
+    on left: 47 48, on right: 45 46
+opt_truncatable (105)
+    on left: 49 50, on right: 48
+value_element_list (106)
+    on left: 51 52, on right: 42 52
+value_element (107)
+    on left: 53 54 55, on right: 52
+state_member (108)
+    on left: 56, on right: 54
+private_public (109)
+    on left: 57 58, on right: 56
+init_dcl (110)
+    on left: 59, on right: 55
+opt_init_param_dcl_list (111)
+    on left: 60 61, on right: 59
+init_param_dcl_list (112)
+    on left: 62 63, on right: 61 63
+init_param_dcl (113)
+    on left: 64, on right: 62 63
+const_dcl (114)
+    on left: 65, on right: 3 23
+const_type (115)
+    on left: 66 67 68 69 70 71 72 73 74 75, on right: 65
+const_expr (116)
+    on left: 76, on right: 65 100 109 185
+or_expr (117)
+    on left: 77 78, on right: 76 78
+xor_expr (118)
+    on left: 79 80, on right: 77 78 80
+and_expr (119)
+    on left: 81 82, on right: 79 80 82
+shift_expr (120)
+    on left: 83 84 85, on right: 81 82 84 85
+add_expr (121)
+    on left: 86 87 88, on right: 83 84 85 87 88
+mult_expr (122)
+    on left: 89 90 91 92, on right: 86 87 88 90 91 92
+unary_expr (123)
+    on left: 93 94, on right: 89 90 91 92
+unary_operator (124)
+    on left: 95 96 97, on right: 93
+primary_expr (125)
+    on left: 98 99 100, on right: 93 94
+literal (126)
+    on left: 101 102 103 104 105 106, on right: 99
+boolean_literal (127)
+    on left: 107 108, on right: 106
+positive_const_int (128)
+    on left: 109, on right: 192 194 196 200 232
+string_literal (129)
+    on left: 110 111, on right: 102 111 225 226
+type_dcl (130)
+    on left: 112 113 114 115 116, on right: 2 22
+type_declarator (131)
+    on left: 117, on right: 112
+type_spec (132)
+    on left: 118 119, on right: 40 56 117 171 187
+simple_type_spec (133)
+    on left: 120 121 122, on right: 118 192 193
+base_type_spec (134)
+    on left: 123 124 125 126 127 128 129 130 131, on right: 120 227
+template_type_spec (135)
+    on left: 132 133 134 135, on right: 121
+constr_type_spec (136)
+    on left: 136 137 138, on right: 119
+declarators (137)
+    on left: 139 140, on right: 56 117 140 171
+declarator (138)
+    on left: 141 142, on right: 139 140 187
+simple_declarator (139)
+    on left: 143, on right: 64 116 141 201 202 217
+complex_declarator (140)
+    on left: 144, on right: 142
+floating_pt_type (141)
+    on left: 145 146, on right: 71 123
+integer_type (142)
+    on left: 147 148, on right: 66 124 173
+signed_int (143)
+    on left: 149 150 151, on right: 147
+signed_long_long_int (144)
+    on left: 152, on right: 151
+signed_long_int (145)
+    on left: 153, on right: 149
+signed_short_int (146)
+    on left: 154, on right: 150
+unsigned_int (147)
+    on left: 155 156 157, on right: 148
+unsigned_long_long_int (148)
+    on left: 158, on right: 157
+unsigned_long_int (149)
+    on left: 159, on right: 155
+unsigned_short_int (150)
+    on left: 160, on right: 156
+char_type (151)
+    on left: 161, on right: 67 125 174
+wide_char_type (152)
+    on left: 162, on right: 68 126 175
+boolean_type (153)
+    on left: 163, on right: 69 127 176
+octet_type (154)
+    on left: 164, on right: 70 128 177
+any_type (155)
+    on left: 165, on right: 130
+object_type (156)
+    on left: 166, on right: 129
+value_base_type (157)
+    on left: 167, on right: 131
+struct_type (158)
+    on left: 168, on right: 113 136
+member_list (159)
+    on left: 169 170, on right: 168 170 207
+member (160)
+    on left: 171, on right: 169 170
+union_type (161)
+    on left: 172, on right: 114 137
+switch_type_spec (162)
+    on left: 173 174 175 176 177 178 179, on right: 172
+switch_body (163)
+    on left: 180 181, on right: 172 181
+case (164)
+    on left: 182, on right: 180 181
+case_label_list (165)
+    on left: 183 184, on right: 182 184
+case_label (166)
+    on left: 185 186, on right: 183 184
+element_spec (167)
+    on left: 187, on right: 182
+enum_type (168)
+    on left: 188, on right: 115 138 178
+enumerator_list (169)
+    on left: 189 190, on right: 188 190
+enumerator (170)
+    on left: 191, on right: 189 190
+sequence_type (171)
+    on left: 192 193, on right: 132
+string_type (172)
+    on left: 194 195, on right: 72 133 228
+wide_string_type (173)
+    on left: 196 197, on right: 73 134 229
+array_declarator (174)
+    on left: 198 199, on right: 144 199
+fixed_array_size (175)
+    on left: 200, on right: 198 199
+attr_dcl (176)
+    on left: 201 202, on right: 25 202
+opt_readonly (177)
+    on left: 203 204, on right: 201
+except_dcl (178)
+    on left: 205, on right: 4 24
+opt_member_list (179)
+    on left: 206 207, on right: 205
+op_dcl (180)
+    on left: 208, on right: 26
+opt_op_attr (181)
+    on left: 209 210, on right: 208
+op_type_spec (182)
+    on left: 211 212, on right: 208
+parameter_dcls (183)
+    on left: 213 214, on right: 208
+param_dcl_list (184)
+    on left: 215 216, on right: 213 216
+param_dcl (185)
+    on left: 217, on right: 215 216
+param_attribute (186)
+    on left: 218 219 220, on right: 217
+opt_raises_expr (187)
+    on left: 221 222, on right: 208
+opt_context_expr (188)
+    on left: 223 224, on right: 208
+string_literal_list (189)
+    on left: 225 226, on right: 224 226
+param_type_spec (190)
+    on left: 227 228 229 230 231, on right: 64 201 211 217
+fixed_pt_type (191)
+    on left: 232, on right: 135 230
+fixed_pt_const_type (192)
+    on left: 233, on right: 74
+pragma (193)
+    on left: 234 235 236, on right: 8
+
+
+state 0
+
+    PRAGMA_ID	shift, and go to state 1
+    PRAGMA_VERSION	shift, and go to state 2
+    PRAGMA_PREFIX	shift, and go to state 3
+    CONST	shift, and go to state 4
+    ENUM	shift, and go to state 5
+    EXCEPTION	shift, and go to state 6
+    MODULE	shift, and go to state 7
+    NATIVE	shift, and go to state 8
+    STRUCT	shift, and go to state 9
+    TYPEDEF	shift, and go to state 10
+    UNION	shift, and go to state 11
+    ABSTRACT	shift, and go to state 12
+    CUSTOM	shift, and go to state 13
+    VALUETYPE	shift, and go to state 14
+
+    $default	reduce using rule 16 (opt_abstract)
+
+    specification	go to state 363
+    definition	go to state 15
+    module	go to state 16
+    definition_list	go to state 17
+    interface	go to state 18
+    interface_dcl	go to state 19
+    forward_dcl	go to state 20
+    opt_abstract	go to state 21
+    interface_header	go to state 22
+    value	go to state 23
+    value_forward_dcl	go to state 24
+    value_box_dcl	go to state 25
+    value_abs_dcl	go to state 26
+    value_dcl	go to state 27
+    value_header	go to state 28
+    const_dcl	go to state 29
+    type_dcl	go to state 30
+    struct_type	go to state 31
+    union_type	go to state 32
+    enum_type	go to state 33
+    except_dcl	go to state 34
+    pragma	go to state 35
+
+
+
+state 1
+
+    pragma  ->  PRAGMA_ID .   (rule 235)
+
+    $default	reduce using rule 235 (pragma)
+
+
+
+state 2
+
+    pragma  ->  PRAGMA_VERSION .   (rule 234)
+
+    $default	reduce using rule 234 (pragma)
+
+
+
+state 3
+
+    pragma  ->  PRAGMA_PREFIX .   (rule 236)
+
+    $default	reduce using rule 236 (pragma)
+
+
+
+state 4
+
+    const_dcl  ->  CONST . const_type IDENT '=' const_expr   (rule 65)
+
+    IDENT	shift, and go to state 36
+    BOOLEAN_T	shift, and go to state 37
+    CHAR_T	shift, and go to state 38
+    DOUBLE_T	shift, and go to state 39
+    FIXED	shift, and go to state 40
+    FLOAT_T	shift, and go to state 41
+    LONG_T	shift, and go to state 42
+    OCTET_T	shift, and go to state 43
+    SCOPE	shift, and go to state 44
+    SHORT_T	shift, and go to state 45
+    STRING_T	shift, and go to state 46
+    UNSIGNED_T	shift, and go to state 47
+    WCHAR_T	shift, and go to state 48
+    WSTRING_T	shift, and go to state 49
+
+    scoped_name	go to state 50
+    const_type	go to state 51
+    floating_pt_type	go to state 52
+    integer_type	go to state 53
+    signed_int	go to state 54
+    signed_long_long_int	go to state 55
+    signed_long_int	go to state 56
+    signed_short_int	go to state 57
+    unsigned_int	go to state 58
+    unsigned_long_long_int	go to state 59
+    unsigned_long_int	go to state 60
+    unsigned_short_int	go to state 61
+    char_type	go to state 62
+    wide_char_type	go to state 63
+    boolean_type	go to state 64
+    octet_type	go to state 65
+    string_type	go to state 66
+    wide_string_type	go to state 67
+    fixed_pt_const_type	go to state 68
+
+
+
+state 5
+
+    enum_type  ->  ENUM . IDENT '{' enumerator_list '}'   (rule 188)
+
+    IDENT	shift, and go to state 69
+
+
+
+state 6
+
+    except_dcl  ->  EXCEPTION . IDENT '{' opt_member_list '}'   (rule 205)
+
+    IDENT	shift, and go to state 70
+
+
+
+state 7
+
+    module  ->  MODULE . IDENT '{' definition_list '}'   (rule 9)
+
+    IDENT	shift, and go to state 71
+
+
+
+state 8
+
+    type_dcl  ->  NATIVE . simple_declarator   (rule 116)
+
+    IDENT	shift, and go to state 72
+
+    simple_declarator	go to state 73
+
+
+
+state 9
+
+    struct_type  ->  STRUCT . IDENT '{' member_list '}'   (rule 168)
+
+    IDENT	shift, and go to state 74
+
+
+
+state 10
+
+    type_dcl  ->  TYPEDEF . type_declarator   (rule 112)
+
+    IDENT	shift, and go to state 36
+    ANY_T	shift, and go to state 75
+    BOOLEAN_T	shift, and go to state 37
+    CHAR_T	shift, and go to state 38
+    DOUBLE_T	shift, and go to state 39
+    ENUM	shift, and go to state 5
+    FIXED	shift, and go to state 76
+    FLOAT_T	shift, and go to state 41
+    LONG_T	shift, and go to state 42
+    OBJECT_T	shift, and go to state 77
+    OCTET_T	shift, and go to state 43
+    SCOPE	shift, and go to state 44
+    SEQUENCE	shift, and go to state 78
+    SHORT_T	shift, and go to state 45
+    STRING_T	shift, and go to state 46
+    STRUCT	shift, and go to state 9
+    UNION	shift, and go to state 11
+    UNSIGNED_T	shift, and go to state 47
+    WCHAR_T	shift, and go to state 48
+    WSTRING_T	shift, and go to state 49
+    VALUEBASE	shift, and go to state 79
+
+    scoped_name	go to state 80
+    type_declarator	go to state 81
+    type_spec	go to state 82
+    simple_type_spec	go to state 83
+    base_type_spec	go to state 84
+    template_type_spec	go to state 85
+    constr_type_spec	go to state 86
+    floating_pt_type	go to state 87
+    integer_type	go to state 88
+    signed_int	go to state 54
+    signed_long_long_int	go to state 55
+    signed_long_int	go to state 56
+    signed_short_int	go to state 57
+    unsigned_int	go to state 58
+    unsigned_long_long_int	go to state 59
+    unsigned_long_int	go to state 60
+    unsigned_short_int	go to state 61
+    char_type	go to state 89
+    wide_char_type	go to state 90
+    boolean_type	go to state 91
+    octet_type	go to state 92
+    any_type	go to state 93
+    object_type	go to state 94
+    value_base_type	go to state 95
+    struct_type	go to state 96
+    union_type	go to state 97
+    enum_type	go to state 98
+    sequence_type	go to state 99
+    string_type	go to state 100
+    wide_string_type	go to state 101
+    fixed_pt_type	go to state 102
+
+
+
+state 11
+
+    union_type  ->  UNION . IDENT SWITCH '(' switch_type_spec ')' '{' switch_body '}'   (rule 172)
+
+    IDENT	shift, and go to state 103
+
+
+
+state 12
+
+    opt_abstract  ->  ABSTRACT .   (rule 17)
+    value_forward_dcl  ->  ABSTRACT . VALUETYPE IDENT   (rule 39)
+    value_abs_dcl  ->  ABSTRACT . VALUETYPE IDENT opt_value_inheritance_spec '{' interface_body '}'   (rule 41)
+
+    VALUETYPE	shift, and go to state 104
+
+    $default	reduce using rule 17 (opt_abstract)
+
+
+
+state 13
+
+    value_header  ->  CUSTOM . VALUETYPE IDENT opt_value_inheritance_spec   (rule 44)
+
+    VALUETYPE	shift, and go to state 105
+
+
+
+state 14
+
+    value_forward_dcl  ->  VALUETYPE . IDENT   (rule 38)
+    value_box_dcl  ->  VALUETYPE . IDENT type_spec   (rule 40)
+    value_header  ->  VALUETYPE . IDENT opt_value_inheritance_spec   (rule 43)
+
+    IDENT	shift, and go to state 106
+
+
+
+state 15
+
+    definition_list  ->  definition .   (rule 10)
+
+    $default	reduce using rule 10 (definition_list)
+
+
+
+state 16
+
+    definition  ->  module . ';'   (rule 6)
+
+    ';' 	shift, and go to state 107
+
+
+
+state 17
+
+    specification  ->  definition_list .   (rule 1)
+    definition_list  ->  definition_list . definition   (rule 11)
+
+    PRAGMA_ID	shift, and go to state 1
+    PRAGMA_VERSION	shift, and go to state 2
+    PRAGMA_PREFIX	shift, and go to state 3
+    CONST	shift, and go to state 4
+    ENUM	shift, and go to state 5
+    EXCEPTION	shift, and go to state 6
+    MODULE	shift, and go to state 7
+    NATIVE	shift, and go to state 8
+    STRUCT	shift, and go to state 9
+    TYPEDEF	shift, and go to state 10
+    UNION	shift, and go to state 11
+    ABSTRACT	shift, and go to state 12
+    CUSTOM	shift, and go to state 13
+    VALUETYPE	shift, and go to state 14
+
+    INTERFACE	reduce using rule 16 (opt_abstract)
+    $default	reduce using rule 1 (specification)
+
+    definition	go to state 108
+    module	go to state 16
+    interface	go to state 18
+    interface_dcl	go to state 19
+    forward_dcl	go to state 20
+    opt_abstract	go to state 21
+    interface_header	go to state 22
+    value	go to state 23
+    value_forward_dcl	go to state 24
+    value_box_dcl	go to state 25
+    value_abs_dcl	go to state 26
+    value_dcl	go to state 27
+    value_header	go to state 28
+    const_dcl	go to state 29
+    type_dcl	go to state 30
+    struct_type	go to state 31
+    union_type	go to state 32
+    enum_type	go to state 33
+    except_dcl	go to state 34
+    pragma	go to state 35
+
+
+
+state 18
+
+    definition  ->  interface . ';'   (rule 5)
+
+    ';' 	shift, and go to state 109
+
+
+
+state 19
+
+    interface  ->  interface_dcl .   (rule 12)
+
+    $default	reduce using rule 12 (interface)
+
+
+
+state 20
+
+    interface  ->  forward_dcl .   (rule 13)
+
+    $default	reduce using rule 13 (interface)
+
+
+
+state 21
+
+    forward_dcl  ->  opt_abstract . INTERFACE IDENT   (rule 15)
+    interface_header  ->  opt_abstract . INTERFACE IDENT   (rule 18)
+    interface_header  ->  opt_abstract . INTERFACE IDENT ':' scoped_name_list   (rule 19)
+
+    INTERFACE	shift, and go to state 110
+
+
+
+state 22
+
+    interface_dcl  ->  interface_header . '{' interface_body '}'   (rule 14)
+
+    '{' 	shift, and go to state 111
+
+
+
+state 23
+
+    definition  ->  value . ';'   (rule 7)
+
+    ';' 	shift, and go to state 112
+
+
+
+state 24
+
+    value  ->  value_forward_dcl .   (rule 37)
+
+    $default	reduce using rule 37 (value)
+
+
+
+state 25
+
+    value  ->  value_box_dcl .   (rule 36)
+
+    $default	reduce using rule 36 (value)
+
+
+
+state 26
+
+    value  ->  value_abs_dcl .   (rule 35)
+
+    $default	reduce using rule 35 (value)
+
+
+
+state 27
+
+    value  ->  value_dcl .   (rule 34)
+
+    $default	reduce using rule 34 (value)
+
+
+
+state 28
+
+    value_dcl  ->  value_header . '{' value_element_list '}'   (rule 42)
+
+    '{' 	shift, and go to state 113
+
+
+
+state 29
+
+    definition  ->  const_dcl . ';'   (rule 3)
+
+    ';' 	shift, and go to state 114
+
+
+
+state 30
+
+    definition  ->  type_dcl . ';'   (rule 2)
+
+    ';' 	shift, and go to state 115
+
+
+
+state 31
+
+    type_dcl  ->  struct_type .   (rule 113)
+
+    $default	reduce using rule 113 (type_dcl)
+
+
+
+state 32
+
+    type_dcl  ->  union_type .   (rule 114)
+
+    $default	reduce using rule 114 (type_dcl)
+
+
+
+state 33
+
+    type_dcl  ->  enum_type .   (rule 115)
+
+    $default	reduce using rule 115 (type_dcl)
+
+
+
+state 34
+
+    definition  ->  except_dcl . ';'   (rule 4)
+
+    ';' 	shift, and go to state 116
+
+
+
+state 35
+
+    definition  ->  pragma .   (rule 8)
+
+    $default	reduce using rule 8 (definition)
+
+
+
+state 36
+
+    scoped_name  ->  IDENT .   (rule 29)
+
+    $default	reduce using rule 29 (scoped_name)
+
+
+
+state 37
+
+    boolean_type  ->  BOOLEAN_T .   (rule 163)
+
+    $default	reduce using rule 163 (boolean_type)
+
+
+
+state 38
+
+    char_type  ->  CHAR_T .   (rule 161)
+
+    $default	reduce using rule 161 (char_type)
+
+
+
+state 39
+
+    floating_pt_type  ->  DOUBLE_T .   (rule 146)
+
+    $default	reduce using rule 146 (floating_pt_type)
+
+
+
+state 40
+
+    fixed_pt_const_type  ->  FIXED .   (rule 233)
+
+    $default	reduce using rule 233 (fixed_pt_const_type)
+
+
+
+state 41
+
+    floating_pt_type  ->  FLOAT_T .   (rule 145)
+
+    $default	reduce using rule 145 (floating_pt_type)
+
+
+
+state 42
+
+    signed_long_long_int  ->  LONG_T . LONG_T   (rule 152)
+    signed_long_int  ->  LONG_T .   (rule 153)
+
+    LONG_T	shift, and go to state 117
+
+    $default	reduce using rule 153 (signed_long_int)
+
+
+
+state 43
+
+    octet_type  ->  OCTET_T .   (rule 164)
+
+    $default	reduce using rule 164 (octet_type)
+
+
+
+state 44
+
+    scoped_name  ->  SCOPE . IDENT   (rule 30)
+
+    IDENT	shift, and go to state 118
+
+
+
+state 45
+
+    signed_short_int  ->  SHORT_T .   (rule 154)
+
+    $default	reduce using rule 154 (signed_short_int)
+
+
+
+state 46
+
+    string_type  ->  STRING_T . '<' positive_const_int '>'   (rule 194)
+    string_type  ->  STRING_T .   (rule 195)
+
+    '<' 	shift, and go to state 119
+
+    $default	reduce using rule 195 (string_type)
+
+
+
+state 47
+
+    unsigned_long_long_int  ->  UNSIGNED_T . LONG_T LONG_T   (rule 158)
+    unsigned_long_int  ->  UNSIGNED_T . LONG_T   (rule 159)
+    unsigned_short_int  ->  UNSIGNED_T . SHORT_T   (rule 160)
+
+    LONG_T	shift, and go to state 120
+    SHORT_T	shift, and go to state 121
+
+
+
+state 48
+
+    wide_char_type  ->  WCHAR_T .   (rule 162)
+
+    $default	reduce using rule 162 (wide_char_type)
+
+
+
+state 49
+
+    wide_string_type  ->  WSTRING_T . '<' positive_const_int '>'   (rule 196)
+    wide_string_type  ->  WSTRING_T .   (rule 197)
+
+    '<' 	shift, and go to state 122
+
+    $default	reduce using rule 197 (wide_string_type)
+
+
+
+state 50
+
+    scoped_name  ->  scoped_name . SCOPE IDENT   (rule 31)
+    const_type  ->  scoped_name .   (rule 75)
+
+    SCOPE	shift, and go to state 123
+
+    $default	reduce using rule 75 (const_type)
+
+
+
+state 51
+
+    const_dcl  ->  CONST const_type . IDENT '=' const_expr   (rule 65)
+
+    IDENT	shift, and go to state 124
+
+
+
+state 52
+
+    const_type  ->  floating_pt_type .   (rule 71)
+
+    $default	reduce using rule 71 (const_type)
+
+
+
+state 53
+
+    const_type  ->  integer_type .   (rule 66)
+
+    $default	reduce using rule 66 (const_type)
+
+
+
+state 54
+
+    integer_type  ->  signed_int .   (rule 147)
+
+    $default	reduce using rule 147 (integer_type)
+
+
+
+state 55
+
+    signed_int  ->  signed_long_long_int .   (rule 151)
+
+    $default	reduce using rule 151 (signed_int)
+
+
+
+state 56
+
+    signed_int  ->  signed_long_int .   (rule 149)
+
+    $default	reduce using rule 149 (signed_int)
+
+
+
+state 57
+
+    signed_int  ->  signed_short_int .   (rule 150)
+
+    $default	reduce using rule 150 (signed_int)
+
+
+
+state 58
+
+    integer_type  ->  unsigned_int .   (rule 148)
+
+    $default	reduce using rule 148 (integer_type)
+
+
+
+state 59
+
+    unsigned_int  ->  unsigned_long_long_int .   (rule 157)
+
+    $default	reduce using rule 157 (unsigned_int)
+
+
+
+state 60
+
+    unsigned_int  ->  unsigned_long_int .   (rule 155)
+
+    $default	reduce using rule 155 (unsigned_int)
+
+
+
+state 61
+
+    unsigned_int  ->  unsigned_short_int .   (rule 156)
+
+    $default	reduce using rule 156 (unsigned_int)
+
+
+
+state 62
+
+    const_type  ->  char_type .   (rule 67)
+
+    $default	reduce using rule 67 (const_type)
+
+
+
+state 63
+
+    const_type  ->  wide_char_type .   (rule 68)
+
+    $default	reduce using rule 68 (const_type)
+
+
+
+state 64
+
+    const_type  ->  boolean_type .   (rule 69)
+
+    $default	reduce using rule 69 (const_type)
+
+
+
+state 65
+
+    const_type  ->  octet_type .   (rule 70)
+
+    $default	reduce using rule 70 (const_type)
+
+
+
+state 66
+
+    const_type  ->  string_type .   (rule 72)
+
+    $default	reduce using rule 72 (const_type)
+
+
+
+state 67
+
+    const_type  ->  wide_string_type .   (rule 73)
+
+    $default	reduce using rule 73 (const_type)
+
+
+
+state 68
+
+    const_type  ->  fixed_pt_const_type .   (rule 74)
+
+    $default	reduce using rule 74 (const_type)
+
+
+
+state 69
+
+    enum_type  ->  ENUM IDENT . '{' enumerator_list '}'   (rule 188)
+
+    '{' 	shift, and go to state 125
+
+
+
+state 70
+
+    except_dcl  ->  EXCEPTION IDENT . '{' opt_member_list '}'   (rule 205)
+
+    '{' 	shift, and go to state 126
+
+
+
+state 71
+
+    module  ->  MODULE IDENT . '{' definition_list '}'   (rule 9)
+
+    '{' 	shift, and go to state 127
+
+
+
+state 72
+
+    simple_declarator  ->  IDENT .   (rule 143)
+
+    $default	reduce using rule 143 (simple_declarator)
+
+
+
+state 73
+
+    type_dcl  ->  NATIVE simple_declarator .   (rule 116)
+
+    $default	reduce using rule 116 (type_dcl)
+
+
+
+state 74
+
+    struct_type  ->  STRUCT IDENT . '{' member_list '}'   (rule 168)
+
+    '{' 	shift, and go to state 128
+
+
+
+state 75
+
+    any_type  ->  ANY_T .   (rule 165)
+
+    $default	reduce using rule 165 (any_type)
+
+
+
+state 76
+
+    fixed_pt_type  ->  FIXED . '<' positive_const_int ',' positive_const_int '>'   (rule 232)
+
+    '<' 	shift, and go to state 129
+
+
+
+state 77
+
+    object_type  ->  OBJECT_T .   (rule 166)
+
+    $default	reduce using rule 166 (object_type)
+
+
+
+state 78
+
+    sequence_type  ->  SEQUENCE . '<' simple_type_spec ',' positive_const_int '>'   (rule 192)
+    sequence_type  ->  SEQUENCE . '<' simple_type_spec '>'   (rule 193)
+
+    '<' 	shift, and go to state 130
+
+
+
+state 79
+
+    value_base_type  ->  VALUEBASE .   (rule 167)
+
+    $default	reduce using rule 167 (value_base_type)
+
+
+
+state 80
+
+    scoped_name  ->  scoped_name . SCOPE IDENT   (rule 31)
+    simple_type_spec  ->  scoped_name .   (rule 122)
+
+    SCOPE	shift, and go to state 123
+
+    $default	reduce using rule 122 (simple_type_spec)
+
+
+
+state 81
+
+    type_dcl  ->  TYPEDEF type_declarator .   (rule 112)
+
+    $default	reduce using rule 112 (type_dcl)
+
+
+
+state 82
+
+    type_declarator  ->  type_spec . declarators   (rule 117)
+
+    IDENT	shift, and go to state 131
+
+    declarators	go to state 132
+    declarator	go to state 133
+    simple_declarator	go to state 134
+    complex_declarator	go to state 135
+    array_declarator	go to state 136
+
+
+
+state 83
+
+    type_spec  ->  simple_type_spec .   (rule 118)
+
+    $default	reduce using rule 118 (type_spec)
+
+
+
+state 84
+
+    simple_type_spec  ->  base_type_spec .   (rule 120)
+
+    $default	reduce using rule 120 (simple_type_spec)
+
+
+
+state 85
+
+    simple_type_spec  ->  template_type_spec .   (rule 121)
+
+    $default	reduce using rule 121 (simple_type_spec)
+
+
+
+state 86
+
+    type_spec  ->  constr_type_spec .   (rule 119)
+
+    $default	reduce using rule 119 (type_spec)
+
+
+
+state 87
+
+    base_type_spec  ->  floating_pt_type .   (rule 123)
+
+    $default	reduce using rule 123 (base_type_spec)
+
+
+
+state 88
+
+    base_type_spec  ->  integer_type .   (rule 124)
+
+    $default	reduce using rule 124 (base_type_spec)
+
+
+
+state 89
+
+    base_type_spec  ->  char_type .   (rule 125)
+
+    $default	reduce using rule 125 (base_type_spec)
+
+
+
+state 90
+
+    base_type_spec  ->  wide_char_type .   (rule 126)
+
+    $default	reduce using rule 126 (base_type_spec)
+
+
+
+state 91
+
+    base_type_spec  ->  boolean_type .   (rule 127)
+
+    $default	reduce using rule 127 (base_type_spec)
+
+
+
+state 92
+
+    base_type_spec  ->  octet_type .   (rule 128)
+
+    $default	reduce using rule 128 (base_type_spec)
+
+
+
+state 93
+
+    base_type_spec  ->  any_type .   (rule 130)
+
+    $default	reduce using rule 130 (base_type_spec)
+
+
+
+state 94
+
+    base_type_spec  ->  object_type .   (rule 129)
+
+    $default	reduce using rule 129 (base_type_spec)
+
+
+
+state 95
+
+    base_type_spec  ->  value_base_type .   (rule 131)
+
+    $default	reduce using rule 131 (base_type_spec)
+
+
+
+state 96
+
+    constr_type_spec  ->  struct_type .   (rule 136)
+
+    $default	reduce using rule 136 (constr_type_spec)
+
+
+
+state 97
+
+    constr_type_spec  ->  union_type .   (rule 137)
+
+    $default	reduce using rule 137 (constr_type_spec)
+
+
+
+state 98
+
+    constr_type_spec  ->  enum_type .   (rule 138)
+
+    $default	reduce using rule 138 (constr_type_spec)
+
+
+
+state 99
+
+    template_type_spec  ->  sequence_type .   (rule 132)
+
+    $default	reduce using rule 132 (template_type_spec)
+
+
+
+state 100
+
+    template_type_spec  ->  string_type .   (rule 133)
+
+    $default	reduce using rule 133 (template_type_spec)
+
+
+
+state 101
+
+    template_type_spec  ->  wide_string_type .   (rule 134)
+
+    $default	reduce using rule 134 (template_type_spec)
+
+
+
+state 102
+
+    template_type_spec  ->  fixed_pt_type .   (rule 135)
+
+    $default	reduce using rule 135 (template_type_spec)
+
+
+
+state 103
+
+    union_type  ->  UNION IDENT . SWITCH '(' switch_type_spec ')' '{' switch_body '}'   (rule 172)
+
+    SWITCH	shift, and go to state 137
+
+
+
+state 104
+
+    value_forward_dcl  ->  ABSTRACT VALUETYPE . IDENT   (rule 39)
+    value_abs_dcl  ->  ABSTRACT VALUETYPE . IDENT opt_value_inheritance_spec '{' interface_body '}'   (rule 41)
+
+    IDENT	shift, and go to state 138
+
+
+
+state 105
+
+    value_header  ->  CUSTOM VALUETYPE . IDENT opt_value_inheritance_spec   (rule 44)
+
+    IDENT	shift, and go to state 139
+
+
+
+state 106
+
+    value_forward_dcl  ->  VALUETYPE IDENT .   (rule 38)
+    value_box_dcl  ->  VALUETYPE IDENT . type_spec   (rule 40)
+    value_header  ->  VALUETYPE IDENT . opt_value_inheritance_spec   (rule 43)
+
+    IDENT	shift, and go to state 36
+    ANY_T	shift, and go to state 75
+    BOOLEAN_T	shift, and go to state 37
+    CHAR_T	shift, and go to state 38
+    DOUBLE_T	shift, and go to state 39
+    ENUM	shift, and go to state 5
+    FIXED	shift, and go to state 76
+    FLOAT_T	shift, and go to state 41
+    LONG_T	shift, and go to state 42
+    OBJECT_T	shift, and go to state 77
+    OCTET_T	shift, and go to state 43
+    SCOPE	shift, and go to state 44
+    SEQUENCE	shift, and go to state 78
+    SHORT_T	shift, and go to state 45
+    STRING_T	shift, and go to state 46
+    STRUCT	shift, and go to state 9
+    UNION	shift, and go to state 11
+    UNSIGNED_T	shift, and go to state 47
+    WCHAR_T	shift, and go to state 48
+    WSTRING_T	shift, and go to state 49
+    VALUEBASE	shift, and go to state 79
+    ':' 	shift, and go to state 140
+
+    ';' 	reduce using rule 38 (value_forward_dcl)
+    $default	reduce using rule 47 (opt_value_inheritance_base)
+
+    scoped_name	go to state 80
+    opt_value_inheritance_spec	go to state 141
+    opt_value_inheritance_base	go to state 142
+    type_spec	go to state 143
+    simple_type_spec	go to state 83
+    base_type_spec	go to state 84
+    template_type_spec	go to state 85
+    constr_type_spec	go to state 86
+    floating_pt_type	go to state 87
+    integer_type	go to state 88
+    signed_int	go to state 54
+    signed_long_long_int	go to state 55
+    signed_long_int	go to state 56
+    signed_short_int	go to state 57
+    unsigned_int	go to state 58
+    unsigned_long_long_int	go to state 59
+    unsigned_long_int	go to state 60
+    unsigned_short_int	go to state 61
+    char_type	go to state 89
+    wide_char_type	go to state 90
+    boolean_type	go to state 91
+    octet_type	go to state 92
+    any_type	go to state 93
+    object_type	go to state 94
+    value_base_type	go to state 95
+    struct_type	go to state 96
+    union_type	go to state 97
+    enum_type	go to state 98
+    sequence_type	go to state 99
+    string_type	go to state 100
+    wide_string_type	go to state 101
+    fixed_pt_type	go to state 102
+
+
+
+state 107
+
+    definition  ->  module ';' .   (rule 6)
+
+    $default	reduce using rule 6 (definition)
+
+
+
+state 108
+
+    definition_list  ->  definition_list definition .   (rule 11)
+
+    $default	reduce using rule 11 (definition_list)
+
+
+
+state 109
+
+    definition  ->  interface ';' .   (rule 5)
+
+    $default	reduce using rule 5 (definition)
+
+
+
+state 110
+
+    forward_dcl  ->  opt_abstract INTERFACE . IDENT   (rule 15)
+    interface_header  ->  opt_abstract INTERFACE . IDENT   (rule 18)
+    interface_header  ->  opt_abstract INTERFACE . IDENT ':' scoped_name_list   (rule 19)
+
+    IDENT	shift, and go to state 144
+
+
+
+state 111
+
+    interface_dcl  ->  interface_header '{' . interface_body '}'   (rule 14)
+
+    ONEWAY	shift, and go to state 145
+    CONST	shift, and go to state 4
+    ENUM	shift, and go to state 5
+    EXCEPTION	shift, and go to state 6
+    NATIVE	shift, and go to state 8
+    READONLY	shift, and go to state 146
+    STRUCT	shift, and go to state 9
+    TYPEDEF	shift, and go to state 10
+    UNION	shift, and go to state 11
+
+    ATTRIBUTE	reduce using rule 203 (opt_readonly)
+    '}' 	reduce using rule 20 (interface_body)
+    $default	reduce using rule 209 (opt_op_attr)
+
+    interface_body	go to state 147
+    export	go to state 148
+    export_list	go to state 149
+    const_dcl	go to state 150
+    type_dcl	go to state 151
+    struct_type	go to state 31
+    union_type	go to state 32
+    enum_type	go to state 33
+    attr_dcl	go to state 152
+    opt_readonly	go to state 153
+    except_dcl	go to state 154
+    op_dcl	go to state 155
+    opt_op_attr	go to state 156
+
+
+
+state 112
+
+    definition  ->  value ';' .   (rule 7)
+
+    $default	reduce using rule 7 (definition)
+
+
+
+state 113
+
+    value_dcl  ->  value_header '{' . value_element_list '}'   (rule 42)
+
+    $default	reduce using rule 51 (value_element_list)
+
+    value_element_list	go to state 157
+
+
+
+state 114
+
+    definition  ->  const_dcl ';' .   (rule 3)
+
+    $default	reduce using rule 3 (definition)
+
+
+
+state 115
+
+    definition  ->  type_dcl ';' .   (rule 2)
+
+    $default	reduce using rule 2 (definition)
+
+
+
+state 116
+
+    definition  ->  except_dcl ';' .   (rule 4)
+
+    $default	reduce using rule 4 (definition)
+
+
+
+state 117
+
+    signed_long_long_int  ->  LONG_T LONG_T .   (rule 152)
+
+    $default	reduce using rule 152 (signed_long_long_int)
+
+
+
+state 118
+
+    scoped_name  ->  SCOPE IDENT .   (rule 30)
+
+    $default	reduce using rule 30 (scoped_name)
+
+
+
+state 119
+
+    string_type  ->  STRING_T '<' . positive_const_int '>'   (rule 194)
+
+    IDENT	shift, and go to state 36
+    BOOL_FALSE	shift, and go to state 158
+    BOOL_TRUE	shift, and go to state 159
+    CHAR_L	shift, and go to state 160
+    FLOAT_L	shift, and go to state 161
+    INTEGER_L	shift, and go to state 162
+    STRING_L	shift, and go to state 163
+    FIXED_PT_L	shift, and go to state 164
+    SCOPE	shift, and go to state 44
+    '(' 	shift, and go to state 165
+    '+' 	shift, and go to state 166
+    '-' 	shift, and go to state 167
+    '~' 	shift, and go to state 168
+
+    scoped_name	go to state 169
+    const_expr	go to state 170
+    or_expr	go to state 171
+    xor_expr	go to state 172
+    and_expr	go to state 173
+    shift_expr	go to state 174
+    add_expr	go to state 175
+    mult_expr	go to state 176
+    unary_expr	go to state 177
+    unary_operator	go to state 178
+    primary_expr	go to state 179
+    literal	go to state 180
+    boolean_literal	go to state 181
+    positive_const_int	go to state 182
+    string_literal	go to state 183
+
+
+
+state 120
+
+    unsigned_long_long_int  ->  UNSIGNED_T LONG_T . LONG_T   (rule 158)
+    unsigned_long_int  ->  UNSIGNED_T LONG_T .   (rule 159)
+
+    LONG_T	shift, and go to state 184
+
+    $default	reduce using rule 159 (unsigned_long_int)
+
+
+
+state 121
+
+    unsigned_short_int  ->  UNSIGNED_T SHORT_T .   (rule 160)
+
+    $default	reduce using rule 160 (unsigned_short_int)
+
+
+
+state 122
+
+    wide_string_type  ->  WSTRING_T '<' . positive_const_int '>'   (rule 196)
+
+    IDENT	shift, and go to state 36
+    BOOL_FALSE	shift, and go to state 158
+    BOOL_TRUE	shift, and go to state 159
+    CHAR_L	shift, and go to state 160
+    FLOAT_L	shift, and go to state 161
+    INTEGER_L	shift, and go to state 162
+    STRING_L	shift, and go to state 163
+    FIXED_PT_L	shift, and go to state 164
+    SCOPE	shift, and go to state 44
+    '(' 	shift, and go to state 165
+    '+' 	shift, and go to state 166
+    '-' 	shift, and go to state 167
+    '~' 	shift, and go to state 168
+
+    scoped_name	go to state 169
+    const_expr	go to state 170
+    or_expr	go to state 171
+    xor_expr	go to state 172
+    and_expr	go to state 173
+    shift_expr	go to state 174
+    add_expr	go to state 175
+    mult_expr	go to state 176
+    unary_expr	go to state 177
+    unary_operator	go to state 178
+    primary_expr	go to state 179
+    literal	go to state 180
+    boolean_literal	go to state 181
+    positive_const_int	go to state 185
+    string_literal	go to state 183
+
+
+
+state 123
+
+    scoped_name  ->  scoped_name SCOPE . IDENT   (rule 31)
+
+    IDENT	shift, and go to state 186
+
+
+
+state 124
+
+    const_dcl  ->  CONST const_type IDENT . '=' const_expr   (rule 65)
+
+    '=' 	shift, and go to state 187
+
+
+
+state 125
+
+    enum_type  ->  ENUM IDENT '{' . enumerator_list '}'   (rule 188)
+
+    IDENT	shift, and go to state 188
+
+    enumerator_list	go to state 189
+    enumerator	go to state 190
+
+
+
+state 126
+
+    except_dcl  ->  EXCEPTION IDENT '{' . opt_member_list '}'   (rule 205)
+
+    IDENT	shift, and go to state 36
+    ANY_T	shift, and go to state 75
+    BOOLEAN_T	shift, and go to state 37
+    CHAR_T	shift, and go to state 38
+    DOUBLE_T	shift, and go to state 39
+    ENUM	shift, and go to state 5
+    FIXED	shift, and go to state 76
+    FLOAT_T	shift, and go to state 41
+    LONG_T	shift, and go to state 42
+    OBJECT_T	shift, and go to state 77
+    OCTET_T	shift, and go to state 43
+    SCOPE	shift, and go to state 44
+    SEQUENCE	shift, and go to state 78
+    SHORT_T	shift, and go to state 45
+    STRING_T	shift, and go to state 46
+    STRUCT	shift, and go to state 9
+    UNION	shift, and go to state 11
+    UNSIGNED_T	shift, and go to state 47
+    WCHAR_T	shift, and go to state 48
+    WSTRING_T	shift, and go to state 49
+    VALUEBASE	shift, and go to state 79
+
+    $default	reduce using rule 206 (opt_member_list)
+
+    scoped_name	go to state 80
+    type_spec	go to state 191
+    simple_type_spec	go to state 83
+    base_type_spec	go to state 84
+    template_type_spec	go to state 85
+    constr_type_spec	go to state 86
+    floating_pt_type	go to state 87
+    integer_type	go to state 88
+    signed_int	go to state 54
+    signed_long_long_int	go to state 55
+    signed_long_int	go to state 56
+    signed_short_int	go to state 57
+    unsigned_int	go to state 58
+    unsigned_long_long_int	go to state 59
+    unsigned_long_int	go to state 60
+    unsigned_short_int	go to state 61
+    char_type	go to state 89
+    wide_char_type	go to state 90
+    boolean_type	go to state 91
+    octet_type	go to state 92
+    any_type	go to state 93
+    object_type	go to state 94
+    value_base_type	go to state 95
+    struct_type	go to state 96
+    member_list	go to state 192
+    member	go to state 193
+    union_type	go to state 97
+    enum_type	go to state 98
+    sequence_type	go to state 99
+    string_type	go to state 100
+    wide_string_type	go to state 101
+    opt_member_list	go to state 194
+    fixed_pt_type	go to state 102
+
+
+
+state 127
+
+    module  ->  MODULE IDENT '{' . definition_list '}'   (rule 9)
+
+    PRAGMA_ID	shift, and go to state 1
+    PRAGMA_VERSION	shift, and go to state 2
+    PRAGMA_PREFIX	shift, and go to state 3
+    CONST	shift, and go to state 4
+    ENUM	shift, and go to state 5
+    EXCEPTION	shift, and go to state 6
+    MODULE	shift, and go to state 7
+    NATIVE	shift, and go to state 8
+    STRUCT	shift, and go to state 9
+    TYPEDEF	shift, and go to state 10
+    UNION	shift, and go to state 11
+    ABSTRACT	shift, and go to state 12
+    CUSTOM	shift, and go to state 13
+    VALUETYPE	shift, and go to state 14
+
+    $default	reduce using rule 16 (opt_abstract)
+
+    definition	go to state 15
+    module	go to state 16
+    definition_list	go to state 195
+    interface	go to state 18
+    interface_dcl	go to state 19
+    forward_dcl	go to state 20
+    opt_abstract	go to state 21
+    interface_header	go to state 22
+    value	go to state 23
+    value_forward_dcl	go to state 24
+    value_box_dcl	go to state 25
+    value_abs_dcl	go to state 26
+    value_dcl	go to state 27
+    value_header	go to state 28
+    const_dcl	go to state 29
+    type_dcl	go to state 30
+    struct_type	go to state 31
+    union_type	go to state 32
+    enum_type	go to state 33
+    except_dcl	go to state 34
+    pragma	go to state 35
+
+
+
+state 128
+
+    struct_type  ->  STRUCT IDENT '{' . member_list '}'   (rule 168)
+
+    IDENT	shift, and go to state 36
+    ANY_T	shift, and go to state 75
+    BOOLEAN_T	shift, and go to state 37
+    CHAR_T	shift, and go to state 38
+    DOUBLE_T	shift, and go to state 39
+    ENUM	shift, and go to state 5
+    FIXED	shift, and go to state 76
+    FLOAT_T	shift, and go to state 41
+    LONG_T	shift, and go to state 42
+    OBJECT_T	shift, and go to state 77
+    OCTET_T	shift, and go to state 43
+    SCOPE	shift, and go to state 44
+    SEQUENCE	shift, and go to state 78
+    SHORT_T	shift, and go to state 45
+    STRING_T	shift, and go to state 46
+    STRUCT	shift, and go to state 9
+    UNION	shift, and go to state 11
+    UNSIGNED_T	shift, and go to state 47
+    WCHAR_T	shift, and go to state 48
+    WSTRING_T	shift, and go to state 49
+    VALUEBASE	shift, and go to state 79
+
+    scoped_name	go to state 80
+    type_spec	go to state 191
+    simple_type_spec	go to state 83
+    base_type_spec	go to state 84
+    template_type_spec	go to state 85
+    constr_type_spec	go to state 86
+    floating_pt_type	go to state 87
+    integer_type	go to state 88
+    signed_int	go to state 54
+    signed_long_long_int	go to state 55
+    signed_long_int	go to state 56
+    signed_short_int	go to state 57
+    unsigned_int	go to state 58
+    unsigned_long_long_int	go to state 59
+    unsigned_long_int	go to state 60
+    unsigned_short_int	go to state 61
+    char_type	go to state 89
+    wide_char_type	go to state 90
+    boolean_type	go to state 91
+    octet_type	go to state 92
+    any_type	go to state 93
+    object_type	go to state 94
+    value_base_type	go to state 95
+    struct_type	go to state 96
+    member_list	go to state 196
+    member	go to state 193
+    union_type	go to state 97
+    enum_type	go to state 98
+    sequence_type	go to state 99
+    string_type	go to state 100
+    wide_string_type	go to state 101
+    fixed_pt_type	go to state 102
+
+
+
+state 129
+
+    fixed_pt_type  ->  FIXED '<' . positive_const_int ',' positive_const_int '>'   (rule 232)
+
+    IDENT	shift, and go to state 36
+    BOOL_FALSE	shift, and go to state 158
+    BOOL_TRUE	shift, and go to state 159
+    CHAR_L	shift, and go to state 160
+    FLOAT_L	shift, and go to state 161
+    INTEGER_L	shift, and go to state 162
+    STRING_L	shift, and go to state 163
+    FIXED_PT_L	shift, and go to state 164
+    SCOPE	shift, and go to state 44
+    '(' 	shift, and go to state 165
+    '+' 	shift, and go to state 166
+    '-' 	shift, and go to state 167
+    '~' 	shift, and go to state 168
+
+    scoped_name	go to state 169
+    const_expr	go to state 170
+    or_expr	go to state 171
+    xor_expr	go to state 172
+    and_expr	go to state 173
+    shift_expr	go to state 174
+    add_expr	go to state 175
+    mult_expr	go to state 176
+    unary_expr	go to state 177
+    unary_operator	go to state 178
+    primary_expr	go to state 179
+    literal	go to state 180
+    boolean_literal	go to state 181
+    positive_const_int	go to state 197
+    string_literal	go to state 183
+
+
+
+state 130
+
+    sequence_type  ->  SEQUENCE '<' . simple_type_spec ',' positive_const_int '>'   (rule 192)
+    sequence_type  ->  SEQUENCE '<' . simple_type_spec '>'   (rule 193)
+
+    IDENT	shift, and go to state 36
+    ANY_T	shift, and go to state 75
+    BOOLEAN_T	shift, and go to state 37
+    CHAR_T	shift, and go to state 38
+    DOUBLE_T	shift, and go to state 39
+    FIXED	shift, and go to state 76
+    FLOAT_T	shift, and go to state 41
+    LONG_T	shift, and go to state 42
+    OBJECT_T	shift, and go to state 77
+    OCTET_T	shift, and go to state 43
+    SCOPE	shift, and go to state 44
+    SEQUENCE	shift, and go to state 78
+    SHORT_T	shift, and go to state 45
+    STRING_T	shift, and go to state 46
+    UNSIGNED_T	shift, and go to state 47
+    WCHAR_T	shift, and go to state 48
+    WSTRING_T	shift, and go to state 49
+    VALUEBASE	shift, and go to state 79
+
+    scoped_name	go to state 80
+    simple_type_spec	go to state 198
+    base_type_spec	go to state 84
+    template_type_spec	go to state 85
+    floating_pt_type	go to state 87
+    integer_type	go to state 88
+    signed_int	go to state 54
+    signed_long_long_int	go to state 55
+    signed_long_int	go to state 56
+    signed_short_int	go to state 57
+    unsigned_int	go to state 58
+    unsigned_long_long_int	go to state 59
+    unsigned_long_int	go to state 60
+    unsigned_short_int	go to state 61
+    char_type	go to state 89
+    wide_char_type	go to state 90
+    boolean_type	go to state 91
+    octet_type	go to state 92
+    any_type	go to state 93
+    object_type	go to state 94
+    value_base_type	go to state 95
+    sequence_type	go to state 99
+    string_type	go to state 100
+    wide_string_type	go to state 101
+    fixed_pt_type	go to state 102
+
+
+
+state 131
+
+    simple_declarator  ->  IDENT .   (rule 143)
+    array_declarator  ->  IDENT . fixed_array_size   (rule 198)
+
+    '[' 	shift, and go to state 199
+
+    $default	reduce using rule 143 (simple_declarator)
+
+    fixed_array_size	go to state 200
+
+
+
+state 132
+
+    type_declarator  ->  type_spec declarators .   (rule 117)
+    declarators  ->  declarators . ',' declarator   (rule 140)
+
+    ',' 	shift, and go to state 201
+
+    $default	reduce using rule 117 (type_declarator)
+
+
+
+state 133
+
+    declarators  ->  declarator .   (rule 139)
+
+    $default	reduce using rule 139 (declarators)
+
+
+
+state 134
+
+    declarator  ->  simple_declarator .   (rule 141)
+
+    $default	reduce using rule 141 (declarator)
+
+
+
+state 135
+
+    declarator  ->  complex_declarator .   (rule 142)
+
+    $default	reduce using rule 142 (declarator)
+
+
+
+state 136
+
+    complex_declarator  ->  array_declarator .   (rule 144)
+    array_declarator  ->  array_declarator . fixed_array_size   (rule 199)
+
+    '[' 	shift, and go to state 199
+
+    $default	reduce using rule 144 (complex_declarator)
+
+    fixed_array_size	go to state 202
+
+
+
+state 137
+
+    union_type  ->  UNION IDENT SWITCH . '(' switch_type_spec ')' '{' switch_body '}'   (rule 172)
+
+    '(' 	shift, and go to state 203
+
+
+
+state 138
+
+    value_forward_dcl  ->  ABSTRACT VALUETYPE IDENT .   (rule 39)
+    value_abs_dcl  ->  ABSTRACT VALUETYPE IDENT . opt_value_inheritance_spec '{' interface_body '}'   (rule 41)
+
+    ':' 	shift, and go to state 140
+
+    ';' 	reduce using rule 39 (value_forward_dcl)
+    $default	reduce using rule 47 (opt_value_inheritance_base)
+
+    opt_value_inheritance_spec	go to state 204
+    opt_value_inheritance_base	go to state 142
+
+
+
+state 139
+
+    value_header  ->  CUSTOM VALUETYPE IDENT . opt_value_inheritance_spec   (rule 44)
+
+    ':' 	shift, and go to state 140
+
+    $default	reduce using rule 47 (opt_value_inheritance_base)
+
+    opt_value_inheritance_spec	go to state 205
+    opt_value_inheritance_base	go to state 142
+
+
+
+state 140
+
+    opt_value_inheritance_base  ->  ':' . opt_truncatable scoped_name_list   (rule 48)
+
+    TRUNCATABLE	shift, and go to state 206
+
+    $default	reduce using rule 49 (opt_truncatable)
+
+    opt_truncatable	go to state 207
+
+
+
+state 141
+
+    value_header  ->  VALUETYPE IDENT opt_value_inheritance_spec .   (rule 43)
+
+    $default	reduce using rule 43 (value_header)
+
+
+
+state 142
+
+    opt_value_inheritance_spec  ->  opt_value_inheritance_base .   (rule 45)
+    opt_value_inheritance_spec  ->  opt_value_inheritance_base . SUPPORTS scoped_name_list   (rule 46)
+
+    SUPPORTS	shift, and go to state 208
+
+    $default	reduce using rule 45 (opt_value_inheritance_spec)
+
+
+
+state 143
+
+    value_box_dcl  ->  VALUETYPE IDENT type_spec .   (rule 40)
+
+    $default	reduce using rule 40 (value_box_dcl)
+
+
+
+state 144
+
+    forward_dcl  ->  opt_abstract INTERFACE IDENT .   (rule 15)
+    interface_header  ->  opt_abstract INTERFACE IDENT .   (rule 18)
+    interface_header  ->  opt_abstract INTERFACE IDENT . ':' scoped_name_list   (rule 19)
+
+    ':' 	shift, and go to state 209
+
+    '{' 	reduce using rule 18 (interface_header)
+    $default	reduce using rule 15 (forward_dcl)
+
+
+
+state 145
+
+    opt_op_attr  ->  ONEWAY .   (rule 210)
+
+    $default	reduce using rule 210 (opt_op_attr)
+
+
+
+state 146
+
+    opt_readonly  ->  READONLY .   (rule 204)
+
+    $default	reduce using rule 204 (opt_readonly)
+
+
+
+state 147
+
+    interface_dcl  ->  interface_header '{' interface_body . '}'   (rule 14)
+
+    '}' 	shift, and go to state 210
+
+
+
+state 148
+
+    export_list  ->  export .   (rule 27)
+
+    $default	reduce using rule 27 (export_list)
+
+
+
+state 149
+
+    interface_body  ->  export_list .   (rule 21)
+    export_list  ->  export_list . export   (rule 28)
+
+    ONEWAY	shift, and go to state 145
+    CONST	shift, and go to state 4
+    ENUM	shift, and go to state 5
+    EXCEPTION	shift, and go to state 6
+    NATIVE	shift, and go to state 8
+    READONLY	shift, and go to state 146
+    STRUCT	shift, and go to state 9
+    TYPEDEF	shift, and go to state 10
+    UNION	shift, and go to state 11
+
+    ATTRIBUTE	reduce using rule 203 (opt_readonly)
+    '}' 	reduce using rule 21 (interface_body)
+    $default	reduce using rule 209 (opt_op_attr)
+
+    export	go to state 211
+    const_dcl	go to state 150
+    type_dcl	go to state 151
+    struct_type	go to state 31
+    union_type	go to state 32
+    enum_type	go to state 33
+    attr_dcl	go to state 152
+    opt_readonly	go to state 153
+    except_dcl	go to state 154
+    op_dcl	go to state 155
+    opt_op_attr	go to state 156
+
+
+
+state 150
+
+    export  ->  const_dcl . ';'   (rule 23)
+
+    ';' 	shift, and go to state 212
+
+
+
+state 151
+
+    export  ->  type_dcl . ';'   (rule 22)
+
+    ';' 	shift, and go to state 213
+
+
+
+state 152
+
+    export  ->  attr_dcl . ';'   (rule 25)
+    attr_dcl  ->  attr_dcl . ',' simple_declarator   (rule 202)
+
+    ';' 	shift, and go to state 214
+    ',' 	shift, and go to state 215
+
+
+
+state 153
+
+    attr_dcl  ->  opt_readonly . ATTRIBUTE param_type_spec simple_declarator   (rule 201)
+
+    ATTRIBUTE	shift, and go to state 216
+
+
+
+state 154
+
+    export  ->  except_dcl . ';'   (rule 24)
+
+    ';' 	shift, and go to state 217
+
+
+
+state 155
+
+    export  ->  op_dcl . ';'   (rule 26)
+
+    ';' 	shift, and go to state 218
+
+
+
+state 156
+
+    op_dcl  ->  opt_op_attr . op_type_spec IDENT parameter_dcls opt_raises_expr opt_context_expr   (rule 208)
+
+    IDENT	shift, and go to state 36
+    VOID_T	shift, and go to state 219
+    ANY_T	shift, and go to state 75
+    BOOLEAN_T	shift, and go to state 37
+    CHAR_T	shift, and go to state 38
+    DOUBLE_T	shift, and go to state 39
+    FIXED	shift, and go to state 76
+    FLOAT_T	shift, and go to state 41
+    LONG_T	shift, and go to state 42
+    OBJECT_T	shift, and go to state 77
+    OCTET_T	shift, and go to state 43
+    SCOPE	shift, and go to state 44
+    SHORT_T	shift, and go to state 45
+    STRING_T	shift, and go to state 46
+    UNSIGNED_T	shift, and go to state 47
+    WCHAR_T	shift, and go to state 48
+    WSTRING_T	shift, and go to state 49
+    VALUEBASE	shift, and go to state 79
+
+    scoped_name	go to state 220
+    base_type_spec	go to state 221
+    floating_pt_type	go to state 87
+    integer_type	go to state 88
+    signed_int	go to state 54
+    signed_long_long_int	go to state 55
+    signed_long_int	go to state 56
+    signed_short_int	go to state 57
+    unsigned_int	go to state 58
+    unsigned_long_long_int	go to state 59
+    unsigned_long_int	go to state 60
+    unsigned_short_int	go to state 61
+    char_type	go to state 89
+    wide_char_type	go to state 90
+    boolean_type	go to state 91
+    octet_type	go to state 92
+    any_type	go to state 93
+    object_type	go to state 94
+    value_base_type	go to state 95
+    string_type	go to state 222
+    wide_string_type	go to state 223
+    op_type_spec	go to state 224
+    param_type_spec	go to state 225
+    fixed_pt_type	go to state 226
+
+
+
+state 157
+
+    value_dcl  ->  value_header '{' value_element_list . '}'   (rule 42)
+    value_element_list  ->  value_element_list . value_element   (rule 52)
+
+    ONEWAY	shift, and go to state 145
+    CONST	shift, and go to state 4
+    ENUM	shift, and go to state 5
+    EXCEPTION	shift, and go to state 6
+    NATIVE	shift, and go to state 8
+    READONLY	shift, and go to state 146
+    STRUCT	shift, and go to state 9
+    TYPEDEF	shift, and go to state 10
+    UNION	shift, and go to state 11
+    FACTORY	shift, and go to state 227
+    PRIVATE	shift, and go to state 228
+    PUBLIC	shift, and go to state 229
+    '}' 	shift, and go to state 230
+
+    ATTRIBUTE	reduce using rule 203 (opt_readonly)
+    $default	reduce using rule 209 (opt_op_attr)
+
+    export	go to state 231
+    value_element	go to state 232
+    state_member	go to state 233
+    private_public	go to state 234
+    init_dcl	go to state 235
+    const_dcl	go to state 150
+    type_dcl	go to state 151
+    struct_type	go to state 31
+    union_type	go to state 32
+    enum_type	go to state 33
+    attr_dcl	go to state 152
+    opt_readonly	go to state 153
+    except_dcl	go to state 154
+    op_dcl	go to state 155
+    opt_op_attr	go to state 156
+
+
+
+state 158
+
+    boolean_literal  ->  BOOL_FALSE .   (rule 108)
+
+    $default	reduce using rule 108 (boolean_literal)
+
+
+
+state 159
+
+    boolean_literal  ->  BOOL_TRUE .   (rule 107)
+
+    $default	reduce using rule 107 (boolean_literal)
+
+
+
+state 160
+
+    literal  ->  CHAR_L .   (rule 103)
+
+    $default	reduce using rule 103 (literal)
+
+
+
+state 161
+
+    literal  ->  FLOAT_L .   (rule 105)
+
+    $default	reduce using rule 105 (literal)
+
+
+
+state 162
+
+    literal  ->  INTEGER_L .   (rule 101)
+
+    $default	reduce using rule 101 (literal)
+
+
+
+state 163
+
+    string_literal  ->  STRING_L .   (rule 110)
+
+    $default	reduce using rule 110 (string_literal)
+
+
+
+state 164
+
+    literal  ->  FIXED_PT_L .   (rule 104)
+
+    $default	reduce using rule 104 (literal)
+
+
+
+state 165
+
+    primary_expr  ->  '(' . const_expr ')'   (rule 100)
+
+    IDENT	shift, and go to state 36
+    BOOL_FALSE	shift, and go to state 158
+    BOOL_TRUE	shift, and go to state 159
+    CHAR_L	shift, and go to state 160
+    FLOAT_L	shift, and go to state 161
+    INTEGER_L	shift, and go to state 162
+    STRING_L	shift, and go to state 163
+    FIXED_PT_L	shift, and go to state 164
+    SCOPE	shift, and go to state 44
+    '(' 	shift, and go to state 165
+    '+' 	shift, and go to state 166
+    '-' 	shift, and go to state 167
+    '~' 	shift, and go to state 168
+
+    scoped_name	go to state 169
+    const_expr	go to state 236
+    or_expr	go to state 171
+    xor_expr	go to state 172
+    and_expr	go to state 173
+    shift_expr	go to state 174
+    add_expr	go to state 175
+    mult_expr	go to state 176
+    unary_expr	go to state 177
+    unary_operator	go to state 178
+    primary_expr	go to state 179
+    literal	go to state 180
+    boolean_literal	go to state 181
+    string_literal	go to state 183
+
+
+
+state 166
+
+    unary_operator  ->  '+' .   (rule 95)
+
+    $default	reduce using rule 95 (unary_operator)
+
+
+
+state 167
+
+    unary_operator  ->  '-' .   (rule 96)
+
+    $default	reduce using rule 96 (unary_operator)
+
+
+
+state 168
+
+    unary_operator  ->  '~' .   (rule 97)
+
+    $default	reduce using rule 97 (unary_operator)
+
+
+
+state 169
+
+    scoped_name  ->  scoped_name . SCOPE IDENT   (rule 31)
+    primary_expr  ->  scoped_name .   (rule 98)
+
+    SCOPE	shift, and go to state 123
+
+    $default	reduce using rule 98 (primary_expr)
+
+
+
+state 170
+
+    positive_const_int  ->  const_expr .   (rule 109)
+
+    $default	reduce using rule 109 (positive_const_int)
+
+
+
+state 171
+
+    const_expr  ->  or_expr .   (rule 76)
+    or_expr  ->  or_expr . '|' xor_expr   (rule 78)
+
+    '|' 	shift, and go to state 237
+
+    $default	reduce using rule 76 (const_expr)
+
+
+
+state 172
+
+    or_expr  ->  xor_expr .   (rule 77)
+    xor_expr  ->  xor_expr . '^' and_expr   (rule 80)
+
+    '^' 	shift, and go to state 238
+
+    $default	reduce using rule 77 (or_expr)
+
+
+
+state 173
+
+    xor_expr  ->  and_expr .   (rule 79)
+    and_expr  ->  and_expr . '&' shift_expr   (rule 82)
+
+    '&' 	shift, and go to state 239
+
+    $default	reduce using rule 79 (xor_expr)
+
+
+
+state 174
+
+    and_expr  ->  shift_expr .   (rule 81)
+    shift_expr  ->  shift_expr . LSHIFT add_expr   (rule 84)
+    shift_expr  ->  shift_expr . RSHIFT add_expr   (rule 85)
+
+    LSHIFT	shift, and go to state 240
+    RSHIFT	shift, and go to state 241
+
+    $default	reduce using rule 81 (and_expr)
+
+
+
+state 175
+
+    shift_expr  ->  add_expr .   (rule 83)
+    add_expr  ->  add_expr . '+' mult_expr   (rule 87)
+    add_expr  ->  add_expr . '-' mult_expr   (rule 88)
+
+    '+' 	shift, and go to state 242
+    '-' 	shift, and go to state 243
+
+    $default	reduce using rule 83 (shift_expr)
+
+
+
+state 176
+
+    add_expr  ->  mult_expr .   (rule 86)
+    mult_expr  ->  mult_expr . '*' unary_expr   (rule 90)
+    mult_expr  ->  mult_expr . '/' unary_expr   (rule 91)
+    mult_expr  ->  mult_expr . '%' unary_expr   (rule 92)
+
+    '*' 	shift, and go to state 244
+    '/' 	shift, and go to state 245
+    '%' 	shift, and go to state 246
+
+    $default	reduce using rule 86 (add_expr)
+
+
+
+state 177
+
+    mult_expr  ->  unary_expr .   (rule 89)
+
+    $default	reduce using rule 89 (mult_expr)
+
+
+
+state 178
+
+    unary_expr  ->  unary_operator . primary_expr   (rule 93)
+
+    IDENT	shift, and go to state 36
+    BOOL_FALSE	shift, and go to state 158
+    BOOL_TRUE	shift, and go to state 159
+    CHAR_L	shift, and go to state 160
+    FLOAT_L	shift, and go to state 161
+    INTEGER_L	shift, and go to state 162
+    STRING_L	shift, and go to state 163
+    FIXED_PT_L	shift, and go to state 164
+    SCOPE	shift, and go to state 44
+    '(' 	shift, and go to state 165
+
+    scoped_name	go to state 169
+    primary_expr	go to state 247
+    literal	go to state 180
+    boolean_literal	go to state 181
+    string_literal	go to state 183
+
+
+
+state 179
+
+    unary_expr  ->  primary_expr .   (rule 94)
+
+    $default	reduce using rule 94 (unary_expr)
+
+
+
+state 180
+
+    primary_expr  ->  literal .   (rule 99)
+
+    $default	reduce using rule 99 (primary_expr)
+
+
+
+state 181
+
+    literal  ->  boolean_literal .   (rule 106)
+
+    $default	reduce using rule 106 (literal)
+
+
+
+state 182
+
+    string_type  ->  STRING_T '<' positive_const_int . '>'   (rule 194)
+
+    '>' 	shift, and go to state 248
+
+
+
+state 183
+
+    literal  ->  string_literal .   (rule 102)
+    string_literal  ->  string_literal . STRING_L   (rule 111)
+
+    STRING_L	shift, and go to state 249
+
+    $default	reduce using rule 102 (literal)
+
+
+
+state 184
+
+    unsigned_long_long_int  ->  UNSIGNED_T LONG_T LONG_T .   (rule 158)
+
+    $default	reduce using rule 158 (unsigned_long_long_int)
+
+
+
+state 185
+
+    wide_string_type  ->  WSTRING_T '<' positive_const_int . '>'   (rule 196)
+
+    '>' 	shift, and go to state 250
+
+
+
+state 186
+
+    scoped_name  ->  scoped_name SCOPE IDENT .   (rule 31)
+
+    $default	reduce using rule 31 (scoped_name)
+
+
+
+state 187
+
+    const_dcl  ->  CONST const_type IDENT '=' . const_expr   (rule 65)
+
+    IDENT	shift, and go to state 36
+    BOOL_FALSE	shift, and go to state 158
+    BOOL_TRUE	shift, and go to state 159
+    CHAR_L	shift, and go to state 160
+    FLOAT_L	shift, and go to state 161
+    INTEGER_L	shift, and go to state 162
+    STRING_L	shift, and go to state 163
+    FIXED_PT_L	shift, and go to state 164
+    SCOPE	shift, and go to state 44
+    '(' 	shift, and go to state 165
+    '+' 	shift, and go to state 166
+    '-' 	shift, and go to state 167
+    '~' 	shift, and go to state 168
+
+    scoped_name	go to state 169
+    const_expr	go to state 251
+    or_expr	go to state 171
+    xor_expr	go to state 172
+    and_expr	go to state 173
+    shift_expr	go to state 174
+    add_expr	go to state 175
+    mult_expr	go to state 176
+    unary_expr	go to state 177
+    unary_operator	go to state 178
+    primary_expr	go to state 179
+    literal	go to state 180
+    boolean_literal	go to state 181
+    string_literal	go to state 183
+
+
+
+state 188
+
+    enumerator  ->  IDENT .   (rule 191)
+
+    $default	reduce using rule 191 (enumerator)
+
+
+
+state 189
+
+    enum_type  ->  ENUM IDENT '{' enumerator_list . '}'   (rule 188)
+    enumerator_list  ->  enumerator_list . ',' enumerator   (rule 190)
+
+    '}' 	shift, and go to state 252
+    ',' 	shift, and go to state 253
+
+
+
+state 190
+
+    enumerator_list  ->  enumerator .   (rule 189)
+
+    $default	reduce using rule 189 (enumerator_list)
+
+
+
+state 191
+
+    member  ->  type_spec . declarators ';'   (rule 171)
+
+    IDENT	shift, and go to state 131
+
+    declarators	go to state 254
+    declarator	go to state 133
+    simple_declarator	go to state 134
+    complex_declarator	go to state 135
+    array_declarator	go to state 136
+
+
+
+state 192
+
+    member_list  ->  member_list . member   (rule 170)
+    opt_member_list  ->  member_list .   (rule 207)
+
+    IDENT	shift, and go to state 36
+    ANY_T	shift, and go to state 75
+    BOOLEAN_T	shift, and go to state 37
+    CHAR_T	shift, and go to state 38
+    DOUBLE_T	shift, and go to state 39
+    ENUM	shift, and go to state 5
+    FIXED	shift, and go to state 76
+    FLOAT_T	shift, and go to state 41
+    LONG_T	shift, and go to state 42
+    OBJECT_T	shift, and go to state 77
+    OCTET_T	shift, and go to state 43
+    SCOPE	shift, and go to state 44
+    SEQUENCE	shift, and go to state 78
+    SHORT_T	shift, and go to state 45
+    STRING_T	shift, and go to state 46
+    STRUCT	shift, and go to state 9
+    UNION	shift, and go to state 11
+    UNSIGNED_T	shift, and go to state 47
+    WCHAR_T	shift, and go to state 48
+    WSTRING_T	shift, and go to state 49
+    VALUEBASE	shift, and go to state 79
+
+    $default	reduce using rule 207 (opt_member_list)
+
+    scoped_name	go to state 80
+    type_spec	go to state 191
+    simple_type_spec	go to state 83
+    base_type_spec	go to state 84
+    template_type_spec	go to state 85
+    constr_type_spec	go to state 86
+    floating_pt_type	go to state 87
+    integer_type	go to state 88
+    signed_int	go to state 54
+    signed_long_long_int	go to state 55
+    signed_long_int	go to state 56
+    signed_short_int	go to state 57
+    unsigned_int	go to state 58
+    unsigned_long_long_int	go to state 59
+    unsigned_long_int	go to state 60
+    unsigned_short_int	go to state 61
+    char_type	go to state 89
+    wide_char_type	go to state 90
+    boolean_type	go to state 91
+    octet_type	go to state 92
+    any_type	go to state 93
+    object_type	go to state 94
+    value_base_type	go to state 95
+    struct_type	go to state 96
+    member	go to state 255
+    union_type	go to state 97
+    enum_type	go to state 98
+    sequence_type	go to state 99
+    string_type	go to state 100
+    wide_string_type	go to state 101
+    fixed_pt_type	go to state 102
+
+
+
+state 193
+
+    member_list  ->  member .   (rule 169)
+
+    $default	reduce using rule 169 (member_list)
+
+
+
+state 194
+
+    except_dcl  ->  EXCEPTION IDENT '{' opt_member_list . '}'   (rule 205)
+
+    '}' 	shift, and go to state 256
+
+
+
+state 195
+
+    module  ->  MODULE IDENT '{' definition_list . '}'   (rule 9)
+    definition_list  ->  definition_list . definition   (rule 11)
+
+    PRAGMA_ID	shift, and go to state 1
+    PRAGMA_VERSION	shift, and go to state 2
+    PRAGMA_PREFIX	shift, and go to state 3
+    CONST	shift, and go to state 4
+    ENUM	shift, and go to state 5
+    EXCEPTION	shift, and go to state 6
+    MODULE	shift, and go to state 7
+    NATIVE	shift, and go to state 8
+    STRUCT	shift, and go to state 9
+    TYPEDEF	shift, and go to state 10
+    UNION	shift, and go to state 11
+    ABSTRACT	shift, and go to state 12
+    CUSTOM	shift, and go to state 13
+    VALUETYPE	shift, and go to state 14
+    '}' 	shift, and go to state 257
+
+    $default	reduce using rule 16 (opt_abstract)
+
+    definition	go to state 108
+    module	go to state 16
+    interface	go to state 18
+    interface_dcl	go to state 19
+    forward_dcl	go to state 20
+    opt_abstract	go to state 21
+    interface_header	go to state 22
+    value	go to state 23
+    value_forward_dcl	go to state 24
+    value_box_dcl	go to state 25
+    value_abs_dcl	go to state 26
+    value_dcl	go to state 27
+    value_header	go to state 28
+    const_dcl	go to state 29
+    type_dcl	go to state 30
+    struct_type	go to state 31
+    union_type	go to state 32
+    enum_type	go to state 33
+    except_dcl	go to state 34
+    pragma	go to state 35
+
+
+
+state 196
+
+    struct_type  ->  STRUCT IDENT '{' member_list . '}'   (rule 168)
+    member_list  ->  member_list . member   (rule 170)
+
+    IDENT	shift, and go to state 36
+    ANY_T	shift, and go to state 75
+    BOOLEAN_T	shift, and go to state 37
+    CHAR_T	shift, and go to state 38
+    DOUBLE_T	shift, and go to state 39
+    ENUM	shift, and go to state 5
+    FIXED	shift, and go to state 76
+    FLOAT_T	shift, and go to state 41
+    LONG_T	shift, and go to state 42
+    OBJECT_T	shift, and go to state 77
+    OCTET_T	shift, and go to state 43
+    SCOPE	shift, and go to state 44
+    SEQUENCE	shift, and go to state 78
+    SHORT_T	shift, and go to state 45
+    STRING_T	shift, and go to state 46
+    STRUCT	shift, and go to state 9
+    UNION	shift, and go to state 11
+    UNSIGNED_T	shift, and go to state 47
+    WCHAR_T	shift, and go to state 48
+    WSTRING_T	shift, and go to state 49
+    VALUEBASE	shift, and go to state 79
+    '}' 	shift, and go to state 258
+
+    scoped_name	go to state 80
+    type_spec	go to state 191
+    simple_type_spec	go to state 83
+    base_type_spec	go to state 84
+    template_type_spec	go to state 85
+    constr_type_spec	go to state 86
+    floating_pt_type	go to state 87
+    integer_type	go to state 88
+    signed_int	go to state 54
+    signed_long_long_int	go to state 55
+    signed_long_int	go to state 56
+    signed_short_int	go to state 57
+    unsigned_int	go to state 58
+    unsigned_long_long_int	go to state 59
+    unsigned_long_int	go to state 60
+    unsigned_short_int	go to state 61
+    char_type	go to state 89
+    wide_char_type	go to state 90
+    boolean_type	go to state 91
+    octet_type	go to state 92
+    any_type	go to state 93
+    object_type	go to state 94
+    value_base_type	go to state 95
+    struct_type	go to state 96
+    member	go to state 255
+    union_type	go to state 97
+    enum_type	go to state 98
+    sequence_type	go to state 99
+    string_type	go to state 100
+    wide_string_type	go to state 101
+    fixed_pt_type	go to state 102
+
+
+
+state 197
+
+    fixed_pt_type  ->  FIXED '<' positive_const_int . ',' positive_const_int '>'   (rule 232)
+
+    ',' 	shift, and go to state 259
+
+
+
+state 198
+
+    sequence_type  ->  SEQUENCE '<' simple_type_spec . ',' positive_const_int '>'   (rule 192)
+    sequence_type  ->  SEQUENCE '<' simple_type_spec . '>'   (rule 193)
+
+    ',' 	shift, and go to state 260
+    '>' 	shift, and go to state 261
+
+
+
+state 199
+
+    fixed_array_size  ->  '[' . positive_const_int ']'   (rule 200)
+
+    IDENT	shift, and go to state 36
+    BOOL_FALSE	shift, and go to state 158
+    BOOL_TRUE	shift, and go to state 159
+    CHAR_L	shift, and go to state 160
+    FLOAT_L	shift, and go to state 161
+    INTEGER_L	shift, and go to state 162
+    STRING_L	shift, and go to state 163
+    FIXED_PT_L	shift, and go to state 164
+    SCOPE	shift, and go to state 44
+    '(' 	shift, and go to state 165
+    '+' 	shift, and go to state 166
+    '-' 	shift, and go to state 167
+    '~' 	shift, and go to state 168
+
+    scoped_name	go to state 169
+    const_expr	go to state 170
+    or_expr	go to state 171
+    xor_expr	go to state 172
+    and_expr	go to state 173
+    shift_expr	go to state 174
+    add_expr	go to state 175
+    mult_expr	go to state 176
+    unary_expr	go to state 177
+    unary_operator	go to state 178
+    primary_expr	go to state 179
+    literal	go to state 180
+    boolean_literal	go to state 181
+    positive_const_int	go to state 262
+    string_literal	go to state 183
+
+
+
+state 200
+
+    array_declarator  ->  IDENT fixed_array_size .   (rule 198)
+
+    $default	reduce using rule 198 (array_declarator)
+
+
+
+state 201
+
+    declarators  ->  declarators ',' . declarator   (rule 140)
+
+    IDENT	shift, and go to state 131
+
+    declarator	go to state 263
+    simple_declarator	go to state 134
+    complex_declarator	go to state 135
+    array_declarator	go to state 136
+
+
+
+state 202
+
+    array_declarator  ->  array_declarator fixed_array_size .   (rule 199)
+
+    $default	reduce using rule 199 (array_declarator)
+
+
+
+state 203
+
+    union_type  ->  UNION IDENT SWITCH '(' . switch_type_spec ')' '{' switch_body '}'   (rule 172)
+
+    IDENT	shift, and go to state 36
+    BOOLEAN_T	shift, and go to state 37
+    CHAR_T	shift, and go to state 38
+    ENUM	shift, and go to state 5
+    LONG_T	shift, and go to state 42
+    OCTET_T	shift, and go to state 43
+    SCOPE	shift, and go to state 44
+    SHORT_T	shift, and go to state 45
+    UNSIGNED_T	shift, and go to state 47
+    WCHAR_T	shift, and go to state 48
+
+    scoped_name	go to state 264
+    integer_type	go to state 265
+    signed_int	go to state 54
+    signed_long_long_int	go to state 55
+    signed_long_int	go to state 56
+    signed_short_int	go to state 57
+    unsigned_int	go to state 58
+    unsigned_long_long_int	go to state 59
+    unsigned_long_int	go to state 60
+    unsigned_short_int	go to state 61
+    char_type	go to state 266
+    wide_char_type	go to state 267
+    boolean_type	go to state 268
+    octet_type	go to state 269
+    switch_type_spec	go to state 270
+    enum_type	go to state 271
+
+
+
+state 204
+
+    value_abs_dcl  ->  ABSTRACT VALUETYPE IDENT opt_value_inheritance_spec . '{' interface_body '}'   (rule 41)
+
+    '{' 	shift, and go to state 272
+
+
+
+state 205
+
+    value_header  ->  CUSTOM VALUETYPE IDENT opt_value_inheritance_spec .   (rule 44)
+
+    $default	reduce using rule 44 (value_header)
+
+
+
+state 206
+
+    opt_truncatable  ->  TRUNCATABLE .   (rule 50)
+
+    $default	reduce using rule 50 (opt_truncatable)
+
+
+
+state 207
+
+    opt_value_inheritance_base  ->  ':' opt_truncatable . scoped_name_list   (rule 48)
+
+    IDENT	shift, and go to state 36
+    SCOPE	shift, and go to state 44
+
+    scoped_name	go to state 273
+    scoped_name_list	go to state 274
+
+
+
+state 208
+
+    opt_value_inheritance_spec  ->  opt_value_inheritance_base SUPPORTS . scoped_name_list   (rule 46)
+
+    IDENT	shift, and go to state 36
+    SCOPE	shift, and go to state 44
+
+    scoped_name	go to state 273
+    scoped_name_list	go to state 275
+
+
+
+state 209
+
+    interface_header  ->  opt_abstract INTERFACE IDENT ':' . scoped_name_list   (rule 19)
+
+    IDENT	shift, and go to state 36
+    SCOPE	shift, and go to state 44
+
+    scoped_name	go to state 273
+    scoped_name_list	go to state 276
+
+
+
+state 210
+
+    interface_dcl  ->  interface_header '{' interface_body '}' .   (rule 14)
+
+    $default	reduce using rule 14 (interface_dcl)
+
+
+
+state 211
+
+    export_list  ->  export_list export .   (rule 28)
+
+    $default	reduce using rule 28 (export_list)
+
+
+
+state 212
+
+    export  ->  const_dcl ';' .   (rule 23)
+
+    $default	reduce using rule 23 (export)
+
+
+
+state 213
+
+    export  ->  type_dcl ';' .   (rule 22)
+
+    $default	reduce using rule 22 (export)
+
+
+
+state 214
+
+    export  ->  attr_dcl ';' .   (rule 25)
+
+    $default	reduce using rule 25 (export)
+
+
+
+state 215
+
+    attr_dcl  ->  attr_dcl ',' . simple_declarator   (rule 202)
+
+    IDENT	shift, and go to state 72
+
+    simple_declarator	go to state 277
+
+
+
+state 216
+
+    attr_dcl  ->  opt_readonly ATTRIBUTE . param_type_spec simple_declarator   (rule 201)
+
+    IDENT	shift, and go to state 36
+    ANY_T	shift, and go to state 75
+    BOOLEAN_T	shift, and go to state 37
+    CHAR_T	shift, and go to state 38
+    DOUBLE_T	shift, and go to state 39
+    FIXED	shift, and go to state 76
+    FLOAT_T	shift, and go to state 41
+    LONG_T	shift, and go to state 42
+    OBJECT_T	shift, and go to state 77
+    OCTET_T	shift, and go to state 43
+    SCOPE	shift, and go to state 44
+    SHORT_T	shift, and go to state 45
+    STRING_T	shift, and go to state 46
+    UNSIGNED_T	shift, and go to state 47
+    WCHAR_T	shift, and go to state 48
+    WSTRING_T	shift, and go to state 49
+    VALUEBASE	shift, and go to state 79
+
+    scoped_name	go to state 220
+    base_type_spec	go to state 221
+    floating_pt_type	go to state 87
+    integer_type	go to state 88
+    signed_int	go to state 54
+    signed_long_long_int	go to state 55
+    signed_long_int	go to state 56
+    signed_short_int	go to state 57
+    unsigned_int	go to state 58
+    unsigned_long_long_int	go to state 59
+    unsigned_long_int	go to state 60
+    unsigned_short_int	go to state 61
+    char_type	go to state 89
+    wide_char_type	go to state 90
+    boolean_type	go to state 91
+    octet_type	go to state 92
+    any_type	go to state 93
+    object_type	go to state 94
+    value_base_type	go to state 95
+    string_type	go to state 222
+    wide_string_type	go to state 223
+    param_type_spec	go to state 278
+    fixed_pt_type	go to state 226
+
+
+
+state 217
+
+    export  ->  except_dcl ';' .   (rule 24)
+
+    $default	reduce using rule 24 (export)
+
+
+
+state 218
+
+    export  ->  op_dcl ';' .   (rule 26)
+
+    $default	reduce using rule 26 (export)
+
+
+
+state 219
+
+    op_type_spec  ->  VOID_T .   (rule 212)
+
+    $default	reduce using rule 212 (op_type_spec)
+
+
+
+state 220
+
+    scoped_name  ->  scoped_name . SCOPE IDENT   (rule 31)
+    param_type_spec  ->  scoped_name .   (rule 231)
+
+    SCOPE	shift, and go to state 123
+
+    $default	reduce using rule 231 (param_type_spec)
+
+
+
+state 221
+
+    param_type_spec  ->  base_type_spec .   (rule 227)
+
+    $default	reduce using rule 227 (param_type_spec)
+
+
+
+state 222
+
+    param_type_spec  ->  string_type .   (rule 228)
+
+    $default	reduce using rule 228 (param_type_spec)
+
+
+
+state 223
+
+    param_type_spec  ->  wide_string_type .   (rule 229)
+
+    $default	reduce using rule 229 (param_type_spec)
+
+
+
+state 224
+
+    op_dcl  ->  opt_op_attr op_type_spec . IDENT parameter_dcls opt_raises_expr opt_context_expr   (rule 208)
+
+    IDENT	shift, and go to state 279
+
+
+
+state 225
+
+    op_type_spec  ->  param_type_spec .   (rule 211)
+
+    $default	reduce using rule 211 (op_type_spec)
+
+
+
+state 226
+
+    param_type_spec  ->  fixed_pt_type .   (rule 230)
+
+    $default	reduce using rule 230 (param_type_spec)
+
+
+
+state 227
+
+    init_dcl  ->  FACTORY . IDENT '(' opt_init_param_dcl_list ')' ';'   (rule 59)
+
+    IDENT	shift, and go to state 280
+
+
+
+state 228
+
+    private_public  ->  PRIVATE .   (rule 57)
+
+    $default	reduce using rule 57 (private_public)
+
+
+
+state 229
+
+    private_public  ->  PUBLIC .   (rule 58)
+
+    $default	reduce using rule 58 (private_public)
+
+
+
+state 230
+
+    value_dcl  ->  value_header '{' value_element_list '}' .   (rule 42)
+
+    $default	reduce using rule 42 (value_dcl)
+
+
+
+state 231
+
+    value_element  ->  export .   (rule 53)
+
+    $default	reduce using rule 53 (value_element)
+
+
+
+state 232
+
+    value_element_list  ->  value_element_list value_element .   (rule 52)
+
+    $default	reduce using rule 52 (value_element_list)
+
+
+
+state 233
+
+    value_element  ->  state_member .   (rule 54)
+
+    $default	reduce using rule 54 (value_element)
+
+
+
+state 234
+
+    state_member  ->  private_public . type_spec declarators ';'   (rule 56)
+
+    IDENT	shift, and go to state 36
+    ANY_T	shift, and go to state 75
+    BOOLEAN_T	shift, and go to state 37
+    CHAR_T	shift, and go to state 38
+    DOUBLE_T	shift, and go to state 39
+    ENUM	shift, and go to state 5
+    FIXED	shift, and go to state 76
+    FLOAT_T	shift, and go to state 41
+    LONG_T	shift, and go to state 42
+    OBJECT_T	shift, and go to state 77
+    OCTET_T	shift, and go to state 43
+    SCOPE	shift, and go to state 44
+    SEQUENCE	shift, and go to state 78
+    SHORT_T	shift, and go to state 45
+    STRING_T	shift, and go to state 46
+    STRUCT	shift, and go to state 9
+    UNION	shift, and go to state 11
+    UNSIGNED_T	shift, and go to state 47
+    WCHAR_T	shift, and go to state 48
+    WSTRING_T	shift, and go to state 49
+    VALUEBASE	shift, and go to state 79
+
+    scoped_name	go to state 80
+    type_spec	go to state 281
+    simple_type_spec	go to state 83
+    base_type_spec	go to state 84
+    template_type_spec	go to state 85
+    constr_type_spec	go to state 86
+    floating_pt_type	go to state 87
+    integer_type	go to state 88
+    signed_int	go to state 54
+    signed_long_long_int	go to state 55
+    signed_long_int	go to state 56
+    signed_short_int	go to state 57
+    unsigned_int	go to state 58
+    unsigned_long_long_int	go to state 59
+    unsigned_long_int	go to state 60
+    unsigned_short_int	go to state 61
+    char_type	go to state 89
+    wide_char_type	go to state 90
+    boolean_type	go to state 91
+    octet_type	go to state 92
+    any_type	go to state 93
+    object_type	go to state 94
+    value_base_type	go to state 95
+    struct_type	go to state 96
+    union_type	go to state 97
+    enum_type	go to state 98
+    sequence_type	go to state 99
+    string_type	go to state 100
+    wide_string_type	go to state 101
+    fixed_pt_type	go to state 102
+
+
+
+state 235
+
+    value_element  ->  init_dcl .   (rule 55)
+
+    $default	reduce using rule 55 (value_element)
+
+
+
+state 236
+
+    primary_expr  ->  '(' const_expr . ')'   (rule 100)
+
+    ')' 	shift, and go to state 282
+
+
+
+state 237
+
+    or_expr  ->  or_expr '|' . xor_expr   (rule 78)
+
+    IDENT	shift, and go to state 36
+    BOOL_FALSE	shift, and go to state 158
+    BOOL_TRUE	shift, and go to state 159
+    CHAR_L	shift, and go to state 160
+    FLOAT_L	shift, and go to state 161
+    INTEGER_L	shift, and go to state 162
+    STRING_L	shift, and go to state 163
+    FIXED_PT_L	shift, and go to state 164
+    SCOPE	shift, and go to state 44
+    '(' 	shift, and go to state 165
+    '+' 	shift, and go to state 166
+    '-' 	shift, and go to state 167
+    '~' 	shift, and go to state 168
+
+    scoped_name	go to state 169
+    xor_expr	go to state 283
+    and_expr	go to state 173
+    shift_expr	go to state 174
+    add_expr	go to state 175
+    mult_expr	go to state 176
+    unary_expr	go to state 177
+    unary_operator	go to state 178
+    primary_expr	go to state 179
+    literal	go to state 180
+    boolean_literal	go to state 181
+    string_literal	go to state 183
+
+
+
+state 238
+
+    xor_expr  ->  xor_expr '^' . and_expr   (rule 80)
+
+    IDENT	shift, and go to state 36
+    BOOL_FALSE	shift, and go to state 158
+    BOOL_TRUE	shift, and go to state 159
+    CHAR_L	shift, and go to state 160
+    FLOAT_L	shift, and go to state 161
+    INTEGER_L	shift, and go to state 162
+    STRING_L	shift, and go to state 163
+    FIXED_PT_L	shift, and go to state 164
+    SCOPE	shift, and go to state 44
+    '(' 	shift, and go to state 165
+    '+' 	shift, and go to state 166
+    '-' 	shift, and go to state 167
+    '~' 	shift, and go to state 168
+
+    scoped_name	go to state 169
+    and_expr	go to state 284
+    shift_expr	go to state 174
+    add_expr	go to state 175
+    mult_expr	go to state 176
+    unary_expr	go to state 177
+    unary_operator	go to state 178
+    primary_expr	go to state 179
+    literal	go to state 180
+    boolean_literal	go to state 181
+    string_literal	go to state 183
+
+
+
+state 239
+
+    and_expr  ->  and_expr '&' . shift_expr   (rule 82)
+
+    IDENT	shift, and go to state 36
+    BOOL_FALSE	shift, and go to state 158
+    BOOL_TRUE	shift, and go to state 159
+    CHAR_L	shift, and go to state 160
+    FLOAT_L	shift, and go to state 161
+    INTEGER_L	shift, and go to state 162
+    STRING_L	shift, and go to state 163
+    FIXED_PT_L	shift, and go to state 164
+    SCOPE	shift, and go to state 44
+    '(' 	shift, and go to state 165
+    '+' 	shift, and go to state 166
+    '-' 	shift, and go to state 167
+    '~' 	shift, and go to state 168
+
+    scoped_name	go to state 169
+    shift_expr	go to state 285
+    add_expr	go to state 175
+    mult_expr	go to state 176
+    unary_expr	go to state 177
+    unary_operator	go to state 178
+    primary_expr	go to state 179
+    literal	go to state 180
+    boolean_literal	go to state 181
+    string_literal	go to state 183
+
+
+
+state 240
+
+    shift_expr  ->  shift_expr LSHIFT . add_expr   (rule 84)
+
+    IDENT	shift, and go to state 36
+    BOOL_FALSE	shift, and go to state 158
+    BOOL_TRUE	shift, and go to state 159
+    CHAR_L	shift, and go to state 160
+    FLOAT_L	shift, and go to state 161
+    INTEGER_L	shift, and go to state 162
+    STRING_L	shift, and go to state 163
+    FIXED_PT_L	shift, and go to state 164
+    SCOPE	shift, and go to state 44
+    '(' 	shift, and go to state 165
+    '+' 	shift, and go to state 166
+    '-' 	shift, and go to state 167
+    '~' 	shift, and go to state 168
+
+    scoped_name	go to state 169
+    add_expr	go to state 286
+    mult_expr	go to state 176
+    unary_expr	go to state 177
+    unary_operator	go to state 178
+    primary_expr	go to state 179
+    literal	go to state 180
+    boolean_literal	go to state 181
+    string_literal	go to state 183
+
+
+
+state 241
+
+    shift_expr  ->  shift_expr RSHIFT . add_expr   (rule 85)
+
+    IDENT	shift, and go to state 36
+    BOOL_FALSE	shift, and go to state 158
+    BOOL_TRUE	shift, and go to state 159
+    CHAR_L	shift, and go to state 160
+    FLOAT_L	shift, and go to state 161
+    INTEGER_L	shift, and go to state 162
+    STRING_L	shift, and go to state 163
+    FIXED_PT_L	shift, and go to state 164
+    SCOPE	shift, and go to state 44
+    '(' 	shift, and go to state 165
+    '+' 	shift, and go to state 166
+    '-' 	shift, and go to state 167
+    '~' 	shift, and go to state 168
+
+    scoped_name	go to state 169
+    add_expr	go to state 287
+    mult_expr	go to state 176
+    unary_expr	go to state 177
+    unary_operator	go to state 178
+    primary_expr	go to state 179
+    literal	go to state 180
+    boolean_literal	go to state 181
+    string_literal	go to state 183
+
+
+
+state 242
+
+    add_expr  ->  add_expr '+' . mult_expr   (rule 87)
+
+    IDENT	shift, and go to state 36
+    BOOL_FALSE	shift, and go to state 158
+    BOOL_TRUE	shift, and go to state 159
+    CHAR_L	shift, and go to state 160
+    FLOAT_L	shift, and go to state 161
+    INTEGER_L	shift, and go to state 162
+    STRING_L	shift, and go to state 163
+    FIXED_PT_L	shift, and go to state 164
+    SCOPE	shift, and go to state 44
+    '(' 	shift, and go to state 165
+    '+' 	shift, and go to state 166
+    '-' 	shift, and go to state 167
+    '~' 	shift, and go to state 168
+
+    scoped_name	go to state 169
+    mult_expr	go to state 288
+    unary_expr	go to state 177
+    unary_operator	go to state 178
+    primary_expr	go to state 179
+    literal	go to state 180
+    boolean_literal	go to state 181
+    string_literal	go to state 183
+
+
+
+state 243
+
+    add_expr  ->  add_expr '-' . mult_expr   (rule 88)
+
+    IDENT	shift, and go to state 36
+    BOOL_FALSE	shift, and go to state 158
+    BOOL_TRUE	shift, and go to state 159
+    CHAR_L	shift, and go to state 160
+    FLOAT_L	shift, and go to state 161
+    INTEGER_L	shift, and go to state 162
+    STRING_L	shift, and go to state 163
+    FIXED_PT_L	shift, and go to state 164
+    SCOPE	shift, and go to state 44
+    '(' 	shift, and go to state 165
+    '+' 	shift, and go to state 166
+    '-' 	shift, and go to state 167
+    '~' 	shift, and go to state 168
+
+    scoped_name	go to state 169
+    mult_expr	go to state 289
+    unary_expr	go to state 177
+    unary_operator	go to state 178
+    primary_expr	go to state 179
+    literal	go to state 180
+    boolean_literal	go to state 181
+    string_literal	go to state 183
+
+
+
+state 244
+
+    mult_expr  ->  mult_expr '*' . unary_expr   (rule 90)
+
+    IDENT	shift, and go to state 36
+    BOOL_FALSE	shift, and go to state 158
+    BOOL_TRUE	shift, and go to state 159
+    CHAR_L	shift, and go to state 160
+    FLOAT_L	shift, and go to state 161
+    INTEGER_L	shift, and go to state 162
+    STRING_L	shift, and go to state 163
+    FIXED_PT_L	shift, and go to state 164
+    SCOPE	shift, and go to state 44
+    '(' 	shift, and go to state 165
+    '+' 	shift, and go to state 166
+    '-' 	shift, and go to state 167
+    '~' 	shift, and go to state 168
+
+    scoped_name	go to state 169
+    unary_expr	go to state 290
+    unary_operator	go to state 178
+    primary_expr	go to state 179
+    literal	go to state 180
+    boolean_literal	go to state 181
+    string_literal	go to state 183
+
+
+
+state 245
+
+    mult_expr  ->  mult_expr '/' . unary_expr   (rule 91)
+
+    IDENT	shift, and go to state 36
+    BOOL_FALSE	shift, and go to state 158
+    BOOL_TRUE	shift, and go to state 159
+    CHAR_L	shift, and go to state 160
+    FLOAT_L	shift, and go to state 161
+    INTEGER_L	shift, and go to state 162
+    STRING_L	shift, and go to state 163
+    FIXED_PT_L	shift, and go to state 164
+    SCOPE	shift, and go to state 44
+    '(' 	shift, and go to state 165
+    '+' 	shift, and go to state 166
+    '-' 	shift, and go to state 167
+    '~' 	shift, and go to state 168
+
+    scoped_name	go to state 169
+    unary_expr	go to state 291
+    unary_operator	go to state 178
+    primary_expr	go to state 179
+    literal	go to state 180
+    boolean_literal	go to state 181
+    string_literal	go to state 183
+
+
+
+state 246
+
+    mult_expr  ->  mult_expr '%' . unary_expr   (rule 92)
+
+    IDENT	shift, and go to state 36
+    BOOL_FALSE	shift, and go to state 158
+    BOOL_TRUE	shift, and go to state 159
+    CHAR_L	shift, and go to state 160
+    FLOAT_L	shift, and go to state 161
+    INTEGER_L	shift, and go to state 162
+    STRING_L	shift, and go to state 163
+    FIXED_PT_L	shift, and go to state 164
+    SCOPE	shift, and go to state 44
+    '(' 	shift, and go to state 165
+    '+' 	shift, and go to state 166
+    '-' 	shift, and go to state 167
+    '~' 	shift, and go to state 168
+
+    scoped_name	go to state 169
+    unary_expr	go to state 292
+    unary_operator	go to state 178
+    primary_expr	go to state 179
+    literal	go to state 180
+    boolean_literal	go to state 181
+    string_literal	go to state 183
+
+
+
+state 247
+
+    unary_expr  ->  unary_operator primary_expr .   (rule 93)
+
+    $default	reduce using rule 93 (unary_expr)
+
+
+
+state 248
+
+    string_type  ->  STRING_T '<' positive_const_int '>' .   (rule 194)
+
+    $default	reduce using rule 194 (string_type)
+
+
+
+state 249
+
+    string_literal  ->  string_literal STRING_L .   (rule 111)
+
+    $default	reduce using rule 111 (string_literal)
+
+
+
+state 250
+
+    wide_string_type  ->  WSTRING_T '<' positive_const_int '>' .   (rule 196)
+
+    $default	reduce using rule 196 (wide_string_type)
+
+
+
+state 251
+
+    const_dcl  ->  CONST const_type IDENT '=' const_expr .   (rule 65)
+
+    $default	reduce using rule 65 (const_dcl)
+
+
+
+state 252
+
+    enum_type  ->  ENUM IDENT '{' enumerator_list '}' .   (rule 188)
+
+    $default	reduce using rule 188 (enum_type)
+
+
+
+state 253
+
+    enumerator_list  ->  enumerator_list ',' . enumerator   (rule 190)
+
+    IDENT	shift, and go to state 188
+
+    enumerator	go to state 293
+
+
+
+state 254
+
+    declarators  ->  declarators . ',' declarator   (rule 140)
+    member  ->  type_spec declarators . ';'   (rule 171)
+
+    ';' 	shift, and go to state 294
+    ',' 	shift, and go to state 201
+
+
+
+state 255
+
+    member_list  ->  member_list member .   (rule 170)
+
+    $default	reduce using rule 170 (member_list)
+
+
+
+state 256
+
+    except_dcl  ->  EXCEPTION IDENT '{' opt_member_list '}' .   (rule 205)
+
+    $default	reduce using rule 205 (except_dcl)
+
+
+
+state 257
+
+    module  ->  MODULE IDENT '{' definition_list '}' .   (rule 9)
+
+    $default	reduce using rule 9 (module)
+
+
+
+state 258
+
+    struct_type  ->  STRUCT IDENT '{' member_list '}' .   (rule 168)
+
+    $default	reduce using rule 168 (struct_type)
+
+
+
+state 259
+
+    fixed_pt_type  ->  FIXED '<' positive_const_int ',' . positive_const_int '>'   (rule 232)
+
+    IDENT	shift, and go to state 36
+    BOOL_FALSE	shift, and go to state 158
+    BOOL_TRUE	shift, and go to state 159
+    CHAR_L	shift, and go to state 160
+    FLOAT_L	shift, and go to state 161
+    INTEGER_L	shift, and go to state 162
+    STRING_L	shift, and go to state 163
+    FIXED_PT_L	shift, and go to state 164
+    SCOPE	shift, and go to state 44
+    '(' 	shift, and go to state 165
+    '+' 	shift, and go to state 166
+    '-' 	shift, and go to state 167
+    '~' 	shift, and go to state 168
+
+    scoped_name	go to state 169
+    const_expr	go to state 170
+    or_expr	go to state 171
+    xor_expr	go to state 172
+    and_expr	go to state 173
+    shift_expr	go to state 174
+    add_expr	go to state 175
+    mult_expr	go to state 176
+    unary_expr	go to state 177
+    unary_operator	go to state 178
+    primary_expr	go to state 179
+    literal	go to state 180
+    boolean_literal	go to state 181
+    positive_const_int	go to state 295
+    string_literal	go to state 183
+
+
+
+state 260
+
+    sequence_type  ->  SEQUENCE '<' simple_type_spec ',' . positive_const_int '>'   (rule 192)
+
+    IDENT	shift, and go to state 36
+    BOOL_FALSE	shift, and go to state 158
+    BOOL_TRUE	shift, and go to state 159
+    CHAR_L	shift, and go to state 160
+    FLOAT_L	shift, and go to state 161
+    INTEGER_L	shift, and go to state 162
+    STRING_L	shift, and go to state 163
+    FIXED_PT_L	shift, and go to state 164
+    SCOPE	shift, and go to state 44
+    '(' 	shift, and go to state 165
+    '+' 	shift, and go to state 166
+    '-' 	shift, and go to state 167
+    '~' 	shift, and go to state 168
+
+    scoped_name	go to state 169
+    const_expr	go to state 170
+    or_expr	go to state 171
+    xor_expr	go to state 172
+    and_expr	go to state 173
+    shift_expr	go to state 174
+    add_expr	go to state 175
+    mult_expr	go to state 176
+    unary_expr	go to state 177
+    unary_operator	go to state 178
+    primary_expr	go to state 179
+    literal	go to state 180
+    boolean_literal	go to state 181
+    positive_const_int	go to state 296
+    string_literal	go to state 183
+
+
+
+state 261
+
+    sequence_type  ->  SEQUENCE '<' simple_type_spec '>' .   (rule 193)
+
+    $default	reduce using rule 193 (sequence_type)
+
+
+
+state 262
+
+    fixed_array_size  ->  '[' positive_const_int . ']'   (rule 200)
+
+    ']' 	shift, and go to state 297
+
+
+
+state 263
+
+    declarators  ->  declarators ',' declarator .   (rule 140)
+
+    $default	reduce using rule 140 (declarators)
+
+
+
+state 264
+
+    scoped_name  ->  scoped_name . SCOPE IDENT   (rule 31)
+    switch_type_spec  ->  scoped_name .   (rule 179)
+
+    SCOPE	shift, and go to state 123
+
+    $default	reduce using rule 179 (switch_type_spec)
+
+
+
+state 265
+
+    switch_type_spec  ->  integer_type .   (rule 173)
+
+    $default	reduce using rule 173 (switch_type_spec)
+
+
+
+state 266
+
+    switch_type_spec  ->  char_type .   (rule 174)
+
+    $default	reduce using rule 174 (switch_type_spec)
+
+
+
+state 267
+
+    switch_type_spec  ->  wide_char_type .   (rule 175)
+
+    $default	reduce using rule 175 (switch_type_spec)
+
+
+
+state 268
+
+    switch_type_spec  ->  boolean_type .   (rule 176)
+
+    $default	reduce using rule 176 (switch_type_spec)
+
+
+
+state 269
+
+    switch_type_spec  ->  octet_type .   (rule 177)
+
+    $default	reduce using rule 177 (switch_type_spec)
+
+
+
+state 270
+
+    union_type  ->  UNION IDENT SWITCH '(' switch_type_spec . ')' '{' switch_body '}'   (rule 172)
+
+    ')' 	shift, and go to state 298
+
+
+
+state 271
+
+    switch_type_spec  ->  enum_type .   (rule 178)
+
+    $default	reduce using rule 178 (switch_type_spec)
+
+
+
+state 272
+
+    value_abs_dcl  ->  ABSTRACT VALUETYPE IDENT opt_value_inheritance_spec '{' . interface_body '}'   (rule 41)
+
+    ONEWAY	shift, and go to state 145
+    CONST	shift, and go to state 4
+    ENUM	shift, and go to state 5
+    EXCEPTION	shift, and go to state 6
+    NATIVE	shift, and go to state 8
+    READONLY	shift, and go to state 146
+    STRUCT	shift, and go to state 9
+    TYPEDEF	shift, and go to state 10
+    UNION	shift, and go to state 11
+
+    ATTRIBUTE	reduce using rule 203 (opt_readonly)
+    '}' 	reduce using rule 20 (interface_body)
+    $default	reduce using rule 209 (opt_op_attr)
+
+    interface_body	go to state 299
+    export	go to state 148
+    export_list	go to state 149
+    const_dcl	go to state 150
+    type_dcl	go to state 151
+    struct_type	go to state 31
+    union_type	go to state 32
+    enum_type	go to state 33
+    attr_dcl	go to state 152
+    opt_readonly	go to state 153
+    except_dcl	go to state 154
+    op_dcl	go to state 155
+    opt_op_attr	go to state 156
+
+
+
+state 273
+
+    scoped_name  ->  scoped_name . SCOPE IDENT   (rule 31)
+    scoped_name_list  ->  scoped_name .   (rule 32)
+
+    SCOPE	shift, and go to state 123
+
+    $default	reduce using rule 32 (scoped_name_list)
+
+
+
+state 274
+
+    scoped_name_list  ->  scoped_name_list . ',' scoped_name   (rule 33)
+    opt_value_inheritance_base  ->  ':' opt_truncatable scoped_name_list .   (rule 48)
+
+    ',' 	shift, and go to state 300
+
+    $default	reduce using rule 48 (opt_value_inheritance_base)
+
+
+
+state 275
+
+    scoped_name_list  ->  scoped_name_list . ',' scoped_name   (rule 33)
+    opt_value_inheritance_spec  ->  opt_value_inheritance_base SUPPORTS scoped_name_list .   (rule 46)
+
+    ',' 	shift, and go to state 300
+
+    $default	reduce using rule 46 (opt_value_inheritance_spec)
+
+
+
+state 276
+
+    interface_header  ->  opt_abstract INTERFACE IDENT ':' scoped_name_list .   (rule 19)
+    scoped_name_list  ->  scoped_name_list . ',' scoped_name   (rule 33)
+
+    ',' 	shift, and go to state 300
+
+    $default	reduce using rule 19 (interface_header)
+
+
+
+state 277
+
+    attr_dcl  ->  attr_dcl ',' simple_declarator .   (rule 202)
+
+    $default	reduce using rule 202 (attr_dcl)
+
+
+
+state 278
+
+    attr_dcl  ->  opt_readonly ATTRIBUTE param_type_spec . simple_declarator   (rule 201)
+
+    IDENT	shift, and go to state 72
+
+    simple_declarator	go to state 301
+
+
+
+state 279
+
+    op_dcl  ->  opt_op_attr op_type_spec IDENT . parameter_dcls opt_raises_expr opt_context_expr   (rule 208)
+
+    '(' 	shift, and go to state 302
+
+    parameter_dcls	go to state 303
+
+
+
+state 280
+
+    init_dcl  ->  FACTORY IDENT . '(' opt_init_param_dcl_list ')' ';'   (rule 59)
+
+    '(' 	shift, and go to state 304
+
+
+
+state 281
+
+    state_member  ->  private_public type_spec . declarators ';'   (rule 56)
+
+    IDENT	shift, and go to state 131
+
+    declarators	go to state 305
+    declarator	go to state 133
+    simple_declarator	go to state 134
+    complex_declarator	go to state 135
+    array_declarator	go to state 136
+
+
+
+state 282
+
+    primary_expr  ->  '(' const_expr ')' .   (rule 100)
+
+    $default	reduce using rule 100 (primary_expr)
+
+
+
+state 283
+
+    or_expr  ->  or_expr '|' xor_expr .   (rule 78)
+    xor_expr  ->  xor_expr . '^' and_expr   (rule 80)
+
+    '^' 	shift, and go to state 238
+
+    $default	reduce using rule 78 (or_expr)
+
+
+
+state 284
+
+    xor_expr  ->  xor_expr '^' and_expr .   (rule 80)
+    and_expr  ->  and_expr . '&' shift_expr   (rule 82)
+
+    '&' 	shift, and go to state 239
+
+    $default	reduce using rule 80 (xor_expr)
+
+
+
+state 285
+
+    and_expr  ->  and_expr '&' shift_expr .   (rule 82)
+    shift_expr  ->  shift_expr . LSHIFT add_expr   (rule 84)
+    shift_expr  ->  shift_expr . RSHIFT add_expr   (rule 85)
+
+    LSHIFT	shift, and go to state 240
+    RSHIFT	shift, and go to state 241
+
+    $default	reduce using rule 82 (and_expr)
+
+
+
+state 286
+
+    shift_expr  ->  shift_expr LSHIFT add_expr .   (rule 84)
+    add_expr  ->  add_expr . '+' mult_expr   (rule 87)
+    add_expr  ->  add_expr . '-' mult_expr   (rule 88)
+
+    '+' 	shift, and go to state 242
+    '-' 	shift, and go to state 243
+
+    $default	reduce using rule 84 (shift_expr)
+
+
+
+state 287
+
+    shift_expr  ->  shift_expr RSHIFT add_expr .   (rule 85)
+    add_expr  ->  add_expr . '+' mult_expr   (rule 87)
+    add_expr  ->  add_expr . '-' mult_expr   (rule 88)
+
+    '+' 	shift, and go to state 242
+    '-' 	shift, and go to state 243
+
+    $default	reduce using rule 85 (shift_expr)
+
+
+
+state 288
+
+    add_expr  ->  add_expr '+' mult_expr .   (rule 87)
+    mult_expr  ->  mult_expr . '*' unary_expr   (rule 90)
+    mult_expr  ->  mult_expr . '/' unary_expr   (rule 91)
+    mult_expr  ->  mult_expr . '%' unary_expr   (rule 92)
+
+    '*' 	shift, and go to state 244
+    '/' 	shift, and go to state 245
+    '%' 	shift, and go to state 246
+
+    $default	reduce using rule 87 (add_expr)
+
+
+
+state 289
+
+    add_expr  ->  add_expr '-' mult_expr .   (rule 88)
+    mult_expr  ->  mult_expr . '*' unary_expr   (rule 90)
+    mult_expr  ->  mult_expr . '/' unary_expr   (rule 91)
+    mult_expr  ->  mult_expr . '%' unary_expr   (rule 92)
+
+    '*' 	shift, and go to state 244
+    '/' 	shift, and go to state 245
+    '%' 	shift, and go to state 246
+
+    $default	reduce using rule 88 (add_expr)
+
+
+
+state 290
+
+    mult_expr  ->  mult_expr '*' unary_expr .   (rule 90)
+
+    $default	reduce using rule 90 (mult_expr)
+
+
+
+state 291
+
+    mult_expr  ->  mult_expr '/' unary_expr .   (rule 91)
+
+    $default	reduce using rule 91 (mult_expr)
+
+
+
+state 292
+
+    mult_expr  ->  mult_expr '%' unary_expr .   (rule 92)
+
+    $default	reduce using rule 92 (mult_expr)
+
+
+
+state 293
+
+    enumerator_list  ->  enumerator_list ',' enumerator .   (rule 190)
+
+    $default	reduce using rule 190 (enumerator_list)
+
+
+
+state 294
+
+    member  ->  type_spec declarators ';' .   (rule 171)
+
+    $default	reduce using rule 171 (member)
+
+
+
+state 295
+
+    fixed_pt_type  ->  FIXED '<' positive_const_int ',' positive_const_int . '>'   (rule 232)
+
+    '>' 	shift, and go to state 306
+
+
+
+state 296
+
+    sequence_type  ->  SEQUENCE '<' simple_type_spec ',' positive_const_int . '>'   (rule 192)
+
+    '>' 	shift, and go to state 307
+
+
+
+state 297
+
+    fixed_array_size  ->  '[' positive_const_int ']' .   (rule 200)
+
+    $default	reduce using rule 200 (fixed_array_size)
+
+
+
+state 298
+
+    union_type  ->  UNION IDENT SWITCH '(' switch_type_spec ')' . '{' switch_body '}'   (rule 172)
+
+    '{' 	shift, and go to state 308
+
+
+
+state 299
+
+    value_abs_dcl  ->  ABSTRACT VALUETYPE IDENT opt_value_inheritance_spec '{' interface_body . '}'   (rule 41)
+
+    '}' 	shift, and go to state 309
+
+
+
+state 300
+
+    scoped_name_list  ->  scoped_name_list ',' . scoped_name   (rule 33)
+
+    IDENT	shift, and go to state 36
+    SCOPE	shift, and go to state 44
+
+    scoped_name	go to state 310
+
+
+
+state 301
+
+    attr_dcl  ->  opt_readonly ATTRIBUTE param_type_spec simple_declarator .   (rule 201)
+
+    $default	reduce using rule 201 (attr_dcl)
+
+
+
+state 302
+
+    parameter_dcls  ->  '(' . param_dcl_list ')'   (rule 213)
+    parameter_dcls  ->  '(' . ')'   (rule 214)
+
+    IN  	shift, and go to state 311
+    OUT 	shift, and go to state 312
+    INOUT	shift, and go to state 313
+    ')' 	shift, and go to state 314
+
+    param_dcl_list	go to state 315
+    param_dcl	go to state 316
+    param_attribute	go to state 317
+
+
+
+state 303
+
+    op_dcl  ->  opt_op_attr op_type_spec IDENT parameter_dcls . opt_raises_expr opt_context_expr   (rule 208)
+
+    RAISES	shift, and go to state 318
+
+    $default	reduce using rule 221 (opt_raises_expr)
+
+    opt_raises_expr	go to state 319
+
+
+
+state 304
+
+    init_dcl  ->  FACTORY IDENT '(' . opt_init_param_dcl_list ')' ';'   (rule 59)
+
+    IN  	shift, and go to state 320
+
+    $default	reduce using rule 60 (opt_init_param_dcl_list)
+
+    opt_init_param_dcl_list	go to state 321
+    init_param_dcl_list	go to state 322
+    init_param_dcl	go to state 323
+
+
+
+state 305
+
+    state_member  ->  private_public type_spec declarators . ';'   (rule 56)
+    declarators  ->  declarators . ',' declarator   (rule 140)
+
+    ';' 	shift, and go to state 324
+    ',' 	shift, and go to state 201
+
+
+
+state 306
+
+    fixed_pt_type  ->  FIXED '<' positive_const_int ',' positive_const_int '>' .   (rule 232)
+
+    $default	reduce using rule 232 (fixed_pt_type)
+
+
+
+state 307
+
+    sequence_type  ->  SEQUENCE '<' simple_type_spec ',' positive_const_int '>' .   (rule 192)
+
+    $default	reduce using rule 192 (sequence_type)
+
+
+
+state 308
+
+    union_type  ->  UNION IDENT SWITCH '(' switch_type_spec ')' '{' . switch_body '}'   (rule 172)
+
+    CASE	shift, and go to state 325
+    DEFAULT	shift, and go to state 326
+
+    switch_body	go to state 327
+    case	go to state 328
+    case_label_list	go to state 329
+    case_label	go to state 330
+
+
+
+state 309
+
+    value_abs_dcl  ->  ABSTRACT VALUETYPE IDENT opt_value_inheritance_spec '{' interface_body '}' .   (rule 41)
+
+    $default	reduce using rule 41 (value_abs_dcl)
+
+
+
+state 310
+
+    scoped_name  ->  scoped_name . SCOPE IDENT   (rule 31)
+    scoped_name_list  ->  scoped_name_list ',' scoped_name .   (rule 33)
+
+    SCOPE	shift, and go to state 123
+
+    $default	reduce using rule 33 (scoped_name_list)
+
+
+
+state 311
+
+    param_attribute  ->  IN .   (rule 218)
+
+    $default	reduce using rule 218 (param_attribute)
+
+
+
+state 312
+
+    param_attribute  ->  OUT .   (rule 219)
+
+    $default	reduce using rule 219 (param_attribute)
+
+
+
+state 313
+
+    param_attribute  ->  INOUT .   (rule 220)
+
+    $default	reduce using rule 220 (param_attribute)
+
+
+
+state 314
+
+    parameter_dcls  ->  '(' ')' .   (rule 214)
+
+    $default	reduce using rule 214 (parameter_dcls)
+
+
+
+state 315
+
+    parameter_dcls  ->  '(' param_dcl_list . ')'   (rule 213)
+    param_dcl_list  ->  param_dcl_list . ',' param_dcl   (rule 216)
+
+    ',' 	shift, and go to state 331
+    ')' 	shift, and go to state 332
+
+
+
+state 316
+
+    param_dcl_list  ->  param_dcl .   (rule 215)
+
+    $default	reduce using rule 215 (param_dcl_list)
+
+
+
+state 317
+
+    param_dcl  ->  param_attribute . param_type_spec simple_declarator   (rule 217)
+
+    IDENT	shift, and go to state 36
+    ANY_T	shift, and go to state 75
+    BOOLEAN_T	shift, and go to state 37
+    CHAR_T	shift, and go to state 38
+    DOUBLE_T	shift, and go to state 39
+    FIXED	shift, and go to state 76
+    FLOAT_T	shift, and go to state 41
+    LONG_T	shift, and go to state 42
+    OBJECT_T	shift, and go to state 77
+    OCTET_T	shift, and go to state 43
+    SCOPE	shift, and go to state 44
+    SHORT_T	shift, and go to state 45
+    STRING_T	shift, and go to state 46
+    UNSIGNED_T	shift, and go to state 47
+    WCHAR_T	shift, and go to state 48
+    WSTRING_T	shift, and go to state 49
+    VALUEBASE	shift, and go to state 79
+
+    scoped_name	go to state 220
+    base_type_spec	go to state 221
+    floating_pt_type	go to state 87
+    integer_type	go to state 88
+    signed_int	go to state 54
+    signed_long_long_int	go to state 55
+    signed_long_int	go to state 56
+    signed_short_int	go to state 57
+    unsigned_int	go to state 58
+    unsigned_long_long_int	go to state 59
+    unsigned_long_int	go to state 60
+    unsigned_short_int	go to state 61
+    char_type	go to state 89
+    wide_char_type	go to state 90
+    boolean_type	go to state 91
+    octet_type	go to state 92
+    any_type	go to state 93
+    object_type	go to state 94
+    value_base_type	go to state 95
+    string_type	go to state 222
+    wide_string_type	go to state 223
+    param_type_spec	go to state 333
+    fixed_pt_type	go to state 226
+
+
+
+state 318
+
+    opt_raises_expr  ->  RAISES . '(' scoped_name_list ')'   (rule 222)
+
+    '(' 	shift, and go to state 334
+
+
+
+state 319
+
+    op_dcl  ->  opt_op_attr op_type_spec IDENT parameter_dcls opt_raises_expr . opt_context_expr   (rule 208)
+
+    CONTEXT	shift, and go to state 335
+
+    $default	reduce using rule 223 (opt_context_expr)
+
+    opt_context_expr	go to state 336
+
+
+
+state 320
+
+    init_param_dcl  ->  IN . param_type_spec simple_declarator   (rule 64)
+
+    IDENT	shift, and go to state 36
+    ANY_T	shift, and go to state 75
+    BOOLEAN_T	shift, and go to state 37
+    CHAR_T	shift, and go to state 38
+    DOUBLE_T	shift, and go to state 39
+    FIXED	shift, and go to state 76
+    FLOAT_T	shift, and go to state 41
+    LONG_T	shift, and go to state 42
+    OBJECT_T	shift, and go to state 77
+    OCTET_T	shift, and go to state 43
+    SCOPE	shift, and go to state 44
+    SHORT_T	shift, and go to state 45
+    STRING_T	shift, and go to state 46
+    UNSIGNED_T	shift, and go to state 47
+    WCHAR_T	shift, and go to state 48
+    WSTRING_T	shift, and go to state 49
+    VALUEBASE	shift, and go to state 79
+
+    scoped_name	go to state 220
+    base_type_spec	go to state 221
+    floating_pt_type	go to state 87
+    integer_type	go to state 88
+    signed_int	go to state 54
+    signed_long_long_int	go to state 55
+    signed_long_int	go to state 56
+    signed_short_int	go to state 57
+    unsigned_int	go to state 58
+    unsigned_long_long_int	go to state 59
+    unsigned_long_int	go to state 60
+    unsigned_short_int	go to state 61
+    char_type	go to state 89
+    wide_char_type	go to state 90
+    boolean_type	go to state 91
+    octet_type	go to state 92
+    any_type	go to state 93
+    object_type	go to state 94
+    value_base_type	go to state 95
+    string_type	go to state 222
+    wide_string_type	go to state 223
+    param_type_spec	go to state 337
+    fixed_pt_type	go to state 226
+
+
+
+state 321
+
+    init_dcl  ->  FACTORY IDENT '(' opt_init_param_dcl_list . ')' ';'   (rule 59)
+
+    ')' 	shift, and go to state 338
+
+
+
+state 322
+
+    opt_init_param_dcl_list  ->  init_param_dcl_list .   (rule 61)
+    init_param_dcl_list  ->  init_param_dcl_list . ',' init_param_dcl   (rule 63)
+
+    ',' 	shift, and go to state 339
+
+    $default	reduce using rule 61 (opt_init_param_dcl_list)
+
+
+
+state 323
+
+    init_param_dcl_list  ->  init_param_dcl .   (rule 62)
+
+    $default	reduce using rule 62 (init_param_dcl_list)
+
+
+
+state 324
+
+    state_member  ->  private_public type_spec declarators ';' .   (rule 56)
+
+    $default	reduce using rule 56 (state_member)
+
+
+
+state 325
+
+    case_label  ->  CASE . const_expr ':'   (rule 185)
+
+    IDENT	shift, and go to state 36
+    BOOL_FALSE	shift, and go to state 158
+    BOOL_TRUE	shift, and go to state 159
+    CHAR_L	shift, and go to state 160
+    FLOAT_L	shift, and go to state 161
+    INTEGER_L	shift, and go to state 162
+    STRING_L	shift, and go to state 163
+    FIXED_PT_L	shift, and go to state 164
+    SCOPE	shift, and go to state 44
+    '(' 	shift, and go to state 165
+    '+' 	shift, and go to state 166
+    '-' 	shift, and go to state 167
+    '~' 	shift, and go to state 168
+
+    scoped_name	go to state 169
+    const_expr	go to state 340
+    or_expr	go to state 171
+    xor_expr	go to state 172
+    and_expr	go to state 173
+    shift_expr	go to state 174
+    add_expr	go to state 175
+    mult_expr	go to state 176
+    unary_expr	go to state 177
+    unary_operator	go to state 178
+    primary_expr	go to state 179
+    literal	go to state 180
+    boolean_literal	go to state 181
+    string_literal	go to state 183
+
+
+
+state 326
+
+    case_label  ->  DEFAULT . ':'   (rule 186)
+
+    ':' 	shift, and go to state 341
+
+
+
+state 327
+
+    union_type  ->  UNION IDENT SWITCH '(' switch_type_spec ')' '{' switch_body . '}'   (rule 172)
+    switch_body  ->  switch_body . case   (rule 181)
+
+    CASE	shift, and go to state 325
+    DEFAULT	shift, and go to state 326
+    '}' 	shift, and go to state 342
+
+    case	go to state 343
+    case_label_list	go to state 329
+    case_label	go to state 330
+
+
+
+state 328
+
+    switch_body  ->  case .   (rule 180)
+
+    $default	reduce using rule 180 (switch_body)
+
+
+
+state 329
+
+    case  ->  case_label_list . element_spec ';'   (rule 182)
+    case_label_list  ->  case_label_list . case_label   (rule 184)
+
+    IDENT	shift, and go to state 36
+    ANY_T	shift, and go to state 75
+    BOOLEAN_T	shift, and go to state 37
+    CASE	shift, and go to state 325
+    CHAR_T	shift, and go to state 38
+    DEFAULT	shift, and go to state 326
+    DOUBLE_T	shift, and go to state 39
+    ENUM	shift, and go to state 5
+    FIXED	shift, and go to state 76
+    FLOAT_T	shift, and go to state 41
+    LONG_T	shift, and go to state 42
+    OBJECT_T	shift, and go to state 77
+    OCTET_T	shift, and go to state 43
+    SCOPE	shift, and go to state 44
+    SEQUENCE	shift, and go to state 78
+    SHORT_T	shift, and go to state 45
+    STRING_T	shift, and go to state 46
+    STRUCT	shift, and go to state 9
+    UNION	shift, and go to state 11
+    UNSIGNED_T	shift, and go to state 47
+    WCHAR_T	shift, and go to state 48
+    WSTRING_T	shift, and go to state 49
+    VALUEBASE	shift, and go to state 79
+
+    scoped_name	go to state 80
+    type_spec	go to state 344
+    simple_type_spec	go to state 83
+    base_type_spec	go to state 84
+    template_type_spec	go to state 85
+    constr_type_spec	go to state 86
+    floating_pt_type	go to state 87
+    integer_type	go to state 88
+    signed_int	go to state 54
+    signed_long_long_int	go to state 55
+    signed_long_int	go to state 56
+    signed_short_int	go to state 57
+    unsigned_int	go to state 58
+    unsigned_long_long_int	go to state 59
+    unsigned_long_int	go to state 60
+    unsigned_short_int	go to state 61
+    char_type	go to state 89
+    wide_char_type	go to state 90
+    boolean_type	go to state 91
+    octet_type	go to state 92
+    any_type	go to state 93
+    object_type	go to state 94
+    value_base_type	go to state 95
+    struct_type	go to state 96
+    union_type	go to state 97
+    case_label	go to state 345
+    element_spec	go to state 346
+    enum_type	go to state 98
+    sequence_type	go to state 99
+    string_type	go to state 100
+    wide_string_type	go to state 101
+    fixed_pt_type	go to state 102
+
+
+
+state 330
+
+    case_label_list  ->  case_label .   (rule 183)
+
+    $default	reduce using rule 183 (case_label_list)
+
+
+
+state 331
+
+    param_dcl_list  ->  param_dcl_list ',' . param_dcl   (rule 216)
+
+    IN  	shift, and go to state 311
+    OUT 	shift, and go to state 312
+    INOUT	shift, and go to state 313
+
+    param_dcl	go to state 347
+    param_attribute	go to state 317
+
+
+
+state 332
+
+    parameter_dcls  ->  '(' param_dcl_list ')' .   (rule 213)
+
+    $default	reduce using rule 213 (parameter_dcls)
+
+
+
+state 333
+
+    param_dcl  ->  param_attribute param_type_spec . simple_declarator   (rule 217)
+
+    IDENT	shift, and go to state 72
+
+    simple_declarator	go to state 348
+
+
+
+state 334
+
+    opt_raises_expr  ->  RAISES '(' . scoped_name_list ')'   (rule 222)
+
+    IDENT	shift, and go to state 36
+    SCOPE	shift, and go to state 44
+
+    scoped_name	go to state 273
+    scoped_name_list	go to state 349
+
+
+
+state 335
+
+    opt_context_expr  ->  CONTEXT . '(' string_literal_list ')'   (rule 224)
+
+    '(' 	shift, and go to state 350
+
+
+
+state 336
+
+    op_dcl  ->  opt_op_attr op_type_spec IDENT parameter_dcls opt_raises_expr opt_context_expr .   (rule 208)
+
+    $default	reduce using rule 208 (op_dcl)
+
+
+
+state 337
+
+    init_param_dcl  ->  IN param_type_spec . simple_declarator   (rule 64)
+
+    IDENT	shift, and go to state 72
+
+    simple_declarator	go to state 351
+
+
+
+state 338
+
+    init_dcl  ->  FACTORY IDENT '(' opt_init_param_dcl_list ')' . ';'   (rule 59)
+
+    ';' 	shift, and go to state 352
+
+
+
+state 339
+
+    init_param_dcl_list  ->  init_param_dcl_list ',' . init_param_dcl   (rule 63)
+
+    IN  	shift, and go to state 320
+
+    init_param_dcl	go to state 353
+
+
+
+state 340
+
+    case_label  ->  CASE const_expr . ':'   (rule 185)
+
+    ':' 	shift, and go to state 354
+
+
+
+state 341
+
+    case_label  ->  DEFAULT ':' .   (rule 186)
+
+    $default	reduce using rule 186 (case_label)
+
+
+
+state 342
+
+    union_type  ->  UNION IDENT SWITCH '(' switch_type_spec ')' '{' switch_body '}' .   (rule 172)
+
+    $default	reduce using rule 172 (union_type)
+
+
+
+state 343
+
+    switch_body  ->  switch_body case .   (rule 181)
+
+    $default	reduce using rule 181 (switch_body)
+
+
+
+state 344
+
+    element_spec  ->  type_spec . declarator   (rule 187)
+
+    IDENT	shift, and go to state 131
+
+    declarator	go to state 355
+    simple_declarator	go to state 134
+    complex_declarator	go to state 135
+    array_declarator	go to state 136
+
+
+
+state 345
+
+    case_label_list  ->  case_label_list case_label .   (rule 184)
+
+    $default	reduce using rule 184 (case_label_list)
+
+
+
+state 346
+
+    case  ->  case_label_list element_spec . ';'   (rule 182)
+
+    ';' 	shift, and go to state 356
+
+
+
+state 347
+
+    param_dcl_list  ->  param_dcl_list ',' param_dcl .   (rule 216)
+
+    $default	reduce using rule 216 (param_dcl_list)
+
+
+
+state 348
+
+    param_dcl  ->  param_attribute param_type_spec simple_declarator .   (rule 217)
+
+    $default	reduce using rule 217 (param_dcl)
+
+
+
+state 349
+
+    scoped_name_list  ->  scoped_name_list . ',' scoped_name   (rule 33)
+    opt_raises_expr  ->  RAISES '(' scoped_name_list . ')'   (rule 222)
+
+    ',' 	shift, and go to state 300
+    ')' 	shift, and go to state 357
+
+
+
+state 350
+
+    opt_context_expr  ->  CONTEXT '(' . string_literal_list ')'   (rule 224)
+
+    STRING_L	shift, and go to state 163
+
+    string_literal	go to state 358
+    string_literal_list	go to state 359
+
+
+
+state 351
+
+    init_param_dcl  ->  IN param_type_spec simple_declarator .   (rule 64)
+
+    $default	reduce using rule 64 (init_param_dcl)
+
+
+
+state 352
+
+    init_dcl  ->  FACTORY IDENT '(' opt_init_param_dcl_list ')' ';' .   (rule 59)
+
+    $default	reduce using rule 59 (init_dcl)
+
+
+
+state 353
+
+    init_param_dcl_list  ->  init_param_dcl_list ',' init_param_dcl .   (rule 63)
+
+    $default	reduce using rule 63 (init_param_dcl_list)
+
+
+
+state 354
+
+    case_label  ->  CASE const_expr ':' .   (rule 185)
+
+    $default	reduce using rule 185 (case_label)
+
+
+
+state 355
+
+    element_spec  ->  type_spec declarator .   (rule 187)
+
+    $default	reduce using rule 187 (element_spec)
+
+
+
+state 356
+
+    case  ->  case_label_list element_spec ';' .   (rule 182)
+
+    $default	reduce using rule 182 (case)
+
+
+
+state 357
+
+    opt_raises_expr  ->  RAISES '(' scoped_name_list ')' .   (rule 222)
+
+    $default	reduce using rule 222 (opt_raises_expr)
+
+
+
+state 358
+
+    string_literal  ->  string_literal . STRING_L   (rule 111)
+    string_literal_list  ->  string_literal .   (rule 225)
+
+    STRING_L	shift, and go to state 249
+
+    $default	reduce using rule 225 (string_literal_list)
+
+
+
+state 359
+
+    opt_context_expr  ->  CONTEXT '(' string_literal_list . ')'   (rule 224)
+    string_literal_list  ->  string_literal_list . ',' string_literal   (rule 226)
+
+    ',' 	shift, and go to state 360
+    ')' 	shift, and go to state 361
+
+
+
+state 360
+
+    string_literal_list  ->  string_literal_list ',' . string_literal   (rule 226)
+
+    STRING_L	shift, and go to state 163
+
+    string_literal	go to state 362
+
+
+
+state 361
+
+    opt_context_expr  ->  CONTEXT '(' string_literal_list ')' .   (rule 224)
+
+    $default	reduce using rule 224 (opt_context_expr)
+
+
+
+state 362
+
+    string_literal  ->  string_literal . STRING_L   (rule 111)
+    string_literal_list  ->  string_literal_list ',' string_literal .   (rule 226)
+
+    STRING_L	shift, and go to state 249
+
+    $default	reduce using rule 226 (string_literal_list)
+
+
+
+state 363
+
+    $   	go to state 364
+
+
+
+state 364
+
+    $   	go to state 365
+
+
+
+state 365
+
+    $default	accept

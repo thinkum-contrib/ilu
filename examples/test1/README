@@ -1,0 +1,387 @@
+README for the "test1" interface example.
+[ $Id: README,v 1.23 1999/08/03 01:52:09 janssen Exp $
+ BeginILUCopyright
+
+ Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+ Unlimited use, reproduction, modification, and distribution of this
+ software and modified versions thereof is permitted.  Permission is
+ granted to make derivative works from this software or a modified
+ version thereof.  Any copy of this software, a modified version
+ thereof, or a derivative work must include both the above copyright
+ notice of Xerox Corporation and this paragraph.  Any distribution of
+ this software, a modified version thereof, or a derivative work must
+ comply with all applicable United States export control laws.  This
+ software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+ WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+ LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+ EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+ NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+ OF THE POSSIBILITY OF SUCH DAMAGES.
+
+ EndILUCopyright ]
+
+"test1" is a rambling, random example, which serves as a primitive
+regression test.  It just calls some sample routines in a
+pre-determined order.  It is rendered in C, C++, Modula-3, Common
+Lisp, Python and Java; the servers and clients in those languages should
+all interoperate in all 49 combinations.
+
+To build all 7 server&client pairs, use the following commands:
+ 
+	% ilumkmf
+	% make
+
+Actually, this will make only those pairs for the languages supported
+at your ILU installation.  To further narrow the pairs made, you can
+explicitly name the desired programs in the `make` invocation;
+they are:
+C	server client
+C++	cppserver cppclient
+M3	TestM3Server TestM3Client
+Python	Test1.py Test2.py Test3.py
+CL      server.lisp client.lisp
+Java      make.java_sources_compiled
+
+Some servers will take additional arguments to control single/multi-threading choice, protocol choice, and transport choice.  Provoke command line errors to get usage messages.
+
+Running the C server looks like this
+(the output prompted by one run of a client is included):
+% ./server
+exported Test1_Initial_Object@Test1-Server@sunrpc_2_0x31000400_248525945|tcp_somehost.example.com_4364
+Test1.O1.U-CSS-to-U
+Test1.O1.f-CSS-to-R0
+Test1.O1.R-ScS-to-F
+Test1.O1.a-RO
+Test1.O1.get-O2
+Test1.o2.OO-A0-to-CSS
+Test1.O2.R-I-A1-to-I-A0
+Test1.O1.get-O3
+making O3...
+Test1.O3.RS-R-to-R-IS
+Test1.O3.O1-U-to-U
+Test1.O1.get-O3
+Test3.O.RS-R-to-R-IS
+Test3.O.O1-U-to-U(0x75658, {3})
+Test3.O.I-to-Test1U(397)
+Test1.O1.get-O3
+making O4...
+Test1.O4.R_to_R (12345.6789000000) => 1020304.0506070800
+
+
+Running the C client looks like this:
+% ./client
+u._d=5, u._u.boolean = 1, u._u.O1 = 0x1
+ro->i=9
+f=39.700001
+got O2, sbh = 1@augustus.6a37.2ee5dca1.2a67@sunrpc_2_0x3458_3|tcp_somehost.example.com_4367
+got O3, sbh = 2@augustus.6a37.2ee5dca1.2a67@sunrpc_2_0x31000400_1016874458|tcp_somehost.example.com_4367, type = Test1.O3
+u._d=3, u._u.boolean = 489128, u._u.O1 = 0x776a8
+got O3, sbh = 3@augustus.6a37.2ee5dca1.2a67@sunrpc_2_0x31000400_58588048|tcp_somehost.example.com_4367, type = Test3.O
+u._d=3, u._u.boolean = 489128, u._u.O1 = 0x776a8
+Test3_O_I_to_Test1U:  u2._d=5, u2._u.boolean = 1, u2._u.O1 = 0x1
+got O3, sbh = 4@augustus.6a37.2ee5dca1.2a67@sunrpc_2_0x31000400_2594209448|tcp_somehost.example.com_4367, type = Test1.O4
+doubles:  r1 is 12345.6789000000, r2 is 1020304.0506070800
+% 
+
+
+Running the C++ server looks like this (incl. one client run):
+% ./cppserver
+exported Test1_Initial_Object@Test1-Server@sunrpc_2_0x31000400_248525945|tcp_somehost.example.com_4382
+Test1.O1.U-CSS-to-U
+Test1.O1.f-CSS-to-R0
+Test1.O1.R-ScS-to-F
+Test1.O1.a-RO
+Test1.O1.get-O2
+Test1.o2.OO-A0-to-CSS
+Test1.O2.R-I-A1-to-I-A0
+Test1.O1.get-O3
+making O3...
+Test1.O3.RS-R-to-R-IS
+Test1.O3.O1-U-to-U
+Test1.O1.get-O3
+Test3.O.RS-R-to-R-IS
+Test3.O.O1-U-to-U(0x861a4, {3})
+Test3.O.I-to-Test1U(397)
+Test1.O1.get-O3
+making O4...
+Test1.O4.R_to_R (12345.6789000000) => 1020304.0506070800
+
+
+Running the C++ client looks like this:
+% ./cppclient
+u.discriminator=5 u.value.boolean = 1
+ro->i=9
+f=39.700001
+got O2, sbh = 1@augustus.6a37.2ee5dca1.2a67@sunrpc_2_0x3458_3|tcp_somehost.example.com_4367
+got O3, sbh = 5@augustus.6a37.2ee5dca1.2a67@sunrpc_2_0x31000400_1016874458|tcp_somehost.example.com_4367, type = Test1.O3
+u.discriminator=3 u.value.O1 = 0x825b8
+got O3, sbh = 6@augustus.6a37.2ee5dca1.2a67@sunrpc_2_0x31000400_58588048|tcp_somehost.example.com_4367, type = Test3.O
+u.discriminator=3 u.value.O1 = 0x825b8
+Test3_O::I_to_Test1U:  u2.discriminator=5 u2.value.boolean = 1
+got O3, sbh = 7@augustus.6a37.2ee5dca1.2a67@sunrpc_2_0x31000400_2594209448|tcp_somehost.example.com_4367, type = Test1.O4
+doubles:  r1 is 12345.6789000000, r2 is 1020304.0506070800
+% 
+
+
+Running the Python server looks like this (incl. one client run):
+% python pyServer.py
+exported Test1_Initial_Object@Test1-Server@sunrpc_2_0x31000400_248525945|tcp_somehost.example.com_1501
+Test1.O1.U-CSS-to-U
+Test1.O1.f-CSS-to-R0
+Test1.O1.R-ScS-to-F
+Test1.O1.a-RO
+Test1.O1.get-O2
+Test1.o2.OO-A0-to-CSS
+Test1.O2.R-I-A1-to-I-A0
+Test1.O1.get-O3
+making O3...
+Test1.O3.RS-R-to-R-IS
+Test1.O3.O1-U-to-U
+Test1.O1.get-O3
+Test3.O.RS-R-to-R-IS
+Test3.O.O1-U-to-U ( <O1 instance at 5b220> , {3})
+Test3.O.I-to-Test1U(397)
+Test1.O1.get-O3
+making O4...
+Test1.O4.R_to_R (12345.6789000000) => 1020304.0506070800
+
+
+Running the Python client looks like this:
+% python pyClient.py
+u = (5, 1)
+ro->i=9
+f=39.700001
+got O2, sbh = 1@Test1-Server@sunrpc_2_0x3458_3|tcp_somehost.example.com_1501
+got O3, sbh = 2@Test1-Server@sunrpc_2_0x31000400_1016874458|tcp_somehost.example.com_1501, O3 is <O3 instance at 7a0d8>
+u = (3, <TheO1 instance at 797d8>)
+got O3, sbh = 3@Test1-Server@sunrpc_2_0x31000400_58588048|tcp_somehost.example.com_1501, O3 is <O instance at 7b5c0>
+u = (3, <TheO1 instance at 797d8>)
+I_to_Test1U:  u2 = (5, 1)
+got O3, sbh = 4@Test1-Server@sunrpc_2_0x31000400_2594209448|tcp_somehost.example.com_1501, O3 is <O4 instance at 76740>
+doubles:  r1 is 12345.6789000000, r2 is 1020304.0506070800
+% 
+
+
+
+Running the Lisp server looks like this:
+% lisp
+Allegro CL 4.2 [SPARC; R1] (1/30/95 16:03)
+Copyright (C) 1985-1993, Franz Inc., Berkeley, CA, USA.  All Rights Reserved.
+USER(1): (load "load-lisp-example")
+; Loading /tmp/test1/load-lisp-example.lisp.
+;;; Loading system ILU
+...
+;;; Loading system TEST1
+...
+;;; Loading system TEST2
+...
+;;; Loading system TEST3
+...
+T
+USER(2): (test1-server:start-server)
+SBH:  Test1_Initial_Object@Test1-Server@sunrpc_2_0x31000400_248525945|tcp_14.1.100.162_2499
+#<TEST1-SERVER::TEST1-O1 Test1_Initial_Object@Test1-Server>
+USER(3): test1:u-css-to-u
+           (#<TEST1-SERVER::TEST1-O1 Test1_Initial_Object@Test1-Server>
+            T ("hello world" "hello mars")) => T
+test1:f-css-to-ro (#<TEST1-SERVER::TEST1-O1 Test1_Initial_Object@Test1-Server>
+                   ("hello world" "hello mars")) => #S(TEST1:R :I 9 :CSS NIL :A #(NIL NIL NIL))
+test1:r-sc-s-to-f (#<TEST1-SERVER::TEST1-O1 Test1_Initial_Object@Test1-Server>
+                   #S(TEST1:THE-R :I 9 :CSS NIL :A #("" "" "")) "hello world") => 39.7
+test1:a-ro (#<TEST1-SERVER::TEST1-O1 Test1_Initial_Object@Test1-Server>
+            #S(TEST1:THE-R :I 9 :CSS NIL :A #("" "" "")))
+test1:get-o2 (#<TEST1-SERVER::TEST1-O1 Test1_Initial_Object@Test1-Server>)
+ => #<TEST1-SERVER::TEST1-O2 3@Test1-Server>
+test1:oo-a0-to-css (#<TEST1-SERVER::TEST1-O2 3@Test1-Server>
+                    #<TEST1-SERVER::TEST1-O1 Test1_Initial_Object@Test1-Server>
+                    #(0 0 0 0 239 127 48 32)) => NIL
+test1:r-i-a1-to-i-a0 (#<TEST1-SERVER::TEST1-O2 3@Test1-Server>
+                      #S(TEST1:THE-R :I 12 :CSS NIL :A #("this is" "data" "initialization"))
+                      0 #("but this" "is" "fun")) => #(0 0 0 0 0 0 0 0) 0
+test1:get-o3 (#<TEST1-SERVER::TEST1-O1 Test1_Initial_Object@Test1-Server> NIL)
+ => #<TEST1-SERVER::TEST1-O3 4@Test1-Server>
+test1:rs-r-to-r-is (#<TEST1-SERVER::TEST1-O3 4@Test1-Server> NIL)
+ => NIL #S(TEST1:R :I 3 :CSS NIL :A #(NIL NIL NIL))
+test1:o1-u-to-u (#<TEST1-SERVER::TEST1-O3 4@Test1-Server>
+                 #<TEST1-SERVER::TEST1-O1 Test1_Initial_Object@Test1-Server> T)
+ => #<TEST1-SERVER::TEST1-O1 Test1_Initial_Object@Test1-Server>
+test1:get-o3 (#<TEST1-SERVER::TEST1-O1 Test1_Initial_Object@Test1-Server> T)
+ => #<TEST1-SERVER::TEST3-O 5@Test1-Server>
+test1:rs-r-to-r-is (#<TEST1-SERVER::TEST3-O 5@Test1-Server> NIL)
+ => NIL #S(TEST1:R :I 3 :CSS NIL :A #(NIL NIL NIL))
+test1:o1-u-to-u (#<TEST1-SERVER::TEST3-O 5@Test1-Server>
+                 #<TEST1-SERVER::TEST1-O1 Test1_Initial_Object@Test1-Server>
+                 #<TEST1-SERVER::TEST1-O1 Test1_Initial_Object@Test1-Server>)
+ => #<TEST1-SERVER::TEST1-O1 Test1_Initial_Object@Test1-Server>
+test3:i-to-test1-u (#<TEST1-SERVER::TEST3-O 5@Test1-Server> 397) => T
+test1:get-o3 (#<TEST1-SERVER::TEST1-O1 Test1_Initial_Object@Test1-Server> NIL)
+ => #<TEST1-SERVER::TEST1-O4 6@Test1-Server>
+test1:r-to-r (#<TEST1-SERVER::TEST1-O4 6@Test1-Server> 12345.6789d0) => 1020304.05060708d0
+Warning: Client on connection 0xcfa08 dropped connection.
+
+Warning: Client on connection 0xcf388 dropped connection.
+USER(3): 
+
+
+Running the lisp client looks quite similar:
+% lisp
+Allegro CL 4.2 [SPARC; R1] (1/30/95 16:03)
+Copyright (C) 1985-1993, Franz Inc., Berkeley, CA, USA.  All Rights Reserved.
+USER(1): (load "load-lisp-example")
+; Loading /tmp/test1/load-lisp-example.lisp.
+;;; Loading system ILU
+...
+;;; Loading system TEST1
+...
+;;; Loading system TEST2
+...
+;;; Loading system TEST3
+...
+T
+USER(2): (test-server)
+(u-css-to-u T ("just" "some" "strings")) => T
+(f-css-to-r0 ("just" "some" "strings")) => #S(TEST1:THE-R :I 9 :CSS NIL :A #("" "" ""))
+(r-sc-s-to-f #S(TEST1:R :I 238 :CSS ("more" "strings") :A #("test1" "test2" "bletch"))
+  "just a string") => 39.7
+(a-ro NIL)
+(get-o2) => #<TEST1:O2 the-02@Test1-Server>
+(test1:oo-a0-to-css #<TEST1:THE-O1 Test1_Initial_Object@Test1-Server>
+                    #(0 0 0 0 0 0 0 0)) => NIL
+(r-i-a1-to-i-a0
+  #S(TEST1:R :I 13 :CSS ("another" "list" "of" "strings") :A #("and" "an" "array"))
+  3289 #("string 1" "string 2" "string 3")) => #(0 0 0 0 0 0 0 0) 3289
+(get-o3 nil) => #<TEST1:O3 3@Test1-Server>
+(rs-r-to-r-is
+  (#S(TEST1:R :I 2349 :CSS ("more") :A #("one" "two" "three"))))
+  => NIL #S(TEST1:THE-R :I 3 :CSS NIL :A #("" "" ""))
+(o1-u-to-u #<TEST1:THE-O1 Test1_Initial_Object@Test1-Server> T)
+  => #<TEST1:THE-O1 Test1_Initial_Object@Test1-Server>
+NIL
+USER(3): 
+
+
+For Java, remember the set-up :
+
+1.  Make sure the "java" interpreter is on your PATH, and that
+"$ILUHOME/bin" is on your path.  If you use the literal expression
+"$ILUHOME/bin", make sure that the environment variable ILUHOME
+is properly defined.
+
+2.  Make sure "./classes" and "$ILUHOME/lib/ilu.jar" are on
+your CLASSPATH.
+
+(On systems which do not generate jar files, use "$ILUHOME/lib/classes"
+instead of "$ILUHOME/lib/ilu.jar")
+
+On systems where the CLASSPATH environment variable does
+not work correctly, use the -classpath command line argument;
+The following instructions use the -classpath command line arguments which
+can be removed if your java system would work with the CLASSPATH
+environment variable. 
+		
+3.  Make sure your LD_LIBRARY_PATH has "$ILUHOME/lib" on it.
+
+Running the java server looks like:
+% java -classpath ./classes:/$ILUHOME/lib/ilu.jar:$JAVAHOME/lib/classes.zip  test01.TestServer
+Created and exported 'ilu:Test1-Server/Test1_Initial_Object;ilu%3AelaCLpDDYEzJBhi-f8WIuDo770u;sunrpc_2_0x61a79_2172497681@sunrpcrm=tcp_somehost.example.com_34293' 'Test1.TheO1'
+Published it too.
+Lookup returned same object.
+Test1.O1.U-CSS-to-U
+Test1.O1.f-CSS-to-R0
+Test1.O1.R-ScS-to-F
+Test1.O1.a_RO
+Test1.o2.OO-A0-to-CSS
+Test1.o2.R-I-A1-to-I-A0
+Test1.O1.get-O3
+     get_O3 else
+Test1.O3.RS-R-to-R-IS in T1O3Svr
+   r2 = [Lstubs.Test1.TheR;@1dc60971 l = 1
+   ..0= null
+Test1.O3.O1-U-to-U
+Test1.O1.get-O3
+     get_O3 subclass
+Test1.O3.RS-R-to-R-IS  in T3OSvrLead
+Test1.O3.O1-U-to-U
+Test3.O.I-to-Test1U(397)
+Test1.O1.get-O3
+     get_O3 flop
+Test1.O4.R-to-R(12345.6789) => 1020304.05060708)
+
+
+Running the java client looks like:
+% java -classpath ./classes:/$ILUHOME/lib/ilu.jar:$JAVAHOME/lib/classes.zip  test01.TestClient
+u = BOOLEAN[true]
+ro->i = 9
+f = 39.70000076293945
+got O2, sbh = ilu:Test1-Server/somehost.example.com.16d8.335edf78.653;ilu%3AaIEolIEr9ovzQXahMK3hDr3roe2;sunrpc_2_0x3458_3@sunrpcrm=tcp_somehost.example.com_34293
+DDD  a = new byte
+got css2
+got a; i = 0
+got o3, sbh = ilu:Test1-Server/somehost.example.com.16d8.335edf78.3acb;ilu%3ApuOVCAVWrbZszHuX5AQ77dstgr7;sunrpc_2_0x61a79_2310469933@sunrpcrm=tcp_somehost.example.com_34293
+got i2
+u = O1[ilu:Test1-Server/Test1_Initial_Object;ilu%3AelaCLpDDYEzJBhi-f8WIuDo770u;sunrpc_2_0x61a79_2172497681@sunrpcrm=tcp_somehost.example.com_34293]
+got o3, sbh = ilu:Test1-Server/somehost.example.com.16d8.335edf78.39f4;ilu%3Ak7P5lUXg5fRC2NCrdesWU7kiJah;sunrpc_2_0x61a79_468900123@sunrpcrm=tcp_somehost.example.com_34293
+got i2
+u = O1[ilu:Test1-Server/Test1_Initial_Object;ilu%3AelaCLpDDYEzJBhi-f8WIuDo770u;sunrpc_2_0x61a79_2172497681@sunrpcrm=tcp_somehost.example.com_34293]
+u2 = BOOLEAN[true]
+got O3, sbh = ilu:Test1-Server/somehost.example.com.16d8.335edf79.48cd;ilu%3AatuhvT1TCwEi-ktIFNKfedZ-I89;sunrpc_2_0x61a79_342708993@sunrpcrm=tcp_somehost.example.com_34293
+doubles:  r1 is  12345.6789, r2 is 1020304.05060708
+% 
+
+For guile:
+
+1.  Make sure that your LD_LIBRARY_PATH variable includes ILUHOME/lib,
+and that your SCHEME_LOAD_PATH environment variable includes ILUHOME/guile.
+You typically also need $(GUILE_LIB_DIR) on your LD_LIBRARY_PATH, if you've built
+iluguile using a shared library for the Guile library.
+
+2.  Make sure that the "iluguile" program is on your path.
+
+3.  To run the server:
+
+% iluguile server.scm
+exported ilu:Test1-Server/Test1_Initial_Object;ilu%3AelaCLpDDYEzJBhi-f8WIuDo770u;sunrpc@sunrpcrm=tcp_somehost.example.com_52616
+
+4.  To run the client:
+
+% iluguile client.scm
+u.discriminator = 5 u.value.boolean = #t
+ro->i=9
+ro->css=("aaa")
+ro->a=#("hi1" "hi2" "hi3")
+f=39.7000007629395
+got O2, sbh = ilu:Test1-Server/2;ilu%3AaIEolIEr9ovzQXahMK3hDr3roe2;sunrpc@sunrpcrm=tcp_somehost.example.com_52616
+got O3, sbh = ilu:Test1-Server/3;ilu%3ApuOVCAVWrbZszHuX5AQ77dstgr7;sunrpc@sunrpcrm=tcp_somehost.example.com_52616, type = Test1.O3
+u.discriminator = 3 u.value.O1 = 0x268af0
+got O3, sbh = ilu:Test1-Server/4;ilu%3Ak7P5lUXg5fRC2NCrdesWU7kiJah;sunrpc@sunrpcrm=tcp_somehost.example.com_52616, type = Test3.O
+u.discriminator = 3 u.value.O1 = 0x268af0
+Test3_O::I_to_Test1U:  u2.discriminator = 5 u2.value.boolean = #t
+got O3, sbh = ilu:Test1-Server/5;ilu%3AatuhvT1TCwEi-ktIFNKfedZ-I89;sunrpc@sunrpcrm=tcp_somehost.example.com_52616, type = Test1.O4
+doubles:  r1 is 12345.6789, r2 is 1020304.05060708
+
+You will also see the following output on the server:
+
+% iluguile server.scm
+exported ilu:Test1-Server/Test1_Initial_Object;ilu%3AelaCLpDDYEzJBhi-f8WIuDo770u;sunrpc@sunrpcrm=tcp_somehost.example.com_52616
+Test1.O1.U-CSS-to-U
+Test1.O1.f-CSS-to-R0
+Test1.O1.R-ScS-to-F
+Test1.O1.a-RO
+Test1.O1.get-O2
+Test1.O2.OO-A0-to-CSS
+Test1.O2.R-I-A1-to-I-A0
+Test1:O1.get-03
+making O3...
+Test1.O3.RS-R-to-R-IS
+Test1.O3.O1-U-to-U
+Test1:O1.get-03
+Test3.O.RS-R-to-R-IS
+Test3.O.O1-U-to-U(0x2dff18, {3})
+Test3.O.I-to-Test1U(397)
+Test1:O1.get-03
+making O4...
+Test1.O4.R_to_R (12345.6789) => 1020304.05060708
+

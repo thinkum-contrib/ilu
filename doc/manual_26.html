@@ -1,0 +1,403 @@
+<!-- This HTML file has been created by timdif2html 1.11
+     from manual.dif on 20 September 1999 -->
+
+<TITLE>ILU Reference Manual - Algorithm for Generation of Structural-Hash Type IDs</TITLE>
+<BODY TEXT=#000000 BGCOLOR=#ffffff>
+<P>Go to the <A HREF="manual_25.html">previous</A>, <A HREF="manual_27.html">next</A> section.<P>
+<H1><A NAME="SEC659" HREF="manual_toc.html#SEC659">Algorithm for Generation of Structural-Hash Type IDs</A></H1>
+<P>
+The following type ID construction algorithm is used for automatic generation of type IDs
+for all types and exceptions in ILU that have no explicitly specified type ID.  The type ID
+is formed by (1) constructing a string
+containing all the salient information about the type or exception, in a
+standardized form, (2) taking the NIST Secure Hash Signature of that
+string, and (3) rendering the SHS in a string form as a 27-digit base-64
+number.
+<P>
+<H2><A NAME="SEC660" HREF="manual_toc.html#SEC660">Resolving Type Ambiguities</A></H2>
+<P>
+There are some types that can be described in multiple ways, using more or less generalized constructions.  For example, the primitive integer types could also be described as fixed-point constructions.  Every type that can be described multiple ways is always considered to <EM>be</EM> the one that uses the least general constructs.  In particular, the primitive integer types are indeed considered primitive -- not fixed-point constructions.
+<P>
+<H2><A NAME="SEC661" HREF="manual_toc.html#SEC661">Constructing the "salient information string"</A></H2>
+<P>
+This string consists of 8-bit bytes.
+Many of those bytes are described here using characters, which are taken to be in the US-ASCII character code.
+<P>
+<PRE>
+&#60;info string&#62; ::= &#60;self ref&#62; &#60;defn&#62;*
+&#60;self ref&#62; ::= &#60;typeref&#62; | &#60;exnref&#62;
+</PRE>
+<P>
+The salient information string consists of a reference to the <EM>initial item</EM>
+(the type or exception being characterized),
+followed by the definitions of the interfaces, execeptions,
+and non-primitive non-explicitly-IDed types referenced directly or indirectly by the initial item.
+Each interface, exception, and non-primitive non-explicitly-IDed type that
+is referenced in the type string is defined exactly once in the type
+string, and these are the only definitions that appear in the type
+string.  In particular, the string includes no definition of any primitive type,
+nor of any type whose ID is explicitly specified in the source language
+(explicit IDs can optionally be given in ISL by appending a <CODE>TYPEID</CODE> clause to a type definition;
+in OMG IDL there is a defined ID for every named type).
+The definitions appear in the order of first appearance of
+the corresponding reference.  In other words, the definitions appear in breadth-first order.  In particular, if the initial item has a definition
+(note that primitive types do not), then it is the first definition.
+Every definition of an item is preceded by at least one reference to that item.
+This forbids adding definitions of types in irrelevant cycles.
+<P>
+We could compress this a bit by making each definition immediately
+follow, and thus not duplicate, its first reference.  But this gains
+little, and type fingerprints are not computed at runtime anyway.  And
+it has this cost: it tempts an implementor to use a recursive strategy
+for generating the type string, and a recursive implementation will
+crash with a stack overflow when presented with hostile interface
+source code.  The structure given is amenable to a simple
+worklist-based generation strategy.
+<P>
+<H2><A NAME="SEC662" HREF="manual_toc.html#SEC662">References to Types, Interfaces, and Exceptions</A></H2>
+<P>
+A type reference is a reference to either a primitive type or a
+constructed one, or an explicit type UID (if the type UID has been
+explicitly specified).
+<P>
+<PRE>
+&#60;typeref&#62; ::= &#60;primitive&#62; | &#60;typeciteref&#62; | &#60;typeidref&#62;
+&#60;typeciteref&#62; ::= "(ref" &#60;sp&#62; &#60;type cite&#62; ")"
+&#60;typeidref&#62; ::= "(id" &#60;sp&#62; &#60;UID string&#62; ")"
+&#60;UID string&#62; ::= &#60;string&#62;
+</PRE>
+<P>
+The primitive types are:
+<P>
+<PRE>
+&#60;primitive&#62; ::=
+	  "byte"
+	| "shortcardinal"
+	| "cardinal"
+	| "longcardinal"
+	| "shortinteger"
+	| "integer"
+	| "longinteger"
+	| "shortreal"
+	| "real"
+	| "longreal"
+	| "shortcharacter"
+	| "character"
+	| "longcharacter"
+	| "boolean"
+	| "pickle"
+	| "void"
+</PRE>
+<P>
+A reference to a constructed type cites two things: (1) the name of
+the interface in which the type is defined, and (2) the name given
+that type.  These are ultimately &#60;id&#62;s, as defined in ISL;
+ISL identifiers may not contain any characters (e.g., quotes, parentheses)
+that are treated specially in the syntax of salient information strings.  In a salient information string, &#60;id&#62;s are represented in US-ASCII (with no leading length nor trailing null).
+<P>
+<PRE>
+&#60;type cite&#62; ::= &#60;ifc ref&#62; &#60;sp&#62; &#60;typename&#62;
+&#60;ifc ref&#62; ::= &#60;interfacename&#62;
+&#60;interfacename&#62; ::= &#60;id&#62;
+&#60;typename&#62; ::= &#60;id&#62;
+&#60;sp&#62; ::= a single space character (i.e., code 32(decimal))
+</PRE>
+<P>
+Exception references similarly have two forms, depending on whether an ID has been explicitly specified:
+<P>
+<PRE>
+&#60;exnref&#62; ::= "(exn" &#60;sp&#62; ( &#60;exnciteref&#62; | &#60;exnidref&#62; ) ")"
+&#60;exnidref&#62; ::= "(id" &#60;sp&#62; &#60;UID string&#62; ")"
+&#60;exnciteref&#62; ::= "(ref" &#60;sp&#62; &#60;ifc ref&#62; &#60;sp&#62; &#60;exnname&#62; ")"
+&#60;exn cite&#62; ::= &#60;ifc ref&#62; &#60;sp&#62; &#60;exnname&#62;
+&#60;exnname&#62; ::= &#60;id&#62;
+</PRE>
+<P>
+<H2><A NAME="SEC663" HREF="manual_toc.html#SEC663">Definitions of Types, Interfaces, and Exceptions</A></H2>
+<P>
+There are three kinds of things that need to be defined: types,
+interfaces, and exceptions.
+<P>
+<PRE>
+&#60;defn&#62; ::= &#60;type def&#62; | &#60;ifc def&#62; | &#60;exn def&#62;
+</PRE>
+<P>
+<H3><A NAME="SEC664" HREF="manual_toc.html#SEC664">Types</A></H3>
+<P>
+A definition of a type gives its compound name, brand, and what the type
+is defined to be.
+<P>
+<PRE>
+&#60;type def&#62; ::= "(type" &#60;sp&#62; &#60;type cite&#62; &#60;sp&#62; &#60;brand&#62; &#60;sp&#62; &#60;type desc&#62; ")"
+</PRE>
+<P>
+A type can be defined either to be a primitive or a construction.
+<P>
+<PRE>
+&#60;type desc&#62; ::= &#60;primitive&#62; | &#60;construction&#62;
+</PRE>
+<P>
+Constructed types have different forms, specific to their types.
+<P>
+<PRE>
+&#60;construction&#62; ::= &#60;fixedpoint&#62;
+		 | &#60;stringt&#62;
+		 | &#60;array&#62;
+		 | &#60;record&#62;
+		 | &#60;optional&#62;
+		 | &#60;sequence&#62;
+		 | &#60;union&#62;
+		 | &#60;enumeration&#62;
+		 | &#60;object&#62;
+</PRE>
+<P>
+<H4><A NAME="SEC665" HREF="manual_toc.html#SEC665">Alias Types</A></H4>
+<P>
+For alias types that have an explicitly assigned type ID, we simply
+generate a &#60;typeidref&#62; when it's referenced.  For alias types that have
+the same type ID as their base type, we just use the base type in its place when
+constructing type info strings.
+<P>
+<H4><A NAME="SEC666" HREF="manual_toc.html#SEC666">Array Types</A></H4>
+<P>
+This should be mostly obvious.  An integer is given as its shortest decimal representation; positive integers have no sign character.
+<P>
+<PRE>
+&#60;array&#62; ::= "(array" &#60;sp&#62; &#60;typeref&#62; (&#60;sp&#62; &#60;dim&#62;)+ ")"
+&#60;dim&#62; ::= "(fixed" &#60;sp&#62; &#60;non-negative integer&#62; ")"
+&#60;integer&#62; ::= "0" | ( ["-"] &#60;non-zero-digit&#62; &#60;digit&#62;* )
+&#60;digit&#62; ::= &#60;non-zero-digit&#62; | "0"
+&#60;non-zero-digit&#62; = "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
+</PRE>
+<P>
+<H4><A NAME="SEC667" HREF="manual_toc.html#SEC667">Record Types</A></H4>
+<P>
+The field names are included on the grounds that they give clues to
+the semantics of the type, so different field names make different
+types.
+<P>
+<PRE>
+&#60;record&#62; ::= "(record" (&#60;sp&#62; &#60;rfield&#62;)+ ")"
+
+&#60;rfield&#62; ::= "(field" &#60;sp&#62; &#60;fieldname&#62; &#60;sp&#62; &#60;typeref&#62; ")"
+
+&#60;fieldname&#62; ::= &#60;id&#62;
+</PRE>
+<P>
+<H4><A NAME="SEC668" HREF="manual_toc.html#SEC668">Optional Types</A></H4>
+<P>
+<PRE>
+&#60;optional&#62; ::= "(optional" &#60;sp&#62; &#60;typeref&#62; ")"
+</PRE>
+<P>
+<H4><A NAME="SEC669" HREF="manual_toc.html#SEC669">Fixed-point Types</A></H4>
+<P>
+The fixed-point constructor gives the minimum and maximum numerators, and the fixed denominator value.
+Note that &#60;integer&#62; may be arbitrarily long.
+<P>
+<PRE>
+&#60;fixedpoint&#62; ::= "(fixedpoint" &#60;sp&#62; &#60;min-num&#62; &#60;sp&#62; &#60;max-num&#62; &#60;sp&#62; &#60;denom&#62; ")"
+&#60;min-num&#62; ::= &#60;integer&#62;
+&#60;max-num&#62; ::= &#60;integer&#62;
+&#60;denom&#62; ::= &#60;positive integer&#62; | "1/" &#60;positive integer&#62;
+</PRE>
+<P>
+<H4><A NAME="SEC670" HREF="manual_toc.html#SEC670">Sequence Types</A></H4>
+<P>
+<PRE>
+&#60;sequence&#62; ::= "(sequence" &#60;sp&#62; &#60;typeref&#62; &#60;sp&#62; "(variable" &#60;sp&#62; &#60;limit&#62; "))"
+&#60;limit&#62; ::= &#60;integer&#62;
+</PRE>
+<P>
+There is always some finite limit, 2^32-1 when not explicitly given in
+ISL.
+<P>
+<H4><A NAME="SEC671" HREF="manual_toc.html#SEC671">Union Types</A></H4>
+<P>
+<PRE>
+&#60;union&#62; ::= "(union" &#60;sp&#62; &#60;typeref&#62; (&#60;sp&#62; &#60;uarm&#62;)+ ")"
+
+&#60;uarm&#62; ::= "(arm" &#60;sp&#62; &#60;typeref&#62; &#60;sp&#62; [ "(name" &#60;arm name&#62; ")" &#60;sp&#62; ] "(" ["default"] ")"
+		(&#60;sp&#62; &#60;discvalue&#62;)* ")"
+
+&#60;arm name&#62; ::= &#60;id&#62;
+
+&#60;discvalue&#62; ::= "(val" &#60;sp&#62; ( &#60;string&#62; | &#60;integer&#62; | ( "TRUE" | "FALSE" ) ) ")"
+</PRE>
+<P>
+The &#60;typeref&#62; at the top level of a UNION constructor is the type of
+the tag, which must be an integer type, a character type, an
+enumerated type, or boolean.
+The &#60;discvalue&#62; is an integer when the tag is a numeric type,
+a string when the tag is an enumerated or character type,
+and a boolean literal when the tag is boolean.
+<P>
+<H4><A NAME="SEC672" HREF="manual_toc.html#SEC672">Enumeration Types</A></H4>
+<P>
+<PRE>
+&#60;enumeration&#62; ::= "(enumeration" (&#60;sp&#62; &#60;efield&#62;)+ ")"
+
+&#60;efield&#62; ::= "(element" &#60;sp&#62; &#60;id&#62; &#60;sp&#62; &#60;integer&#62; ")"
+</PRE>
+<P>
+Enumeration info includes the numeric codes assigned when not
+explicitly given.
+<P>
+<H4><A NAME="SEC673" HREF="manual_toc.html#SEC673">Object Types</A></H4>
+<P>
+<PRE>
+&#60;object&#62; ::= "(object"
+		 [ &#60;sp&#62; "(singleton" &#60;sp&#62; &#60;singletoninfo&#62; ")" ]
+		 [ &#60;sp&#62; "optional" ]
+		 [ &#60;sp&#62; "collectible" ]
+		 ( &#60;sp&#62; "(supertype" &#60;sp&#62; &#60;typeref&#62; ")" )*
+		 ( &#60;sp&#62; &#60;method&#62; )*
+
+&#60;method&#62; ::= "(method" &#60;sp&#62; &#60;methodname&#62;
+	[ &#60;sp&#62; "asynchronous" ]
+	[ &#60;sp&#62; "functional" ]
+	&#60;sp&#62; "(returns" &#60;sp&#62; &#60;typeref&#62; (&#60;sp&#62; &#60;exnref&#62;)* ")"
+	( &#60;sp&#62; &#60;marg&#62; )*
+        ")"
+
+&#60;marg&#62; ::= "(parameter" &#60;sp&#62; &#60;name&#62; &#60;sp&#62; ( "in" | "out" | "inout" ) &#60;sp&#62; &#60;typeref&#62;
+            [ &#60;sp&#62; "sibling" ] ")"
+
+</PRE>
+<P>
+The form of object type constructions follows the features of the ISL fairly closely.  A method with no explicit return result is considered here to return "void".  The methods listed are only those introduced at the object type at hand -- the inherited methods are not listed.
+<P>
+<PRE>
+&#60;singletoninfo&#62; ::= &#60;string&#62;
+</PRE>
+<P>
+The &#60;singletoninfo&#62; is the string
+given in the ISL (quoted, as all &#60;string&#62;s are).
+<P>
+<H3><A NAME="SEC674" HREF="manual_toc.html#SEC674">Interfaces</A></H3>
+<P>
+The definition of an interface simply gives its brand.  We *could*
+make it also include a reference to everything defined in that
+interface, but I don't see any particular value in doing so.
+<P>
+<PRE>
+&#60;ifc def&#62; ::= "(interface" &#60;sp&#62; &#60;interfacename&#62; &#60;sp&#62; &#60;interfacebrand&#62; ")"
+&#60;interfacebrand&#62; ::= &#60;string&#62;
+</PRE>
+<P>
+<H3><A NAME="SEC675" HREF="manual_toc.html#SEC675">Exceptions</A></H3>
+<P>
+The definition of an exception gives its compound name, its brand, and the
+associated datatype.  As exceptions are not yet branded in the rest of ILU,
+the brand here is always the empty string.  If the exception has no associated datatype, it is given as "void" here.
+<P>
+<PRE>
+&#60;exn def&#62; ::= "(exception" &#60;sp&#62; &#60;exn cite&#62; &#60;sp&#62; &#60;exnbrand&#62; &#60;sp&#62; &#60;typeref&#62; ")"
+&#60;exnbrand&#62; ::= &#60;string&#62;
+</PRE>
+<P>
+<H3><A NAME="SEC676" HREF="manual_toc.html#SEC676">Brands</A></H3>
+<P>
+<PRE>
+&#60;brand&#62; ::= &#60;string&#62;
+</PRE>
+<P>
+The string brand for a type, exception, or interface.  If not explicitly given in the ISL,
+the empty string.
+<P>
+<H3><A NAME="SEC677" HREF="manual_toc.html#SEC677">String Literals</A></H3>
+<P>
+A &#60;string&#62; is encoded using US-ASCII and surrounded with double-quotes (US-ASCII code 34).
+If the double-quote character appears in the string,
+it is escaped with a leading backslash character.  If a backslash character appears in the string,
+it is escaped with an additional leading backslash character.  If a non-printing character
+(with a US-ASCII code less than 32(decimal) or greater than 126(decimal)) appears in the string,
+it appears as a 3-digit octal number containing the US-ASCII code for that character, preceded with a backslash character.
+<P>
+<PRE>
+&#60;string&#62; ::= &#60;dquote&#62; &#60;string-char&#62;* &#60;dquote&#62;
+&#60;dquote&#62; ::= the US-ASCII double-quote character (i.e., code 34(decimal))
+&#60;string-char&#62; ::= &#60;simple-char&#62; | &#60;quoted-char&#62;
+&#60;simple-char&#62; ::= any printing US-ASCII character (i.e., codes 32(decimal) to 126(decimal)),
+                  except double-quote (code 34(decimal)) or backslash (code 92(decimal))
+&#60;quoted-char&#62; ::= &#60;quoted-backslash&#62; | &#60;quoted-double-quote&#62; | &#60;quoted-byte&#62;
+&#60;quoted-backslash&#62; ::= &#60;backslash&#62; &#60;backslash&#62;
+&#60;backslash&#62; ::= the US-ASCII backslash character (i.e., code 92(decimal))
+&#60;quoted-double-quote&#62; ::= &#60;backslash&#62; &#60;dquote&#62;
+&#60;quoted-byte&#62; ::= &#60;backslash&#62; &#60;octal-digit&#62; &#60;octal-digit&#62; &#60;octal-digit&#62;
+&#60;octal-digit&#62; ::= "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7"
+</PRE>
+<P>
+<H3><A NAME="SEC678" HREF="manual_toc.html#SEC678">Example</A></H3>
+<P>
+Consider the following interface:
+<P>
+<PRE>
+INTERFACE Foo BRAND "13.2.116.14 October 26, 1998";
+
+EXCEPTION E;
+
+TYPE C1 = FIXEDPOINT
+	MIN-NUMERATOR 0
+	MAX-NUMERATOR 59
+        DENOMINATOR 1;
+
+TYPE I1 = FIXEDPOINT
+	MIN-NUMERATOR -2147483648
+	MAX-NUMERATOR 2147483647
+        DENOMINATOR 1 ;
+
+TYPE O-1 = OBJECT
+	METHODS m1(o:O-2, c:C1):I1 END;
+
+TYPE O-2 = OBJECT
+	SUPERTYPES O-1 END
+	METHODS m2() RAISES E END END
+	BRAND "13.2.116.14 October 26, 1998" ;
+
+TYPE O-1X = O-1;
+
+TYPE O-1Y = O-1X TYPEID "xyz:bad-idea";
+</PRE>
+<P>
+The salient information strings for types O-1 and O-1X are the same.  That string is:
+<P>
+<PRE>
+(ref Foo O-1)
+(interface Foo "13.2.116.14 October 26, 1998")
+(type Foo O-1 "" (object (method m1 (returns integer) (parameter o in (ref Foo O-2)
+) (parameter c in (ref Foo C1)))))
+(type Foo O-2 "13.2.116.14 October 26, 1998" (object (supertype (ref Foo O-1)) (
+method m2 (returns void (exn (ref Foo E))))))
+(type Foo C1 "" (fixedpoint 0 59 1))
+(exception Foo E "" void)
+</PRE>
+<P>
+Line breaks have been introduced into the display above for readability; the actual salient information string contains none of those linebreaks nor any whitespace of any kind at their positions.
+<P>
+The type ID (not salient information string) for O-1Y is "xyz:bad-idea".
+<P>
+<H2><A NAME="SEC679" HREF="manual_toc.html#SEC679">Calculation of the NIST SHS of the "salient information" String.</A></H2>
+<P>
+See <A HREF=" http://www.itl.nist.gov/div897/pubs/fip180-1.htm">FIPS PUB 180-1:  Secure Hash Standard</A>.
+<P>
+Abstract:<BR>
+"This standard specifies a Secure Hash Algorithm (SHA-1) which can be used to generate a condensed
+representation of a message called a message digest. The SHA-1 is required for use with the Digital
+Signature Algorithm (DSA) as specified in the Digital Signature Standard (DSS) and whenever a secure hash
+algorithm is required for Federal applications. The SHA-1 is used by both the transmitter and intended
+receiver of a message in computing and verifying a digital signature."
+<P>
+<H2><A NAME="SEC680" HREF="manual_toc.html#SEC680">Conversion of the SHS to a Base-64 Number.</A></H2>
+<P>
+The SHS is converted to a string of length 32 bytes, each
+containing an ASCII character code.  First, two 0 bits are appended to
+the 160-bit SHS.  This 162-bit string is encoded as 27 6-bit digits,
+most significant digit first.  The encoding uses characters 'a' - 'z'
+to represent the values 0-25, the characters 'A' - 'Z' to represent
+the characters 26-51, the characters '0' - '9' to represent the values
+52-61, the character '-' to represent the value 62, and the character
+'+' to represent the value 63.  Finally the 5 bytes "ilut:" are
+prepended, giving the total of 32 bytes.
+<P>
+<P>Go to the <A HREF="manual_25.html">previous</A>, <A HREF="manual_27.html">next</A> section.<P>

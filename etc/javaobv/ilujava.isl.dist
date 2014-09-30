@@ -1,0 +1,101 @@
+(** $Id: ilujava.isl.dist,v 1.5 1999/08/03 01:56:23 janssen Exp $
+ BeginILUCopyright
+
+ Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+ Unlimited use, reproduction, modification, and distribution of this
+ software and modified versions thereof is permitted.  Permission is
+ granted to make derivative works from this software or a modified
+ version thereof.  Any copy of this software, a modified version
+ thereof, or a derivative work must include both the above copyright
+ notice of Xerox Corporation and this paragraph.  Any distribution of
+ this software, a modified version thereof, or a derivative work must
+ comply with all applicable United States export control laws.  This
+ software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+ WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+ LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+ EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+ NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+ OF THE POSSIBILITY OF SUCH DAMAGES.
+
+ EndILUCopyright
+*)
+(* Last edited by Chris Jacobi, January 18, 1999 1:30 pm PST *)
+(* Last edited by Mike Spreitzer October 9, 1998 9:56 am PDT *)
+
+
+INTERFACE ilujava;
+  
+(* Support for java objects by value; marshalled and life. *)
+   
+ILUDIRECTIVE-EXPERIMENTAL "JAVA-PREFIX", "xerox"; 
+ILUDIRECTIVE-EXPERIMENTAL "JAVA-CUSTOMFILE", "ilujava.map"; 
+
+(* inline alternative...
+ILUDIRECTIVE-EXPERIMENTAL "JAVA-CUSTOM", 
+    "JavaObject", "java.lang.Object", "xerox.ilujava.Holder", 
+    "xerox.ilujava.IluOBV"; 
+*)
+
+
+(***** Main Types *****)
+
+TYPE JavaObject = OPTIONAL JavaObjectBase; 
+  (* A "life" java object (typicly serializable) 
+   *
+   * Custom mapped to generic java.lang.Object
+   *)
+
+TYPE MarshalledObject = OPTIONAL MarshalledObjectBase;
+  (* A "marshalled" java object (typicly serializable) 
+   *
+   * See the xerox.ilujava.IluOBV class for internalizing (get)
+   * or externalizing (set) MarshalledObject's 
+   *)
+   
+
+(***** Implementation fluff *****)
+
+TYPE MarshalledObjectBase =      (* Base type for "marshalled" java Object *)
+  RECORD
+    sb: ObjectBytes,             (* State of this java.lang.Object instance *)
+    accessMethod: "String",      (* Mechanism to choose the class loader *)
+    accessor: ClassAccessor      (* For the benefit of certain class loaders *)
+  END;
+  (* A "marshalled" java object (typicly serializable)
+   *
+   * For new instances, use new xerox.ilujava.IluOBV()
+   *
+   * MarshalledObjectBase are custom records; avoid "new" of the 
+   * MarshalledObjectBase super class directly because the custom
+   * record marshals more efficient due to internal caching.
+   * The fields are not intended for user access.
+   *)
+
+TYPE ObjectBytes =               (* The serialized object instance *)
+  SEQUENCE OF BYTE;
+
+TYPE ClassBytes =                (* The bytecodes for a class *)
+  SEQUENCE OF BYTE;
+
+TYPE "String" =                  (* Unicode *)
+  SEQUENCE OF CHARACTER;
+
+EXCEPTION AccessError: "String"; (* class (bytecodes) not found *)   
+
+TYPE ClassAccessor =             (* input mechanism for certain class loaders *)
+  OBJECT OPTIONAL 
+    DOCUMENTATION "Accessing the bytecodes of the class"
+    METHODS
+      GetBytes(classname: "String"): ClassBytes RAISES AccessError END
+    END;
+
+TYPE JavaObjectBase =            (* Base type for "life" java Object *)
+  RECORD
+    code: BYTE,
+    mo: MarshalledObject
+  END;
+  
+

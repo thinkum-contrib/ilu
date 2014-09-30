@@ -1,0 +1,368 @@
+/*
+BeginILUCopyright
+
+Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+Unlimited use, reproduction, modification, and distribution of this
+software and modified versions thereof is permitted.  Permission is
+granted to make derivative works from this software or a modified
+version thereof.  Any copy of this software, a modified version
+thereof, or a derivative work must include both the above copyright
+notice of Xerox Corporation and this paragraph.  Any distribution of
+this software, a modified version thereof, or a derivative work must
+comply with all applicable United States export control laws.  This
+software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+OF THE POSSIBILITY OF SUCH DAMAGES.
+  
+EndILUCopyright
+
+$Id: iluconf.h.in,v 1.74 1999/08/12 04:43:43 janssen Exp $
+*/
+#ifndef	_iluconf_h_
+#define	_iluconf_h_
+
+/* Define to `int' if <sys/types.h> doesn't define.  */
+#undef pid_t
+
+/* Define if your processor stores words with the most significant
+   byte first (like Motorola and SPARC, unlike Intel and VAX).  */
+#undef WORDS_BIGENDIAN
+
+/* Define this to a string which is the output of config.guess,
+   namely the canonical system name */
+#undef ILU_MACHINE_TYPE
+
+/* Define this to a string which is the command used to compil
+   the ILU system */
+#undef ILU_COMPILE_COMMAND
+
+/* Define this to a string which is the setting of ANSI_C_LIBRARY */
+#undef ILU_ANSI_C_LIBRARY
+
+/* Define this to a string which is the setting of SYSAUX_LIBRARIES */
+#undef ILU_SYSAUX_LIBRARIES
+
+/* The number of bytes in a char */
+#undef SIZEOF_CHAR
+
+/* Define this if the "char" type is unsigned */
+#undef __CHAR_UNSIGNED__
+
+/* Define this to be the local locale for LC_CTYPE */
+#undef CTYPE_LOCALE
+
+/* The number of bytes in a short */
+#undef SIZEOF_SHORT
+
+/* The number of bytes in an int.  */
+#undef SIZEOF_INT
+
+/* The number of bytes in a long.  */
+#undef SIZEOF_LONG
+
+/* The number of bytes in a void *.  */
+#undef SIZEOF_VOID_P
+
+/* The number of bytes in a function pointer (void (*) (void)) */
+#undef SIZEOF_FN_P
+
+/* The number of bytes in a long long.  */
+#undef SIZEOF_LONG_LONG
+
+/* The number of bytes in a long double.  */
+#undef SIZEOF_LONG_DOUBLE
+
+/* The number of bytes in an enum.  */
+#undef SIZEOF_ENUM
+
+/* The number of bytes in a wchar_t (0 if not supported) */
+#undef SIZEOF_WCHAR_T
+
+/* Whether there's a natural mapping for LONG CARDINAL */
+#undef LONG_CARDINAL_TYPE
+
+/* Whether there's a natural mapping for LONG INTEGER */
+#undef LONG_INTEGER_TYPE
+
+/* Whether there's a natural mapping for LONG REAL */
+#undef LONG_REAL_TYPE
+
+/* Define as the return type of signal handlers (int or void).  */
+#undef RETSIGTYPE
+
+/* Define this to be the appropriate type to use for places where "size_t" should really be used. */
+#undef SIZE_T
+
+/* Define this if you have alloca() in your libc */
+#undef HAVE_ALLOCA
+
+/* Define this if unistd.h defines a prototype for gethostname() */
+#undef HAVE_GETHOSTNAME_PROTOTYPE
+
+/* Define this if stdio.h or unistd.h defines a prototype for sys_errlist() */
+#undef ILU_HAVE_SYS_ERRLIST_PROTOTYPE
+
+/* Define if you don't have vprintf but do have _doprnt.  */
+#undef HAVE_DOPRNT
+
+/* Define if you have the vprintf function.  */
+#undef HAVE_VPRINTF
+
+/* Define if you have the gettimeofday function.  */
+#undef HAVE_GETTIMEOFDAY
+
+/* Define if you have the BSD-ish function `getwd' */
+#undef HAVE_GETWD
+
+/* Define if you have the function `putenv' */
+#undef HAVE_PUTENV
+
+/* Define if you have the Solaris-ish function `getrlimit' */
+#undef HAVE_GETRLIMIT
+
+/* Define if you have the strdup function.  */
+#undef HAVE_STRDUP
+
+/* Define if you have the popen function.  */
+#undef HAVE_POPEN
+
+/* Define if you have the memmove function.  */
+#undef HAVE_MEMMOVE
+
+/* Define if SIG_IGN is broken.  */
+#undef SIG_IGN_BROKEN
+
+/* Define if the system automatically restarts a system call that is
+     interrupted by a signal */
+#undef HAVE_RESTARTABLE_SYSCALLS
+
+/* Define if the system is more or less POSIX-compliant */
+#undef _IS_POSIX
+
+/* HP UX seems to need the following defined to have the ANSI C header files work properly */
+#undef _INCLUDE_POSIX_SOURCE
+
+/* Define this if you are using the #include files that come with the GNU C library */
+#undef ILU_USING_GLIBC
+
+/* Define if the system has some BSD networking calls */
+#undef _IS_BSD
+
+/* Define if the system has has a BSD-style socket library */
+#undef _HAS_SOCKETS
+
+/* Define this if your POSIX way of doing nonblocking I/O is broken the same
+   way SunOS 4.1 is broken */
+#undef HAS_SOLARIS1_NONBLOCKING_BUG
+
+/* Define this if your POSIX getgroups call requires an int[] argument instead of
+   the standard gid_t[] argument, as in SunOS 4.1 with acc */
+#undef HAS_SOLARIS1_GID_T_SIZE_BUG
+
+/* Define this if your socket recv/send calls are broken over TCP as they are for
+   Solaris 2.{4,5} */
+#undef HAS_SOLARIS2_TCP_SOCKET_BUG
+
+/* Define this if sys/socket.h provides prototypes for recv/send */
+#undef HAS_RECV_AND_SEND_PROTOTYPES
+
+/* Define this if you're including the Solaris 2 thread support */
+#undef ILU_SOLARIS2_THREADS
+
+/* Define this if you're including the Posix thread (draft 10) support */
+#undef ILU_POSIX_THREADS
+
+/* Define this if you're including the DCE thread (POSIX draft 4) support */
+#undef ILU_DCE_THREADS
+
+/* Define this if you're building the WIN32 thread support */
+#undef ILU_WIN32_THREADS
+
+/* Define if you need to include sys/select.h to use select(2) */
+#undef _NEEDS_SELECT_H
+
+/* Define this if your system needs to #include <netinet/tcp.h>
+   to get the NODELAY flag defined (BSDI 2.0 needs this) */
+#undef ILU_NEEDS_NETINET_TCP_H_FOR_NODELAY
+
+/* Define this if you want debugging print statements included in the kernel */
+#undef ENABLE_DEBUGGING
+
+/* Define this if you want the collection of tcp statistics to be enabled
+- this is implied if ENABLE_DEBUGGING is defined */
+#undef ENABLE_TCP_STATS 
+
+/* Define this to be the value of the ILU registry directory */
+#undef REGISTRY_LAST_RESORT
+
+/* Define this to be the value of the ILU root directory */
+#undef ILUHOME
+
+/* Define this to be the value of the ILU simple binding directory, if using shared files for simple binding */
+#undef ILU_BINDING_DIRECTORY
+
+/* Define this to be the domain of the simple binding server, if using ILU service for simple binding */
+#undef ILU_BINDING_REALM
+
+/* Define this to be the host ip addr of the simple binding server, if using ILU service for simple binding */
+#undef ILU_BINDING_HOST
+
+/* Define this to be the network port on the binding host, if using ILU service for simple binding */
+#undef ILU_BINDING_PORT
+
+/* Define this to be the binding multicast address, if using multicast for simple binding */
+#undef ILU_BINDING_MCASTADDR
+
+/* Define this to be the fully-qualified domain name, if applicable */
+#undef FULLY_QUALIFIED_DOMAIN_NAME
+
+/* Define this if the filename canonicalization code should strip "/tmp_mnt" prefixes from the front of pathnames */
+#undef REMOVE_AUTOMOUNT_TMP_MNT
+
+/* Define this if you are including support for Sun RPC protocol */
+#undef SUNRPC_PROTOCOL
+
+/* Define this if you are including support for XNS Courier protocol */
+#undef COURIER_PROTOCOL
+
+/* Define this if you are including support for World Wide Web HTTP protocol */
+#undef HTTP_PROTOCOL
+
+/* Define this if you are including support for CORBA GIOP protocol */
+#undef IIOP_PROTOCOL
+
+/* Define this if you are including support for the W3C NG protocol */
+#undef W3NG_PROTOCOL
+
+/* Define this if you want w3ng to be able to carry arbitrary ILU objects, even those not exported via w3ng */
+#undef ILU_W3NG_ALLOW_ILU_URLS
+
+/* Define this if you want w3ng to use relative ih passing in object references */
+#undef ILU_W3NG_RELATIVE_IH_PASSING
+
+/* Define this if you are including support for the Java RMI protocol */
+#undef JAVARMI_PROTOCOL
+
+/* Define this to select a default protocol for ILU use, and for intra-address-space use */
+#undef ILU_DEFAULT_PROTOCOL_INFO
+
+/* Define this if you are including support for TCP/IP transport via sockets */
+#undef TCPIP_TRANSPORT
+
+/* Define this if you are including support for UDP/IP transport via sockets */
+#undef UDPSOCKET_TRANSPORT
+
+/* Define this if you are including support for XNS/SPP transport via TLI */
+#undef XNSSPP_TRANSPORT
+
+/* Define this if you are including support for the Sun RPC record marking transport filter */
+#undef SUNRPCRM_TRANSPORT
+
+/* Define this if you are including support for the W3C multiplexing record marking transport filter */
+#undef W3MUX_TRANSPORT
+
+/* Define this if you are including support for the batching transport filter */
+#undef BATCHING_TRANSPORT
+
+/* Define this if you are including support for the secure transport filter */
+#undef SECURE_TRANSPORT
+
+/* Define this if you are including support for the zlib compression transport filter */
+#undef ILU_ZLIB_TRANSPORT
+
+/* Define this for the default transport info to use with the default protocol */
+#undef ILU_DEFAULT_TRANSPORT_INFO
+
+/* Define this if you are including support for the SSL security mechanism */
+#undef INCLUDE_SSL_SECMECH
+
+/* Define this if you are including support for the Sun RPC UNIX auth protocol */
+#undef USE_SUNRPC_UNIX_AUTHENTICATION
+
+/* Define this is the Python libraries are installed (with libainstall) */
+#undef PYTHON_LIBRARIES_INSTALLED
+
+/* Define this if ILU true objects shouldn't be GC'ed */
+#undef ILU_OLD_PYTHON_GC_BEHAVIOR
+
+/* Define this if Python mappings should be new CORBA-style */
+#undef ILU_CORBA_PYTHON_MAPPING
+
+/* Define this to enable hack of mapping ISL types which are sequences of a record type,
+which is itself a name-value pair record, to Python dictionaries */
+#undef ILU_PYTHON_DICTIONARIES
+
+/* Define this if adding support for VARIANT types (and CORBA `any') */
+#undef ADD_VARIANT_SUPPORT
+
+/* Define this if adding support for pickle 2 format (default) */
+#undef ADD_PICKLE2_SUPPORT
+
+/* Define this if adding support for pickle 3 format (used with w3ng) */
+#undef ADD_PICKLE3_SUPPORT
+
+/* Define this if adding support for in-memory type database */
+#undef ADD_TYPE_REGISTRATION_SUPPORT
+
+/* Define this if the CORBA C++ mapping should use Namespaces - default is Underscores */
+#undef CPLUSPLUSMAPPING_NAMESPACES
+
+/* Define this if the CORBA C++ mapping should use NestedClasses - default is Underscores */
+#undef CPLUSPLUSMAPPING_NESTEDCLASSES
+
+/* Define this if the direct OMG IDL support by Martin von Loewis is configured in */
+#undef ADD_DIRECT_OMG_IDL_SUPPORT
+
+/* Define this to use new ISL keywords without ILU prefix */
+#undef ILU_USE_NEW_KEYWORDS
+
+/* Define this if the idl2isl parser has been built */
+#undef ADD_IDL_SUPPORT
+
+/* Define this if the xmlidl parser has been built */
+#undef ILU_XMLIDL_SUPPORT
+
+/* Define this to relax the pinfo comparison rules for singleton objects */
+#undef ILU_RELAXED_SINGLETON_CHECKING
+
+/* Define this to include support for in-memory type structure database */
+#undef ADD_TYPE_REGISTRATION_SUPPORT
+
+/* Define this to include support for ILU fixed-point types */
+#undef ILU_FIXED_POINT_SUPPORT
+
+/* Define this to include support for ILU C bignum library */
+#undef ILU_BIGNUM_LIBRARY_SUPPORT
+
+/* Define this to include code in C runtime to gather timing statistics */
+#undef ILU_C_TIMING_STATISTICS
+
+/* Define this to enable generation of fake surrogate classes for unknown object types
+   where multiple supertypes are known */
+#undef ILU_GENERATE_SUBTYPES
+
+/* Define this to enable support for aliased/optional reference types and disable
+   support for standard OPTIONAL */
+#undef ILU_REFERENCE_TYPES
+
+/* Define this to enable support for HTTP-ng-style object types */
+#undef ILU_HTTPNG_OBJECTS
+
+/* Define this to use the version 2 type UID hash algorithm instead of the 2.0alpha12 one */
+#undef ILU_TYPEUID_V2
+
+#if defined(ILU_TYPEUID_HTTPNG)
+#define ILU_TYPEUID_VERSION_STRING "httpng v1"
+#elif defined(ILU_TYPEUID_V2)
+#define ILU_TYPEUID_VERSION_STRING "v2 (post-2.0alpha12)"
+#else
+#define ILU_TYPEUID_VERSION_STRING "v1 (pre-2.0alpha13)"
+#endif
+
+#endif	/* _iluconf_h_ */

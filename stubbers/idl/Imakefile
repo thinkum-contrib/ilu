@@ -1,0 +1,77 @@
+/** 
+ BeginILUCopyright
+
+ Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+ Unlimited use, reproduction, modification, and distribution of this
+ software and modified versions thereof is permitted.  Permission is
+ granted to make derivative works from this software or a modified
+ version thereof.  Any copy of this software, a modified version
+ thereof, or a derivative work must include both the above copyright
+ notice of Xerox Corporation and this paragraph.  Any distribution of
+ this software, a modified version thereof, or a derivative work must
+ comply with all applicable United States export control laws.  This
+ software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+ WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+ LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+ EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+ NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+ OF THE POSSIBILITY OF SUCH DAMAGES.
+  
+ EndILUCopyright
+*/
+
+NormalObjectRule()
+
+LOCALINCLUDES= -I../../runtime/kernel -I../parser
+ILUCINCLUDES=
+
+ObjectTarget(idlparser.o)
+ObjectTarget(idlscan.o)
+ObjectTarget(idl2isl.o)
+
+iluconf.h : ../../runtime/kernel/iluconf.h
+	-$(RM) iluconf.h
+	$(CP) ../../runtime/kernel/iluconf.h .
+
+idlscan.c: idlscan.c.dist
+	$(RM) idlscan.c
+	$(CP) idlscan.c.dist idlscan.c
+
+idlparser-output.c: idlparser-output.c.dist
+	$(RM) idlparser-output.c
+	$(CP) idlparser-output.c.dist idlparser-output.c
+
+idlparser.c: idlparser.c.dist
+	$(RM) idlparser.c
+	$(CP) idlparser.c.dist idlparser.c
+
+idlparser.h: idlparser.h.dist
+	$(RM) idlparser.h
+	$(CP) idlparser.h.dist idlparser.h
+
+idlscan.o:	idlscan.c idlparser.h iluidl.h
+idlparser.o:	idlparser.c idlparser-output.c idlparser.h iluidl.h
+idl2isl.o:	idl2isl.c iluidl.h
+
+omgidl.tgz:
+	make -f omgidl.mk omgidl.tgz
+
+dist:: idlparser.c.dist idlparser.h.dist idlscan.c.dist idlparser-output.c.dist
+
+idlscan.c.dist:	idlscan.l
+	$(RM) idlscan.c.dist
+	$(FLEX) -Pidl -oidlscan.c.dist -d idlscan.l ; $(CHMOD_READONLY) idlscan.c.dist
+
+idlparser.c.dist idlparser.h.dist idlparser-output.c.dist:	idlparser.y
+	BISON_SIMPLE=./bison.skel ; export BISON_SIMPLE ; $(BISON) -v -p idl -t -d idlparser.y
+	$(RM) idlparser.c.dist idlparser.h.dist idlparser-output.c.dist idlparser-output.c
+	$(MV) idlparser.tab.c idlparser.c.dist ; $(CHMOD_READONLY) idlparser.c.dist
+	$(MV) idlparser.tab.h idlparser.h.dist ; $(CHMOD_READONLY) idlparser.h.dist
+	$(PYTHON_EXEC_PREFIX)/bin/python bisonparse.py idlparser.output ; mv idlparser-output.c idlparser-output.c.dist ; $(CHMOD_READONLY) idlparser-output.c.dist
+
+CleanTarget(idlparser.c idlparser.h idlscan.c idlparser-output.c idlparser.output aprintf.c idlparser.tab.c omgidl omgidl.tgz)
+
+

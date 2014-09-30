@@ -1,0 +1,948 @@
+@c $Id: protocol.tim,v 1.39 1999/08/03 01:56:52 janssen Exp $
+@setfilename ilu-protocol.info
+@settitle Protocols and Transports
+@ifset ilucopyright
+BeginILUCopyright
+
+Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+Unlimited use, reproduction, modification, and distribution of this
+software and modified versions thereof is permitted.  Permission is
+granted to make derivative works from this software or a modified
+version thereof.  Any copy of this software, a modified version
+thereof, or a derivative work must include both the above copyright
+notice of Xerox Corporation and this paragraph.  Any distribution of
+this software, a modified version thereof, or a derivative work must
+comply with all applicable United States export control laws.  This
+software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+OF THE POSSIBILITY OF SUCH DAMAGES.
+  
+EndILUCopyright
+@end ifset
+@ifclear largerdoc
+@titlepage
+@title Protocols and Transports
+@author Bill Janssen @code{<janssen@@parc.xerox.com>}
+@sp
+(typeset @today{})
+@sp
+Copyright @copyright{} 1993, 1994 Xerox Corporation@*
+All Rights Reserved.
+@end titlepage
+@ifinfo
+@node Top, ,(dir),(dir)
+@top Protocols and Transports
+@end ifinfo
+@end ifclear
+
+When two modules of a program are in different address spaces,
+or use different data representations, @system{ILU} forms messages
+to send across the inter-module boundary;
+we call a particular way of forming and interpreting these messages
+an @dfn{RPC protocol} (sometimes simply @dfn{protocol}).
+These messages may be transported between address spaces in different ways; we call a particular
+way of moving messages a @dfn{transport}.  This chapter describes the various
+kinds of available @system{ILU} protocols and transports.  @system{ILU} is extensible: additional RPC protocols and transports can be added, either at compile-time or run-time; this chapter does not describe how to do so.
+
+When an @system{ILU} kernel server
+exports objects, it does so via one or more contact stacks.  Each stack has an RPC protocol
+at the top of the stack, forming and interpreting messages, and one or more layers
+of transport below the protocol layer, transforming or communicating the messages
+in various ways.  A contact stack is specified by a protocol-info string and a sequence of transport-info strings; the syntax of these strings is defined
+in this chapter.
+
+@section Protocols
+
+@subsection The Abstract ILU Message Protocol
+
+@cindex protocol
+Before describing any particular protocol, we will describe the abstract
+@system{ILU} protocol, which is layered on top of each actual protocol.
+It is quite simple.  Two types of messages are used, one to communicate
+parameters to a true method, and the other to communicate results and/or
+exceptions from the true method to surrogate caller.  Parameters and
+values are encoded according to a simple abstract external data
+representation format.  This abstract protocol identifies what
+information is passed between modules without specifying its exact
+mapping to bit patterns.
+
+@cindex pipeline
+Additionally, the abstract protocol is capable of being used with either
+a @dfn{concurrent} or a @dfn{non-concurrent} actual protocol.  A
+concurrent protocol is one which allows multiple requests to be
+outstanding on a single connection.  A non-concurrent protocol normally
+allows only one outstanding request per connection; it preserves
+liveness with such protocols by using multiple connections when needed.
+This is to avoid introducing deadlocks into a distributed thread;
+@system{ILU} does not attempt any scheme for global thread
+identification.  However, a client application can inform @system{ILU}
+that a collection of calls belong to logically distinct threads, thus
+enabling @system{ILU} to @dfn{pipeline} them down a single connection
+(if they happen to all be going to the same server).  This is done by
+creating a pipeline meta-object and associating it with each of these
+calls.
+
+@cindex barrier call
+@cindex serialization guarantee
+@system{ILU} normally does not guarantee to deliver calls to server
+application code in the same order that client application code makes
+them (of course, a client can refrain from making one call until after
+receiving results from a previous one; this is not an instance of
+@system{ILU} doing anything to preserve ordering).  However, a client
+can request special treatment of a collection of calls.  That special
+treatment is an instance of the serialization guarantee.  The guarantee
+is this: these calls are delivered to server application code in the
+same order that client application code makes them, except that a call
+made after a @dfn{barrier call} may be delivered before a call made
+earlier.  A barrier call is one that raises the system exception
+@C{BARRIER}.  No two of the given calls may be executed concurrently.
+The given calls must all be on objects in the same server.  That server
+must export itself via a port that uses a non-concurrent protocol; that
+port must be the server's default port (the only one that clients
+attempt to use, so far).  The serialization guarantee is requested on a
+collection of calls by creating a serializer meta-object and associating it
+with each of those calls.
+
+@subsubsection Messages
+
+The first type of message is called a @dfn{request}.  Each request
+consists of a code identifying the method being requested, an authentication
+block identifying the principal making the call, and a list of parameter inputs
+to the method being called.  The method is identified by passing the one-based ordinal value (that is, the index of the
+method in the list of methods, beginning with one) of the method,
+in the list of methods as specified in the
+@language{ISL} description of the class which actually defines the method.  No more than 65278 (1-0xFEFF)
+methods may be directly specified for any type (though more methods may be inherited by a type).
+Method codes 0xFF00 to 0xFFFF are reserved
+for @system{ILU} internal use.
+The principal is identified by a block of authentication credentials information which varies depending
+on the specific authentication protocol used.  These credentials may be either in the request header,
+or may appear as a parameter of the request.
+(Note:  There should also be an ILU protocol version number somewhere here, but there isn't (yet).)
+
+The @dfn{result} message is used to convey return values and exception
+values from the true method back to the caller.  It consists of a Boolean
+value, indicating whether the call was successful (for @isl{TRUE}) or
+signalled an exception (for @isl{FALSE}).  If successful, the return value (if any),
+follows, followed by the values of any @isl{Out} parameters, in the order
+they are specified as parameters.  If an exception was signalled, a value
+between 1 and 2^16-1 follows, indicating the ordinal value specific exception in
+the list specified in the definition of the method, followed by a value of the
+exception type, if any was specified for the exception.
+
+@subsubsection Parameter Types
+
+Simple numerical values, of types @isl{integer}, @isl{cardinal}, @isl{real}, or @isl{byte},
+are passed directly.
+
+@isl{Character} values are passed as integer values in the range [0,2^16-1].
+@isl{Short character} values are passed as integer values in the range [0,2^16-1].
+@isl{Long character} values are passed as integer values in the range [0,2^32-1].
+
+@isl{Enumeration} values are passed as integer values in the range [0,2^16-1], the
+value being the zero-based ordinal value of the corresponding enumeration value
+in the original list of enumeration values in the definition of the enumerated type.
+
+@isl{Boolean} values are passed as as integer values of either 0, for @isl{FALSE}, or 1, for @isl{TRUE}.
+
+@isl{Optional} values are passed by first passing a Boolean value, with @isl{TRUE} indicating
+that a non-@isl{NIL} value is being passed, and then only in the non-@isl{NIL} case
+passing a value of the optional value's indicated type.
+
+@isl{Sequence} values are passed by first passing a count,
+as an integer in the range [0,2^32-1] for sequences without limits, or for sequences with
+limits greater than 2^16-1, or an integer in the range [0,2^16-1], for sequences
+with limits less than 2^16, indicating the number
+of elements in the sequence, and then that number of values of the sequence's base
+type.
+
+@isl{Array} values are passed by passing a number of elements of the array's base type corresponding
+to the size of the array.
+
+@isl{Record} values are passed by passing values of types corresponding to the fields of the record, following the
+order in which the fields are defined in the @language{ISL} definition of the record.
+
+@isl{Union} values are passed by passing a value of the discriminant type, which indicates which branch
+of the union constitutes the union's actual type, usually followed by a value of the union's actual type.
+If the discriminant value indicates a branch of the union which has no associate value, only the
+discriminant value is passed.
+
+@isl{Object} values are passed in several different forms,
+depending on whether or not the object value is in the discriminator position,
+whether or not the object's type is a @isl{singleton} type, and
+whether or not the object reference is @kwd{NIL}.
+
+@enumerate
+@item
+The first form is used when the object is in the discriminator
+position (that is, is the instance upon which the method is being invoked), and is an instance
+of a @isl{singleton} type.  In this case, the object is already known to both sides, and the object
+is passed implicitly; that is, no actual bytes are transmitted.
+@item
+The second form is used when the object is in the discriminator position,
+but is not of a @isl{singleton} type.  In this case,
+the CRC-32 of the server ID of the object is passed as a @isl{cardinal} value,
+followed by the instance handle of the object, as a @isl{sequence of short character} value.
+Both the instance handle and server ID must be passed,
+as the true object previously at the ``known address'' for the object may have been replaced
+by a different object with the same instance handle, in a different kernel server.
+@item
+In the
+third case, the object is being passed as a normal parameter, that is, not in
+the discriminator position.
+In this case, the full string binding handle of the object is passed as a @isl{sequence of short character} value.
+@item
+If the object being passed as a normal parameter is the @system{CORBA} Nil object reference,
+it is passed as the @isl{sequence of short character} value of length zero.
+@end enumerate
+
+@subsection The @system{ONC RPC} Protocol
+
+This section describes the mapping of the abstract @system{ILU} protocol
+into the specific on-the-wire protocol used with @system{ONC RPC}@footnote{RPC:  Remote Procedure
+Call Protocol Specification, Version 2; R. Srinivasan.  IETF RFC 1831, August 1995.}
+One of the major goals of this mapping is to preserve
+compatibility with existing @system{Sun RPC} services that can be described in
+@language{ISL}.
+
+Four variants of the @system{ONC RPC} protocol are provided.
+They all have protocol info strings of the form
+@code{@metavar{X}sunrpc_2_@metavar{program-number}_@metavar{program-version}}, where
+@metavar{X} is either `c' or nil, depending on whether the protocol
+is concurrent or not, respectively.
+@metavar{program-number} and @metavar{program-version} may be specified
+either in decimal, or in hexidecimal with a leading string of @code{0x}.
+The program number for non-native-ONC-RPC @system{ILU} object types is
+always the same (in @system{ILU} 2.0alpha1 to 2.0alpha7, @code{0x61A78}; in @system{ILU} 2.0alpha8 and up, @code{0x61A79}), and the program version
+varies depending on the specific object type.
+
+Use of @system{ONC RPC} requires use of a boundaried transport below it.
+
+@subsubsection Message Mappings
+
+The request message used is that specified by the @system{ONC RPC} protocol.  The
+@system{ILU} method index is encoded as a 32-bit number in the ``proc''
+field in the @system{ONC RPC} request header.  Principal identification is passed
+in the ``cred'' field of the @system{ONC RPC} request header.  By
+default, @system{ILU} will pass the @kwd{AUTH_UNIX} authentication
+information, if no authentication method is specified for the method.  (This default
+authentication can be disabled by defining the environment variable @var{ILU_NO_SUNRPC_UNIX_AUTH}
+to any value.)  For non-singleton
+object types, the @system{ONC RPC}
+program number passed in the ``prog'' slot is always the same (for @system{ILU} 2.0alpha1 - 2.0alpha7, 0x00061a78;
+for @system{ILU} 2.0alpha8, 0x00061a79),
+and the version
+number passed in the ``vers'' slot is the CRC-32 hashed value of the MSTID for
+the object type on which the method being invoked is defined.  For singleton classes, the program number and version
+specified in the singleton information is used.
+The ``mtype'' field is set to @kwd{CALL}.  The indicated
+``rpcvers'' is 2.  A monotonically increasing 32-bit serial number is
+used in the ``xid'' field.  For non-singleton, non-NIL objects,
+an extra argument identifying the @dfn{discriminant} of the
+message (the object on which the method is being invoked) is marshalled before
+any of the specified arguments.  This discriminant is marshalled as an XDR Unsigned Integer,
+which is the CRC-32 of the server ID of the object, followed by an XDR string, which is
+the plain instance handle of the object.
+
+The reply message used is that specified by the @system{ONC RPC} protocol.  The
+``mtype'' field is set to @kwd{REPLY}.  The ``stat'' field is always set
+to @kwd{MSG_ACCEPTED}.  In the @kwd{accepted_reply}, the authentication
+verifier is always NULL.  The ``stat'' field may be non-zero, to signal
+one of a small number of ``standard'' exceptions, or may be zero.  This
+header is then followed by one of three forms: If a ``standard''
+exception was raised, nothing.  If the method has no exceptions, the
+return values and out parameters (if any).  If the method has any
+exceptions defined, a 32-bit value which specifies either successful
+completion (a value of 0), or an exception (a value greater than 0,
+which is the ordinal value of the particular exception being signalled
+in the list of exceptions specified for this method), followed by either
+the return value and out parameters (if any), in the case of successful
+completion, or the exception value (if any), in the case of an
+exception.
+
+@subsubsection Mapping of Standard Types
+
+The mapping of @system{ILU} types into @system{ONC RPC} types is accomplished
+primarily by using the appropriate @language{XDR}
+@footnote{XDR:  External Data Representation Standard; R. Srinivasan. IETF RFC 1832, August 1995.}
+representation for that type.
+
+@isl{Short integer} and @isl{integer} types are represented with the @language{XDR} Integer type.  @isl{Long integer}
+types are represented as an @language{XDR} Hyper Integer.
+
+@isl{Short cardinal}, @isl{byte}, and @isl{cardinal} types are represented
+with the @language{XDR} Unsigned Integer type.  @isl{Long cardinal}
+types are represented as an @language{XDR} Unsigned Hyper Integer.
+
+@isl{Short real} numbers are encoded as @language{XDR} Floating-point.  @isl{Real} numbers are encoded
+as @language{XDR} Double-precision Floating-point.  @isl{Long real} numbers are encoded as @language{XDR} Fixed-length
+Opaque data of length 16.
+
+@isl{Array} values are encoded as @language{XDR} Fixed-length Array, except for two special cases.
+If the array is multi-dimensional,
+it is encoded as a flat rendering into a single-dimensional array in row-major order (the last specified
+index varying most rapidly).  If the array is of element-type @isl{byte} or @isl{short character}, it is encoded
+as an array of one (in the one-dimensional case) or more (in the greater-than-one dimensional case)
+values of @language{XDR} Opaque Data.  
+
+@isl{Record} values are encoded as @language{XDR} Structures.
+
+@isl{Union} values are encoded as @language{XDR} Discriminated Unions, with a discriminant of type
+``unsigned int'' containing the @system{ILU} @isl{short cardinal} discriminant.
+
+@isl{Enumeration} values are encoded as @language{XDR} Unsigned Integer (note that this is different
+from @language{XDR} Enumerations, which are encoded as @language{XDR} Integer).
+
+@isl{Boolean} values are encoded as @language{XDR} Unsigned Integer, using the value 0 for @isl{FALSE}
+and the value 1 for @isl{TRUE}.
+
+@isl{Sequence} values are encoded as @language{XDR} Variable-length Arrays, except for several special cases.
+Sequences of @isl{short character} are encoded as @language{XDR} String, sequences of @isl{byte} are encoded
+as @language{XDR} Variable-length Opaque Data, and sequences of @isl{character} are encoded as @language{XDR} String,
+where the string is the UTF-2 encoding of the Unicode characters in the sequence.
+
+@isl{Optional} values are encoded as an @language{XDR} Boolean value, followed by another encoded
+value, if the Boolean value is TRUE.
+
+Instances of an @isl{object} type are encoded as either zero (in the case of a method discriminant of a singleton type),
+or one, values of type @language{XDR} String.
+
+@subsection The @system{Xerox Courier} Protocol
+
+This section describes the mapping of the abstract @system{ILU} protocol
+into the specific on-the-wire protocol used with @system{Xerox Courier}@footnote{Courier:  The Remote
+Procedure Call Protocol; Xerox Corporation, XNSS 038112, 1981}.
+One of the major goals of this mapping is to preserve
+compatibility with existing @system{Xerox Courier} services that can be described in
+@language{ISL}.  Unfortunately, many if not most important @system{Courier} services
+use @dfn{bulk data transfer}, something that is still only planned for @system{ILU}.
+
+A protocol info string for @system{Xerox Courier} has the form
+@code{courier_@metavar{program-number}_@metavar{program-version}} where
+@metavar{program-number} and @metavar{program-version} may be specified
+either in decimal, or in hexidecimal with a leading string of @code{0x}.
+The program number for non-singleton @system{ILU} object types is
+always (in @system{ILU} 2.0) @code{0x001yxxxx}, where @metavar{y} is currently
+@code{1}; the specific program number
+and the program version varies depending on the specific object type.  Courier is a non-concurrent protocol.
+
+Use of @system{Xerox Courier} requires use of a boundaried transport below
+it.
+
+@subsubsection Message Mappings -- Courier Layer 3
+
+The request message used is the @code{CallMessageBody} specified in section 4.3.1 of the @system{Courier} protocol.
+A monotonically increasing 16-bit serial number is passed in the @code{transactionID} field; a 32-bit program number
+is passed in the @code{programNumber} field, a 16-bit number is passed in the @code{versionNumber}
+field; the @system{ILU} method index
+is passed as a 16-bit value in the @code{procedureValue} field.  The program number
+is calculated by computing the CRC-32 hash value of the MSTID of the object type on which the
+method is defined, then forming a program number by using the value @code{0x0011} for the high-order
+16 bits, and the high-order 16 bits of the CRC for the low-order 16 bits of the program number.
+The version number is the low-order 16 bits of the CRC.
+
+Successful replies are sent using the @system{Courier} @code{ReturnMessageBody} specified in section 4.3.3
+of the @system{Courier} specification.  The @code{procedureResults} field contains
+the return value, if any, followed by the @kwd{INOUT} and @kwd{OUT} parameter values, if any.
+
+User exceptions are signalled using the @code{AbortMessageBody} specified in section 4.3.4
+of the Courier specification.  The @code{errorValue} field contains a value greater than 0,
+which is the ordinal value of the particular exception being signalled
+in the list of exceptions specified for this method.  The @code{errorArguments} field
+contain the exception value, if any.
+
+System exceptions (of exception type @isl{ilu.ProtocolError}) are signalled
+using the @code{RejectMessageBody} message of section 4.3.2.  The @code{rejectionDetail}
+field of the message contains the @isl{ProtocolError} detail.
+
+@subsubsection Mapping of Standard Types -- Courier Layer 2
+
+The mapping of @system{ILU} types into @system{Courier} types is accomplished
+primarily by using the appropriate @language{Courier} Layer 2 representation for that type.
+
+@isl{Short integer} and @isl{integer} types are represented with the @language{Courier} @kwd{Integer}
+and @kwd{Long Integer} types.
+@isl{Long integer} types are represented as an @isl{integer} followed by a @isl{cardinal}.
+
+@isl{Short cardinal}, @isl{byte}, and @isl{cardinal} types are
+represented with the @language{Courier} @kwd{cardinal}, @kwd{cardinal},
+and @kwd{long cardinal} types, respectively.  @isl{Long cardinal} types
+are represented as a big-endian (most significant 16 bits first) @language{Courier} array of 4 @kwd{cardinal}s.
+
+As the @system{Courier} protocol does not have any mapping for floating point values,
+@isl{short real} numbers are passed as a @language{Courier} @kwd{long cardinal},
+@isl{real} numbers are encoded as a big-endian array of two @language{Courier} @kwd{long cardinal} values,
+and @isl{long real} numbers are encoded as big-endian array of four @language{Courier} @kwd{long cardinal}
+values.
+
+@isl{Array} values are encoded as @language{Courier} one-dimensional
+@kwd{array}s.  If the array is multi-dimensional, it is encoded as a
+flat rendering into a single-dimensional array in row-major order (the
+last specified index varying most rapidly).  If the array is of type
+@isl{byte} or @isl{short character}, the contents of the @system{ILU}
+value are packed into a @system{Courier} array of @kwd{unspecified} two values per array
+element, so that the @system{Courier} array is half the length of the actual @system{ILU} array.
+
+@isl{Record} values are encoded as @language{Courier} @kwd{record} values.
+
+@isl{Union} values of union types whose discriminant type can be mapped to a 16-bit value type in
+the range [0,2^16-1] are passed as @system{Courier} @kwd{choice} values.  Other
+unions are passed as a @system{Courier} @kwd{long cardinal}, followed by the
+value of the union's indicated type (if any).
+
+@isl{Enumeration} values are encoded as @language{Courier} @kwd{enumeration} values.
+
+@isl{Boolean} values are encoded as @language{Courier} @kwd{boolean} values.
+
+@isl{Sequence} values are encoded as @language{Courier} @kwd{sequence}s, except for several special cases.
+Sequences of @metavar{N} @isl{short character}s or @isl{byte}s are encoded as
+either a @language{Courier} @kwd{cardinal}, for sequences with limits less than 2^16, or @kwd{long cardinal},
+for sequences with no limits or limits greater than 2^16-1, value of @metavar{N}, followed by
+@code{(@metavar{N}+1)/2} values of @language{Courier} @kwd{unspecified}, each such value
+containing two @isl{short character} or @isl{byte} values, packed in big-endian order.
+
+@isl{Optional} values are encoded as an @language{Courier} @kwd{boolean} value, followed by another encoded
+value, if the Boolean value is @isl{TRUE}.
+
+Instances of an @isl{object} type are encoded as either zero (in the case of a method discriminant of a singleton type),
+or one values of @language{ISL} @isl{short sequence of short character}.
+@system{CORBA} Nil object references are represented as a
+zero-length @isl{short sequence of short character}.
+
+
+@subsection The OMG Internet Inter-Orb Protocol (IIOP)
+
+This section describes the mapping of the abstract @system{ILU} protocol
+into the specific on-the-wire protocol prescribed by the OMG's
+@system{CORBA} @protocol{Internet Inter-ORB Protocol} (@protocol{IIOP}),
+version 1.0.
+
+A protocol info string for the @protocol{IIOP} version 1.0, with the
+@system{ILU}-to-@system{IIOP} mapping version 1, has the form @code{iiop_1_0_1}.
+
+The @protocol{IIOP} is a concurrent protocol; it may be used on top of either a reliable, boundaried or non-boundaried,
+transport stack.
+
+@subsubsection Message Mappings -- GIOP
+
+@system{ILU} request and reply messages are mapped to GIOP Request and Reply messages fairly directly.
+The byte order used is that native
+to the machine on which the message is being formed.  A zero-length service context is always sent.
+
+In a Request message, the operation name is the ISL operation name for the method, with all hyphen characters
+in the operation name changed to underscore characters.  The Principal field is always sent as a zero-length
+field.
+
+The GIOP CancelRequest, LocateRequest, MessageError, and CloseConnection messages are never sent by @system{ILU},
+though one or more of them may be used in the future.  @system{ILU} will send GIOP LocateReply messages
+in response to LocateRequest messages.
+
+@subsubsection Mapping of Standard Types -- GIOP
+
+The mapping of @system{ILU} types into @system{IIOP} types is accomplished
+primarily by using the mapping for the corresponding @system{CORBA} type.
+
+@isl{Short integer} and @isl{integer} types are marshaled as @system{CORBA} @omgidl{short} and @omgidl{long} types.
+@isl{Long integer} types are represented as an @isl{integer} followed by a @isl{cardinal}.
+
+@isl{Short cardinal}, @isl{byte}, and @isl{cardinal} types are
+marshaled as the @system{CORBA} @omgidl{unsigned short}, @omgidl{octet},
+and @omgidl{unsigned long} types, respectively.  @isl{Long cardinal} types
+are marshalled as two @system{CORBA} @omgidl{unsigned long} values, and the
+byte order of the message determines which is marshalled first.
+
+@isl{short real} numbers are passed as @system{CORBA} @omgidl{float} values.
+@isl{real} numbers are passed as @system{CORBA} @omgidl{double} values,
+and @isl{long real} numbers are encoded as big-endian array of 16 bytes.
+
+@isl{Array} values are encoded as @system{CORBA} @omgidl{array} values.
+
+@isl{Record} values are encoded as @system{CORBA} @omgidl{struct} values.
+
+@isl{Union} values are encoded as @system{CORBA} @omgidl{union} values.
+
+@isl{Enumeration} values are encoded as @system{CORBA} @omgidl{enum} values.
+
+@isl{Boolean} values are encoded as @system{CORBA} @omgidl{boolean} values.
+
+@isl{Sequence} values are encoded as @system{CORBA} @omgidl{sequence} values.
+
+@isl{Optional} values are encoded as a @system{CORBA} @omgidl{sequence} of the base type,
+with an upper limit of one value.
+
+@isl{Object} values are passed as an @protocol{IIOP} Interoperable Object Reference (IOR), containing
+at least an Internet Profile.  The IOR may also contain an ILU Profile.  In the case of the Internet
+Profile, the object key contains four strings, separated by NUL (zero octet) characters.  The first string
+is always "ilu".  The second string is the most specific type ID of the object (in case some intervening
+ORB decides to re-write the IOR's type_id field).  The third string is the server ID of the object's server.
+The fourth string is the instance handle of the object.
+
+
+@subsection The Hyper Text Transfer Protocol (@protocol{HTTP})
+
+@protocol{HTTP} in ILU allows an ILU application to interact with an existing Web
+resource.  That is, Web Browser to ILU, ILU to Web Server, and general ILU
+to ILU over @protocol{HTTP} is possible.  @protocol{HTTP} is a non-concurrent protocol.
+
+For @protocol{HTTP} interaction with existing web services, an ILU application must be
+able to not only get an object (a surrogate actually) representing the
+resource.  It must also have some means by which to specify the @protocol{HTTP}
+headers and entity body that should be sent with the request. Similarly, an
+ILU server functioning as a @protocol{HTTP} accessible Web resource must be able to
+set status, header and entity body content.
+
+Arbitrary programmers interpretations of these @protocol{HTTP} components cannot be
+generally mapped into @protocol{HTTP}.  A specific signature is needed for the @method{GET}
+@method{HEAD} and @method{POST} methods so that the ILU implementation of the @protocol{HTTP} protocol
+can know how to map arguments into actual @protocol{HTTP} format.  In addition, a way
+is needed to distinguish these methods intended for use with existing Web
+services from other methods that may happen to have the same name but
+different signatures.
+
+This need is addressed by defining a specific type of object that has
+declarations for how an application should structure the arguments / return
+values for the @method{GET} @method{HEAD} and @method{POST} operations.  Any @method{GET} @method{HEAD} or @method{POST}
+operation invoked on an object that is an instance of this base type (or an
+instance of a type derived directly or indirectly from that base type) has
+a particular signature that the ILU protocol implementation knows how to
+map to @protocol{HTTP}.  This type, called @class{Resource} in the @interface{http} interface, is defined in the http.isl file,
+and any application wishing to supply Web compatible objects should make
+the objects a direct or derived instance of it. A server for objects
+acessible via @protocol{HTTP} should be created with the protocol info string
+http_1_0, and should use the tcp transport. 
+
+A version of @protocol{HTTP} 1.0 that supports connection persistence
+(i.e. Connection: Keep-Alive  headers) can be used by specifying the protocol info
+string http_1_0p.  In this case, Connection: Keep-Alive headers will be
+automatically appropriately generated on both the client and server sides.
+Client side connections obtained from an http URL, e.g. from
+'Object_of_SBH' fuctions, will use persistence automatically (assuming the
+server they're connecting to supports it of course). Client side
+connections obtained from ILU style SBH's will use whatever protocol the
+server advertizes.  
+
+See the @program{httest} example for a sample use of @protocol{HTTP} in ILU.
+
+
+A method named @method{GET} @method{HEAD} or @method{POST}, invoked on an object that is a direct or
+indirect instance of the @class{Resource} type, automatically has its Request
+and Response mapped to/from @protocol{HTTP} in a manner compatible with existing Web
+services.  The fairly straightforward mapping from the ILU @interface{http} Interface to 
+@protocol{HTTP} Protocol is outlined described below:
+
+@codeexample
+
+ILU Method Name                       Method name in Request's Request line
+
+(if using a Proxy server, scheme + 
+location of object +) ILU Object ID +
+any params/queries present in the 
+Request.URI field                     Request-URI in Request's Request line
+
+Request.headers                       Headers in Request
+
+Request.body                          Entity-Body in Request
+
+Response.status                       Status-Code and Reason-Phrase in Response's Status-Line
+
+Response.headers                      Headers in Response
+
+Response.body                         Entity-Body in Response
+
+@end codeexample
+
+The @protocol{HTTP} implementation will automatically insert a Content-Length header
+when necessary and possible, and takes care of the colon separators between
+header names and values.  It will also deal with older servers that
+sometimes omits the CR from the required CRLF line termination.
+
+Note that existing Web tools (e.g. browsers) will always send the 'path'
+of the resource.  On the ILU @protocol{HTTP} end, this means that
+the object identifier will always begin with a forward slash. For
+example, asking a browser to retrieve http://www.foo.bar.com/hello.html
+where www.foo.bar.com is serviced by an ILU @protocol{HTTP} server,
+will result in that server trying to invoke a GET operation on the
+object whose object identifier is /hello.html.  Omitting any
+path info, i.e. asking the browser to retrieve http://www.foo.bar.com
+would result in a GET on an object whose object identifier is simply /.
+
+Regarding the Request-URI field on the client side, it is really only
+necessary to put in any 'param's and/or 'queries'.  Any path information
+in this field is just ignored, since the path info needed is to form the
+request is based on the object's instance handle. So for example, a client
+my simply put the string ";param1;param2?query" into the Request-URI field
+instead of "http://www.foo.bar.com/hello.html;param1;param2?query".
+
+If operations need to occur through a proxy server, the environment variable
+ILU_HTTP_PROXY_INFO should be set to the proxy server name, colon, and port
+number  e.g. ourproxyserver.foo.bar.com:8000.
+
+For other situations, i.e. general ILU to ILU communication that just
+happens to be occurring over @protocol{HTTP}, the mapping is still consistent with
+@protocol{HTTP} protocol, but a more general format is used.  ILU specific information
+such as the ilu_Server ID is placed in a header, and the marshaling of
+arguments is done entirely within the entity body.  In keeping with some
+idea of human readability, marshaled arguments, with the exception of
+potentially huge byte-vectors, are encoded as readable ASCII strings -
+e.g. 3.1416 encodes as "3.1416".  Readers concerned about utmost efficiency should
+note that for general ILU-ILU communication, another protocol such as @protocol{ONC RPC}
+is a much better choice than the current @protocol{HTTP} implementation. The @protocol{HTTP}
+protocol implementation could however be easily changed to use a more
+efficient encoding, similar to what's used in @protocol{ONC RPC} for example.
+The following grammer describes the on-the-wire mapping of ILU's @protocol{HTTP}
+when it is used for general ILU to ILU communication.
+
+@codeexample
+( ----------------------------------------------------------------
+  ILU HTTP on the wire encoding for general ILU  method invocation 
+  (i.e. when object is not of iluhttp.Resource type) 
+  ---------------------------------------------------------------- )
+
+
+( ------------------------------------------------------------ 
+  basic items 
+  ------------------------------------------------------------ 
+)
+
+OCTET               = <any 8-bit sequence of data>
+CHAR                = <any US-ASCII character (octets 0 - 127)>
+ALPHA               = <any US-ASCII uppercase letter "A".."Z" or "a".."z"> 
+DIGIT               = <any US-ASCII digit "0".."9">
+SP                  = <US-ASCII SP, space (32)>
+CRLF                = <US-ASCII CR, carriage return (13) followed by LF, linefeed (10)>
+HYPHEN              = <US-ASCII hyphen (45)>
+HEX                 = "A" | "B" | "C" | "D" | "E" | "F" | "a" | "b" | "c" | "d" | "e" | "f" | DIGIT
+ISO-LATIN-1-NO-NULL = <any ISO-LATIN-1  character other than NUL>
+
+hexbyte         = HEX HEX
+cstring         = ISO-LATIN-1-NO-NULL [cstring]
+digits          = DIGIT [digits]  ( interpreted as base 10 )
+octets          = OCTET [octets]
+nameString      = ALPHA [ nameStringChars ]
+nameStringChars = nameStringChar [nameStringChars]
+nameStringChar  = ALPHA | DIGIT | HYPHEN
+
+
+( ------------------------------------------------------------ 
+  Typed Values
+  ------------------------------------------------------------ 
+)
+
+sbh = (string binding handle - follows IETF rules for URLs)
+
+typedValues    = typedValue [typedValues]
+
+typedValue     = optionalValue | value
+
+optionalValue  = optional [value]
+
+value          = primitiveValue | constructedValue
+
+
+( ------------- Primitive values ---------------------- )
+
+primitiveValue = integer   | shortInteger   | longInteger  |
+                 cardinal  | shortCardinal  | longCardinal |
+                 byte      | boolean                       | 
+                 real      | shortReal      | longReal     |
+                 character | shortCharacter | pickle 
+
+integer        = [-] digits CRLF
+
+shortInteger   = [-] digits CRLF
+
+longInteger    = integer integer (high word followed by low word)
+
+cardinal       = digits CRLF
+
+shortCardinal  = digits CRLF
+
+shortCardinals = shortCardinal [shortCardinals]
+
+longCardinal   = cardinal cardinal (high word followed by low word)
+
+byte           = 0x hexbyte CRLF
+
+boolean        = "TRUE" CRLF | 
+                 "FALSE" CRLF 
+
+real           = <as printed by  "%.64g format in printf> CRLF
+
+shortReal      = <as printed by  "%.64g format in printf> CRLF
+
+longReal       = 16 CRLF (number of bytes in a long Real) 
+                 hexbyte hexbyte hexbyte hexbyte hexbyte hexbyte hexbyte hexbyte 
+                 hexbyte hexbyte hexbyte hexbyte hexbyte hexbyte hexbyte hexbyte 
+
+character      = shortCardinal
+
+shortCharacter = byte
+
+pickle         = digits CRLF (number of bytes in the pickled value)
+                 octets CRLF (pickled contents)
+
+
+( ------------- Constructed values ---------------------- )
+
+constructedValue = array    | sequence    | record | union | 
+                   optional | enumeration | object
+
+array     = typedValues (Nothing is sent specially to indicate an array, 
+                         just the array's contents)
+
+sequence  = digits CRLF (the sequence length, sequence contents follow)
+            typedValues
+
+record    = typedValues (Nothing is sent specially to indicate a record, 
+                         just the record's contents follow)
+
+union     = digits       CRLF (union discriminator)
+	    typedValue
+
+optional  = "OPT_PRESENT"      CRLF  |  
+            "OPT_NOT_PRESENT"  CRLF
+
+enum      = digits CRLF (the enumeration value)
+
+object    = nilObject | nonNilObject
+
+nilObject = "7" CRLF "NIL_OBJ" CRLF	
+
+nonNilObject = digits  CRLF (number of characters in the objects sbh)
+	       sbh     CRLF (the objects sbh)
+
+
+
+( ------------------------------------------------------------ 
+  requests
+  ------------------------------------------------------------ 
+)
+
+methodName  = nameString
+
+requestBody = arguments
+
+arguments   = typedValues
+
+objectDiscriminant = cstring (discriminant object's instance handle)
+
+serverId = cstring (ID of discriminant object's server)
+
+request     = methodName SP objectDiscriminant SP "HTTP/" majorVersion "." minorVersion CRLF
+	      "ILU_ServerID:" SP serverId CRLF
+              "Content-Length:" SP digits CRLF    (number of bytes in the requestBody)
+              CRLF
+              [requestBody]
+
+
+( ------------------------------------------------------------ 
+  responses
+  ------------------------------------------------------------ 
+)
+
+responseBody = returnvalues
+
+returnvalues = typedValues
+
+response     = normalResponse | exceptionResponse
+
+
+
+normalResponse     =  "HTTP/" majorVersion "." minorVersion SP "200" SP "OK" CRLF
+                      "Content-Length:" SP digits CRLF    (number of bytes in the response Body)
+                      CRLF
+                      [responseBody]
+
+
+exceptionResponse = protocolExcpeption   |  ( problem with protocol itself )
+                    userException           ( user method raised exception )
+
+
+exceptionIndex         = digits (which exception of the method an exception is)
+
+internalExceptionIndex = digits (index of internal ilu_ProtocolException)
+
+
+userException =  "HTTP/" majorVersion "." minorVersion SP exceptionIndex SP "Non_Protocol_Exception" CRLF
+                      "Content-Length:" SP digits CRLF    (number of bytes in the typedValue response Body)
+                      CRLF
+                      [typedValue]   (the exception's contents)
+
+
+protocolException =  "HTTP/" majorVersion "." minorVersion SP internalExceptionIndex SP "Protocol_Exception" CRLF
+                      "Content-Length:" SP "0" CRLF    (number of bytes in the response Body)
+                      CRLF
+
+
+
+
+( ------------------------------------------------------------ 
+  End of File
+  ------------------------------------------------------------ 
+)
+
+
+@end codeexample
+	
+@subsection The World Wide Web HTTP-NG Protocol (w3ng)
+
+This section describes the mapping of the abstract @system{ILU} protocol
+into the specific experimental on-the-wire protocol specified by the World Wide Web's
+HTTP-NG project, @protocol{w3ng}.
+See @url{http://www.w3.org/Protocols/HTTP-NG/Group/PDG/wire-protocol/WD-HTTP-NG-wire.html} for
+a full description of the protocol.  The protocol is currently under
+design, so changes to it should be anticipated.
+
+A protocol info string for the @protocol{w3ng} version 1.0, has the form @code{w3ng_1.0}.
+
+The @protocol{w3ng} protocol is a concurrent protocol; it must
+be used on top of either a reliable, boundaried transport stack.
+
+@subsection The Default Protocol and Transport
+@cindex default protocol
+@cindex default transport
+
+Server applications can create ports without specifying which protocol and transport to use.  In this case, @dfn{the default protocol and transport} will be used.  Which protocol and transport are the defaults is a consequence of which are included in the configuration step performed at the start of installing @system{ILU}.  The first protocol from the following list that is included in the configuration is the default: sunrpc, courier, iiop, http.  The default transport is chosen to be a configured transport appropriate for the default protocol.  That is, sunrpcrm over TCP for sunrpc or courier, bare TCP for iiop and http.
+
+
+@section Transports
+
+A transport stack consists of a sequence of transport layers.  The last, or ``bottom'', layer does some kind of low-level I/O; the other layers are ``filters'' or ``modifiers'' on the transport services provided by the lower part of the stack.  That is, every tail of a transport stack implements an abstraction called simply ``a transport'' (in English; in @language{C}, it is @C{ilu_Transport}); each transport layer (except the bottom) implements a transport in terms of another transport (the one implemented by the rest of the stack).
+
+Transport stacks are used in two roles, active and passive.  A client uses a transport stack in the active role to contact a server; a server uses a transport stack in the passive role to wait for connection requests from clients.  The passive role for a transport stack is called a @emph{mooring}.
+
+A transport stack is specified by a sequence of strings, each one of which specifies a transport layer.  This section is a catalog of the built-in kinds of transport layers and their specification strings.
+
+Some transports convey delimited messages (where each message is a byte
+sequence), others simply convey a byte sequence (that must be parsed
+into messages by something else).  The former are called boundaried, the
+latter are not.  Some RPC protocols require a boundaried transport, others require non-boundaried transports.
+
+Some transports are reliable, and some aren't.  Unreliable transports
+are deprecated in @system{ILU}, but included for interoperability with
+existing software that uses only unreliable transports.
+With these transport, messages may be delivered more
+than once.  The @system{ILU} implementation of UDP on the server side
+filters out multiple receipts of the same request.  Asynchronous methods
+may not be called over this transport mechanism, as reliable delivery of
+the request packet cannot be recognized by the client side.
+Non-asynchronous methods use the reply message as an acknowledgement
+that the request was received.  @footnote{Query: can requests be larger than the
+UDP packet size?  [No]  How then are they segmented?  [They're not; replies aren't either]  Note: This should
+probably be replaced by a reliable UDP protocol, in which each message
+is acknowledged by the receiver.  This would allow use of asynchronous
+methods over UDP.  Of course, @system{ONC RPC} would not cooperate.}
+
+@subsection TCP
+
+@cindex @code{tcp} transport endpoint
+A @transport{TCP} transport layer is reliable, not boundaried, and goes on the bottom.
+
+A @transport{TCP} transport is specified by a @metavar{transport-info} of the form @code{tcp_@metavar{host}_@metavar{port}[_@metavar{buffersize}]}.
+
+The @metavar{host} needs to convey an IP address.  The @metavar{host} can either be a dotted decimal notation of an IP address (e.g., @code{13.2.116.14}), or be a hostname that can be mapped into an IP address.  The optional @metavar{buffersize} parameter is an unsigned integer; it can be used to control the size of buffers allocated for use in the transport, where buffer usage is allowed by the higher-level transport or protocol.
+
+In @system{ILU}, a TCP mooring always bound to a particular IP address.  However, the @metavar{host} in a @transport{TCP} @metavar{transport-info} used to create a mooring can use special notations to mean "pick any IP address of this host".  Those notations are @code{0}, @code{0.0.0.0}, and @code{localhost}.  When one of these notations is used, the @system{ILU} runtime picks an IP address and binds the mooring to that address.  These special notations are replaced with either a name or address of the host when an SBH is produced; an SBH cannot contain such special notations.  @code{0} and @code{0.0.0.0} are replaced by an address; @code{localhost} is replaced by a name, if possible, and perhaps an address otherwise.  The first replacement name considered is "the hostname" of the machine.  Exactly what this is (and how it is set) is system specific, but you should beware that it may or may not be a Fully Qualified Domain Name.  If it can be converted to an IP address by the usual means, and a socket bound to that address, that name is used.  Otherwise, the replacement is "127.0.0.1" (the loopback address --- an address that means "this machine" everywhere) or "localhost" (the canonical name for the loopback address) and the mooring's socket is bound to 0.0.0.0 (the "any" address).  We bind to 0.0.0.0 rather than 127.0.0.1 because some systems (e.g., Linux) won't let us bind to 127.0.0.1.
+
+If you use a host name instead of an address, think about how widely it can be interpreted.  If it's a Fully Qualified Domain Name, the client has to be able to use the DNS to resolve it --- but not all systems include DNS support.  If it's not a FQDN, the resulting SBH can only be distributed within the organization that manages the name's mapping.
+
+The @metavar{port} can either be a decimal string identifying a specific port (which, of course, must not be used for anything else), or, for a mooring, be @code{0}, which constitutes a request for a new, unused port.  In the latter case, a decimal string for that port will be substituted in the transport-info.
+
+Examples are:
+
+@display
+@code{tcp_augustus_0}
+@code{tcp_13.2.116.14_12321}
+@code{tcp_localhost_12321}
+@code{tcp_0_0}
+@end display
+
+@subsection UDP
+
+@cindex @code{udp} transport endpoint
+A @transport{UDP} transport is boundaried, not reliable, and on the bottom.
+
+A @transport{UDP} transport supports only messages that are no longer than the maximum size of a @transport{UDP} packet; an attempt to send a longer message will cause an I/O error to be raised in the sender.
+
+One could imagine creating a reliable boundaried transport layer, either using @transport{RDP} (an @transport{IP} protocol similar to @transport{UDP}; see RFC 1151) or building on @transport{UDP}.  Of course, such a transport layer could not be used to communicate with @system{ONC RPC/UDP} peers.
+
+A @transport{UDP} transport is specified by a @metavar{transport-info} of the form @code{udp_@metavar{host}_@metavar{port}}.  The @metavar{host} and @metavar{port} convey IP host address and port just as for @transport{TCP}.
+
+Examples are:
+
+@display
+@code{udp_augustus_0}
+@code{udp_13.2.116.14_12321}
+@code{udp_localhost_12321}
+@code{udp_0_0}
+@end display
+
+@subsection SunRPC Record Marking
+
+@cindex @code{sunrpcrm} transport filter
+A @transport{SunRPC Record Marking} transport is reliable and boundaried, and is built on top of some other transport that is reliable and not boundaried.  A @transport{SunRPC Record Marking} transport layer is specified by a @metavar{transport-info} of the form @code{sunrpcrm}.
+
+The canonical form is:
+
+@display
+@code{sunrpcrm}
+@end display
+
+@subsection World Wide Web Consortium MUX Transport
+
+@cindex @code{w3mux} transport filter
+The @transport{World Wide Web Consortium MUX} transport filter is
+reliable and boundaried, and will run only on top of the TCP transport.  It
+supports multiple virtual transport channels over a single TCP/IP
+transport.  Each channel can be used with a different server and/or
+protocol and/or transport stack.  Both outgoing and incoming channels
+can be used with the same TCP/IP connection, so the MUX protocol supports
+callbacks through a firewall.  The MUX protocol also supports message
+fragmentation and interleaving, and provides application-level flow
+control.  The protocol supported is as documented in @url{http://www.w3.org/Protocols/MUX/WD-mux-961023.html},
+but with the modifications suggested in @url{http://lists.w3.org/Archives/Member/w3c-mux/msg00039.html}.
+A @transport{World Wide Web Consortium
+MUX} transport layer is specified by a @metavar{transport-info} of the
+form @code{w3mux_@metavar{CHANNEL-ID}}, where @metavar{CHANNEL-ID} specifies an
+18-bit channel number.  If the @metavar{CHANNEL-ID} is specified as @constant{0} when creating
+a mooring, a random available channel ID will be assigned.
+
+The canonical form is:
+@display
+@code{w3mux_0}
+@code{w3mux_258049}
+@end display
+
+
+@subsection Generic Security Service (GSS)
+
+@cindex @code{gss} transport filter
+@transport{GSS} transport layers may be added to a transport stack
+to provide some form of authenticated connection.  It uses the IETF Common Authentication Technology Working Group's
+Generic Security Service (GSS) API to add various flavors of security to
+the messages that flow back and forth over the transport.  Generally speaking, each outgoing message
+will be ``wrapped'' by the standard GSS routine @C{gss_wrap}, and each incoming message will
+be ``unwrapped'' by the standard GSS routine @C{gss_unwrap}.  This transport also includes a mechanism
+for identifying callers that is integrated with the specific security scheme being used.
+
+Use of this transport requires linking against a GSS library,
+implemented according to the @language{ANSI C} mapping for the GSS spec, and against an implementation
+of the specific GSS scheme being used.
+
+The @transport{security} transport layer is reliable and
+unboundaried, and requires a reliable, boundaried, transport stack below
+it.  It is specified, on the server side, by a string of the form @code{gss_1_@metavar{SCHEME-NAME}}, where
+@metavar{SCHEME-NAME} identifies some specific GSS security scheme.  Scheme names are typically dotted-decimal
+strings, representing OIDs for specific schemes.  Two special names are also understood, "Xerox.ILU.GSS.NIL" and
+"Xerox.ILU.GSS.SSL".  Examples are:
+
+@display
+@code{gss_1_Xerox.ILU.GSS.NIL} -- use security with the ILU GSS NIL scheme
+@code{gss_1_1.2.840.113550.9.1.3} -- another way of saying the same thing
+@end display

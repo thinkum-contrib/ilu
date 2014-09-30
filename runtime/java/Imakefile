@@ -1,0 +1,989 @@
+/*
+ BeginILUCopyright
+ 
+ Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+ 
+ Unlimited use, reproduction, modification, and distribution of this
+ software and modified versions thereof is permitted.  Permission is
+ granted to make derivative works from this software or a modified
+ version thereof.  Any copy of this software, a modified version
+ thereof, or a derivative work must include both the above copyright
+ notice of Xerox Corporation and this paragraph.  Any distribution of
+ this software, a modified version thereof, or a derivative work must
+ comply with all applicable United States export control laws.  This
+ software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+ WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+ LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+ EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+ NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+ OF THE POSSIBILITY OF SUCH DAMAGES.
+ 
+ EndILUCopyright
+$Id: Imakefile,v 1.205 1999/08/03 01:55:18 janssen Exp $
+*/
+/* Chris Jacobi, January 13, 1999 9:51 am PST */
+
+
+/* ======================================================== */
+
+/* Dealing with JNI versus ONI */
+
+#ifdef ILUJAVA_M_JNI
+JNI_INCLUDES = -DJNI
+GNH_FLAG = -jni
+#undef ILUJAVA_M_NATIVE_THREADS_EXTRA
+#undef ILUJAVA_M_NATIVE_THREADS_ONLY
+    /*using JNI the same object files work for native and green threads */
+#else
+JNI_INCLUDES = 
+GNH_FLAG = -oni
+#endif
+
+/* ======================================================== */
+
+
+/* NETSCAPE 4.05
+ * This about the "vm" FROM netscape; this is not used
+ * for activator (plugin) which is a "vm" from sun, even if
+ * it would run within netscape browser.
+ *
+ * This has only been tested very lightly and only
+ * on sparc station using netscape 4.05 with jdk 1.1 
+ * patch on solaris 2.5.1.
+ * Ilu system must be on the class path (because of native code)
+ * Ilu stubs must be on the class path (CLASSES MUST NOT BE UNLOADING)
+ * 
+ * The build includes a few manual steps; Look at 
+ * ilusource/runtime/java/IluMozillaExtra.java
+ * for more instructions; sorry, this file needs editing.
+ *
+ * Alternate good news:  build for activator (plugin) does not need
+ * any extra flags but is identical to build for JRE.  Except setup
+ * junk...
+ */
+
+/* #define JAVA_NETSCAPE_VM 999999999 */
+
+#ifdef JAVA_NETSCAPE_VM
+
+#ifdef ILUJAVA_M_DONTUSE_POLL
+#else
+#define ILUJAVA_M_DONTUSE_POLL
+#endif
+
+NETSCAPE_INCLUDES = -DNetscapeVM_ONI
+#else
+NETSCAPE_INCLUDES = 
+#endif
+
+
+/* ======================================================== */
+
+/* native threads versus green threads */
+/*
+ * TWO symbols can be defined as _D flags for the C compiler
+ *
+ * -DNATIVE
+ *	NATIVE is used in java header files from Sun
+ *  	Define this exactly when needed by Sun's code 
+ *	(which I don't know when it is the case; that is why we
+ *	build two systems)
+ *
+ * -DILUJAVA_H_NATIVE_THREADS
+ *	ILUJAVA_H_NATIVE_THREADS is used by ilu's own header and c files
+ * 	This may be defined even when not needed, at a minor efficiency cost
+ */
+
+
+#ifdef ILUJAVA_M_NATIVE_THREADS_ONLY
+#undef ILUJAVA_M_NATIVE_THREADS_EXTRA
+#endif
+
+
+#if defined(ILUJAVA_M_NATIVE_THREADS_EXTRA)
+DEFINES1 = -DILUJAVA_H_NATIVE_THREADS
+DEFINES2 = -DILUJAVA_H_NATIVE_THREADS -DNATIVE
+#else
+
+#if defined(ILUJAVA_M_NATIVE_THREADS_ONLY)
+DEFINES1 = -DILUJAVA_H_NATIVE_THREADS -DNATIVE
+#else
+DEFINES1 = -DILUJAVA_H_NATIVE_THREADS
+#endif
+
+#endif
+
+/* ======================================================== */
+
+#ifdef ILUJAVA_M_NEEDSOURCEPATH
+SOURCE_PATH_SWITCH = -sourcepath ./jsrc
+#else
+SOURCE_PATH_SWITCH = 
+#endif
+
+
+/*
+ * Compiling a java source file
+ * Use this for ilu itself but not for test programs
+ * (Test programs need to import the java-ilu classes and shouldn't install)
+ */
+#define JavaCompileTarget(compiled, sources, extraSources)			@@\
+all:: compiled extraSources								@@\
+											@@\
+compiled : sources									@@\
+	$(JAVAC) -g -d "$(ILUJAVA_M_CLASSESDIR)" -classpath "$(ILUJAVA_M_CLASSESDIR):$(ILUJAVA_M_CORECLASSES)" $(SOURCE_PATH_SWITCH)  sources @@\
+											@@\
+install:: compiled									@@\
+	@sh -c 'for i in compiled;  do  \						@@\
+		if test -r $(DESTDIR)/lib/$$i ; then \				@@\
+			$(RM) -f $(DESTDIR)/lib/$$i ; fi ; \			@@\
+		echo "installing $$i..." ; \						@@\
+		$(CP) $$i $(DESTDIR)/lib/$$i ; \					@@\
+		$(CHMOD_READONLY) $(DESTDIR)/lib/$$i ; \		@@\
+          done'									@@\
+											@@\
+CleanTarget(compiled)
+
+
+
+/*
+ * Stubbing a java class 
+ * (generating both .h and .c stubs)
+ * (used if the java class defines native methods)
+ */
+
+#ifdef ILUJAVA_M_JNI
+
+#define JStubHCTargets(stubdir, stubfiles, sourcefile, classname)		@@\
+											@@\
+all:: stubfiles										@@\
+											@@\
+stubfiles: sourcefile									@@\
+	$(RM) $@									@@\
+	$(JAVAH) -jni -classpath "$(ILUJAVA_M_CLASSESDIR):$(ILUJAVA_M_CORECLASSES)" -d stubdir classname @@\
+											@@\
+CleanTarget(stubfiles)
+
+#else
+
+#ifdef ILUJAVA_M_JDK12POSTBETA
+HSTUB_OLD = -old
+#else
+HSTUB_OLD =
+#endif
+
+#define JStubHCTargets(stubdir, stubfiles, sourcefile, classname)		@@\
+											@@\
+all:: stubfiles										@@\
+											@@\
+stubfiles: sourcefile									@@\
+	$(RM) $@									@@\
+	$(JAVAH) $(HSTUB_OLD) -classpath "$(ILUJAVA_M_CLASSESDIR):$(ILUJAVA_M_CORECLASSES)" -d stubdir -stubs classname @@\
+	$(JAVAH) $(HSTUB_OLD) -classpath "$(ILUJAVA_M_CLASSESDIR):$(ILUJAVA_M_CORECLASSES)" -d stubdir classname	@@\
+											@@\
+CleanTarget(stubfiles)
+
+#endif
+
+
+
+
+/*
+ * Stubbing a java class 
+ * (generating .h stubs only)
+ * (used if the java class defines fields accessed by native methods of other classes)
+ */
+#define JStubHTarget(stubdir, stubfile, sourcefile, classname)	@@\
+											@@\
+all:: stubfile										@@\
+											@@\
+stubfile : sourcefile								@@\
+	$(RM) $@									@@\
+	$(JAVAH) $(HSTUB_OLD) -classpath "$(ILUJAVA_M_CLASSESDIR):$(ILUJAVA_M_CORECLASSES)" -d stubdir classname	@@\
+											@@\
+CleanTarget(stubfile)
+
+
+/*
+ * Like ObjectTarget but the .c and the o are both in subdir.
+ * (This is not used for JNI) 
+ */
+#define ObjectTargetSDir(subdir, name)				@@\
+all:: subdir/name.o							@@\
+subdir/name.o:	subdir/name.c make.gnh $(SYSMACROS_FILE)	@@\
+	$(RM) $@							@@\
+	$(ANSI_C_COMPILER) -c $(CFLAGS) $(ILUCINCLUDES) subdir/name.c -o $@
+
+
+/*
+ * Like ObjectTarget but the .o goes into subdir 
+ * (the .c is in .) 
+ */
+ 
+#ifdef ILUJAVA_M_NATIVE_THREADS_EXTRA
+ 
+#define ObjectTargetXDir(name)				@@\
+all:: $(BUILD_DIR)/name.o 							@@\
+$(BUILD_DIR)/name.o:	name.c make.gnh $(SYSMACROS_FILE) 	@@\
+	$(RM) $@							@@\
+	$(ANSI_C_COMPILER) -c $(CFLAGS) $(ILUCINCLUDES) -I$(BUILD_DIR) $(DEFINES1) name.c -o $@	@@\
+$(SECOND_BUILD_DIR)/name.o:	name.c make.gnh $(SYSMACROS_FILE) 	@@\
+	$(RM) $@							@@\
+	$(ANSI_C_COMPILER) -c $(CFLAGS) $(ILUCINCLUDES) -I$(BUILD_DIR) $(DEFINES2) name.c -o $@
+
+#else
+
+#define ObjectTargetXDir(name)				@@\
+all:: $(BUILD_DIR)/name.o 							@@\
+$(BUILD_DIR)/name.o:	name.c make.gnh $(SYSMACROS_FILE) 	@@\
+	$(RM) $@							@@\
+	$(ANSI_C_COMPILER) -c $(CFLAGS) $(ILUCINCLUDES) -I$(BUILD_DIR) $(DEFINES1) name.c -o $@	@@\
+
+#endif
+
+/* ======================================================== */
+
+
+BUILD_DIR = ./build
+SECOND_BUILD_DIR = ./build2
+JAVA_SRC_DIR = ./jsrc
+JAVA_OMG_SRC_DIR = ./omgsrc
+
+
+JAVA_INCLUDES = -I$(ILUJAVA_M_INCLUDES) -I$(ILUJAVA_M_MACH_DEP_INCLUDES) -I$(ILUJAVA_M_OLD_INCLUDES) -I$(ILUJAVA_M_OLD_MACH_DEP_INCLUDES) 
+
+LOCALINCLUDES = -I../kernel $(JAVA_INCLUDES) $(JNI_INCLUDES) $(NETSCAPE_INCLUDES) $(BUILD_SECURITY_INCLUDES) $(BUILD_BIGNUM_INCLUDES) 
+
+
+
+/*
+ * Special handling for java native methods in different ways depending 
+ * on the java version...
+ *
+ * first compile the gnh program  (gnh = generate native headers)
+ * then run gnh...
+ */
+
+make.gnh0:	$(JAVA_SRC_DIR)/xerox/ilutools/gnh.java $(JAVA_SRC_DIR)/xerox/ilutools/gnh.java $(JAVA_SRC_DIR)/xerox/ilutools/japp.java $(JAVA_SRC_DIR)/xerox/ilutools/GenIluTypeIds.java
+	$(JAVAC) -d "$(ILUJAVA_M_CLASSESDIR)" -classpath "$(ILUJAVA_M_CLASSESDIR):$(ILUJAVA_M_CORECLASSES)" $(SOURCE_PATH_SWITCH)  $(JAVA_SRC_DIR)/xerox/ilutools/gnh.java $(JAVA_SRC_DIR)/xerox/ilutools/japp.java  $(JAVA_SRC_DIR)/xerox/ilutools/GenIluTypeIds.java
+	touch make.gnh0
+
+make.gnh:	make.gnh0 ilunative.in
+	rm -f ilunative.h
+	rm -f ilunative.c
+	$(ILUJAVA_M_JAVAHOME)/bin/java -classpath "$(ILUJAVA_M_CLASSESDIR):$(ILUJAVA_M_CORECLASSES)" xerox.ilutools.gnh  $(GNH_FLAG) ilunative.in
+	../../stubbers/parser/islscan -I ../../stubbers/parser build.isl >$(BUILD_DIR)/typeids.scanned
+	$(ILUJAVA_M_JAVAHOME)/bin/java -classpath "$(ILUJAVA_M_CLASSESDIR):$(ILUJAVA_M_CORECLASSES)" xerox.ilutools.GenIluTypeIds
+	touch make.gnh
+
+
+$(BUILD_DIR)/IluTypeIdProps.java:	make.gnh
+	../../stubbers/parser/islscan  -I ../../stubbers/parser build.isl >$(BUILD_DIR)/typeids.scanned
+	$(ILUJAVA_M_JAVAHOME)/bin/java -classpath "$(ILUJAVA_M_CLASSESDIR):$(ILUJAVA_M_CORECLASSES)" xerox.ilutools.GenIluTypeIds
+
+
+CleanTarget(make.gnh0)
+CleanTarget(make.gnh)
+CleanTarget($(ILUJAVA_M_CLASSESDIR)/xerox/ilutools/gnh.class)
+CleanTarget($(ILUJAVA_M_CLASSESDIR)/xerox/ilutools/japp.class)
+
+
+
+NormalObjectRule()
+
+CleanTarget(sysmacros_md.h)
+
+BuildDir($(ILUJAVA_M_CLASSESDIR) $(BUILD_DIR) $(SECOND_BUILD_DIR))
+
+MkdirTarget($(DESTDIR)/lib)
+MkdirTarget($(DESTDIR)/lib/$(ILUJAVA_M_CLASSESDIR))
+MkdirTarget($(DESTDIR)/lib/$(ILUJAVA_M_CLASSESDIR)/xerox)
+MkdirTarget($(DESTDIR)/lib/$(ILUJAVA_M_CLASSESDIR)/xerox/basics)
+MkdirTarget($(DESTDIR)/lib/$(ILUJAVA_M_CLASSESDIR)/xerox/ilu)
+MkdirTarget($(DESTDIR)/lib/$(ILUJAVA_M_CLASSESDIR)/xerox/ilutools)
+
+/*
+below are listed Java files that need to be converted to .class
+files by running the compiler.  The rule JavaCompileTarget() runs
+the compiler.
+*/
+
+#ifdef ILUJAVA_M_GENERATE_OMG_CLASSES
+
+OMG_PATH_PART = org/omg
+OMG_OMGSRCDIR = $(JAVA_OMG_SRC_DIR)/$(OMG_PATH_PART)
+OMG_OMGCLASSESDIR = $(ILUJAVA_M_CLASSESDIR)/$(OMG_PATH_PART)
+
+MkdirTarget($(DESTDIR)/lib/$(ILUJAVA_M_CLASSESDIR)/org)
+MkdirTarget($(DESTDIR)/lib/$(OMG_OMGCLASSESDIR))
+MkdirTarget($(DESTDIR)/lib/$(OMG_OMGCLASSESDIR)/CORBA)
+MkdirTarget($(DESTDIR)/lib/$(OMG_OMGCLASSESDIR)/CORBA/portable)
+MkdirTarget($(DESTDIR)/lib/$(OMG_OMGCLASSESDIR)/CORBA/ORBPackage)
+MkdirTarget($(DESTDIR)/lib/$(OMG_OMGCLASSESDIR)/CORBA/TypeCodePackage)
+MkdirTarget($(DESTDIR)/lib/$(OMG_OMGCLASSESDIR)/PortableServer)
+
+OMG_CLASSES = \
+	$(OMG_OMGCLASSESDIR)/CORBA/TypeCodePackage/BadKind.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/TypeCodePackage/Bounds.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/Bounds.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/ORBPackage/InvalidName.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/portable/Streamable.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/portable/OutputStream.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/portable/InputStream.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/SetOverrideType.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/OperationDef.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/Principal.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/ExceptionList.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/WrongTransaction.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/ContextList.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/Environment.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/IDLType.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/StructMember.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/UnionMember.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/ImplementationDef.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/InterfaceDef.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/Request.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/NamedValue.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/NVList.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/Context.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/CompletionStatus.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/NO_MEMORY.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/IMP_LIMIT.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/COMM_FAILURE.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/INITIALIZE.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/NO_IMPLEMENT.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/BAD_TYPECODE.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/NO_RESOURCES.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/NO_RESPONSE.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/PERSIST_STORE.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/BAD_INV_ORDER.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/TRANSIENT.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/FREE_MEM.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/INV_IDENT.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/INV_FLAG.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/INTF_REPOS.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/BAD_CONTEXT.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/OBJ_ADAPTER.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/OBJECT_NOT_EXIST.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/TRANSACTIONREQUIRED.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/TRANSACTIONROLLEDBACK.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/MARSHAL.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/INTERNAL.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/BAD_PARAM.class \
+	$(OMG_OMGCLASSESDIR)/PortableServer/POA.class \
+	$(OMG_OMGCLASSESDIR)/PortableServer/DynamicImplementation.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/UNKNOWN.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/SystemException.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/UserException.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/BAD_OPERATION.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/DATA_CONVERSION.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/NO_PERMISSION.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/INV_OBJREF.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/TCKind.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/ORB.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/BOA.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/Object.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/Policy.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/DomainManager.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/portable/ObjectImpl.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/portable/Delegate.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/TypeCode.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/Any.class
+
+
+OMG_SOURCES = \
+	$(OMG_OMGSRCDIR)/CORBA/TypeCodePackage/BadKind.java \
+	$(OMG_OMGSRCDIR)/CORBA/TypeCodePackage/Bounds.java \
+	$(OMG_OMGSRCDIR)/CORBA/Bounds.java \
+	$(OMG_OMGSRCDIR)/CORBA/ORBPackage/InvalidName.java \
+	$(OMG_OMGSRCDIR)/CORBA/portable/Streamable.java \
+	$(OMG_OMGSRCDIR)/CORBA/portable/OutputStream.java \
+	$(OMG_OMGSRCDIR)/CORBA/portable/InputStream.java \
+	$(OMG_OMGSRCDIR)/CORBA/SetOverrideType.java \
+	$(OMG_OMGSRCDIR)/CORBA/OperationDef.java \
+	$(OMG_OMGSRCDIR)/CORBA/Principal.java \
+	$(OMG_OMGSRCDIR)/CORBA/WrongTransaction.java \
+	$(OMG_OMGSRCDIR)/CORBA/Environment.java \
+	$(OMG_OMGSRCDIR)/CORBA/ContextList.java \
+	$(OMG_OMGSRCDIR)/CORBA/ExceptionList.java \
+	$(OMG_OMGSRCDIR)/CORBA/IDLType.java \
+	$(OMG_OMGSRCDIR)/CORBA/StructMember.java \
+	$(OMG_OMGSRCDIR)/CORBA/UnionMember.java \
+	$(OMG_OMGSRCDIR)/CORBA/ImplementationDef.java \
+	$(OMG_OMGSRCDIR)/CORBA/InterfaceDef.java \
+	$(OMG_OMGSRCDIR)/CORBA/Request.java \
+	$(OMG_OMGSRCDIR)/CORBA/NamedValue.java \
+	$(OMG_OMGSRCDIR)/CORBA/NVList.java \
+	$(OMG_OMGSRCDIR)/CORBA/Context.java \
+	$(OMG_OMGSRCDIR)/CORBA/CompletionStatus.java \
+	$(OMG_OMGSRCDIR)/CORBA/NO_MEMORY.java \
+	$(OMG_OMGSRCDIR)/CORBA/IMP_LIMIT.java \
+	$(OMG_OMGSRCDIR)/CORBA/COMM_FAILURE.java \
+	$(OMG_OMGSRCDIR)/CORBA/INITIALIZE.java \
+	$(OMG_OMGSRCDIR)/CORBA/NO_IMPLEMENT.java \
+	$(OMG_OMGSRCDIR)/CORBA/BAD_TYPECODE.java \
+	$(OMG_OMGSRCDIR)/CORBA/NO_RESOURCES.java \
+	$(OMG_OMGSRCDIR)/CORBA/NO_RESPONSE.java \
+	$(OMG_OMGSRCDIR)/CORBA/PERSIST_STORE.java \
+	$(OMG_OMGSRCDIR)/CORBA/BAD_INV_ORDER.java \
+	$(OMG_OMGSRCDIR)/CORBA/TRANSIENT.java \
+	$(OMG_OMGSRCDIR)/CORBA/FREE_MEM.java \
+	$(OMG_OMGSRCDIR)/CORBA/INV_IDENT.java \
+	$(OMG_OMGSRCDIR)/CORBA/INV_FLAG.java \
+	$(OMG_OMGSRCDIR)/CORBA/INTF_REPOS.java \
+	$(OMG_OMGSRCDIR)/CORBA/BAD_CONTEXT.java \
+	$(OMG_OMGSRCDIR)/CORBA/OBJ_ADAPTER.java \
+	$(OMG_OMGSRCDIR)/CORBA/OBJECT_NOT_EXIST.java \
+	$(OMG_OMGSRCDIR)/CORBA/TRANSACTIONREQUIRED.java \
+	$(OMG_OMGSRCDIR)/CORBA/TRANSACTIONROLLEDBACK.java \
+	$(OMG_OMGSRCDIR)/CORBA/INTERNAL.java \
+	$(OMG_OMGSRCDIR)/CORBA/MARSHAL.java \
+	$(OMG_OMGSRCDIR)/CORBA/BAD_PARAM.java \
+	$(OMG_OMGSRCDIR)/CORBA/UNKNOWN.java \
+	$(OMG_OMGSRCDIR)/CORBA/SystemException.java \
+	$(OMG_OMGSRCDIR)/PortableServer/POA.java \
+	$(OMG_OMGSRCDIR)/PortableServer/DynamicImplementation.java \
+	$(OMG_OMGSRCDIR)/CORBA/UserException.java \
+	$(OMG_OMGSRCDIR)/CORBA/BAD_OPERATION.java \
+	$(OMG_OMGSRCDIR)/CORBA/DATA_CONVERSION.java \
+	$(OMG_OMGSRCDIR)/CORBA/NO_PERMISSION.java \
+	$(OMG_OMGSRCDIR)/CORBA/INV_OBJREF.java \
+	$(OMG_OMGSRCDIR)/CORBA/TCKind.java \
+	$(OMG_OMGSRCDIR)/CORBA/BOA.java \
+	$(OMG_OMGSRCDIR)/CORBA/ORB.java \
+	$(OMG_OMGSRCDIR)/CORBA/Object.java \
+	$(OMG_OMGSRCDIR)/CORBA/DomainManager.java \
+	$(OMG_OMGSRCDIR)/CORBA/Policy.java \
+	$(OMG_OMGSRCDIR)/CORBA/portable/ObjectImpl.java \
+	$(OMG_OMGSRCDIR)/CORBA/portable/Delegate.java \
+	$(OMG_OMGSRCDIR)/CORBA/TypeCode.java \
+	$(OMG_OMGSRCDIR)/CORBA/Any.java 
+
+JavaCompileTarget($(OMG_CLASSES), $(OMG_SOURCES),)
+
+/* holder classes with and without ilu dependencies */
+
+HOLDER_CLASSES = \
+	$(OMG_OMGCLASSESDIR)/CORBA/ShortHolder.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/IntHolder.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/LongHolder.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/ByteHolder.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/FloatHolder.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/DoubleHolder.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/CharHolder.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/BooleanHolder.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/StringHolder.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/ObjectHolder.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/AnyHolder.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/TypeCodeHolder.class \
+	$(OMG_OMGCLASSESDIR)/CORBA/PrincipalHolder.class
+
+HOLDER_SOURCES = \
+	$(OMG_OMGSRCDIR)/CORBA/ShortHolder.java \
+	$(OMG_OMGSRCDIR)/CORBA/IntHolder.java \
+	$(OMG_OMGSRCDIR)/CORBA/LongHolder.java \
+	$(OMG_OMGSRCDIR)/CORBA/ByteHolder.java \
+	$(OMG_OMGSRCDIR)/CORBA/FloatHolder.java \
+	$(OMG_OMGSRCDIR)/CORBA/DoubleHolder.java \
+	$(OMG_OMGSRCDIR)/CORBA/CharHolder.java \
+	$(OMG_OMGSRCDIR)/CORBA/BooleanHolder.java \
+	$(OMG_OMGSRCDIR)/CORBA/StringHolder.java \
+	$(OMG_OMGSRCDIR)/CORBA/ObjectHolder.java \
+	$(OMG_OMGSRCDIR)/CORBA/AnyHolder.java \
+	$(OMG_OMGSRCDIR)/CORBA/TypeCodeHolder.java \
+	$(OMG_OMGSRCDIR)/CORBA/PrincipalHolder.java 
+
+JavaCompileTarget($(HOLDER_CLASSES), $(HOLDER_SOURCES),)
+
+#endif
+
+BASIC_CLASSES = \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/basics/NowhereStream.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/basics/NowhereWriter.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/basics/Consumer0.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/basics/Queue.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/basics/Environment.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/basics/VMExtras.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/basics/VMExtrasThread.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/basics/IntTab.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/basics/IntTabNode.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/float128.class
+
+  
+BASIC_SOURCES = \
+	$(JAVA_SRC_DIR)/xerox/basics/NowhereStream.java \
+	$(JAVA_SRC_DIR)/xerox/basics/NowhereWriter.java \
+	$(JAVA_SRC_DIR)/xerox/basics/Consumer0.java \
+	$(JAVA_SRC_DIR)/xerox/basics/Queue.java \
+	$(JAVA_SRC_DIR)/xerox/basics/Environment.java \
+	$(JAVA_SRC_DIR)/xerox/basics/VMExtras.java \
+	$(JAVA_SRC_DIR)/xerox/basics/IntTab.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/float128.java
+
+JavaCompileTarget($(BASIC_CLASSES), $(BASIC_SOURCES),)
+
+
+PRE_CLASSES = \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluInit.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluMozillaBase.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluPreLoad.class
+
+  
+PRE_SOURCES = \
+	$(JAVA_SRC_DIR)/xerox/ilu/IluInit.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/IluMozillaBase.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/IluPreLoad.java
+
+
+JavaCompileTarget($(PRE_CLASSES), $(PRE_SOURCES),)
+
+
+
+PRE_EXCEPTION_CLASSES = \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluInconsistentCallException.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluNotConfiguredException.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluGcRegFailedException.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluUnexpectedException.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluSystemExceptionBase.class
+	 
+
+PRE_EXCEPTION_SOURCES = \
+	$(JAVA_SRC_DIR)/xerox/ilu/IluInconsistentCallException.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/IluUnexpectedException.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/IluNotConfiguredException.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/IluGcRegFailedException.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/IluSystemExceptionBase.java
+
+JavaCompileTarget($(PRE_EXCEPTION_CLASSES), $(PRE_EXCEPTION_SOURCES),)
+
+
+
+RT_CLASSES = \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluConstantValueKind.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluTypeKind.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/CStringHolder.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/CStringHelper.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluLifetimeArgs.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluLifetimeRemember.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluLifetimeForget.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluUserException.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluDebugWriter.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluEnvironment.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluDebug.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluDataSupport.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluIHProposer.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluObject.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluWPBase.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluObjectBase.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluFactory.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluPassport.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluPipeline.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluSerializationContext.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluIdentity.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluIdentityType.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluSurrogateConnection.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluRegularSurrConnectionThread.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluOtherSurrogateConnForkerThread.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluServiceThread.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluServerConnection.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluServerConnectionThread.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluServerConnectionExtraThread.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluInit2.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluDebugHooks.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluClassRep.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluRootClassObjects_stub.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluClassAccess.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluRuntimeException.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluExceptionRep.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluOInt.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluAlarmTech.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluForkTech.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluCall.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluMethodRep.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluMethodArgRep.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluServer.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluServerRelocationInfo.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluServerRelocation.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluObjectTable.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluRT0.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluSkeleton.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluSurrogateObject.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluTransportInfo.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluPort.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluBatcher.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluGssCred.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluGssOid.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluPortWatcherThread.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluServantFinalizable.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/corba_ServantFinalizer.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluGCClient.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/Ilu.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluSBH.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluResolving.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluSimpleBinding.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluFinalizeReporter.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluOIntFinalizer.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluReEnableFinalization.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluTypeCode.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluTypeIdProps.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluTypeRep.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluAny.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluORB.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluIOFunctions.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluCustomMappingException.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluCustomMapping.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluPickle.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluRootObjectHelper.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/CORBA_WStringHelper.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/CORBA_ObjectStub.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/_CORBA_Object_skeletonClass.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/_CORBA_Object_Factory.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/CORBA_ObjectHelper.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/SpecialIOFuncs.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluTypeRep_Record.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluTypeRep_baseWithChain.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluTypeRep_RecordFld.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluTypeRep_ChainEl.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluTypeRep_Enum.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluTypeRep_EnumEl.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluTypeRep_Union.class \
+	$(ILUJAVA_M_CLASSESDIR)/xerox/ilu/IluTypeRep_UnionArm.class
+
+
+RT_SOURCES = \
+	$(JAVA_SRC_DIR)/xerox/ilu/IluConstantValueKind.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/IluTypeKind.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/CStringHolder.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/CStringHelper.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/IluLifetimeArgs.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/IluLifetimeRemember.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/IluLifetimeForget.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/IluUserException.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/IluDebugWriter.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/IluEnvironment.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/IluDebug.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/IluDataSupport.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/IluIHProposer.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/IluObject.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/IluWPBase.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/IluObjectBase.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/IluFactory.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/IluPassport.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/IluPipeline.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/IluSerializationContext.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/IluIdentity.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/IluIdentityType.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/IluSurrogateConnection.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/IluServerConnection.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/IluServiceThread.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/IluInit2.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/IluDebugHooks.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/IluClassRep.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/IluClassAccess.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/IluRuntimeException.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/IluExceptionRep.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/IluOInt.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/IluAlarmTech.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/IluForkTech.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/IluCall.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/IluMethodRep.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/IluMethodArgRep.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/IluServer.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/IluServerRelocation.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/IluServerRelocationInfo.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/IluObjectTable.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/IluRT0.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/IluSkeleton.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/IluSurrogateObject.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/IluTransportInfo.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/IluPort.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/IluBatcher.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/IluGssCred.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/IluGssOid.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/IluServantFinalizable.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/corba_ServantFinalizer.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/IluGCClient.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/Ilu.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/IluSBH.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/IluResolving.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/IluSubstitute.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/IluSimpleBinding.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/IluTypeCode.java \
+	$(BUILD_DIR)/IluTypeIdProps.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/IluTypeRep.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/IluAny.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/IluORB.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/IluIOFunctions.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/IluCustomMappingException.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/IluCustomMapping.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/IluPickle.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/IluRootObjectHelper.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/CORBA_ObjectStub.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/CORBA_ObjectHelper.java \
+	$(JAVA_SRC_DIR)/xerox/ilu/CORBA_WStringHelper.java
+
+JavaCompileTarget($(RT_CLASSES), $(RT_SOURCES),)
+
+
+
+
+
+/*
+below are files which need to have both .c code and .h header files
+generated by running javah -stubs and javah on them. 
+(Classes requiring native methods for implementation)
+*/
+JStubHCTargets($(BUILD_DIR),$(BUILD_DIR)/xerox_ilu_IluInit2.c $(BUILD_DIR)/xerox_ilu_IluInit2.h,$(JAVA_SRC_DIR)/xerox/ilu/IluInit2.java,xerox.ilu.IluInit2)
+JStubHCTargets($(BUILD_DIR),$(BUILD_DIR)/xerox_ilu_IluPassport.c $(BUILD_DIR)/xerox_ilu_IluPassport.h,$(JAVA_SRC_DIR)/xerox/ilu/IluPassport.java,xerox.ilu.IluPassport)
+JStubHCTargets($(BUILD_DIR),$(BUILD_DIR)/xerox_ilu_IluPipeline.c $(BUILD_DIR)/xerox_ilu_IluPipeline.h,$(JAVA_SRC_DIR)/xerox/ilu/IluPipeline.java,xerox.ilu.IluPipeline)
+JStubHCTargets($(BUILD_DIR),$(BUILD_DIR)/xerox_ilu_IluSerializationContext.c $(BUILD_DIR)/xerox_ilu_IluSerializationContext.h,$(JAVA_SRC_DIR)/xerox/ilu/IluSerializationContext.java,xerox.ilu.IluSerializationContext)
+JStubHCTargets($(BUILD_DIR),$(BUILD_DIR)/xerox_ilu_IluIdentityType.c $(BUILD_DIR)/xerox_ilu_IluIdentityType.h,$(JAVA_SRC_DIR)/xerox/ilu/IluIdentityType.java,xerox.ilu.IluIdentityType)
+JStubHCTargets($(BUILD_DIR),$(BUILD_DIR)/xerox_ilu_IluIdentity.c $(BUILD_DIR)/xerox_ilu_IluIdentity.h,$(JAVA_SRC_DIR)/xerox/ilu/IluIdentity.java,xerox.ilu.IluIdentity)
+JStubHCTargets($(BUILD_DIR),$(BUILD_DIR)/xerox_ilu_IluServerConnection.c $(BUILD_DIR)/xerox_ilu_IluServerConnection.h,$(JAVA_SRC_DIR)/xerox/ilu/IluServerConnection.java,xerox.ilu.IluServerConnection)
+JStubHCTargets($(BUILD_DIR),$(BUILD_DIR)/xerox_ilu_IluSurrogateConnection.c $(BUILD_DIR)/xerox_ilu_IluSurrogateConnection.h,$(JAVA_SRC_DIR)/xerox/ilu/IluSurrogateConnection.java,xerox.ilu.IluSurrogateConnection)
+JStubHCTargets($(BUILD_DIR),$(BUILD_DIR)/xerox_ilu_IluOInt.c $(BUILD_DIR)/xerox_ilu_IluOInt.h,$(JAVA_SRC_DIR)/xerox/ilu/IluOInt.java,xerox.ilu.IluOInt)
+JStubHCTargets($(BUILD_DIR),$(BUILD_DIR)/xerox_ilu_IluClassRep.c $(BUILD_DIR)/xerox_ilu_IluClassRep.h,$(JAVA_SRC_DIR)/xerox/ilu/IluClassRep.java,xerox.ilu.IluClassRep)
+JStubHCTargets($(BUILD_DIR),$(BUILD_DIR)/xerox_ilu_IluServer.c $(BUILD_DIR)/xerox_ilu_IluServer.h,$(JAVA_SRC_DIR)/xerox/ilu/IluServer.java,xerox.ilu.IluServer)
+JStubHCTargets($(BUILD_DIR),$(BUILD_DIR)/xerox_ilu_IluAlarmTech.c $(BUILD_DIR)/xerox_ilu_IluAlarmTech.h,$(JAVA_SRC_DIR)/xerox/ilu/IluAlarmTech.java,xerox.ilu.IluAlarmTech)
+JStubHCTargets($(BUILD_DIR),$(BUILD_DIR)/xerox_ilu_IluForkTech.c $(BUILD_DIR)/xerox_ilu_IluForkTech.h,$(JAVA_SRC_DIR)/xerox/ilu/IluForkTech.java,xerox.ilu.IluForkTech)
+JStubHCTargets($(BUILD_DIR),$(BUILD_DIR)/xerox_ilu_IluCall.c $(BUILD_DIR)/xerox_ilu_IluCall.h,$(JAVA_SRC_DIR)/xerox/ilu/IluCall.java,xerox.ilu.IluCall)
+JStubHCTargets($(BUILD_DIR),$(BUILD_DIR)/xerox_ilu_IluExceptionRep.c $(BUILD_DIR)/xerox_ilu_IluExceptionRep.h,$(JAVA_SRC_DIR)/xerox/ilu/IluExceptionRep.java,xerox.ilu.IluExceptionRep)
+JStubHCTargets($(BUILD_DIR),$(BUILD_DIR)/xerox_ilu_IluRT0.c $(BUILD_DIR)/xerox_ilu_IluRT0.h,$(JAVA_SRC_DIR)/xerox/ilu/IluRT0.java,xerox.ilu.IluRT0)
+JStubHCTargets($(BUILD_DIR),$(BUILD_DIR)/xerox_ilu_IluTransportInfo.c $(BUILD_DIR)/xerox_ilu_IluTransportInfo.h,$(JAVA_SRC_DIR)/xerox/ilu/IluTransportInfo.java,xerox.ilu.IluTransportInfo)
+JStubHCTargets($(BUILD_DIR),$(BUILD_DIR)/xerox_ilu_IluPort.c $(BUILD_DIR)/xerox_ilu_IluPort.h,$(JAVA_SRC_DIR)/xerox/ilu/IluPort.java,xerox.ilu.IluPort)
+JStubHCTargets($(BUILD_DIR),$(BUILD_DIR)/xerox_ilu_IluBatcher.c $(BUILD_DIR)/xerox_ilu_IluBatcher.h,$(JAVA_SRC_DIR)/xerox/ilu/IluBatcher.java,xerox.ilu.IluBatcher)
+JStubHCTargets($(BUILD_DIR),$(BUILD_DIR)/xerox_ilu_IluGssCred.c $(BUILD_DIR)/xerox_ilu_IluGssCred.h,$(JAVA_SRC_DIR)/xerox/ilu/IluGssCred.java,xerox.ilu.IluGssCred)
+JStubHCTargets($(BUILD_DIR),$(BUILD_DIR)/xerox_ilu_IluGssOid.c $(BUILD_DIR)/xerox_ilu_IluGssOid.h,$(JAVA_SRC_DIR)/xerox/ilu/IluGssOid.java,xerox.ilu.IluGssOid)
+JStubHCTargets($(BUILD_DIR),$(BUILD_DIR)/xerox_ilu_IluDebugHooks.c $(BUILD_DIR)/xerox_ilu_IluDebugHooks.h,$(JAVA_SRC_DIR)/xerox/ilu/IluDebugHooks.java,xerox.ilu.IluDebugHooks)
+JStubHCTargets($(BUILD_DIR),$(BUILD_DIR)/xerox_ilu_IluGCClient.c $(BUILD_DIR)/xerox_ilu_IluGCClient.h,$(JAVA_SRC_DIR)/xerox/ilu/IluGCClient.java,xerox.ilu.IluGCClient)
+JStubHCTargets($(BUILD_DIR),$(BUILD_DIR)/xerox_ilu_IluDebug.c $(BUILD_DIR)/xerox_ilu_IluDebug.h,$(JAVA_SRC_DIR)/xerox/ilu/IluDebug.java,xerox.ilu.IluDebug)
+JStubHCTargets($(BUILD_DIR),$(BUILD_DIR)/xerox_ilu_IluDebugWriter.c $(BUILD_DIR)/xerox_ilu_IluDebugWriter.h,$(JAVA_SRC_DIR)/xerox/ilu/IluDebugWriter.java,xerox.ilu.IluDebugWriter)
+JStubHCTargets($(BUILD_DIR),$(BUILD_DIR)/xerox_ilu_IluPickle.c $(BUILD_DIR)/xerox_ilu_IluPickle.h,$(JAVA_SRC_DIR)/xerox/ilu/IluPickle.java,xerox.ilu.IluPickle)
+JStubHCTargets($(BUILD_DIR),$(BUILD_DIR)/xerox_ilu_IluTypeCode.c $(BUILD_DIR)/xerox_ilu_IluTypeCode.h,$(JAVA_SRC_DIR)/xerox/ilu/IluTypeCode.java,xerox.ilu.IluTypeCode)
+JStubHCTargets($(BUILD_DIR),$(BUILD_DIR)/xerox_ilu_IluTypeRep.c $(BUILD_DIR)/xerox_ilu_IluTypeRep.h,$(JAVA_SRC_DIR)/xerox/ilu/IluTypeRep.java,xerox.ilu.IluTypeRep)
+JStubHCTargets($(BUILD_DIR),$(BUILD_DIR)/xerox_ilu_IluSBH.c $(BUILD_DIR)/xerox_ilu_IluSBH.h,$(JAVA_SRC_DIR)/xerox/ilu/IluSBH.java,xerox.ilu.IluSBH)
+JStubHCTargets($(BUILD_DIR),$(BUILD_DIR)/xerox_ilu_IluWPBase.c $(BUILD_DIR)/xerox_ilu_IluWPBase.h,$(JAVA_SRC_DIR)/xerox/ilu/IluWPBase.java,xerox.ilu.IluWPBase)
+
+
+
+
+/*
+below are files which need to have only .h header files generated
+by running javah on them.
+(Classes permitting field access by native methods of other classes)
+*/
+JStubHTarget($(BUILD_DIR),$(BUILD_DIR)/xerox_ilu_IluMethodRep.h,$(JAVA_SRC_DIR)/xerox/ilu/IluMethodRep.java,xerox.ilu.IluMethodRep)
+JStubHTarget($(BUILD_DIR),$(BUILD_DIR)/xerox_ilu_IluMethodArgRep.h,$(JAVA_SRC_DIR)/xerox/ilu/IluMethodArgRep.java,xerox.ilu.IluMethodArgRep)
+JStubHTarget($(BUILD_DIR),$(BUILD_DIR)/xerox_ilu_IluObjectTable.h,$(JAVA_SRC_DIR)/xerox/ilu/IluObjectTable.java,xerox.ilu.IluObjectTable)
+JStubHTarget($(BUILD_DIR),$(BUILD_DIR)/xerox_ilu_IluSurrogateObject.h,$(JAVA_SRC_DIR)/xerox/ilu/IluSurrogateObject.java,xerox.ilu.IluSurrogateObject)
+JStubHTarget($(BUILD_DIR),$(BUILD_DIR)/xerox_ilu_IluServerRelocationInfo.h,$(JAVA_SRC_DIR)/xerox/ilu/IluServerRelocationInfo.java,xerox.ilu.IluServerRelocationInfo)
+
+/*
+below are files which need to have only .h header files generated
+by running javah on them.
+(non public classes in the file of another class)
+*/
+
+/* Use poll(2) form of wait tech if possible, select(2) form otherwise */
+#ifdef ILUJAVA_M_DONTUSE_POLL
+JAVA_WAITTECH_CALL=IluJava_selectwt
+#else
+JAVA_WAITTECH_CALL=IluJava_pollwt
+#endif
+
+/* 
+below are C source files which need to be compiled to link into the
+Java extension .so file
+*/
+ObjectTargetXDir(IluJava_IluConnOps)
+ObjectTargetXDir(IluJava_IluAlarmTech)
+ObjectTargetXDir(IluJava_IluOInt)
+ObjectTargetXDir(IluJava_JOps)
+ObjectTargetXDir(IluJava_IluCall)
+ObjectTargetXDir(IluJava_IluClassRep)
+ObjectTargetXDir(IluJava_IluServer)
+ObjectTargetXDir(IluJava_IluRT0)
+ObjectTargetXDir(IluJava_LockTech)
+ObjectTargetXDir(IluJava_IluDebug)
+ObjectTargetXDir(IluJava_IluPort)
+ObjectTargetXDir($(JAVA_WAITTECH_CALL))
+ObjectTargetXDir(IluJava_GCClient)
+ObjectTargetXDir(IluJava_IluInit)
+ObjectTargetXDir(IluJava_IluPickle)
+ObjectTargetXDir(IluJava_JMon)
+ObjectTargetXDir(ilunative)
+
+/*
+below are C stub files which need to be compiled to link into the
+Java extension .so file
+*/
+#ifdef ILUJAVA_M_JNI
+#else
+ObjectTargetSDir($(BUILD_DIR),xerox_ilu_IluInit2)
+ObjectTargetSDir($(BUILD_DIR),xerox_ilu_IluAlarmTech)
+ObjectTargetSDir($(BUILD_DIR),xerox_ilu_IluForkTech)
+ObjectTargetSDir($(BUILD_DIR),xerox_ilu_IluSurrogateConnection)
+ObjectTargetSDir($(BUILD_DIR),xerox_ilu_IluServerConnection)
+ObjectTargetSDir($(BUILD_DIR),xerox_ilu_IluServer)
+ObjectTargetSDir($(BUILD_DIR),xerox_ilu_IluOInt)
+ObjectTargetSDir($(BUILD_DIR),xerox_ilu_IluCall)
+ObjectTargetSDir($(BUILD_DIR),xerox_ilu_IluClassRep)
+ObjectTargetSDir($(BUILD_DIR),xerox_ilu_IluExceptionRep)
+ObjectTargetSDir($(BUILD_DIR),xerox_ilu_IluRT0)
+ObjectTargetSDir($(BUILD_DIR),xerox_ilu_IluPassport)
+ObjectTargetSDir($(BUILD_DIR),xerox_ilu_IluSerializationContext)
+ObjectTargetSDir($(BUILD_DIR),xerox_ilu_IluPipeline)
+ObjectTargetSDir($(BUILD_DIR),xerox_ilu_IluIdentity)
+ObjectTargetSDir($(BUILD_DIR),xerox_ilu_IluIdentityType)
+ObjectTargetSDir($(BUILD_DIR),xerox_ilu_IluTransportInfo)
+ObjectTargetSDir($(BUILD_DIR),xerox_ilu_IluPort)
+ObjectTargetSDir($(BUILD_DIR),xerox_ilu_IluBatcher)
+ObjectTargetSDir($(BUILD_DIR),xerox_ilu_IluGssCred)
+ObjectTargetSDir($(BUILD_DIR),xerox_ilu_IluGssOid)
+ObjectTargetSDir($(BUILD_DIR),xerox_ilu_IluSBH)
+ObjectTargetSDir($(BUILD_DIR),xerox_ilu_IluDebugHooks)
+ObjectTargetSDir($(BUILD_DIR),xerox_ilu_IluGCClient)
+ObjectTargetSDir($(BUILD_DIR),xerox_ilu_IluDebug)
+ObjectTargetSDir($(BUILD_DIR),xerox_ilu_IluDebugWriter)
+ObjectTargetSDir($(BUILD_DIR),xerox_ilu_IluPickle)
+ObjectTargetSDir($(BUILD_DIR),xerox_ilu_IluTypeCode)
+ObjectTargetSDir($(BUILD_DIR),xerox_ilu_IluTypeRep)
+ObjectTargetSDir($(BUILD_DIR),xerox_ilu_IluWPBase)
+#endif
+
+/*
+the following var OBJS is a list of all object files which get 
+linked into our extension
+*/
+#ifdef ILUJAVA_M_JNI
+OBJS_stubs = 
+#else
+OBJS_stubs = \
+$(BUILD_DIR)/xerox_ilu_IluInit2.o \
+$(BUILD_DIR)/xerox_ilu_IluAlarmTech.o \
+$(BUILD_DIR)/xerox_ilu_IluForkTech.o \
+$(BUILD_DIR)/xerox_ilu_IluSurrogateConnection.o \
+$(BUILD_DIR)/xerox_ilu_IluServerConnection.o \
+$(BUILD_DIR)/xerox_ilu_IluServer.o \
+$(BUILD_DIR)/xerox_ilu_IluOInt.o \
+$(BUILD_DIR)/xerox_ilu_IluCall.o \
+$(BUILD_DIR)/xerox_ilu_IluClassRep.o \
+$(BUILD_DIR)/xerox_ilu_IluExceptionRep.o \
+$(BUILD_DIR)/xerox_ilu_IluRT0.o \
+$(BUILD_DIR)/xerox_ilu_IluSBH.o \
+$(BUILD_DIR)/xerox_ilu_IluTransportInfo.o \
+$(BUILD_DIR)/xerox_ilu_IluPort.o \
+$(BUILD_DIR)/xerox_ilu_IluBatcher.o \
+$(BUILD_DIR)/xerox_ilu_IluGssCred.o \
+$(BUILD_DIR)/xerox_ilu_IluGssOid.o \
+$(BUILD_DIR)/xerox_ilu_IluDebugHooks.o \
+$(BUILD_DIR)/xerox_ilu_IluGCClient.o \
+$(BUILD_DIR)/xerox_ilu_IluDebug.o \
+$(BUILD_DIR)/xerox_ilu_IluDebugWriter.o \
+$(BUILD_DIR)/xerox_ilu_IluPickle.o \
+$(BUILD_DIR)/xerox_ilu_IluTypeCode.o \
+$(BUILD_DIR)/xerox_ilu_IluTypeRep.o \
+$(BUILD_DIR)/xerox_ilu_IluWPBase.o \
+$(BUILD_DIR)/xerox_ilu_IluPassport.o \
+$(BUILD_DIR)/xerox_ilu_IluPipeline.o \
+$(BUILD_DIR)/xerox_ilu_IluSerializationContext.o \
+$(BUILD_DIR)/xerox_ilu_IluIdentityType.o \
+$(BUILD_DIR)/xerox_ilu_IluIdentity.o 
+#endif
+
+OBJS_manual = \
+$(BUILD_DIR)/IluJava_IluConnOps.o \
+$(BUILD_DIR)/IluJava_IluAlarmTech.o \
+$(BUILD_DIR)/IluJava_IluOInt.o \
+$(BUILD_DIR)/IluJava_JOps.o \
+$(BUILD_DIR)/IluJava_IluCall.o \
+$(BUILD_DIR)/IluJava_IluClassRep.o \
+$(BUILD_DIR)/IluJava_IluServer.o \
+$(BUILD_DIR)/IluJava_IluRT0.o \
+$(BUILD_DIR)/IluJava_LockTech.o \
+$(BUILD_DIR)/IluJava_IluDebug.o \
+$(BUILD_DIR)/IluJava_IluPort.o \
+$(BUILD_DIR)/$(JAVA_WAITTECH_CALL).o \
+$(BUILD_DIR)/IluJava_GCClient.o \
+$(BUILD_DIR)/IluJava_IluPickle.o \
+$(BUILD_DIR)/IluJava_IluInit.o \
+$(BUILD_DIR)/IluJava_JMon.o \
+$(BUILD_DIR)/ilunative.o 
+
+OBJS_manual_2nd = \
+$(SECOND_BUILD_DIR)/IluJava_IluConnOps.o \
+$(SECOND_BUILD_DIR)/IluJava_IluAlarmTech.o \
+$(SECOND_BUILD_DIR)/IluJava_IluOInt.o \
+$(SECOND_BUILD_DIR)/IluJava_JOps.o \
+$(SECOND_BUILD_DIR)/IluJava_IluCall.o \
+$(SECOND_BUILD_DIR)/IluJava_IluClassRep.o \
+$(SECOND_BUILD_DIR)/IluJava_IluServer.o \
+$(SECOND_BUILD_DIR)/IluJava_IluRT0.o \
+$(SECOND_BUILD_DIR)/IluJava_LockTech.o \
+$(SECOND_BUILD_DIR)/IluJava_IluDebug.o \
+$(SECOND_BUILD_DIR)/IluJava_IluPort.o \
+$(SECOND_BUILD_DIR)/$(JAVA_WAITTECH_CALL).o \
+$(SECOND_BUILD_DIR)/IluJava_GCClient.o \
+$(SECOND_BUILD_DIR)/IluJava_IluPickle.o \
+$(SECOND_BUILD_DIR)/IluJava_IluInit.o \
+$(SECOND_BUILD_DIR)/IluJava_JMon.o \
+$(SECOND_BUILD_DIR)/ilunative.o 
+
+/* ======================================================== */
+
+/*
+ * make a java jar file...
+ */
+
+CleanTarget(ilu.jar)
+
+all:: ilu.jar
+
+ilu.jar: $(PRE_EXCEPTION_CLASSES) $(RT_CLASSES)
+	cd $(ILUJAVA_M_CLASSESDIR); $(JAVAJAR) -0cf ../ilu.jar *
+
+InstallRO(ilu.jar, $(DESTDIR)/lib)
+
+/* ======================================================== */
+
+#ifdef ILUJAVA_M_JDK12
+LIB_POSTFIX = _12
+#else
+LIB_POSTFIX = 
+#endif
+
+/* don't modify these rules without help... */
+
+#ifdef ADD_KERNEL_SHARED_LIBRARY
+/* Here, we build the ILUJava shared library against the ILU kernel shared library.
+   It goes in the non-dependent part of the macro because the actual content of
+   the kernel library is not hard-linked into the ILUJava shared library. */
+
+JavaExtension(libIluJava$(LIB_POSTFIX), $(OBJS_stubs) $(OBJS_manual),, -L../kernel -lilu $(BUILD_GSS_LIBS))
+InstallLink($(DESTDIR)/lib/libIluJava$(LIB_POSTFIX).$(SHAREDEXT), $(DESTDIR)/lib/libIluJava$(LIB_POSTFIX)_g.$(SHAREDEXT))
+
+#ifdef ILUJAVA_M_NATIVE_THREADS_EXTRA
+JavaExtension(libIluJava$(LIB_POSTFIX)_alt, $(OBJS_stubs) $(OBJS_manual_2nd),, -L../kernel -lilu $(BUILD_GSS_LIBS))
+InstallLink($(DESTDIR)/lib/libIluJava$(LIB_POSTFIX)_alt.$(SHAREDEXT), $(DESTDIR)/lib/libIluJava$(LIB_POSTFIX)_alt_g.$(SHAREDEXT))
+#endif
+
+#else /* no kernel shared library */
+
+/* Here, we build the ILUJava shared library against the static ar version of
+   the ILU kernel library.  The code actually gets linked into the ILUJava
+   shared library, so the reference to libilu.a goes in the dependent part of
+   the macro. */
+
+JavaExtension(libIluJava$(LIB_POSTFIX), $(OBJS_stubs) $(OBJS_manual), ../kernel/libilu.a, $(BUILD_GSS_LIBS))
+InstallLink($(DESTDIR)/lib/libIluJava$(LIB_POSTFIX).$(SHAREDEXT), $(DESTDIR)/lib/libIluJava$(LIB_POSTFIX)_g.$(SHAREDEXT))
+
+#ifdef ILUJAVA_M_NATIVE_THREADS_EXTRA
+JavaExtension(libIluJava$(LIB_POSTFIX)_alt, $(OBJS_stubs) $(OBJS_manual_2nd), ../kernel/libilu.a, $(BUILD_GSS_LIBS))
+InstallLink($(DESTDIR)/lib/libIluJava$(LIB_POSTFIX)_alt.$(SHAREDEXT), $(DESTDIR)/lib/libIluJava$(LIB_POSTFIX)_alt_g.$(SHAREDEXT))
+#endif
+
+#endif /* kernel shared library */
+
+/* ======================================================== */

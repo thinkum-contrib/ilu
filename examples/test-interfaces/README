@@ -1,0 +1,7 @@
+
+This directory contains a collection of .isl and .idl
+interface declarations, some obtained from other ilu src directories
+and some not, that exercise various aspects of the isl and idl
+parsers, and stubber mappings.  In particular, Testcomb.isl
+contains a fairly broad set of type definitions.
+

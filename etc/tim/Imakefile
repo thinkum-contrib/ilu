@@ -1,0 +1,50 @@
+/*
+Copyright (c) 1991, 1992, 1993 Xerox Corporation.  All Rights Reserved.  
+
+Unlimited use, reproduction, and distribution of this software is
+permitted.  Any copy of this software must include both the above
+copyright notice of Xerox Corporation and this paragraph.  Any
+distribution of this software must comply with all applicable United
+States export control laws.  This software is made available AS IS,
+and XEROX CORPORATION DISCLAIMS ALL WARRANTIES, EXPRESS OR IMPLIED,
+INCLUDING WITHOUT LIMITATION THE IMPLIED WARRANTIES OF MERCHANTABILITY
+AND FITNESS FOR A PARTICULAR PURPOSE, AND NOTWITHSTANDING ANY OTHER
+PROVISION CONTAINED HEREIN, ANY LIABILITY FOR DAMAGES RESULTING FROM
+THE SOFTWARE OR ITS USE IS EXPRESSLY DISCLAIMED, WHETHER ARISING IN
+CONTRACT, TORT (INCLUDING NEGLIGENCE) OR STRICT LIABILITY, EVEN IF
+XEROX CORPORATION IS ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+
+$Id: Imakefile,v 1.14 1999/05/01 02:10:06 janssen Exp $
+*/
+
+all::	tim timdif2html eps2jpeg
+
+tim::	tim.dist
+	sed -e 's;PYTHON_EXECUTABLE;$(PYTHON_HOME)/bin/python;' -e 's;TEX_EXECUTABLE;$(TEX);' -e 's;TEXINDEX_EXECUTABLE;$(TEXINDEX);' -e 's;DVIPS_EXECUTABLE;$(DVIPS);' -e 's;MAKEINFO_EXECUTABLE;$(MAKEINFO);' <tim.dist >tim ; \
+	chmod +x tim
+
+timdif2html:: timdif2html.dist
+	sed -e 's;PERL;$(PERL);' -e 's;TIMHOME;$(ILUHOME)/bin;g' <timdif2html.dist >timdif2html ; \
+	chmod +x timdif2html
+
+eps2gif:: eps2gif.dist
+	sed -e 's;PERL;$(PERL);' -e 's;GHOSTSCRIPT;$(GHOSTSCRIPT);g' <eps2gif.dist >eps2gif ; \
+	chmod +x eps2gif
+
+eps2png:: eps2png.dist
+	sed -e 's;PERL;$(PERL);' -e 's;GHOSTSCRIPT;$(GHOSTSCRIPT);g' <eps2png.dist >eps2png ; \
+	chmod +x eps2png
+
+eps2jpeg:: eps2jpeg.dist
+	sed -e 's;PERL;$(PERL);' -e 's;GHOSTSCRIPT;$(GHOSTSCRIPT);g' <eps2jpeg.dist >eps2jpeg ; \
+	chmod +x eps2jpeg
+
+#ifdef ADD_TIM_TOOLS
+dist:: tim timdif2html eps2jpeg eps2png
+#endif
+
+InstallProgram(tim, $(DESTDIR)/bin)
+InstallProgram(timdif2html, $(DESTDIR)/bin)
+InstallProgram(eps2jpeg, $(DESTDIR)/bin)
+InstallFile(texinfo.tex, -m 444, $(DESTDIR)/lib)
+CleanTarget(tim timdif2html eps2jpeg)

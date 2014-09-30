@@ -1,0 +1,53 @@
+<!-- This HTML file has been created by timdif2html 1.11
+     from manual.dif on 20 September 1999 -->
+
+<TITLE>ILU Reference Manual - Footnotes</TITLE>
+<BODY TEXT=#000000 BGCOLOR=#ffffff>
+<H1>ILU Reference Manual</H1>
+<H3><A NAME="FOOT1" HREF="manual_2.html#FOOT1">(1)</A></H3>
+We might forbid two consecutive hyphens or add other restrictions.
+<H3><A NAME="FOOT2" HREF="manual_2.html#FOOT2">(2)</A></H3>
+We may change this.
+<H3><A NAME="FOOT3" HREF="manual_2.html#FOOT3">(3)</A></H3>
+Same integer in all protocols?  Yep -- for now.
+<H3><A NAME="FOOT4" HREF="manual_2.html#FOOT4">(4)</A></H3>
+OMG IDL is defined in:
+The Common Object Request Broker: Architecture and Specification,
+OMG Document Number 91.12.1, Revision 1.1
+<H3><A NAME="FOOT5" HREF="manual_2.html#FOOT5">(5)</A></H3>
+The program's front end is derived from the
+Interface Definition Language Compiler Front End
+from SunSoft, Inc.  See the file <TT>`src/stubbers/idl2isl/Sun-parser/docs/COPYRIGHT'</TT>
+in the ILU distribution.
+<H3><A NAME="FOOT6" HREF="manual_3.html#FOOT6">(6)</A></H3>
+The Common Object Request Broker: Architecture and Specification,
+revision 2.0, Draft July 1995
+<H3><A NAME="FOOT7" HREF="manual_8.html#FOOT7">(7)</A></H3>
+This causes problems; the ISL names "FooBar" and "foo-bar"
+map to the same Common Lisp name.  Something will have to
+change.
+<H3><A NAME="FOOT8" HREF="manual_8.html#FOOT8">(8)</A></H3>
+See section <A HREF="manual_23.html#SEC625">The ILU Common Lisp Portable DEFSYSTEM Module</A>,
+ for a description of the <CODE>PDEFSYS</CODE> package.
+<H3><A NAME="FOOT9" HREF="manual_14.html#FOOT9">(9)</A></H3>
+RPC:  Remote Procedure
+Call Protocol Specification, Version 2; R. Srinivasan.  IETF RFC 1831, August 1995.
+<H3><A NAME="FOOT10" HREF="manual_14.html#FOOT10">(10)</A></H3>
+XDR:  External Data Representation Standard; R. Srinivasan. IETF RFC 1832, August 1995.
+<H3><A NAME="FOOT11" HREF="manual_14.html#FOOT11">(11)</A></H3>
+Courier:  The Remote
+Procedure Call Protocol; Xerox Corporation, XNSS 038112, 1981
+<H3><A NAME="FOOT12" HREF="manual_14.html#FOOT12">(12)</A></H3>
+Query: can requests be larger than the
+UDP packet size?  [No]  How then are they segmented?  [They're not; replies aren't either]  Note: This should
+probably be replaced by a reliable UDP protocol, in which each message
+is acknowledged by the receiver.  This would allow use of asynchronous
+methods over UDP.  Of course, ONC RPC would not cooperate.
+<H3><A NAME="FOOT13" HREF="manual_15.html#FOOT13">(13)</A></H3>
+The current ILU GSS implementation only allows one name per GSS identity.  This restriction will be lifted in the future.
+<H3><A NAME="FOOT14" HREF="manual_19.html#FOOT14">(14)</A></H3>
+Currently, it does this by marshalling
+one language's representation into a data buffer, as if to transmit it to
+another address space, then hands this buffer to the other language's ILU support,
+which unmarshalls it into representations appropriate for that language.  We plan
+to optimize this process in the future.

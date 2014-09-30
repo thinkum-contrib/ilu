@@ -1,0 +1,150 @@
+#!/bin/csh
+
+
+# BeginILUCopyright
+
+# Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+# Unlimited use, reproduction, modification, and distribution of this
+# software and modified versions thereof is permitted.  Permission is
+# granted to make derivative works from this software or a modified
+# version thereof.  Any copy of this software, a modified version
+# thereof, or a derivative work must include both the above copyright
+# notice of Xerox Corporation and this paragraph.  Any distribution of
+# this software, a modified version thereof, or a derivative work must
+# comply with all applicable United States export control laws.  This
+# software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+# WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+# PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+# LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+# EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+# NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+# OF THE POSSIBILITY OF SUCH DAMAGES.
+  
+# EndILUCopyright
+
+echo ""
+echo "------"
+echo "test1"
+echo "------"
+echo ""
+./xml test/test1
+echo ""
+echo "------"
+echo "test2"
+echo "------"
+./xml test/test2 
+echo ""
+echo "------"
+echo "test3"
+echo "------"
+./xml test/test3 
+echo ""
+echo "------"
+echo "test4"
+echo "------"
+./xml test/test4 
+echo ""
+echo "------"
+echo "test5"
+echo "------"
+./xml test/test5 
+echo ""
+echo "------"
+echo "test6"
+echo "------"
+./xml test/test6 
+echo ""
+echo "------"
+echo "test7"
+echo "------"
+./xml test/test7 
+echo ""
+echo "------"
+echo "test8"
+echo "------"
+./xml test/test8 
+echo ""
+echo "------"
+echo "test9"
+echo "------"
+./xml test/test9 
+echo ""
+echo "------"
+echo "test10"
+echo "------"
+./xml test/test10 
+echo ""
+echo "------"
+echo "test11"
+echo "------"
+./xml test/test11 
+echo ""
+echo "------"
+echo "test12"
+echo "------"
+./xml test/test12 
+echo ""
+echo "------"
+echo "test13"
+echo "------"
+./xml test/test13 
+echo ""
+echo "------"
+echo "test14"
+echo "------"
+./xml test/test14 
+echo ""
+echo "------"
+echo "test15"
+echo "------"
+./xml test/test15 
+echo ""
+echo "------"
+echo "test16"
+echo "------"
+./xml test/test16 
+echo ""
+echo "------"
+echo "test17"
+echo "------"
+./xml test/test17 
+echo ""
+echo "------"
+echo "test18"
+echo "------"
+./xml test/test18 
+echo ""
+echo "------"
+echo "test19"
+echo "------"
+./xml test/test19 
+echo ""
+echo "------"
+echo "test20"
+echo "------"
+./xml test/test20 
+echo ""
+echo "------"
+echo "test21"
+echo "------"
+./xml test/test21 
+echo ""
+echo "------"
+echo "test22"
+echo "------"
+./xml test/test22 
+echo "------"
+echo "test26"
+echo "------"
+./xml test/test26 
+echo "------"
+echo "test27"
+echo "------"
+./xml test/test27 
+echo "------"
+echo "test28"
+echo "------"
+./xml test/test28 
+exit

@@ -1,0 +1,289 @@
+/*
+ BeginILUCopyright
+ 
+ Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+ 
+ Unlimited use, reproduction, modification, and distribution of this
+ software and modified versions thereof is permitted.  Permission is
+ granted to make derivative works from this software or a modified
+ version thereof.  Any copy of this software, a modified version
+ thereof, or a derivative work must include both the above copyright
+ notice of Xerox Corporation and this paragraph.  Any distribution of
+ this software, a modified version thereof, or a derivative work must
+ comply with all applicable United States export control laws.  This
+ software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+ WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+ LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+ EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+ NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+ OF THE POSSIBILITY OF SUCH DAMAGES.
+ 
+ EndILUCopyright
+ $Id: Imakefile,v 1.79 1999/09/15 00:26:51 janssen Exp $
+*/
+
+
+#if ((defined(ILU_SOLARIS2_THREADS) || defined(ILU_POSIX_THREADS) || defined(ILU_DCE_THREADS) || defined(ILU_WIN32_THREADS)) && defined(ILU_PYTHON_HAS_THREADS))
+
+pythonversion.h: ../../imake/ilu.defs.new
+	$(RM) pythonversion.h
+	echo "#define ILUPYTHON_MAJOR_VERSION " PYTHON_MAJOR_VERSION >pythonversion.h
+	echo "#define ILUPYTHON_MINOR_VERSION " PYTHON_MINOR_VERSION >>pythonversion.h
+	if test -r $(PYTHON_PREFIX)/include/$(PYTHON_INCLUDE_SUFFIX)/pythread.h ; then \
+		echo '#include "pythread.h"' > pythonthreadheaderfile.h ;\
+	else \
+		echo '#include "thread.h"' > pythonthreadheaderfile.h ;\
+	fi
+	echo "#define ILU_PYTHON_THREADS 1" >>pythonversion.h
+
+#else
+
+pythonversion.h: ../../imake/ilu.defs.new
+	$(RM) pythonversion.h
+	echo "#define ILUPYTHON_MAJOR_VERSION " PYTHON_MAJOR_VERSION >pythonversion.h
+	echo "#define ILUPYTHON_MINOR_VERSION " PYTHON_MINOR_VERSION >>pythonversion.h
+	echo "" > pythonthreadheaderfile.h
+#endif /* (defined(ILU_OS_THREADED) && defined(ILU_PYTHON_HAS_THREADS)) */
+
+CleanTarget(pythonversion.h)
+
+#ifdef ILU_CORBA_PYTHON_MAPPING
+
+ILUPythonTargetWithOptions(iluhttp__POA.py iluhttp.py, ../../stubbers/parser/iluhttp.isl, -I ../../stubbers/parser)
+all:: iluhttp__POA.py iluhttp.py
+InstallRO(iluhttp__POA.py iluhttp.py, $(DESTDIR)/lib)
+
+#else
+
+ILUPythonTargetWithOptions(iluhttp__skel.py iluhttp.py, ../../stubbers/parser/iluhttp.isl, -I ../../stubbers/parser)
+all:: iluhttp__skel.py iluhttp.py
+InstallRO(iluhttp__skel.py iluhttp.py, $(DESTDIR)/lib)
+
+#endif /* ILU_CORBA_PYTHON_MAPPING */
+
+#if ((PYTHON_MAJOR_VERSION == 1) && (PYTHON_MINOR_VERSION >= 5))
+LOCALINCLUDES	= -I$(PYTHON_PREFIX)/include/$(PYTHON_INCLUDE_SUFFIX) -I$(PYTHON_EXEC_PREFIX)/include/$(PYTHON_SUFFIX) -I../kernel $(BUILD_GSS_INCLUDES) $(BUILD_BIGNUM_INCLUDES)
+#else
+LOCALINCLUDES	= -I$(PYTHON_PREFIX)/include/$(PYTHON_INCLUDE_SUFFIX) -I$(PYTHON_EXEC_PREFIX)/lib/$(PYTHON_EXEC_SUFFIX) -I../kernel $(BUILD_GSS_INCLUDES) $(BUILD_BIGNUM_INCLUDES)
+#endif /* ((PYTHON_MAJOR_VERSION == 1) && (PYTHON_MINOR_VERSION >= 5)) */
+
+ILUCINCLUDES =
+KERNELHEADERS = ../kernel/iluxport.h ../kernel/iluerror.h ../kernel/iluerrs.h ../kernel/iluconf.h ../kernel/ilubasic.h
+
+NormalObjectRule()
+
+python.h	: pythonversion.h
+iluPrmodule.o	: python.h ilualobject.h ilucaobject.h iluclobject.h \
+		  iluftobject.h ilulrobject.h ilusvobject.h iohcobject.h \
+		  ivobject.h thcobject.h ilupygss.h ilugiobject.h pythonthreads.h $(KERNELHEADERS)
+
+#if (defined(_IS_POSIX) && defined(ILU_USING_GLIBC))
+iluPrmodule.o : iluPrmodule.c
+	$(RM) $@
+	$(ANSI_C_COMPILER) -D_POSIX_SOURCE -c $(CFLAGS) $(ILUCINCLUDES) $(LOCALINCLUDES) $*.c
+#endif /* _IS_POSIX */
+
+ilualobject.o	: python.h ilualobject.h iluftobject.h pythonthreads.h $(KERNELHEADERS)
+ilucaobject.o	: python.h ilucaobject.h $(KERNELHEADERS)
+ilugiobject.o	: python.h ilugiobject.h $(KERNELHEADERS)
+iluclobject.o	: python.h iluclobject.h $(KERNELHEADERS)
+iluftobject.o	: python.h iluftobject.h $(KERNELHEADERS)
+ilulrobject.o	: python.h ilulrobject.h $(KERNELHEADERS)
+ilusvobject.o	: python.h ilusvobject.h $(KERNELHEADERS)
+ilupygss.o	: python.h ilupygss.h    $(KERNELHEADERS)
+ilutpobject.o	: python.h ilutpobject.h $(KERNELHEADERS)
+iluszobject.o	: python.h iluszobject.h $(KERNELHEADERS)
+iluplobject.o	: python.h iluplobject.h $(KERNELHEADERS)
+iluppobject.o	: python.h iluppobject.h $(KERNELHEADERS) ilupygss.h
+ilulpobject.o	: python.h ilulpobject.h $(KERNELHEADERS)
+iohcobject.o	: python.h iohcobject.h $(KERNELHEADERS)
+ivobject.o	: python.h ivobject.h pythonthreads.h $(KERNELHEADERS)
+thcobject.o	: python.h thcobject.h iluftobject.h $(KERNELHEADERS)
+
+#ifdef ADD_SECURE_TRANSPORT
+SECURITYOBJS = ilugiobject.o ilupygss.o
+#endif /* ADD_SECURE_TRANSPORT */
+
+#ifdef ADD_TYPE_REGISTRATION_SUPPORT
+TYPEOBJS = ilutpobject.o
+#endif
+
+#ifdef ILU_FIXED_POINT_SUPPORT
+FIXEDPOINTOBJS = ../../common/bignum/bigarith.o
+#endif /* def ILU_FIXED_POINT_SUPPORT */
+
+OBJS		= ${TYPEOBJS} ${SECURITYOBJS} \
+		ilualobject.o \
+		ilucaobject.o \
+		iluclobject.o \
+		iluftobject.o \
+		ilulrobject.o \
+		ilusvobject.o \
+		iluszobject.o \
+		iluplobject.o \
+		iluppobject.o \
+		ilulpobject.o \
+		iohcobject.o \
+		ivobject.o \
+		thcobject.o \
+		iluPrmodule.o
+
+ILU_LIB		= ../kernel/libilu.a
+
+#if ((PYTHON_MAJOR_VERSION == 1) && (PYTHON_MINOR_VERSION > 4))
+
+ADDOBJS = $(PYTHON_EXEC_PREFIX)/lib/$(PYTHON_EXEC_SUFFIX)/python.o
+AUXOBJS = $(FIXEDPOINTOBJS)
+
+#endif /* python version > 1.4 */
+
+#if ((PYTHON_MAJOR_VERSION == 1) && (PYTHON_MINOR_VERSION > 2) && (PYTHON_MINOR_VERSION < 5))
+
+ADDOBJS = $(PYTHON_EXEC_PREFIX)/lib/$(PYTHON_EXEC_SUFFIX)/main.o getpath.o
+
+GETPATHDEFINES=-DPYTHONPATH=\".:$(ILUHOME)/lib:$(PYTHON_PREFIX)/lib/$(PYTHON_SUFFIX)\" -DPREFIX=\"$(PYTHON_PREFIX)\" -DEXEC_PREFIX=\"$(PYTHON_EXEC_PREFIX)\"
+
+getpath.o : $(PYTHON_EXEC_PREFIX)/lib/$(PYTHON_EXEC_SUFFIX)/getpath.c
+	$(ANSI_C_COMPILER) $(CFLAGS) -c $(GETPATHDEFINES) -o ./getpath.o $(PYTHON_EXEC_PREFIX)/lib/$(PYTHON_EXEC_SUFFIX)/getpath.c
+
+AUXOBJS = getpath.o $(FIXEDPOINTOBJS)
+
+#endif /* python version 1.3 or 1.4 */
+
+#if ((PYTHON_MAJOR_VERSION == 1) && (PYTHON_MINOR_VERSION < 3))
+
+ADDOBJS =
+
+getpath.c : getpath.c.dist
+	$(RM) getpath.c
+	cp getpath.c.dist getpath.c
+
+getpath.o : getpath.c
+
+AUXOBJS = getpath.o $(FIXEDPOINTOBJS)
+
+CleanTarget(getpath.c)
+
+#endif /* Python version < 1.3 */
+
+#ifdef PYTHON_USES_SHARED_LIBRARIES_FOR_EXTENSIONS
+
+ObjectTarget(iluPrmodule.o)
+ObjectTarget(ilualobject.o)
+ObjectTarget(ilucaobject.o)
+ObjectTarget(iluclobject.o)
+ObjectTarget(iluftobject.o)
+ObjectTarget(ilulrobject.o)
+ObjectTarget(ilusvobject.o)
+#ifdef ADD_TYPE_REGISTRATION_SUPPORT
+ObjectTarget(ilutpobject.o)
+#endif /* def ADD_TYPE_REGISTRATION_SUPPORT */
+#ifdef ADD_SECURE_TRANSPORT
+ObjectTarget(ilugiobject.o)
+#endif
+ObjectTarget(iohcobject.o)
+ObjectTarget(ivobject.o)
+ObjectTarget(thcobject.o)
+
+#ifdef ADD_KERNEL_SHARED_LIBRARY
+
+/* we build against the kernel shared library if available, so
+   that the resulting Python shared library will be compatible
+   with being loaded into a Java VM */
+
+#if (defined(ILU_PYTHON_HAS_THREADS) || (!(defined(ILU_SOLARIS2_THREADS) || defined(ILU_POSIX_THREADS) || defined(ILU_WIN32_THREADS) || defined(ILU_DCE_THREADS))))
+
+PythonExtension(iluPrmodule, $(OBJS), $(FIXEDPOINTOBJS) , $(BUILD_SECURITY_LIBRARIES) -L$(ILU_KERNEL_SHAREDLIB_DIRECTORY) -lilu)
+
+#else  /* def ILU_PYTHON_HAS_THREADS */
+
+PythonExtension(iluPrmodule, $(OBJS), $(FIXEDPOINTOBJS) , $(BUILD_SECURITY_LIBRARIES) -L$(ILU_KERNEL_SHAREDLIB_DIRECTORY) -lilu-nothread)
+
+#endif /* def ILU_PYTHON_HAS_THREADS */
+
+#else
+
+PythonExtension(iluPrmodule, $(OBJS), $(FIXEDPOINTOBJS) $(ILU_LIB), $(BUILD_SECURITY_LIBRARIES))
+
+#endif
+
+#else /* build new Python executable with ILU linked in */
+
+Makefiles:: Makefile.build Setup
+
+all:: ilupython
+
+#ifdef ADD_SECURE_TRANSPORT
+Setup.in:
+	echo iluPr $(OBJS) $(FIXEDPOINTOBJS) -I../kernel -L../kernel -lilu $(BUILD_SECURITY_LIBRARIES) >Setup.in
+#else /* no SECURE_TRANSPORT */
+Setup.in:
+	echo iluPr $(OBJS) $(FIXEDPOINTOBJS) -I../kernel -L../kernel -lilu >Setup.in
+#endif /* ADD_SECURE_TRANSPORT */
+
+Makefile.pre.in : Makefile.pre.in.1.2
+	-rm -f Makefile.pre.in
+	cp Makefile.pre.in.1.2 Makefile.pre.in
+
+config.c Setup Makefile.build: Setup.in Makefile.pre.in
+	-rm -f Setup
+	make -f Makefile.pre.in Makefile.build \
+	    installdir=$(PYTHON_PREFIX) \
+	    exec_installdir=$(PYTHON_EXEC_PREFIX) \
+	    PYTHON_INCLUDE_SUFFIX=$(PYTHON_INCLUDE_SUFFIX) \
+	    PYTHON_EXEC_SUFFIX=$(PYTHON_EXEC_SUFFIX)
+
+ilupython: config.c Makefile.build Setup $(OBJS) $(ADDOBJS) ../kernel/libilu.a
+	make -f Makefile.build ilupython CC="$(ANSI_C_COMPILER)" \
+	    ADDOBJS="$(ADDOBJS)" \
+	    PYTHON_SUFFIX=$(PYTHON_SUFFIX) \
+	    PYTHON_EXEC_SUFFIX=$(PYTHON_EXEC_SUFFIX) \
+	    PYTHON_INCLUDE_SUFFIX=$(PYTHON_INCLUDE_SUFFIX)
+
+CleanTarget(python ilupython Makefile.build Setup.in Setup Makefile.pre sedscript)
+
+InstallProgram(ilupython, $(DESTDIR)/bin)
+
+#endif /* PYTHON_USES_SHARED_LIBRARIES_FOR_EXTENSIONS */
+
+#ifdef PYTHON_LIBRARIES_INSTALLED
+/*
+	Build and install libilupython.a, so that users can
+	build standalone programs with ILU and Python linked in.
+*/
+
+libconfig.c : $(PYTHON_EXEC_PREFIX)/lib/$(PYTHON_EXEC_SUFFIX)/config.c
+	$(SED) -f makelibconfig.sed <$(PYTHON_EXEC_PREFIX)/lib/$(PYTHON_EXEC_SUFFIX)/config.c >libconfig.c
+
+libconfig.o : libconfig.c
+	$(ANSI_C_COMPILER) $(CFLAGS) -I$(PYTHON_PREFIX)/include/$(PYTHON_INCLUDE_SUFFIX) -DNO_MAIN -o libconfig.o -c libconfig.c
+
+Setup : Setup-dist
+	$(RM) Setup ; $(SED) -e s:ILUHOME:$(ILUHOME): <Setup-dist >Setup
+
+LibraryTarget(libilupython.a, $(OBJS) libconfig.o)
+InstallLibrary(libilupython.a, $(DESTDIR)/lib)
+InstallRO(Setup, $(DESTDIR)/lib)
+
+LibraryTarget(libilupythonaux.a, $(AUXOBJS) getprogramname.o)
+InstallLibrary(libilupythonaux.a, $(DESTDIR)/lib)
+
+#endif /* PYTHON_LIBRARIES_INSTALLED */
+
+CleanTarget(libconfig.c libconfig.o)
+
+#if (defined(ADD_DIRECT_OMG_IDL_SUPPORT) || defined(ADD_IDL_SUPPORT))
+OMGIDL_INSTALLED=1
+#else
+OMGIDL_INSTALLED=0
+#endif /* if (defined(ADD_DIRECT_OMG_IDL_SUPPORT) || defined(ADD_IDL_SUPPORT)) */
+
+iluimport.py : iluimport.py.dist ../../imake/ilu.defs.new
+	rm -f iluimport.py
+	$(SED) -e 's;ILUHOME;$(ILUHOME);' -e 's;OMGIDL_INSTALLED;$(OMGIDL_INSTALLED);' < iluimport.py.dist >iluimport.py
+
+all:: iluimport.py
+
+InstallRO(iluRt.py iluimport.py CORBA.py CORBAExceptions.py ilu.py ilu__skel.py ilu_tk.py SunRPCUNIXAuthUsername.py, $(DESTDIR)/lib)

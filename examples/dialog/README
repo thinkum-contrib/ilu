@@ -1,0 +1,49 @@
+README for the "dialog" interface example.
+[$Id: README,v 1.5 1999/08/03 01:57:27 janssen Exp $
+ BeginILUCopyright
+
+ Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+ Unlimited use, reproduction, modification, and distribution of this
+ software and modified versions thereof is permitted.  Permission is
+ granted to make derivative works from this software or a modified
+ version thereof.  Any copy of this software, a modified version
+ thereof, or a derivative work must include both the above copyright
+ notice of Xerox Corporation and this paragraph.  Any distribution of
+ this software, a modified version thereof, or a derivative work must
+ comply with all applicable United States export control laws.  This
+ software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+ WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+ LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+ EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+ NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+ OF THE POSSIBILITY OF SUCH DAMAGES.
+
+ EndILUCopyright ]
+
+This simple example pauses for user input everywhere the application gets control.  By deliberately breaking network connectivity at one of these pauses, one can test ILU's reaction to network failures.  The example is available only in C.
+
+To build,
+
+% ilumkmf
+% make
+
+To run the server,
+
+% ./server
+SBH = 'ilu:DialogTest-Server/it;ilu%3Dp4NgL1yu-oubkE2nAEl9rLUU6iU;sunrpc_2_0x31000400_2621784198@sunrpcrm=tcp_13.2.116.14_4307'
+
+The full syntax for the server is this:
+
+server [-pt <pinfo> <transport layer>...] ... [-p pinfo] [-t <transport layer>...]
+
+The -p and -t switches affect the RPC protocol and transport stack used in the last port created for the server; each use of the -pt switch causes an additional port to be created.
+
+
+Then run the client
+
+% ./client 'ilu:DialogTest-Server/it;ilu%3Dp4NgL1yu-oubkE2nAEl9rLUU6iU;sunrpc_2_0x31000400_2621784198@sunrpcrm=tcp_13.2.116.14_4307'
+
+passing the host address and port number from the SBH printed by the server.

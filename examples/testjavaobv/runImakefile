@@ -1,0 +1,82 @@
+/** $Id: runImakefile,v 1.2 1999/08/03 01:59:10 janssen Exp $
+ BeginILUCopyright
+
+ Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+ Unlimited use, reproduction, modification, and distribution of this
+ software and modified versions thereof is permitted.  Permission is
+ granted to make derivative works from this software or a modified
+ version thereof.  Any copy of this software, a modified version
+ thereof, or a derivative work must include both the above copyright
+ notice of Xerox Corporation and this paragraph.  Any distribution of
+ this software, a modified version thereof, or a derivative work must
+ comply with all applicable United States export control laws.  This
+ software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+ WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+ LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+ EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+ NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+ OF THE POSSIBILITY OF SUCH DAMAGES.
+
+ EndILUCopyright
+*/
+/* Chris Jacobi, January 5, 1999 4:16 pm PST */
+/* Last edited by Mike Spreitzer October 9, 1998 9:52 am PDT */
+
+NormalObjectRule()
+
+InterfaceTarget(Test1.isl)
+
+
+#####################################################
+#
+# Java
+#
+
+#ifdef ADD_JAVA_LANGUAGE
+
+
+ILUJAVA_M_CLASSESDIR = ./classes
+JAVA_STUB_DIR = ./javastubs
+SPECIAL_CLASS_DIR = ./hiddenclasses
+
+BuildDir($(ILUJAVA_M_CLASSESDIR))
+BuildDir($(JAVA_STUB_DIR))
+BuildDir($(SPECIAL_CLASS_DIR))
+
+ALL_JAVA_FILES = *java
+STUB_SOURCES = \
+	$(JAVA_STUB_DIR)/testJavaSerialObjects/$(ALL_JAVA_FILES)
+
+SPECIAL_SOURCES = TestSending.java FooWhizBangFuzzler.java
+APP_SOURCES = TestReceiving.java
+
+ILUJavaStubTarget(make.java_has_been_stubbed, testJavaSerialObjects.isl,)
+
+
+/* for compiling java applications */
+#define ILUJavaSpecialCompileTarget(touchtarget,sources,extrapendencies,extraswitches)	@@\
+										@@\
+all:: touchtarget 								@@\
+										@@\
+touchtarget: sources extrapendencies					@@\
+	$(JAVAC) -d $(ILUJAVA_M_CLASSESDIR) -classpath "$(ILUJAVA_M_CLASSESDIR):$(ILUHOME)/lib/ilujavaobv.jar:$(SPECIAL_CLASS_DIR):$(ILUJAVA_M_ILUCLASSES):$(ILUJAVA_M_JAVAHOME)/lib/classes.zip" $(ILUJAVA_M_JAVACOMPILESWITCHES) extraswitches sources 	@@\
+	touch touchtarget							@@\
+										@@\
+clean::									@@\
+	-rm -f touchtarget							@@\
+	-rm -rf $(ILUJAVA_M_CLASSESDIR)*.class
+
+
+
+ILUJAVA_M_U_EXTRACLASSES=:$(ILUHOME)/lib/ilujavaobv.jar
+
+ILUJavaCompile2Target(make.java_stubs_compiled, $(STUB_SOURCES), $(JAVA_STUB_DIR)/testJavaSerialObjects/ObjectGetter.java, make.java_has_been_stubbed,)
+
+ILUJavaCompile2Target(make.java_sources_compiled, $(APP_SOURCES), $(APP_SOURCES), make.java_stubs_compiled,)
+
+ILUJavaSpecialCompileTarget(make.java_special_sources_compiled, $(SPECIAL_SOURCES), make.java_stubs_compiled,)
+
+#endif

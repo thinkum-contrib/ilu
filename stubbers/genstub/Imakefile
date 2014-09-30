@@ -1,0 +1,68 @@
+/**
+ BeginILUCopyright
+
+ Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+ Unlimited use, reproduction, modification, and distribution of this
+ software and modified versions thereof is permitted.  Permission is
+ granted to make derivative works from this software or a modified
+ version thereof.  Any copy of this software, a modified version
+ thereof, or a derivative work must include both the above copyright
+ notice of Xerox Corporation and this paragraph.  Any distribution of
+ this software, a modified version thereof, or a derivative work must
+ comply with all applicable United States export control laws.  This
+ software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+ WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+ LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+ EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+ NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+ OF THE POSSIBILITY OF SUCH DAMAGES.
+
+ EndILUCopyright
+*/
+
+#gstub makefile
+
+NormalObjectRule()
+
+LOCALINCLUDES = -I../parser
+
+PARSEOBJS = \
+	parse-util.o \
+	parse.o 
+
+PARSEHEADERFILES = data.h parse.h rules.h 
+
+$(PARSEOBJS) :  parse.h rules.h data.h parse.c
+
+parse.o : parse.c $(PARSEHEADERFILES)
+parse-util.o : parse-util.c $(PARSEHEADERFILES)
+
+parse-rules: $(PARSEOBJS)  
+
+ProgramTarget(parse-rules, $(PARSEOBJS),,)
+
+
+STUBOBJS = \
+	convert.o \
+	generate.o \
+	modules.o \
+	typesort.o \
+	ilup.data.o
+
+GENHEADERFILES = ../parser/iluptype.h data.h convert.h rules.h ../parser/iluconf.h
+
+convert.o : convert.c $(GENHEADERFILES)
+generate.o : generate.c $(GENHEADERFILES)
+modules.o : modules.c $(GENHEADERFILES)
+ilup.data.o: ilup.data.c $(GENHEADERFILES)
+
+print-converted.o: print-converted.c $(GENHEADERFILES) libilu-stub.a
+
+ProgramTarget(print-genstub-ilup, print-converted.o, $(ILU_STUBBER_LIBRARIES) libilu-stub.a,)
+
+LibraryTarget(libilu-stub.a, $(STUBOBJS))
+
+InstallProgram(print-genstub-ilup, $(DESTDIR)/bin)  

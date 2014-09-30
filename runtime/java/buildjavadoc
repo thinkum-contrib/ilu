@@ -1,0 +1,4 @@
+echo buildjavadoc
+echo this should build the javadocs documentation for ILU using Java JDK1.2
+echo you might want to replace ftp://ftp.parc.xerox.com/pub/ilu/misc/ilu4java.html
+javadoc -d javadocs -splitindex -sourcepath ./jsrc:../../etc/javaobv/jsrc:../../etc/javaobv/javastubs -link http://java.sun.com/products/jdk/1.2/docs/api -doctitle "ILU for Java" -header "<A href="" ftp://ftp.parc.xerox.com/pub/ilu/misc/ilu4java.html"" target=""_top"">ILU for Java</A>" -windowtitle "javadoc - ILU" xerox.basics xerox.ilu xerox.ilutools xerox.ilujava

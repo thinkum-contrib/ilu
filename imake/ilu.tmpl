@@ -1,0 +1,276 @@
+/*
+BeginILUCopyright
+
+Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+Unlimited use, reproduction, modification, and distribution of this
+software and modified versions thereof is permitted.  Permission is
+granted to make derivative works from this software or a modified
+version thereof.  Any copy of this software, a modified version
+thereof, or a derivative work must include both the above copyright
+notice of Xerox Corporation and this paragraph.  Any distribution of
+this software, a modified version thereof, or a derivative work must
+comply with all applicable United States export control laws.  This
+software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+OF THE POSSIBILITY OF SUCH DAMAGES.
+  
+EndILUCopyright
+
+$Id: ilu.tmpl,v 1.56 1999/08/03 01:59:23 janssen Exp $
+*/
+/* Chris Jacobi, November 19, 1998 10:01 am PST */
+
+#include "ilu.defs.new"
+
+MACROFILE = MacroIncludeFile
+
+.SUFFIXES: .PS .do .o .ih .eh .fwm .snf .rtx .c .s .spp .y .l .ch .mss .fdb .bdf .fb .pcf
+
+#ifdef ConstructMFLAGS
+MFLAGS = -$(MAKEFLAGS)
+#endif /* ConstructMFLAGS */
+
+ALL_INCLUDES = -I. $(LOCALINCLUDES) $(INCLUDES)
+ALL_DEFINES = $(THREADDEFINES) $(STD_DEFINES) $(DEFINES) $(BSDDEFINE) $(POSIXDEFINE)
+COMPILERFLAGS = $(CCSHARED_FLAGS)
+CFLAGS = $(COMPILERFLAGS) $(CDEBUGFLAGS) $(ALL_INCLUDES) $(ALL_DEFINES)
+TESTING_CFLAGS = -DTESTINGONLYTESTING $(CFLAGS)
+CLASSFLAGS = $(CLASSINCLUDES)
+LDFLAGS = $(ILU_ZLIB_LIBRARY) $(SYS_LIBRARIES) $(SYSAUX_LIBRARIES)
+LDSHARED_FLAGS =
+INSTUIDFLAGS = -m 4755
+#if hp9000s800
+INSTLIBFLAGS = -m 0775
+#else
+INSTLIBFLAGS = -m 0664
+#endif
+INSTINCFLAGS = -m 0444
+INSTMANFLAGS = -m 0444
+INSTAPPFLAGS = -m 0444
+INSTPROGFLAGS = -m 0555
+INSTPROGRWFLAGS = -m 0755
+INSTCLASSPROGFLAGS = $(INSTPROGFLAGS)
+
+/* end changeable items */
+
+M3FLAGS = -make -why -w1 $(M3DEBUGFLAGS) $(LOCALM3FLAGS)
+
+CC = $(ANSI_C_COMPILER)
+
+#ifdef WORK_IN_ILU_SOURCE_TREE
+
+ILU_TESTING_PYTHON_LIBS = $(ILUSRC)/etc/testing
+
+ILUPYTHONLIBS = $(ILUSRC)/runtime/python
+
+ILU_LISP_DIR = $(ILUSRC)/runtime/lisp
+
+ILU_KERNEL_LIB = $(ILUSRC)/runtime/kernel/libilu.a
+#ifdef ADD_KERNEL_SHARED_LIBRARY
+ILU_KERNEL_SHAREDLIB_DIRECTORY = $(ILUSRC)/runtime/kernel
+#endif
+ILU_C_LIB = $(ILUSRC)/runtime/c/libilu-c.a
+
+ILUCINCLUDES = -I$(ILUSRC)/runtime/c -I$(ILUSRC)/runtime/kernel $(BUILD_SECURITY_INCLUDES) $(BUILD_BIGNUM_INCLUDES)
+ILUCLIBS = $(ILU_C_LIB) $(ILU_KERNEL_LIB) $(BUILD_SECURITY_LIBRARIES) $(ILU_ZLIB_LIBRARY)
+
+#ifdef ADD_ILU_CPLUSPLUS_LANGUAGE
+
+ILUCPLUSPLUSINCLUDES = -I$(ILUSRC)/runtime/cpp -I$(ILUSRC)/runtime/kernel $(BUILD_SECURITY_INCLUDES) $(BUILD_BIGNUM_INCLUDES)
+ILU_CPLUSPLUS_LIB = $(ILUSRC)/runtime/cpp/libilu-c++.a
+ILUCPLUSPLUSLIBS = $(ILU_CPLUSPLUS_LIB) $(ILU_KERNEL_LIB) $(BUILD_SECURITY_LIBRARIES) $(ILU_ZLIB_LIBRARY)
+
+#elif defined(ADD_CORBA_CPLUSPLUS_LANGUAGE)
+
+ILUCPLUSPLUSINCLUDES = -I$(ILUSRC)/runtime/cpp2 -I$(ILUSRC)/stubbers/cpp2 -I$(ILUSRC)/runtime/kernel $(BUILD_SECURITY_INCLUDES) $(BUILD_BIGNUM_INCLUDES)
+ILU_CPLUSPLUS_LIB = $(ILUSRC)/runtime/cpp2/libilu-cpp2.a
+ILUCPLUSPLUSLIBS = $(ILU_CPLUSPLUS_LIB) $(ILU_KERNEL_LIB) $(BUILD_SECURITY_LIBRARIES) $(ILU_ZLIB_LIBRARY)
+
+#endif
+
+ILUJAVA_M_ILUCLASSES = $(ILUSRC)/runtime/java/ilu.jar
+ILUJAVA_M_ILUMODULE_HOME = $(ILUSRC)/runtime/java
+
+ILUGUILE_COMMAND=$(ILUSRC)/runtime/guile/iluguile
+ILUGUILE_DIRECTORY=$(ILUSRC)/runtime/guile
+ILUGUILELIBS=$(ILUSRC)/runtime/guile/libilu-guile.a $(ILUSRC)/runtime/kernel/libilu.a  $(ILU_ZLIB_LIBRARY)
+
+CURRENT_SECURITY_LIBS = $(BUILD_SECURITY_LIBRARIES)
+CURRENT_SECURITY_INCLUDES = $(BUILD_SECURITY_INCLUDES)
+
+#if defined(ADD_ILU_CPLUSPLUS_LANGUAGE)
+CPLUSPLUS_STUBBER=$(ILUSRC)/stubbers/cpp/c++-stubber
+#elif defined(ADD_CORBA_CPLUSPLUS_LANGUAGE)
+CPLUSPLUS_STUBBER=$(ILUSRC)/stubbers/cpp2/cpp2-stubber
+#endif
+C_STUBBER=$(ILUSRC)/stubbers/c/c-stubber
+M3_STUBBER=$(ILUSRC)/stubbers/m3/m3-stubber
+LISP_STUBBER=$(ILUSRC)/stubbers/lisp/lisp-stubber
+PYTHON_STUBBER=$(ILUSRC)/stubbers/python/python-stubber
+JAVA_STUBBER=$(ILUSRC)/stubbers/java/java-stubber
+SCHEME_STUBBER=$(ILUSRC)/stubbers/scheme/scheme-stubber
+IDL2ISL=$(ILUSRC)/stubbers/idl2isl/idl2isl
+
+ILU_C_CONFIGURATION_FILE = $(ILUSRC)/imake/iluconf.h
+
+ILUSB = $(ILUSRC)/etc/sbserver/ilusb
+
+#if (defined(ADD_C_LANGUAGE) && defined(ADD_IIOP_PROTOCOL) && (defined(ADD_IDL_SUPPORT) || defined(ADD_DIRECT_OMG_IDL_SUPPORT)))
+ILU_COS_NAMING_IMPL = $(ILUSRC)/etc/CosNaming/ILUCosNaming
+ILU_COS_NAMING_IDL = $(ILUSRC)/etc/CosNaming/CosNaming.idl
+#endif /* defined(ADD_C_LANGUAGE)... */
+
+#else	/* def WORK_IN_ILU_SOURCE_TREE */
+
+ILU_TESTING_PYTHON_LIBS = $(ILUHOME)/lib
+
+ILUPYTHONLIBS = $(ILUHOME)/lib
+
+ILU_LISP_DIR = $(ILUHOME)/lisp
+
+ILU_KERNEL_LIB = $(ILUHOME)/lib/libilu.a
+#ifdef ADD_KERNEL_SHARED_LIBRARY
+ILU_KERNEL_SHAREDLIB_DIRECTORY = $(ILUHOME)/lib
+#endif
+ILU_C_LIB = $(ILUHOME)/lib/libilu-c.a
+
+ILUCINCLUDES = -I$(ILUHOME)/include $(SECURITYINCLUDES) $(BIGNUMINCLUDES)
+ILUCLIBS = $(ILU_C_LIB) $(ILU_KERNEL_LIB) $(SECURITYLIBS) $(ILU_ZLIB_LIBRARY)
+
+ILUCPLUSPLUSINCLUDES = -I$(ILUHOME)/include $(SECURITYINCLUDES) $(BIGNUMINCLUDES)
+#if defined(ADD_ILU_CPLUSPLUS_LANGUAGE)
+ILU_CPLUSPLUS_LIB = $(ILUHOME)/lib/libilu-c++.a
+#elif defined(ADD_CORBA_CPLUSPLUS_LANGUAGE)
+ILU_CPLUSPLUS_LIB = $(ILUHOME)/lib/libilu-cpp2.a
+#endif
+ILUCPLUSPLUSLIBS = $(ILU_CPLUSPLUS_LIB) $(ILU_KERNEL_LIB) $(SECURITYLIBS) $(ILU_ZLIB_LIBRARY)
+
+ILUJAVA_M_ILUCLASSES = $(ILUHOME)/lib/ilu.jar
+ILUJAVA_M_ILUMODULE_HOME = $(ILUHOME)/lib
+
+ILUGUILE_COMMAND=$(ILUHOME)/bin/iluguile
+ILUGUILE_DIRECTORY=$(ILUHOME)/guile
+ILUGUILELIBS=$(ILUHOME)/lib/libilu-guile.a $(ILU_KERNEL_LIB) $(ILU_ZLIB_LIBRARY)
+
+CURRENT_SECURITY_LIBS = $(SECURITYLIBS)
+CURRENT_SECURITY_INCLUDES = $(SECURITYINCLUDES)
+
+CLASS_STUBBER=$(ILUHOME)/bin/class-stubber
+#if defined(ADD_ILU_CPLUSPLUS_LANGUAGE)
+CPLUSPLUS_STUBBER=$(ILUHOME)/bin/c++-stubber
+#elif defined(ADD_CORBA_CPLUSPLUS_LANGUAGE)
+CPLUSPLUS_STUBBER=$(ILUHOME)/bin/cpp2-stubber
+#endif
+FORTRAN_STUBBER=$(ILUHOME)/bin/fortran-stubber
+C_STUBBER=$(ILUHOME)/bin/c-stubber
+M3_STUBBER=$(ILUHOME)/bin/m3-stubber
+LISP_STUBBER=$(ILUHOME)/bin/lisp-stubber
+PYTHON_STUBBER=$(ILUHOME)/bin/python-stubber
+JAVA_STUBBER=$(ILUHOME)/bin/java-stubber
+SCHEME_STUBBER=$(ILUHOME)/bin/scheme-stubber
+IDL2ISL=$(ILUHOME)/bin/idl2isl
+
+ILU_C_CONFIGURATION_FILE = $(ILUHOME)/include/iluconf.h
+
+ILUSB = $(ILUHOME)/bin/ilusb
+
+#if (defined(ADD_C_LANGUAGE) && defined(ADD_IIOP_PROTOCOL) && (defined(ADD_IDL_SUPPORT) || defined(ADD_DIRECT_OMG_IDL_SUPPORT)))
+ILU_COS_NAMING_IMPL = $(ILUHOME)/bin/ILUCosNaming
+ILU_COS_NAMING_IDL = $(ILUHOME)/interfaces/CosNaming.idl
+#endif /* defined(ADD_C_LANGUAGE)... */
+
+#endif /* def WORK_IN_ILU_SOURCE_TREE */
+
+TEXINFO2PS = $(ILUHOME)/bin/texinfo2ps
+TEXINFO2INFO = $(ILUHOME)/bin/texinfo2info
+TIM = $(ILUHOME)/bin/tim
+
+IMAKE_CMD = $(IMAKE) -T$(IMAKE_RULES_SRCDIR)/ilu.tmpl -I$(IMAKE_RULES_SRCDIR) -I. -s Makefile
+DOTDOTIMAKE_CMD = $(IMAKE) -T$(IMAKE_RULES_SRCDIR)/ilu.tmpl -I$(IMAKE_RULES_SRCDIR) -s Makefile
+
+#include "ilu.rules"
+
+All:: all
+Doc:: doc
+doc:: install.doc
+Aliases:: aliases
+aliases:: install.alias
+Install:: install
+install:: all install.time doc
+system: Install
+World:: world
+world:: depend install aliases
+Tidy:: tidy
+Ptest:: ptest
+Dist:: dist
+Clean:: clean
+clean:: tidy
+
+dependInstall:: depend
+	make DESTDIR=$(DESTDIR) install
+
+dependAll:: depend
+	make DESTDIR=$(DESTDIR) all
+
+depend::
+all::
+
+dist::
+
+ptest::
+
+dependInstallClean:: depend install clean
+
+MAKEFILE_SOURCES = $(IMAKE_RULES_SRCDIR)/ilu.defs.new \
+                   $(IMAKE_RULES_SRCDIR)/ilu.tmpl \
+                   $(IMAKE_RULES_SRCDIR)/ilu.rules
+
+GenericCleanTarget()
+MakefileTarget()
+TagsTarget()
+
+#include INCLUDE_IMAKEFILE
+
+Makefiles:: Imakefile
+
+
+
+#ifdef IHaveSubdirs
+
+dependInstallClean::
+	@case '$(MFLAGS)' in *[ik]*) set +e;; esac; \
+ for i in $(SUBDIRS); \
+ do \
+ (cd $$i; echo "building (dependInstall) (`pwd`)"; \
+ $(MAKE) $(MFLAGS) DESTDIR='$(DESTDIR)' dependInstallClean) \
+ done
+
+DistSubdirs($(SUBDIRS) $(EXTRASUBDIRS))
+MakeSubdirs($(SUBDIRS) $(EXTRASUBDIRS))
+DependMakeSubdirs($(SUBDIRS) $(EXTRASUBDIRS))
+InstallSubdirs($(SUBDIRS))
+InstallDocSubdirs($(SUBDIRS))
+InstallAliasSubdirs($(SUBDIRS))
+DependInstallSubdirs($(SUBDIRS))
+WorldInstallSubdirs($(SUBDIRS))
+CleanSubdirs($(SUBDIRS) $(EXTRASUBDIRS))
+TidySubdirs($(SUBDIRS) $(EXTRASUBDIRS))
+PTestSubdirs($(SUBDIRS) $(EXTRASUBDIRS))
+TagSubdirs($(SUBDIRS) $(EXTRASUBDIRS))
+MakefileSubdirs($(SUBDIRS) $(EXTRASUBDIRS))
+
+#endif /* IHaveSubdirs */
+
+install.time::
+	touch install.time
+
+install.doc::
+	touch install.doc
+
+install.alias::

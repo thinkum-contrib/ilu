@@ -1,0 +1,203 @@
+#! /bin/csh
+#
+# @(#) Carefully install a binary file
+#
+# This script follows the SunOS man page for "install(1)", except that it will
+# move existing executables out of the way before installing a new version
+# of the program, so as not to interrupt running users.
+#
+# Install a binary file.
+# Usage:
+#	install-binary [-R | +R] [-c] [-s] [-g group] [-o owner] [-m mode] source target
+#	install-binary -d [-g group] [-m mode] [-o owner] directory
+#
+# The file source is copied to target.
+# If there is already a target file, it is first renamed to ${target}-old
+# to prevent lossage that occurs when you delete a file that somebody is currently
+# executing.  If the -R flag is provided, this rename is skipped and the target is
+# replaced.  If the +R flag is provided, the rename does happen. If neither flag is
+# provided the rename is done if the source is an executable.
+# The copying is done by first copying to a temporary file in target directory, then
+# renaming to the desired name.  This minimizes the time window where the target file
+# is not valid.  The -c switch does nothing, as a copy is always performed.
+# The -m switch allows a new protection mask to be specified which will be applied
+# to the installed file.
+#
+# Parse arg list
+set command = $0
+#
+while ($#argv > 1)
+ switch ($1)
+  case -d:
+   shift
+   set makedirectory = 1
+   breaksw
+  case +R:
+   shift
+   set replace = 0
+   breaksw
+  case -R:
+   shift
+   set replace = 1
+   breaksw
+  case -c:	# ignore this case, always copy.  Provided for compatibility.
+   shift
+   breaksw
+  case -m:
+   shift
+   set newmode = $1
+   shift
+   breaksw
+  case -o:
+   shift
+   set newowner = $1
+   shift
+   breaksw
+  case -g:
+   shift
+   set newgroup = $1
+   shift
+   breaksw
+  case -s:
+   shift
+   set stripfile = 1
+   breaksw
+  default:
+   goto checkargs
+ endsw
+end
+#
+# finished parsing switches, now either make directories or copy file
+#
+checkargs:
+if ($?makedirectory) then
+#
+# make directory path, setting protections and ownerships
+#
+  if (! $#argv == 1) goto usage
+  if ( `expr match $1 "/import/.*"` ) then
+	set target = `/import/import-support/bin/file-writable-location $1`
+  else
+	set target = $1
+  endif
+  mkdir -p $target
+  if (! -d $target ) then
+    echo "Couldn't create directory $target."
+    exit 1
+  endif
+  if ($?newmode) then
+   /bin/chmod $newmode $target
+  endif
+  if ($?newowner) then
+   /etc/chown $newowner $target
+  endif
+  if ($?newgroup) then
+   /bin/chgrp $newgroup $target
+  endif
+  exit 0
+endif  
+#
+# copy the file
+#
+if ($#argv < 2) goto usage
+#
+# figure out the target dir or file
+#
+set last = $argv[$#argv]
+if ( `expr match $last "/import/.*"` ) then
+	set target = `/import/import-support/bin/file-writable-location $last`
+else
+	set target = $last
+endif
+
+if ( ( ! -d $target ) && $#argv > 2 ) then
+  echo "When more than 1 source file is specified, the target ($target) must be a dir."
+  goto usage
+endif
+
+set sources =
+while ($#argv > 1)
+  set sources = ( $sources $argv[1] )
+  shift
+end
+
+while ($#sources > 0)
+  set source = $sources[1]
+  if (! -f ${source}) then
+    echo "File ${source} not found"
+    exit 1
+  endif
+#
+  if (! $?replace) then
+    if (-x ${source}) then
+      set replace = 0
+    else
+      set replace = 1
+    endif
+  endif
+#
+  if (-d $target) then
+    set temptarget = ${target}/${source:t}
+  else
+    set temptarget = ${target}
+  endif
+#
+#
+# Get the file over there under a temp name
+  set copy_tries = (5 4 3 2 1)
+  copyfile:
+  cp -p ${source} ${temptarget}-temp$$
+  shift copy_tries
+  cmp -s ${source} ${temptarget}-temp$$
+  if ($status != 0) then
+    if ("$copy_tries" == "") then
+      echo "Failed to copy file"
+      exit 1
+    else
+      echo "Copy incorrect, trying again..."
+      /bin/rm ${temptarget}-temp$$
+    endif
+    goto copyfile
+  endif
+  if ($?newmode) then
+    /bin/chmod $newmode ${temptarget}-temp$$
+  endif
+  if ($?newowner) then
+    /etc/chown $newowner ${temptarget}-temp$$
+  endif
+  if ($?newgroup) then
+    /bin/chgrp $newgroup ${temptarget}-temp$$
+  endif
+  if ($?stripfile) then
+    /bin/strip ${temptarget}-temp$$
+  endif
+#
+# If the file exists rename any existing file (if we are supposed to)
+  if ($replace == 0) then
+    set old_files = 
+    set file = ${temptarget}
+    while (-f ${file})
+      set old_files = ( ${file} ${old_files} )
+      set file = ${file}-old
+    end
+    foreach file (${old_files})
+      echo "Renaming ${file} to ${file}-old"
+      mv ${file} ${file}-old
+    end
+  endif
+#
+# Rename the temp version to the real version
+  if (-f ${temptarget}) rm -f ${temptarget}
+  mv ${temptarget}-temp$$ ${temptarget}
+#
+# end of while loop
+  shift sources
+end
+
+exit 0
+#
+# Oops...
+usage:
+echo "Usage: ${command:t} [-R | +R] [-c] [-m mode] [-g group] source [source2 ...] target"
+echo "    or ${command:t} -d [-m mode] [-o owner] [-g group] directory"
+exit 1

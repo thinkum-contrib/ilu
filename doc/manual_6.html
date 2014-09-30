@@ -1,0 +1,467 @@
+<!-- This HTML file has been created by timdif2html 1.11
+     from manual.dif on 20 September 1999 -->
+
+<TITLE>ILU Reference Manual - Using ILU with C++</TITLE>
+<BODY TEXT=#000000 BGCOLOR=#ffffff>
+<P>Go to the <A HREF="manual_5.html">previous</A>, <A HREF="manual_7.html">next</A> section.<P>
+<H1><A NAME="SEC218" HREF="manual_toc.html#SEC218">Using ILU with C++</A></H1>
+<P>
+<H2><A NAME="SEC219" HREF="manual_toc.html#SEC219">Introduction</A></H2>
+<P>
+This document is for the C++ programmer who wishes to use 
+ILU. The following sections will show how ILU is
+mapped into C++ constructs and how both C++
+clients and servers are generated and built.
+<P>
+When functions are described in this section,
+they are sometimes accompanied by <I>locking comments</I>,
+which describe the locking invariants maintained by ILU on a threaded system.
+See the file <TT>`<VAR>ILUSRC</VAR>/runtime/kernel/iluxport.h'</TT>
+for more information on this locking scheme, and the types of locking comments used.
+<P>
+A number of macros are used in function descriptions, to indicated optional arguments, and ownership of potentially
+malloc'ed objects.
+The owner is responsible for freeing the object's storage at an appropriate time, and generally makes no interesting guarantees of when that will be.  Some types of objects (generally (fixed- and variable-length) arrays, including strings) are presumed to be mutable by only their owners.
+The macro <CODE>OPTIONAL(<VAR>type-name</VAR>)</CODE> means that the value
+is either of the type indicated by <VAR>type-name</VAR>, or the value <CODE>NULL</CODE>.  This macro
+may only be used with pointer values.  The macro <CODE>RETAIN(<VAR>type-name</VAR>)</CODE>
+indicates, when used on a parameter type, that the caller retains ownership of the value,
+and when used on a return type, that the called function retains ownership of the
+value.  The macro <CODE>PASS(<VAR>type-name</VAR>)</CODE> indicates, when used on a parameter type,
+that the caller is passing ownership of the storage to the called function, and when
+used on a return type, that the called function is passing ownership of the called
+value to the caller.  The macro <CODE>GLOBAL(<VAR>type-name</VAR>)</CODE> means that neither
+the caller nor the calling function owns the storage.
+<P>
+<H2><A NAME="SEC220" HREF="manual_toc.html#SEC220">Mapping ILU ISL to C++</A></H2>
+<A NAME="IDX607"></A>
+<P>
+Using ILU with C++ is intended to eventually be compatible
+with the OMG CORBA specification.  That is, all of the naming
+and stub generation comply with the Common Object Request Broker
+Architecture specified mapping for C++, when that specification is available.
+The current mapping was designed to be usable with a large number of C++
+compilers, by avoiding problematic constructs such as templates, exceptions,
+namespaces, and nested class definitions.
+<P>
+Note that ILU support for C++ does rely on having
+argument prototypes, all C++ library functions, and the
+capabilities of the C++ pre-processor.
+<P>
+<A NAME="IDX608"></A>
+<H3><A NAME="SEC221" HREF="manual_toc.html#SEC221">Names</A></H3>
+<P>
+In general, ILU constructs C++ names from ISL names
+by replacing hyphens with underscores.  Type names are prepended with their interface name
+and the string "_T_".  Enumeration value namess are formed
+by prepending the enumeration type name and "_" to the ISL enumeration value name.
+Exception names are prepended with their interface name and "_E_".
+Constant names are prepended with their interface name and "_C_".
+<P>
+Other naming conventions may be specified explicitly; see the following section on tailoring names
+for more information.
+<P>
+<H3><A NAME="SEC222" HREF="manual_toc.html#SEC222">Types</A></H3>
+<P>
+Records turn directly into C++ structs.
+Unions consist of a struct with two fields:  the type discriminator, a field called "discriminator",
+and a union of the possible values, called "value".
+Arrays map directly into C++ arrays.  Sequences become a C++ class
+with methods and representation analogous to the procedures and representation that appear in the C mapping.  Objects become normal C++ classes
+that are subclasses of the pre-defined class <CODE>iluObject</CODE>.
+<P>
+<H4><A NAME="SEC223" HREF="manual_toc.html#SEC223">Sequence types</A></H4>
+<P>
+For most sequences types, the generated C++ code follows a pattern analogous to that set in the C mapping and illustrated in the upcoming example.
+<P>
+<H3><A NAME="SEC224" HREF="manual_toc.html#SEC224">Object types</A></H3>
+<P>
+<H3><A NAME="SEC225" HREF="manual_toc.html#SEC225">Exceptions</A></H3>
+<P>
+Because of the scarcity of implementation of the C++ exception mechanism,
+exceptions are passed by adding an additional argument to the beginning of each method,
+which is a pointer to a status struct, which contains an exception code, and a union of
+all the possible exception value types defined in the interface.  Method implementations
+set the exception code, and fill in the appropriate value of the union, to signal an
+exception.  Exception codes
+are represented in C++ with values of the type <CODE>ilu_Exception</CODE>.
+<P>
+In a true module, exceptions may be raised by using the function <CODE><VAR>&#60;interface&#62;</VAR>_G::RaiseException</CODE>.
+<P>
+<A NAME="IDX609"></A>
+<U>C++:</U> void <B><VAR><interface></VAR>_G::RaiseException</B> <I>( RETAIN(<VAR><interface></VAR>Status *) <VAR>status</VAR>, GLOBAL(ilu_Exception) <VAR>code</VAR>, ...)</I><P>
+<P>
+Causes an exception code and value for the exception specified by <VAR>code</VAR> to be bound
+in <VAR>status</VAR>.  Besides the two required arguments, the function may take another
+argument, which should be a value of the type implied by the value of <VAR>code</VAR>;
+that is, of the appropriate type to be a value of the exception being signalled.
+Note that <CODE>RaiseException</CODE> does not actually cause a transfer of control,
+so that an explicit return statement must follow a call to <CODE>RaiseException</CODE>.
+<P>
+<H3><A NAME="SEC226" HREF="manual_toc.html#SEC226">Constants</A></H3>
+<P>
+Constants are implemented with C++ <CODE>#define</CODE> statements.
+<P>
+<H3><A NAME="SEC227" HREF="manual_toc.html#SEC227">Examples</A></H3>
+<P>
+Here's a sample ISL spec, and the resulting C++ mappings:
+<P>
+<PRE>
+INTERFACE Foo;
+
+TYPE String = ilu.CString;
+TYPE UnsignedInt = CARDINAL;
+
+TYPE E1 = ENUMERATION val1, val2, val3=40 END;
+TYPE R1 = RECORD field1 : CARDINAL, field2 : E1 END;
+TYPE A1 = ARRAY OF 200 BYTE;
+TYPE A2 = ARRAY OF 41, 3 R1;
+TYPE S1 = SEQUENCE OF E1;
+TYPE U1 = UNION R1, A2 END;
+
+EXCEPTION Except1 : String;
+
+CONSTANT Zero : CARDINAL = 0;
+
+TYPE O1 = OBJECT
+  METHODS
+    M1 (arg1 : R1) : UnsignedInt RAISES Except1 END
+  END;
+</PRE>
+<P>
+The C++ mapping:
+<P>
+<PRE>
+typedef ilu_CString Foo_T_String;
+typedef ilu_Cardinal Foo_T_UnsignedInt;
+
+typedef enum _Foo_T_E1_enum {
+  Foo_T_E1_val1 = 1,
+  Foo_T_E1_val2 = 2,
+  Foo_T_E1_val3 = 40
+} Foo_T_E1;
+typedef struct _Foo_T_R1_struct {
+  ilu_Cardinal field1;
+  Foo_T_E1 field2;
+} Foo_T_R1;
+typedef ilu_Byte Foo_T_A1[200];
+typedef Foo_T_R1 Foo_T_A2[41][3];
+class _Foo_T_S1_sequence {
+ private:
+  ilu_Cardinal _maximum;
+  ilu_Cardinal _length;
+  Foo_T_E1 *_buffer;
+ public:
+  _Foo_T_S1_sequence ();
+  virtual ~_Foo_T_S1_sequence ();
+  static class _Foo_T_S1_sequence *Create (ilu_Cardinal initial_size, Foo_T_E1 *initial_data);
+  virtual ilu_Cardinal Length();
+  virtual void Append(Foo_T_E1);
+  virtual Foo_T_E1 RemoveHead();
+  virtual Foo_T_E1 RemoveTail();
+  virtual ilu_Cardinal RemoveAll(ilu_Boolean (*matchproc)(Foo_T_E1));
+  virtual Foo_T_E1 * Array();
+  virtual Foo_T_E1 Nth(ilu_Cardinal index);
+};
+typedef class _Foo_T_S1_sequence * Foo_T_S1;
+enum Foo_T_U1_allowableTypes { Foo_T_U1_R1, Foo_T_U1_A2 };
+typedef struct _Foo_T_U1_union {
+  enum Foo_T_U1_allowableTypes discriminator;
+  union {
+    Foo_T_R1 R1;
+    Foo_T_A2 A2;
+  } value;
+} Foo_T_U1;
+
+extern ilu_Exception Foo_E_Except1;     /* exception code Except1 */
+
+typedef struct _Foo_Status_struct {
+  ilu_Exception returnCode;
+  union {
+    ilu_Cardinal anyvalue;
+    Foo_T_String Except1;
+  } values;
+} FooStatus;
+
+class Foo_T_O1 : public iluObject {
+ public:
+  Foo_T_O1();			// constructor
+  virtual ~Foo_T_O1();		// destructor
+  static class Foo_T_O1 * ILUCreateFromSBH(ilu_CString sbh);
+  Foo_T_UnsignedInt M1 (FooStatus *_status, Foo_T_R1 *arg1);
+};
+
+#define Foo_C_Zero ((ilu_Cardinal) 0)
+</PRE>
+<P>
+<H2><A NAME="SEC228" HREF="manual_toc.html#SEC228">Using an ILU module from C++</A></H2>
+<P>
+A client module may obtain an instance of an ILU object in
+three basic ways:  1)  instantiating it directly from a string binding handle,
+2) using the function <CODE>iluObject::Lookup</CODE> to locate it via the
+simple binding interface, and 3) receiving the instance directly as a return
+value or out parameter from a method on a different object.
+<P>
+To instantiate from a string binding handle, a static member function is
+generated for each subclass of <CODE>class iluObject</CODE> declared in the C++ stubs:
+<P>
+<A NAME="IDX610"></A>
+<U>C++:</U> {OPTIONAL(class <B><VAR>T</VAR></B> <I>*)} <VAR>T</VAR>::ILUCreateFromSBH (ilu_CString <VAR>sbh</VAR>)</I><P>
+<P>
+To use the simple binding service to locate an object:
+<P>
+<A NAME="IDX611"></A>
+<U>C++:</U> static OPTIONAL(GLOBAL(void *)) <B>iluObject::Lookup</B> <I>( RETAIN(char *) <VAR>sid</VAR>, RETAIN(char *) <VAR>ih</VAR>, ilu_Class <VAR>putative-class</VAR> )</I><P>
+<P>
+Locking:  Main invariant holds.
+<P>
+Finds and returns the object specified by the given Server ID (<VAR>sid</VAR>) and server-relative Instance Handle (<VAR>ih</VAR>) by consulting the local domain registry of objects.
+<VAR>putative-class</VAR> is the type that the object is expected to be of,
+though the type of the actual object returned may be a subtype of <VAR>putative-class</VAR>, cast
+to the <VAR>putative-class</VAR>.  The return value should be immediately cast to a value of the C++
+mapping of <VAR>putative-class</VAR>.
+<P>
+<H2><A NAME="SEC229" HREF="manual_toc.html#SEC229">Implementing an ILU Module in C++</A></H2>
+<P>
+For each ILU class <CODE><VAR>interface</VAR>.<VAR>otype</VAR></CODE>,
+ILU will define, in the file
+<TT>`<VAR>interface</VAR>.cc'</TT>,
+a C++ class called <CODE><VAR>interface</VAR>_T_<VAR>otype</VAR></CODE>.
+To implement a true object for <CODE><VAR>interface</VAR>.<VAR>otype</VAR></CODE>,
+one should further subclass this C++ class,
+and override all of its methods.  In particular, do not let
+any of the default methods for the class be called from your methods for it.
+<P>
+<H3><A NAME="SEC230" HREF="manual_toc.html#SEC230">Servers</A></H3>
+<P>
+ILU supports,
+in each address space, multiple instances of something called
+a <I>kernel server</I>, each of which in turn
+supports some set of object instances.
+A kernel server <I>export</I>s its objects by making them available
+to other modules.  It may do so via one or more <I>port</I>s, which are
+abstractly a tuple of (<VAR>rpc protocol</VAR>, <VAR>transport type</VAR>,
+<VAR>transport address</VAR>).  For example, a typical port might
+provide access to a kernel server's objects
+via <CODE>(Sun RPC, TCP/IP, (host 13.24.52.9, UNIX port 2076))</CODE>.  Another port on the
+same kernel server might provide access to the objects via
+<CODE>(Xerox Courier, XNS SPP, XNS port 1394)</CODE>.
+<P>
+When creating an instance of a true object, a kernel server for it,
+and an instance handle (the name by which the kernel server knows it) for
+it must be determined.  These may be specified explicitly by overriding
+the default <CODE>iluObject::ILUGetServer</CODE> and <CODE>iluObject::ILUGetInstanceHandle</CODE> methods,
+respectively.  The <CODE>iluObject</CODE> implementation of <CODE>ILUGetServer</CODE> defers to <CODE>ilu::GetDefaultServer</CODE>.
+The <CODE>iluObject</CODE> implementation of <CODE>ILUGetInstanceHandle</CODE> generates a handle that's unique relative to the kernel server.
+<P>
+The kernel server is represented in C++ with the class <CODE>iluServer</CODE>,
+which has the following constructor:
+<P>
+<A NAME="IDX612"></A>
+<U>C++:</U> ?? <B>iluServer::iluServer</B> <I>( OPTIONAL(const char *) <VAR>server-id</VAR>, OPTIONAL(iluObjectTable *) <VAR>object-table</VAR> )</I><P>
+<P>
+Constructs an instance of <CODE>class iluObject</CODE> with the given <VAR>server-id</VAR>
+and <VAR>object-table</VAR>.
+<P>
+Note that ILU object IDs, which consist of the kernel server ID, plus the instance
+handle of the object on that server, must be unique "across space
+and time", as the saying goes.  If no kernel server id is specified,
+ILU will generate one automatically, using an algorithm
+that provides a high probability of uniqueness.  If you explicitly
+specify a kernel server ID, a good technique is to use a prefix or
+suffix which uniquely identifies some domain in which you can assure
+the uniqueness of the remaining part of the ID.  For example, when
+using ILU at some project called NIFTY at some internet
+site in the IP domain <CODE>department.company.com</CODE>, one might use
+kernel server IDs with names like
+<CODE>something.NIFTY.department.company.com</CODE>.
+<P>
+Once the server is constructed, a port must be added:
+<P>
+<A NAME="IDX613"></A>
+<U>C++:</U> ilu_Boolean <B>iluServer::AddPort</B> <I>(OPTIONAL(RETAIN(char *)) <VAR>protocol-info</VAR>, OPTIONAL(RETAIN(ilu_TransportInfo)) <VAR>transport-info</VAR>, ilu_Boolean <VAR>be-default</VAR>)</I><P>
+<P>
+Adds a port through which the server can be contacted.  The <VAR>protocol-info</VAR> and <VAR>transport-info</VAR> specify the RPC and transport protocols and their parameters.  The <VAR>transport-info</VAR> has a layered structure, represented by the C type <CODE>ilu_TransportInfo</CODE>, described in <TT>`<VAR>ILUSRC</VAR>/runtime/kernel/iluxport.h'</TT>.  See chapter 1 for a catalogue of available RPC and transport layer specifications.
+<P>
+To export a module for use by other modules,
+simply instantiate one or more instances
+of your subtype of <CODE><VAR>interface</VAR>:<VAR>otype</VAR></CODE> and (if single-threaded) call the ILU C++
+event dispatching loop, <CODE>iluServer::Run</CODE>.
+<P>
+<H3><A NAME="SEC231" HREF="manual_toc.html#SEC231">Event dispatching</A></H3>
+<P>
+Most non-threaded long-lived C and C++ programs
+simulate threads with <I>event dispatching</I>, in which the program waits in some
+piece of code called the <I>main loop</I> until an <I>event</I> such
+as input arriving on a file descriptor or the expiration of an alarm
+signal causes a <I>callback routine</I> to be invoked.  The ILU C++
+runtime, in single-threaded mode, supports this style of operation with various static member functions
+of the class <CODE>iluServer</CODE>.
+<P>
+<A NAME="IDX614"></A>
+<U>C++:</U> static ilu_Boolean <B>iluServer::RegisterInputHandler</B> <I>( int <VAR>fd</VAR>, void (*<VAR>callbackRoutine</VAR>)(int, void *), void * <VAR>callbackArg</VAR>)</I><P>
+<P>
+Register the file descriptor <VAR>fd</VAR> with the ILU kernel so that when
+ILU kernel event dispatching is active (that is, during the <CODE>iluServer::Run</CODE> call),
+the function <VAR>callbackRoutine</VAR> will be invoked with the arguments <CODE>(<VAR>fd</VAR>, <VAR>callbackArg</VAR>)</CODE>
+whenever input is available on the file descriptor <VAR>fd</VAR>.
+<P>
+<A NAME="IDX615"></A>
+<U>C++:</U> static ilu_Boolean <B>iluServer::UnregisterInputHandler</B> <I>( int <VAR>fd</VAR> )</I><P>
+<P>
+Removes any callback routine registered on file descriptor <VAR>fd</VAR>.
+<P>
+<A NAME="IDX616"></A>
+<U>C++:</U> static ilu_Boolean <B>iluServer::Run</B> <I>( void )</I><P>
+<P>
+Invokes the ILU main loop and causes ILU kernel event
+dispatching to be active.  This routine never returns.
+<P>
+Occasionally it is necessary to use a different event dispatching mechanism,
+typically because some other work is done inside the main loop of the mechanism.
+An alternate main loop can be registered for use with ILU by creating
+a subtype of the class <CODE>iluMainLoop</CODE> and registering it with the kernel
+by calling the function <CODE>iluServer::iluSetMainLoop</CODE>:
+<P>
+<A NAME="IDX617"></A>
+<U>C++:</U> static void <B>iluServer::iluSetMainLoop</B> <I>( RETAIN(iluMainLoop *) <VAR>ml</VAR> )</I><P>
+<P>
+Registers the main loop object <VAR>ml</VAR> with the runtime kernel.
+<P>
+<H3><A NAME="SEC232" HREF="manual_toc.html#SEC232">Publishing</A></H3>
+<P>
+To enable users of your module find the exported objects, you may
+register the string binding handle of the object or objects, along
+with their type IDs, in any name service or registry that is convenient
+for you.  In releases 1.6--2.0 of ILU, we support an experimental
+simple binding method that allows you to "publish" an object,
+which registers it in a domain-wide registry, and
+then to withdraw the object, if necessary.  Potential clients can
+find the string binding handle of the object by calling
+a lookup function.  <STRONG>Note that this interface and service
+is experimental, and may be supported differently in future releases
+of the ILU system.</STRONG>
+<P>
+<A NAME="IDX618"></A>
+<U>C++:</U> ilu_Boolean <B>iluObject::ILUPublish</B> <I>()</I><P>
+<P>
+A method on instances of <CODE>class iluObject</CODE>, it registers the instance with some
+domain-wide registration service.
+The object is known by its &#60;<VAR>Server-ID</VAR>, <VAR>Instance-Handle</VAR>&#62; pair.  Clients may find
+the object by passing this pair to the <CODE>iluObject::Lookup</CODE> function.
+Returns true if the object can be successfully published in the local registry.
+<P>
+<A NAME="IDX619"></A>
+<U>C++:</U> ilu_Boolean <B>iluObject::ILUWithdraw</B> <I>()</I><P>
+<P>
+Returns true if the object's registration in the local registry can be successfully withdrawn,
+or does not exist.
+<P>
+<A NAME="IDX620"></A>
+<U>C++:</U> ilu_Boolean <B>iluObject::ILUPing</B> <I>(ilu_Error* p_error)</I><P>
+<P>
+Returns ilu_TRUE if the true object exists, and the process serving it can be contacted, otherwise ilu_FALSE.
+*p_error is set if some error occurred.
+<P>
+<H2><A NAME="SEC233" HREF="manual_toc.html#SEC233">ILU API for C++</A></H2>
+<P>
+<H2><A NAME="SEC234" HREF="manual_toc.html#SEC234">Generating ILU stubs for C++</A></H2>
+<P>
+To generate C++ stubs from an ISL file, you use the
+program c++-stubber.
+<A NAME="IDX621"></A>
+Three files are generated from the
+<TT>`.isl'</TT> file (the extension <CODE>cpp</CODE> is used instead of <CODE>cc</CODE> when running on Windows):
+<UL>
+<LI>
+<TT>`<VAR>interface-name</VAR>.hh'</TT> contains the class definitions for the types
+and procedures defined by the interface;
+<LI>
+<TT>`<VAR>interface-name</VAR>.cc'</TT> contains the client-side and general code
+for the interface; and
+<LI>
+<TT>`<VAR>interface-name</VAR>-server-stubs.cc'</TT> contains the server-side
+stubs and code for the interface.
+</UL>
+Typically, clients of a module never have a need for the <TT>`<VAR>interface-name</VAR>-server-stubs.cc'</TT> file.
+<P>
+<PRE>
+% <STRONG>c++-stubber foo.isl</STRONG>
+header file interface foo to ./foo.hh...
+code for interface foo to ./foo.cc...
+code for server stubs of interface foo to ./foo-server-stubs.cc...
+%
+</PRE>
+<P>
+The option <CODE>-renames <VAR>renames-filename</VAR></CODE> may be used with <CODE>c++-stubber</CODE>
+to specify particular C++ names for ISL types.  See the following section
+for more details.
+<P>
+<A NAME="IDX622"></A>
+<H3><A NAME="SEC235" HREF="manual_toc.html#SEC235">Tailoring C++ Names</A></H3>
+<P>
+It is sometimes necessary to have the C++ names of an ILU interface
+match some other naming scheme.  A mechanism is provided to allow the programmer to
+specify the names of C++ language artifacts directly, and thus override
+the automatic ISL to C++ name mappings.
+<P>
+To do this, you place a set of synonyms for ISL names in a
+<I>renames-file</I>, and invoke the <CODE>c++-stubber</CODE> program with the switch <CODE>-renames</CODE>,
+specifying the name of the renames-file.  The lines in the file are of the form
+<PRE>
+<VAR>construct</VAR> <VAR>ISL-name</VAR> <VAR>C++-name</VAR>
+</PRE>
+where <VAR>construct</VAR> is one of <CODE>method</CODE>, <CODE>exception</CODE>, <CODE>type</CODE>, <CODE>interface</CODE>,
+or <CODE>constant</CODE>; <VAR>ISL-name</VAR> is the name of the construct, expressed either
+as the simple name, for interface names, the concatenation
+<CODE><VAR>interface-name</VAR>.<VAR>construct-name</VAR></CODE> for exceptions, types, and constants,
+or <CODE><VAR>interface-name</VAR>.<VAR>type-name</VAR>.<VAR>method-name</VAR></CODE> for methods;
+and <VAR>C++-name</VAR> is the name the construct should have in the generated
+C++ code.  For example:
+<P>
+<PRE>
+# change "Foo_T_R1" to plain "R1"
+type Foo.R1 R1
+# change name of method "M1" to "Method1"
+method Foo.O1.M1 Method1
+</PRE>
+<P>
+Lines beginning with the `hash' character <SAMP>`#'</SAMP> are treated as comment lines,
+and ignored, in the renames-file.
+<P>
+This feature of the <CODE>c++-stubber</CODE> should be used as little and as carefully
+as possible, as it can cause confusion for readers of the ISL interface,
+in trying to follow the C++ code.  It can also create name conflicts
+between different modules, unless names are carefully chosen.
+<P>
+<H2><A NAME="SEC236" HREF="manual_toc.html#SEC236">Threading</A></H2>
+<P>
+The ILU C++ runtime is prepared to be used in either a single-thread or a multi-threaded mode.  Single-threaded is the default.  To run multi-threaded, the application is responsible for picking a threading mechanism and making it accessible to ILU.  Two calls must be made to make a threading mechanism available to ILU.  One, <CODE>iluServer::SetFork</CODE>, enables ILU to fork new threads.  The other, <CODE>ilu_SetLockTech</CODE> (from <TT>`<VAR>ILUSRC</VAR>/runtime/kernel/iluxport.h'</TT>), supplies various thread synchronization primitives.  These calls must be done at startup time, before any ILU servers are created or surrogate objects imported.
+<P>
+<H2><A NAME="SEC237" HREF="manual_toc.html#SEC237">Other ILU Considerations For C++</A></H2>
+<P>
+<H3><A NAME="SEC238" HREF="manual_toc.html#SEC238">Libraries and Linking</A></H3>
+<P>
+For clients of an ILU module, it is only necessary to link
+with the <TT>`<VAR>interface-name</VAR>.o'</TT> file compiled from the
+<TT>`<VAR>interface-name</VAR>.cc'</TT> file generated for the interface or interfaces
+being used, and with the two libraries
+<TT>`<VAR>ILUHOME</VAR>/lib/libilu-c++.a'</TT> and <TT>`<VAR>ILUHOME</VAR>/lib/libilu.a'</TT> (in this
+order, as <TT>`libilu-c++.a'</TT> uses functions in <TT>`libilu.a'</TT>).
+<P>
+For implementors of true classes, or servers, the code for the server-side
+stubs, in the file <TT>`<VAR>interface-name</VAR>-server-stubs.o'</TT>, compiled
+from <TT>`<VAR>interface-name</VAR>-server-stubs.cc'</TT>, should be included along
+with the other files and libraries.
+<P>
+<H3><A NAME="SEC239" HREF="manual_toc.html#SEC239">Initialization order</A></H3>
+<P>
+ILU uses the static-object-with-constructor trick to effect per-compilation-unit startup code.  In certain cases you'll want to ensure that a certain compilation unit's initialization is run before another's.  While C++ defines no standard way to do this, most compilers work like this: compilation units are initialized (static object construtors run) in the order in which they are given to the link-editor.  We want to hear about any exceptions to this rule.
+<P>
+<H3><A NAME="SEC240" HREF="manual_toc.html#SEC240">Makefiles</A></H3>
+<P>
+ILU uses the <CODE>imake</CODE> system from X11R? to produce
+<TT>`Makefile'</TT>s from <TT>`Imakefile'</TT>s.  For more details on this process,
+section <A HREF="manual_20.html#SEC580">Using Imake with ILU</A>.
+<P>
+<P>Go to the <A HREF="manual_5.html">previous</A>, <A HREF="manual_7.html">next</A> section.<P>

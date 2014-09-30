@@ -1,0 +1,105 @@
+# BeginILUCopyright
+
+# Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+# Unlimited use, reproduction, modification, and distribution of this
+# software and modified versions thereof is permitted.  Permission is
+# granted to make derivative works from this software or a modified
+# version thereof.  Any copy of this software, a modified version
+# thereof, or a derivative work must include both the above copyright
+# notice of Xerox Corporation and this paragraph.  Any distribution of
+# this software, a modified version thereof, or a derivative work must
+# comply with all applicable United States export control laws.  This
+# software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+# WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+# PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+# LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+# EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+# NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+# OF THE POSSIBILITY OF SUCH DAMAGES.
+
+# EndILUCopyright
+
+#THE AUTOMATED TEST SCRIPTS IN THIS DIRECTORY CURRENTLY WORK 
+#ONLY AT XEROX PARC, ON SOLARIS HOST NGSUN2.
+
+This file describes how to use the tcl scripts in this directory
+to run automated tests from the ILUHOME/ngtest directory. 
+The scripts currently encompass only nggetbot runs with url reference
+files drawn from /opt/local/http-ng/ngtesturls
+
+There are 2 top level tcl scripts: 
+
+   testload.tcl - for dynamic testing
+   testreg.tcl - for regression testing 
+
+Both of these set some necessary variables, establish the log
+files for the test in the /tmp directory, and read (load)
+testprocs.tcl containing the bulk of the processing. 
+
+testreg.tcl then continues by invoking a collection of
+tests (via run-some-tests in testprocs.tcl) using a number of 
+server/client pair invocations.
+
+Using either of the scripts requires the sequence
+    ilumkmf
+    make
+
+It also requires that the environment variable "thishost" be
+set to the host processor used to run the script.
+
+To run a canned regression, then type "make test" or 
+"tclsh  testreg.tcl"
+
+To test individual server/client pairs, type
+    tclsh
+    source testload.tcl
+then a sequence of invocations of "run-pair" and "run-http-pair".
+Each invocation will execute a ./ngwebserver ./nggetbot server/client pair
+with parameters derived from the specified ones.  
+
+run-pair assumes the w3ng url scheme for requests, and has parameters 
+  site protocol transport batch serial keep
+  where 
+    site      is currently restricted to "mscape"
+    protocol  may be "http10", "http11", "w3ng", or "iiop"
+              (note: currently problem with http10.. do not use 
+              until further notice)
+    transport may be "tcp", "w3mux", or "sunrpcrm"
+    batch     may be "batch", in which case both server and client
+              batching is used, or anything else, in which case.
+              no batching is used.  The batch time is built-in. 
+    serial    may be "serial", in which case serialization is used,
+              or anything else (in which case it is not) 
+    keep      is the only optional parameter.  If present and
+              equal to "keep', the client and server logs in 
+              /tmp/processidlog-client  respectively -server  
+              are retained after successful tests.  If not,
+              the logs are retained only if a test fails.
+
+For example, invoking  
+   run-pair "mscape" "http11" "tcp" "batch" "serial" 
+
+will produce a test invoking ./ngwebserver with
+./ngwebserver
+      -filebase /opt/local/http-ng/serverdocs
+      -verbose 2 -batch 50000   -httptinfo tcp_0_8080
+      -ngpinfo http_1_1 -ngtinfo tcp_0_2718 
+      -logfile /tmp/testlog25488-server
+      >>& /tmp/testlog25488-server 
+
+and ./nggetbot with
+./nggetbot
+    -urls /opt/local/http-ng/ngtesturls/mscape_ngsun2_w3ng_http11_2718.urls 
+    -batch 50000 -pipeline -serial
+    -logfile /tmp/testlog25488-client -v 2 -mt 10 >>&
+
+run-http-pair assumes the http scheme for url requests,
+and has parameters batch, serial, and keep, defined as above.
+It runs a server/client pair with the client nggetbot invoked
+with -urls mscape_http_http_8080.urls. 
+
+For details on use of the individual executables in this directory,
+see the basic README file and ngsun2 /opt/local/http-ng/ngtesturls
+

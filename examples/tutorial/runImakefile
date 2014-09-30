@@ -1,0 +1,135 @@
+/** $Id: runImakefile,v 1.14 1999/08/03 01:57:21 janssen Exp $
+ BeginILUCopyright
+
+ Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+ Unlimited use, reproduction, modification, and distribution of this
+ software and modified versions thereof is permitted.  Permission is
+ granted to make derivative works from this software or a modified
+ version thereof.  Any copy of this software, a modified version
+ thereof, or a derivative work must include both the above copyright
+ notice of Xerox Corporation and this paragraph.  Any distribution of
+ this software, a modified version thereof, or a derivative work must
+ comply with all applicable United States export control laws.  This
+ software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+ WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+ LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+ EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+ NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+ OF THE POSSIBILITY OF SUCH DAMAGES.
+
+ EndILUCopyright
+*/
+/* Chris Jacobi, October 12, 1998 5:48 pm PDT */
+/* Last edited by Mike Spreitzer October 9, 1998 1:48 pm PDT */
+
+NormalObjectRule()
+
+/***********************************************************************/
+/******  C  ************************************************************/
+/***********************************************************************/
+
+#ifdef ADD_C_LANGUAGE
+
+InterfaceTarget(Tutorial.isl)
+ILUCTarget(Tutorial.h Tutorial-true.c Tutorial-surrogate.c Tutorial-common.c, Tutorial.isl)
+ObjectTarget(Tutorial-common.o)
+ObjectTarget(Tutorial-surrogate.o)
+ObjectTarget(Tutorial-true.o)
+
+ObjectTarget(faulty-impl.o)
+faulty-impl.o : Tutorial.h faulty-impl.c
+
+ObjectTarget(Calculator-impl.o)
+Calculator-impl.o : Tutorial.h Calculator-impl.c
+
+ObjectTarget(Factory-impl.o)
+Factory-impl.o : Tutorial.h Factory-impl.c
+
+InterfaceTarget(Tutorial2.isl)
+ILUCTarget(Tutorial2.h Tutorial2-true.c Tutorial2-surrogate.c Tutorial2-common.c, Tutorial2.isl)
+ObjectTarget(Tutorial2-common.o)
+ObjectTarget(Tutorial2-surrogate.o)
+ObjectTarget(Tutorial2-true.o)
+
+ObjectTarget(TapeCalculator-impl.o)
+TapeCalculator-impl.o : Tutorial.h Tutorial2.h TapeCalculator-impl.c
+
+ObjectTarget(Factory2-impl.o)
+Factory2-impl.o : Tutorial.h Factory2-impl.c
+
+LibraryTarget (libTutorial.a, Tutorial-true.o Tutorial-surrogate.o Tutorial-common.o Calculator-impl.o Factory-impl.o Tutorial2-true.o Tutorial2-surrogate.o Tutorial2-common.o TapeCalculator-impl.o Factory2-impl.o)
+
+simple1.o : Tutorial.h simple1.c
+ILUCProgramTarget(simple1, simple1.o, libTutorial.a,)
+
+simple2.o : Tutorial.h simple2.c
+ILUCProgramTarget(simple2, simple2.o, libTutorial.a,)
+
+simple3.o : Tutorial.h simple2.c
+ILUCProgramTarget(simple3, simple3.o, libTutorial.a,)
+
+simple4.o : Tutorial.h simple4.c
+ILUCProgramTarget(simple4, simple4.o, libTutorial.a,)
+
+server.o : Tutorial.h server.c
+ILUCProgramTarget(server, server.o, libTutorial.a,)
+
+server2.o : Tutorial.h Tutorial2.h server2.c
+ILUCProgramTarget(server2, server2.o, libTutorial.a,)
+
+#endif
+
+/***********************************************************************/
+/******  Python  *******************************************************/
+/***********************************************************************/
+
+#ifdef ADD_PYTHON_LANGUAGE
+
+ILUPythonTarget(Tutorial.py Tutorial__skel.py, Tutorial.isl)
+ILUPythonTarget(Tutorial2.py Tutorial2__skel.py, Tutorial2.isl)
+
+all:: Tutorial.py Tutorial__skel.py Tutorial2__skel.py Tutorial2.py
+
+CleanTarget(*.pyc)
+
+#endif
+
+/***********************************************************************/
+/******  Java  *******************************************************/
+/***********************************************************************/
+
+#ifdef ADD_JAVA_LANGUAGE
+
+JAVA_CLASS_DIR = ./classes
+JAVA_STUB_DIR = ./javastubs
+
+BuildDir($(JAVA_CLASS_DIR))
+BuildDir($(JAVA_STUB_DIR))
+
+ALL_JAVA_FILES = *java
+STUB_SOURCES = \
+	$(JAVA_STUB_DIR)/Tutorial/$(ALL_JAVA_FILES) \
+	$(JAVA_STUB_DIR)/Tutorial2/$(ALL_JAVA_FILES)
+
+APP_SOURCES = \
+	CalculatorImpl.java  \
+	simple1.java \
+	simple2.java \
+	TutorialServer.java\
+	simple3.java \
+	TapeCalculatorImpl.java \
+	Tutorial2Server.java \
+	simple4.java
+
+
+ILUJavaStubTarget(make.java_has_been_stubbed, Tutorial.isl Tutorial2.isl,)
+
+ILUJavaCompile2Target(make.java_stubs_compiled, $(STUB_SOURCES), $(JAVA_STUB_DIR)/Tutorial/Calculator.java, make.java_has_been_stubbed,)
+
+ILUJavaCompile2Target(make.java_sources_compiled, $(APP_SOURCES), $(APP_SOURCES), make.java_stubs_compiled,)
+
+
+#endif

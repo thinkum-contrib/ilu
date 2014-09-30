@@ -1,0 +1,218 @@
+@setfilename ilu-multlang.tim
+@settitle Multiple Languages in One Address Space
+@ifset ilucopyright
+BeginILUCopyright
+
+Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+Unlimited use, reproduction, modification, and distribution of this
+software and modified versions thereof is permitted.  Permission is
+granted to make derivative works from this software or a modified
+version thereof.  Any copy of this software, a modified version
+thereof, or a derivative work must include both the above copyright
+notice of Xerox Corporation and this paragraph.  Any distribution of
+this software, a modified version thereof, or a derivative work must
+comply with all applicable United States export control laws.  This
+software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+OF THE POSSIBILITY OF SUCH DAMAGES.
+  
+EndILUCopyright
+@end ifset
+@ifclear largerdoc
+@titlepage
+@title Multiple Languages in One Address Space
+@author Bill Janssen @code{<janssen@@parc.xerox.com>}
+@sp
+@today{}
+@sp
+Copyright @copyright{} 1993, 1994 Xerox Corporation@*
+All Rights Reserved.
+@end titlepage
+@ifinfo
+@node Top, ,(dir),(dir)
+@top Multiple Languages in One Address Space
+@end ifinfo
+@end ifclear
+
+With @system{ILU} version 2.0 or later, modules implemented in different programming
+languages can be mixed in the same address space, with @system{ILU} doing automatic
+translation between data representations.  @footnote{Currently, it does this by marshalling
+one language's representation into a data buffer, as if to transmit it to
+another address space, then hands this buffer to the other language's @system{ILU} support,
+which unmarshalls it into representations appropriate for that language.  We plan
+to optimize this process in the future.}  There are a number of things to consider
+when doing this; this section discusses some of them.
+
+@section Dueling Runtimes
+
+Some languages simply cannot be mixed in the same address space because their
+runtimes will conflict.  @system{ILU} offers no solutions to this problem.  Typical
+examples are two languages like @language{Franz Allegro Common Lisp} and
+@language{Java} with ``green threads''.  They each implement a user-level threads package,
+and their implementations of threads probably cannot co-exist in the same address space.
+
+A possible solution to this problem, called the @system{POSIX Portable Common Runtime} (PPCR),
+is available from Xerox PARC, as @url{ftp://ftp.parc.xerox.com/pub/ppcr/}.  It contains
+a basic runtime which can be used as the platform for a particular language implementation's
+runtime.  Languages which use @system{PPCR} will have a lower chance of having conflicting
+runtimes.
+
+In general, the non-threaded languages @language{C}, @language{C++}, and @language{Python}
+are the best languages to construct libraries with; that is, code which is intended to be loaded
+into another language's address space.  Modules constructed with one of these languages can
+be loaded into any of the other ILU-supported languages' address spaces.
+
+@section Module Initialization and Binding
+
+Module initialization really consists of two operations:  interface initialization
+and object instantiation.  The first operation initializes all the interfaces
+used or exported by the module; the second creates one or more true instances of
+objects to be used by other modules.  The act of binding is finding a true object
+in the surrogate space, so that client code can access the true module.
+
+@subsection Initialization
+
+Generally, each @system{ILU} interface must be initialized.  The process of doing
+this initialization varies from programming language to programming language.
+In @language{ANSI C}, @system{ILU} requires explicit calls to @C{@metavar{interface}__Initialize()}
+for interfaces being used, or @C{@metavar{interface}__InitializeServer()} for interfaces
+being exported.
+In languages like @language{C++} and @language{Java}, interface initialization is performed automatically,
+but at some indeterminate time before
+the first symbol from that interface is referenced from outside the interface.  When @language{C++} code
+is used in a shared library, sometimes this initialization must be forced manually.
+In @language{Python} or @language{Common Lisp}, interface initialization is performed
+automatically by the language at the time the module describing the interface
+is ``loaded'' into the address space.
+
+In addition to initializing all interfaces being used or exported, a module must create
+one or more true object instances, to allow other modules to access it.  Again, the specific
+way of doing this varies from programming language to programming language.  Once the
+true instance has been created, it can be @dfn{exported} from the module by either publishing it, via
+the @system{ILU} simple binding system, or taking its string binding handle, and passing that
+outside the module for other modules to use.
+
+When multiple languages are used in the same address space, each must be initialized
+according to the standards used for that programming language.  This can be tricky when using
+both statically compiled and dynamically compiled languages together.  Consider the case
+where @language{Python} and @language{ANSI C} are linked together.  
+This use of @language{Python} may be as an extension language to a program written in @language{C}.
+In this case, the @language{C} code must do all initialization of modules written in
+@language{C} before calling into any @language{Python} module which might reference
+them.  Similarly, @language{Python} initialization (@Python{import}) of modules must
+occur before the @language{C} code can use them.  See @file{@metavar{ILUSRC}/src/examples/multlang/}
+for an example of a situation of this sort.
+
+In the other case,
+@language{C} true modules which are to be used from a @language{Python} program
+in the same address space must somehow be first loaded into that address space, then initialized.
+The loading is done by turning the @language{C} module into a @language{Python} @dfn{extension module},
+and either linking it into the @program{python} image, or creating a dynamically loadable module
+from it.
+The initialization is done by then calling @Python{import} on that module from within
+the @language{Python} interpreter.  The extension module's
+initialization routine initializes all of its interfaces,
+creates one or more true objects, and exports them.  After the @Python{import} statement
+returns, the objects are available for finding (see next section)
+from within @language{Python}.
+
+@subsection Finding Objects (Binding)
+
+Object instances may be located by calls on the variations of @fn{LookupObject} and @fn{ObjectOfSBH}
+that exist in the various language runtimes.  @fn{LookupObject} is implemented so that it first
+looks to see if the true object for the specified object ID is available in the local address
+space.  If so, it returns a version of that object.  Only if the object is not locally available does it perform external
+lookups in an attempt to locate the object.  Note that for an object to be found via @fn{LookupObject},
+the true instance must first have been published via the implementation language @system{ILU} runtime's
+variant of @fn{PublishObject}.  If you do not want your objects published outside your address space,
+you should use @fn{ObjectOfSBH} to find them. 
+
+@subsection Suggested Modularization Strategies
+
+One of the most effective ways of building a module to be loadable into another language's address space
+is to create a shared library containing the module.  The library can provide binding hooks in various ways,
+but a suggested strategy is to provide a, from the shared library, a @language{C}-callable function which
+returns the string binding handle of an object, and to make all the functionality of the module available
+through that object, possibly by getting other objects from that object.  There are then a handful of stylized
+ways of invoking that @language{C} procedure; we'll discuss them for each programming language.
+
+@subsubsection Building a Shared Library Around a C or C++ Module
+
+This is typically quite simple.  You must implement the true module in either C or C++, leaving
+a @language{C}-callable hook into the implementation available.  Here's what a typical initialization
+procedure for a module called @module{testImpl}, providing the @interface{test} interface, which
+implements the @class{Strlen} object type,
+might look like in @language{C++} (using ILU's CORBA @language{C++} mapping):
+@codeexample
+extern "C" @{
+
+  ilu_string testImpl__initialize ()
+    @{
+      iluServer *s;
+      test_Strlen_impl *i;
+
+      // in case static initializers weren't run,
+      // this will cause them to be run
+      ILU_INIT_test_SERVER_ONLY();
+      iluCppRuntime::iluInitialize();
+
+      // create a new ILU kernel server
+      s = new iluServer ();
+
+      // now create an instance of test.Strlen
+      // and return its SBH
+      i = new test_Strlen_impl((iluCString) NULL, *s);
+      return i->iluObjectToString();
+    @}
+@}
+@end codeexample
+@noindent
+A @language{C} version would look quite similar.
+
+ILU provide an Imake rule called @code{SharedLibrary}, which can be used to build a shared library
+from @language{C} code.  It also works in most cases for @language{C++} code, though in this case
+you will need to explicitly specify your @language{C++} library.  A better idea, with @language{C++},
+is to use the @language{C++} compile command to build the library.  Specifics of how to do this will
+differ from compiler to compiler.
+
+@subsubsection Building a Shared Library Around a Python Module
+
+It may seem odd building a shared library around a @language{Python} implementation of a module, but
+that will allow it to be loaded into other languages that don't support @language{Python} bytecodes.
+To do this, one first implements the module in @language{Python}, providing an initialization function
+similar to that shown in the @language{C++} case:
+@codeexample
+def init():
+
+	global inst
+
+	# we create the server carefully here.  We don't create
+	# a normal port, and it doesn't become the default server
+	# (though it could be)
+	server = ilu.CreateServer()
+
+	# now make an instance of Strlen with the server
+	inst = Strlen(None, server)
+
+	# and return its SBH
+	return inst.IluSBH()
+@end codeexample
+
+@subsubsection Initializing a Shared Library from C or C++
+
+For the @language{C} or @language{C++} programming languages, accessing a shared library is trivial.  The client code
+simply loads in the shared library, then calls
+
+@subsubsection Initializing a Shared Library from Python
+
+@subsubsection Initializing a Shared Library from Java
+
+@subsubsection Initializing a Shared Library from Common Lisp
+
+

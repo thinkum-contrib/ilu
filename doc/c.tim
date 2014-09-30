@@ -1,0 +1,2423 @@
+@c $Id: c.tim,v 1.86 1999/08/19 06:50:11 spreitze Exp $
+@setfilename ilu-c.info
+@settitle Using ILU with Standard C
+@ifset ilucopyright
+BeginILUCopyright
+
+Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+Unlimited use, reproduction, modification, and distribution of this
+software and modified versions thereof is permitted.  Permission is
+granted to make derivative works from this software or a modified
+version thereof.  Any copy of this software, a modified version
+thereof, or a derivative work must include both the above copyright
+notice of Xerox Corporation and this paragraph.  Any distribution of
+this software, a modified version thereof, or a derivative work must
+comply with all applicable United States export control laws.  This
+software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+OF THE POSSIBILITY OF SUCH DAMAGES.
+  
+EndILUCopyright
+@end ifset
+@ifclear largerdoc
+@include ilu-macros.tim
+@c Experiment with smaller amounts of whitespace between chapters
+@c and sections.
+@tex
+\global\chapheadingskip = 15pt plus 4pt minus 2pt 
+\global\secheadingskip = 12pt plus 3pt minus 2pt
+\global\subsecheadingskip = 9pt plus 2pt minus 2pt
+@end tex
+
+@c Experiment with smaller amounts of whitespace between paragraphs in
+@c the 8.5 by 11 inch format.
+
+@titlepage
+@title Using ILU with Standard C
+@author Bill Janssen @code{<janssen@@parc.xerox.com>}
+@sp
+(Typeset @today{})
+@sp
+Copyright @copyright{} 1993, 1994 Xerox Corporation@*
+All Rights Reserved.
+@end titlepage
+
+@ifinfo
+@node Top, Using ILU with Standard C, (dir), (dir)
+@top Using ILU with Standard C
+@menu
+* Using ILU with Standard C:: chapter contents
+@end menu
+@end ifinfo
+
+@defcodeindex ft
+@defcodeindex vt
+@defcodeindex et
+@defcodeindex mt
+@defcodeindex tt
+@defcodeindex dt
+
+@syncodeindex dt ft
+@syncodeindex vt ft
+@syncodeindex et ft
+@syncodeindex mt ft
+@syncodeindex tt ft
+
+@syncodeindex pg cp
+@syncodeindex tp ft
+
+@chapter Using ILU with Standard C
+
+@end ifclear
+
+@menu
+* C Mapping Introduction::
+* The ISL Mapping to C::
+* Access to Standard ILU Features::
+* Building C/ILU Applications::
+* ILU C API::
+@end menu
+
+@node C Mapping Introduction, The ISL Mapping to ANSI C, , Using ILU with Standard C
+@section C Mapping Introduction
+@cindex ILU and C
+
+This document is for the @language{C} programmer who wishes to use 
+@system{ILU}. (By @language{C}, we mean the language defined in the
+ISO/ANSI standard, not `K&R C', or `Portable C'.)  The following sections will show how @language{ILU} is
+mapped into @language{C} constructs and how both @language{C}
+clients and servers are generated and built.
+
+@cindex ILU and CORBA
+Using @system{ILU} with @language{C} is intended to be compatible
+with the OMG @system{CORBA} specification.  That is, all of the naming
+and stub generation comply with the Common Object Request Broker
+Architecture, revision 2.0.
+@footnote{The Common Object Request Broker: Architecture and Specification,
+revision 2.0, Draft July 1995}
+
+Note that @system{ILU} does not support non-ANSI variants of
+the @language{C} language.  In particular, it relies on having
+prototypes, all @language{C} library functions, and the
+capabilities of the @language{C} pre-processor.
+
+When functions are described in this section,
+they are sometimes accompanied by @dfn{locking comments},
+which describe the locking invariants maintained by @system{ILU} on a threaded system.
+See the file @file{@metavar{ILUHOME}/include/iluxport.h}
+for more information on this locking scheme, and the types of locking comments used.
+
+A number of macros are used in function descriptions, to indicated optional arguments, and ownership of potentially
+malloc'ed objects.  The macro @C{OPTIONAL(@metavar{type})} means that the value
+is either of the type indicated by @metavar{type}, or the value @C{NULL}.  This macro
+may only be used with pointer types.  The macro @C{RETAIN(@metavar{type})}
+indicates, when used on a parameter, that the caller retains ownership of the value,
+and when used in the result position, that the called function retains ownership of the
+value.  The macro @C{PASS(@metavar{type})} indicates, when used on a parameter,
+that the caller is passing ownership of the storage to the called function, and when
+used in the result position, that the called function is passing ownership of the called
+value to the caller.  The macro @C{GLOBAL(@metavar{type})} means that neither
+the caller nor the calling function owns the storage.
+
+@page
+
+@node The ISL Mapping to C, Access to Standard ILU Features, C Mapping Introduction, Using ILU with Standard C
+@section The ISL Mapping to C
+
+@menu
+* Names::
+* Interface::
+* Basic Types::
+* Constants::
+* Strings and Characters::
+* Pickles and Typecodes::
+* Constructed Types::
+* Object Types::
+* Issues in Mapping OMG IDL to C::
+@end menu
+
+@node Names, Mapping Type Constructs Into C, , The ISL Mapping to C
+@subsection Names
+@cindex Mapping ISL names to C identifiers
+
+In general, @system{ILU} constructs @language{C} names from 
+@language{ISL} names by replacing hyphens with underscores.  Type names and class
+names are prepended with their interface name. For example, for
+the @language{ISL} type @isl{T-1} in interface @isl{I},
+the generated name of the @language{C} type would be @C{I_T_1}.
+
+@cindex CORBA naming for C
+Method name prefixes are specified by @system{CORBA} to be 
+@C{@metavar{module-name}_@metavar{interface-name}}.
+@language{C} function names for @language{ISL} methods are composed of the generated class name prepended to
+the method name. For example, if the interface name is @interface{X} and the
+class type name is @type{Y} and the @language{ISL} method name is @method{Z} then the
+@language{C} callable method name will be @C{X_Y_Z}.
+@system{ILU} @language{C} servers for this method must implement a function called @C{server_X_Y_Z}.
+
+For field names within records and unions, hyphens are replaced with underscores.
+
+@subsection Interface
+
+The @language{ISL} @kwd{interface} is mapped to a prefix for all generated
+type names, constant names, and exception names, by replacing all hyphens
+in the interface name with underscore characters.
+
+@subsection Basic Types
+
+The following basic @language{ISL} types have the corresponding mappings in @language{C}, as
+specified by the @system{CORBA} 2.0 standard mapping for @language{C}:
+
+@itemize @bullet
+@item
+@language{ISL} @isl{BOOLEAN} maps to @language{C} @C{CORBA_boolean}
+@item
+@language{ISL} @isl{BYTE} maps to @language{C} @C{CORBA_octet}
+@item
+@language{ISL} @isl{CHARACTER} maps to @language{C} @C{CORBA_wchar}
+@item
+@language{ISL} @isl{SHORT CHARACTER} maps to @language{C} @C{CORBA_char}
+@item
+@language{ISL} @isl{CARDINAL} maps to @language{C} @C{CORBA_unsigned_long}
+@item
+@language{ISL} @isl{SHORT CARDINAL} maps to @language{C} @C{CORBA_unsigned_short}
+@item
+@language{ISL} @isl{LONG CARDINAL} maps to @language{C} @C{CORBA_unsigned_long_long}
+@item
+@language{ISL} @isl{INTEGER} maps to @language{C} @C{CORBA_long}
+@item
+@language{ISL} @isl{SHORT INTEGER} maps to @language{C} @C{CORBA_short}
+@item
+@language{ISL} @isl{LONG INTEGER} maps to @language{C} @C{CORBA_long_long}
+@item
+@language{ISL} @isl{REAL} maps to @language{C} @C{CORBA_double}
+@item
+@language{ISL} @isl{SHORT REAL} maps to @language{C} @C{CORBA_float}
+@item
+@language{ISL} @isl{LONG REAL} maps to @language{C} @C{CORBA_long_double}
+@end itemize
+
+@subsection Constants
+
+@language{ISL} constants are translated to @language{C} @C{const} expressions
+initialized to the specified value.  Constant names are prepended with their interface name,
+separated from the name of the constant with a hyphen character.
+
+@subsection Strings and Characters
+
+@language{ISL} @kwd{character} and @kwd{short character} types are represented
+with the @system{ILU} types @C{ilu_character}, which hold values of 16-bit @system{Unicode},
+and @C{ilu_shortcharacter}, which hold values of 8-bit @system{ISO Latin-1}.
+
+String sequences (@isl{SEQUENCE OF SHORT CHARACTER} or @isl{SEQUENCE OF CHARACTER})
+are just arrays of the character codes for the characters, using either Latin-1 codes (for
+@isl{SEQUENCE OF SHORT CHARACTER}), or ISO 10646 Unicode codes (for @isl{SEQUENCE OF CHARACTER}).
+These sequences are terminated with a character code of zero.  The terminating code is not
+counted in the length of the sequence.  
+
+@subsection Pickles and Typecodes
+
+@system{ILU} pickles are mapped to opaque structures of the type @C{CORBA_any}, as per the CORBA specification
+for the type @omgidl{any}.  However, in @system{ILU}, the fields of the pickle are not directly accessible.  Instead, the following utility functions are provided to manipulate pickles:
+
+@deftypefn Function {PASS(CORBA_any *)} ILU_C_Any_Create (RETAIN(CORBA_TypeCode) @metavar{typecode}, RETAIN(void *) @metavar{value}, RETAIN(CORBA_Environment *) @metavar{env})
+@ftindex ILU_C_Any_Create (C LSR function)
+
+Locking:  n/a
+
+Create a new pickle from a @language{C} @metavar{value} and @metavar{typecode}.  The return value is heap-allocated.
+@end deftypefn
+
+@deftypefn Function {PASS(CORBA_any *)} ILU_C_Any_Init (RETAIN(CORBA_any *) @metavar{uninitialized-any}, RETAIN(CORBA_TypeCode) @metavar{typecode}, RETAIN(void *) @metavar{value}, RETAIN(CORBA_Environment *) @metavar{env})
+@ftindex ILU_C_Any_Create (C LSR function)
+
+Locking:  n/a
+
+Given a pointer to an uninitialized @C{@type{CORBA_any}} value @metavar{uninitialized-any}, sets the typecode and value of the any to the specified @metavar{typecode} and @metavar{value}.
+@end deftypefn
+
+@deftypefn Function {PASS(CORBA_any *)} ILU_C_Any_ResetValue (RETAIN(CORBA_any *) @metavar{initialized-any}, RETAIN(CORBA_TypeCode) @metavar{typecode}, RETAIN(void *) @metavar{value}, RETAIN(CORBA_Environment *) @metavar{env})
+@ftindex ILU_C_Any_Create (C LSR function)
+
+Locking:  n/a
+
+Given a pointer to a previously used @C{@type{CORBA_any}} value @metavar{initialized-any}, frees the current value and sets the typecode and value of the any to the specified @metavar{typecode} and @metavar{value}.
+@end deftypefn
+
+@deftypefn Function {PASS(void *)} ILU_C_Any_Value ({RETAIN(CORBA_any *)} @metavar{pickle}, {RETAIN(CORBA_Environment *)} @metavar{env})
+@ftindex ILU_C_Any_Value (C LSR function)
+
+Locking:  n/a
+
+Returns the @language{C} value from the @metavar{pickle}.  Returns NIL if the type of the value contained in the pickle is not `known' to the @system{ILU} @language{C} runtime.  Relatively expensive, as it involves several malloc's.
+@end deftypefn
+
+@deftypefn Function CORBA_TypeCode ILU_C_Any_TypeCode ({RETAIN(CORBA_any *)} @metavar{pickle}, {RETAIN(CORBA_Environment *)} @metavar{env})
+@ftindex ILU_C_Any_TypeCode (C LSR function)
+
+Locking:  n/a
+
+Retrieve the @system{CORBA} typecode of the value in the @metavar{pickle}.  Returns NIL if the type of the value in the pickle is not registered with the @system{ILU} @language{C} runtime.
+@end deftypefn
+
+@deftypefn Function {PASS(CORBA_any *)} ILU_C_Any_Duplicate (RETAIN(CORBA_any *) @metavar{pickle}, RETAIN(CORBA_Environment *) @metavar{env})
+@ftindex ILU_C_Any_Duplicate (C LSR function)
+
+Locking:  n/a
+
+Make a copy of an existing pickle without `looking inside'.  This call will work even with pickle values that are of types not known to the @system{ILU} @language{C} runtime.
+@end deftypefn
+
+@subsection Constructed Types
+
+@subsubsection Enumeration
+
+@language{ISL} enumeration types are mapped @language{C} enum types, in an exception to the @system{CORBA}
+specification.  Each element of the enumeration is named as @C{@metavar{<interface>}_@metavar{<element-name>}}.
+The @language{C} @C{enum} type is @C{typedef}'ed to the specified name for the type.  For example, the @language{ISL}
+definition
+@codeexample
+INTERFACE Foo;
+...
+TYPE Color = ENUMERATION Red, Green, Blue END;
+...
+@end codeexample
+@noindent
+would produce the following @language{C} definition:
+@codeexample
+typedef enum @{ Foo_Red, Foo_Green, Foo_Blue @} Foo_Color;
+@end codeexample
+
+@subsubsection Array
+
+Arrays are represented as @language{C} arrays.
+
+@subsubsection Sequence
+@cindex C sequence mappings
+Sequence type names, as most type definitions, are formed with the interface name
+and the type name. 
+Sequence instances are represented to the @language{C} programmer
+as a pointer to the sequence descriptor structure.
+For each sequence type declared in the interface description, a pseudo-object sequence type
+is defined in @language{C}.  These sequence types will hold any number of
+values of type sequence's @dfn{primary type}.
+For the sequence@*
+@isl{   INTERFACE I;}@*
+@isl{   TYPE @metavar{T2} = SEQUENCE OF @metavar{T1};}@*
+the following functions are defined:
+
+@deftypefn {Sequence Method} {PASS(@metavar{I}_@metavar{T2}*)} @metavar{I}_@metavar{T2}_Create ( OPTIONAL(unsigned long) @var{length}, OPTIONAL(@metavar{T1} *) @var{initial-values} )
+@ftindex @metavar{I}_@metavar{T2}_Create (C stub function)
+
+This function creates and returns a pointer to a newly allocated
+instance of @metavar{T2}.  If @metavar{length} is specified,
+but @metavar{initial-values} is not specified, enough space for @metavar{length} values of type @metavar{T1}
+is allocated in the sequence.  If @metavar{initial-values} is specified, @metavar{length} is assumed
+to be the number of values pointed to by @metavar{initial-values}, and must be specified.
+Note that if type @metavar{T1} is a @isl{character} or @isl{short character} type, a pointer
+to a NIL-terminated sequence will be returned; otherwise, a normal @system{CORBA} sequence structure
+will be returned by reference.
+
+@end deftypefn
+
+@deftypefn {Sequence Method} CORBA_unsigned_long @metavar{I}_@metavar{T2}_Length ( @metavar{I}_@metavar{T2} * @metavar{s} )
+@mtindex @metavar{seqtype}_Length (C seq method)
+
+Returns the length of @metavar{s}.
+ 
+@end deftypefn
+
+@deftypefn {Sequence Method} void @metavar{I}_@metavar{T2}_Append ( @metavar{I}_@metavar{T2} * @metavar{s}, @metavar{T1} @metavar{value} )
+@mtindex @metavar{seqtype}_Append (C seq method)
+
+Appends @metavar{value} to the end of @metavar{s}.  This function will reallocate space and copy, if necessary.
+
+@end deftypefn
+
+@deftypefn {Sequence Method} void @metavar{I}_@metavar{T2}_Push ( @metavar{I}_@metavar{T2} * @metavar{s}, @metavar{T1} @metavar{value} )
+@mtindex @metavar{seqtype}_Push (C seq method)
+
+Pushes @metavar{value} on to the beginning of the sequence.  This function will reallocate space and copy, if necessary.
+ 
+@end deftypefn
+
+@deftypefn {Sequence Method} void @metavar{I}_@metavar{T2}_Pop ( @metavar{I}_@metavar{T2} * @metavar{s}, @metavar{T1} * @metavar{value-ptr} )
+@mtindex @metavar{seqtype}_Pop (C seq method)
+
+Removes the first value from the sequence @metavar{s}, and places it in the location
+pointed to by @metavar{value-ptr}.
+
+@end deftypefn
+
+@deftypefn {Sequence Method} void @metavar{I}_@metavar{T2}_Every ( @metavar{I}_@metavar{T2} * @metavar{s}, void (*@metavar{func})(@metavar{T1}, void *), void * @metavar{data} )
+@mtindex @metavar{seqtype}_Every (C seq method)
+
+Calls the function @metavar{func} on each element of @metavar{s} in sequence, passing @metavar{data}
+as the second argument to @metavar{func}.
+
+@end deftypefn
+
+@deftypefn {Sequence Method} {RETAIN(@metavar{I}_@metavar{T1}*)} @metavar{I}_@metavar{T2}_Nth ( @metavar{I}_@metavar{T2} * @var{s}, CORBA_unsigned_long @var{n} )
+@mtindex @metavar{seqtype}_Nth (C seq method)
+
+Returns the address of the @metavar{n}th element of the sequence @metavar{s}.  Returns @C{ILU_NIL}
+if @metavar{n} is out of range.
+
+@end deftypefn
+
+@deftypefn {Sequence Method} void @metavar{I}_@metavar{T2}_Init ( @metavar{I}_@metavar{T2} * @metavar{s}, OPTIONAL(CORBA_unsigned_long) @metavar{length}, OPTIONAL(@metavar{T1} *) @metavar{initial-values} )
+@mtindex @metavar{seqtype}_Init (C seq method)
+
+This function works like @C{@metavar{T2}_Create}, except that it takes
+a the address of an already-existing @metavar{T2} to initialize.  This can be used
+to initialize instances of @metavar{T2} that have been stack-allocated.
+
+@end deftypefn
+
+@deftypefn {Sequence Method} void @metavar{I}_@metavar{T2}__Free ( @metavar{I}_@metavar{T2} * @metavar{s} )
+@mtindex @metavar{seqtype}_Free (C seq method)
+
+Frees allocated storage used internally by @metavar{s}.  Does not free @metavar{s} itself.
+
+@end deftypefn
+
+String sequences (@isl{SEQUENCE OF SHORT CHARACTER} or @isl{SEQUENCE OF CHARACTER})
+are just arrays of the character codes for the characters, using either Latin-1 codes (for
+@isl{SEQUENCE OF SHORT CHARACTER}), or ISO 10646 Unicode codes (for @isl{SEQUENCE OF CHARACTER}).
+These sequences are terminated with a character code of zero.  The terminating code is not
+counted in the length of the sequence.  All other sequence types have a record structure, mandated by @system{CORBA}:
+
+@codeexample
+typedef struct @metavar{I}_@metavar{T2} @{
+  unsigned long _maximum;
+  unsigned long _length;
+  @metavar{I}_@metavar{T1} *_buffer;
+@} @metavar{I}_@metavar{T2};
+@end codeexample
+
+The field @C{_maximum} contains the number of elements pointed to by
+@C{_buffer}. The field @C{_length} indicates the number of valid or
+useful elements pointed to by @C{_buffer}.
+
+For example, the @language{ISL} specification
+@codeexample
+INTERFACE I;
+ 
+TYPE iseq = SEQUENCE OF INTEGER;
+@end codeexample
+would have in its @language{C} mapping the type
+@codeexample
+typedef struct I_iseq @{
+  unsigned long _maximum;
+  unsigned long _length;
+  ilu_integer *_buffer;
+@} I_iseq;
+@end codeexample
+In a client program, a pointer to this type would be instantiated and
+initialized by calling the type specific sequence creation function generated
+for the sequence, e.g.
+@codeexample
+        ...
+    I_O h;
+    ILU_C_ENVIRONMENT s;
+    I_iseq sq;
+        ... 
+    sq = I_iseq_Create (0, NULL);
+    I_iseq_Append (&sq, 4);
+        ...
+@end codeexample
+
+@subsubsection Record
+@cindex C mapping for RECORD
+Records map directly into corresponding @language{C} structures.
+
+@subsubsection Union
+@cindex C mapping for UNION
+Because of the somewhat baroque @system{CORBA} concept of union types,
+unions may take one of several forms.
+
+Generally, @system{ILU} unions in @language{C} consist of a struct with two members:  the type discriminator 
+(a member named ``@C{_d}''),
+and a union (a member named ``@C{_u}'') of the possible values.  In a simple @language{ISL} union that does not
+name the elements, the union member names are derived from the
+@language{ISL} data types which compose the union. For example, if the
+@language{ISL} type in interface @interface{I} is @isl{TYPE u1 = UNION INTEGER, SHORT REAL END;}
+the generated @language{C} struct would be
+@codeexample
+struct _I_u1_union @{
+        CORBA_short _d;
+        union @{
+                CORBA_long integer;     /* 0 */
+                CORBA_float shortreal;  /* 1 */
+        @} _u;
+@};
+typedef struct _I_u1_union I_u1;
+@end codeexample
+
+Note the discriminator @C{_d} may take on the values of @C{0}, for the @C{integer} field,
+or @C{1}, for the @C{shortreal} field.
+
+In more complex union forms, the user may specify the type of the discriminator as
+well as the member names and which member corresponds to which discriminator
+value. Consider the following @language{ISL} example:
+
+@codeexample
+INTERFACE I;
+TYPE e1 = ENUMERATION red, blue, green, yellow, orange END;
+TYPE u1 = e1 UNION 
+ a : INTEGER = red, green END,
+ b : SHORT REAL = blue END,
+ c : REAL = DEFAULT
+END;
+@end codeexample
+
+The generated union is:
+
+@codeexample
+typedef struct _I_u1_union I_u1;
+typedef enum @{ I_red = 0, I_blue = 1, I_green = 2, I_yellow = 3, I_orange = 4 @} I_e1;
+struct _I_u1_union @{
+  I_e1 _d;
+  union @{
+    CORBA_long a;       /* I_red, I_green */
+    CORBA_float b;      /* I_blue */
+    CORBA_double c;     /* DEFAULT */
+  @} _u;
+@};
+@end codeexample
+
+This example shows that the discriminator type is to be @C{I_e1} and that
+the member names are to be @C{a}, @C{b}, and @C{c}. When the discriminator
+has the value @C{I_red} or @C{I_green} the member @C{a} has a valid value
+and the type is interpreted to be @C{CORBA_long}. When the discriminator has
+the value @C{I_green} the member @C{b} has a valid value and the type is
+interpreted to be @C{CORBA_float}. If the discriminator has any other value,
+the member @C{c} is expected to have a valid value and the type is interpreted
+to be @C{CORBA_double}.
+
+Discriminator types may be @isl{INTEGER}, @isl{CARDINAL}, @isl{ENUMERATION}, @isl{SHORT CARDINAL}, or @isl{SHORT INTEGER}.
+The default for an unspecified discriminator is @isl{SHORT INTEGER}.
+
+@subsubsection Optional
+
+An @language{ISL} @kwd{OPTIONAL} type maps either to the same @language{C} type as its base
+type, if that base type is represented with an @language{C} pointer type, or to a pointer to that base type,
+if it is not represented with a @language{C} pointer type.
+
+@node Object Types, Exceptions, Mapping Type Constructs Into C, The ISL Mapping to C
+@subsection Object Types
+@cindex C methods
+
+@menu
+* Surrogate and True Objects::
+* Interface Inheritance::
+* Accessing the String Binding Handle or IOR or Object ID::
+* Distinguishing Between Local and Remote Instances::
+* Object Implementation::
+* Methods::
+* Parameter Passing Considerations::
+* Exceptions::
+* Garbage Collection and COLLECTIBLE Types::
+@end menu
+
+@node Surrogate and True Objects, Interface Inheritance, , Object Types
+@subsubsection Surrogate and True Objects
+
+@system{ILU} uses an object system embedded into @language{C}.
+The @language{C} type of objects in this system is @C{ILU_C_Object*};
+the identifiers @C{ILU_C_OBJECT} and @C{CORBA_Object}
+can also be used for this type.
+@dtindex ILU_C_Object (C LSR type)
+@dtindex CORBA_Object (C LSR type)
+@dtindex ILU_C_OBJECT (C LSR macro)
+We recommend the use of @macro{ILU_C_OBJECT}, as it is a macro that expands to the
+identifier for the @language{C} object type
+specified by the version of @system{CORBA} being used (currently 2.0).
+
+Since @language{C} has no subtyping relationship isomorphic to that of
+@language{ISL} object types, a more liberal approximation is used:
+all @language{ISL} object types map to the same @language{C} type,
+@C{CORBA_Object}.  However, a @C{typedef} is emitted for each
+@language{ISL} object type, so an object-type-specific @language{C}
+type name may be used to express intent.
+For conformance with @system{CORBA}, the @language{C} name
+for @language{ISL} type @metavar{I.T} is @C{@metavar{I}_@metavar{T}}.
+
+The @language{C} mapping of an object type includes a set of generic
+functions for the methods introduced at that object type.  The name of
+the generic function for the method @metavar{M} introduced at object
+type @metavar{I.T} is @C{@metavar{I}_@metavar{T}_@metavar{M}}.  This
+generic function is used to invoke method @metavar{M} on objects of type
+@metavar{I.T} (naturally including objects that also have types that are
+subtypes of @metavar{I.T}).
+@cindex C method arguments
+The first argument to a generic function is an object instance (@C{ILU_C_Object *})
+that should have type @metavar{I.T} (among possibly others).
+
+An implementation of an @language{ISL} object type is commonly
+referred to as a @dfn{class}.
+Classes are represented in the @system{ILU} @language{C} runtime as the @language{C} type @C{ILU_C_Class}.
+@dtindex ILU_C_Class (C LSR type)
+To create an @C{ILU_C_Class}, the application calls an
+object-type-specific function that is part of the stubs.  The
+class-creation procedure named @C{@metavar{I}_@metavar{T}__MakeClass},
+which is declared in generated file @file{@metavar{I}.h}, makes a class
+for objects that implement object type @metavar{I.T} (and thus all its
+supertypes).  This procedure takes as arguments a set of @language{C}
+procedures that are the implementations of the methods of that class,
+plus a finalization procedure.  The finalization procedure is given
+access to the private data of the object after the object is destroyed.
+
+For each object type @metavar{I.T}, the generated server-side stub
+module for @metavar{I} creates a default true class, unless the true code
+has been generated with the @command{-nodefaulttrueclass} or @command{-nodefaulttrueclassfor} command-line switches.  Linking with this
+server-side stub requires the application to supply the procedures that
+implement the methods of this default class.  Those procedures are named
+@C{server_@metavar{I}_@metavar{T}_@metavar{M}}, for each method
+@metavar{M} of @metavar{I.T}.
+A finalization procedure can be associated with the default class by invoking @C{@metavar{I}_@metavar{T}__SetDefaultClassFinalization}.
+Implementations of true objects
+typically just use this default class, since the methods for this
+class have to be provided in any case.  The function @C{@metavar{I}_@metavar{T}__CreateTrue}
+will create an true instance using the default true class for
+the object type @metavar{I}_@metavar{T}.  @C{@metavar{I}_@metavar{T}__CreateTrue} methods
+take an @dfn{instance handle}, a server on which
+to maintain the object, and arbitrary user data, and create and return
+the true instance of the object.  An alternate version of 
+@C{@metavar{I}_@metavar{T}__CreateTrue}, called @C{@metavar{I}_@metavar{T}__OTCreateTrue},
+is provided for use inside the scope of an object table's incarnation
+procedure.  Also, a generic creation procedure,
+@C{ILU_C_CreateTrueObject}, is declared in @file{iluchdrs.h} for
+application use.  The default true class can be registered or changed
+with the function @fn{@C{@metavar{I}_@metavar{T}__SetDefaultClass}}, which returns the previous setting of the default true class.
+
+Surrogate instances generally use another automatically-constructed
+class, though custom surrogate classes may be registered with the
+procedure @C{ILU_C_RegisterCustomSurrogateType}.  Surrogate instances
+are typically either received as reply values from calls or parameters to calls, or
+reified from one or more strings with a @dfn{binding procedure}.
+(A @dfn{binding procedure} is a procedure that takes some name for an
+object instance, and returns the actual instance.)  There are a number
+of binding procedures available.  The simple binding interface to @language{C}
+offers the function @C{ILU_C_LookupObject}, which takes an object ID and a
+type, and returns the registered object with that ID, if any.
+The function @C{CORBA_ORB_string_to_object} will take a URL for an instance, in any
+of the supported URL forms, and return an @C{ILU_C_OBJECT} instance.
+The function @C{ILU_C_SBHToObject} is similar to @C{CORBA_ORB_string_to_object},
+except that an expected object type may also be specified, to constrain
+the process.
+In addition, the @system{ILU}-generated stubs will provide a function
+called @C{@metavar{I}_@metavar{T}__CreateFromSBH}, which will either find or create
+an instance of the specified type, with the specified parameters.
+
+In general, for any object type @metavar{T}, the following
+@language{C} functions are defined:
+
+@deftp {C Procedure Type} {ILU_C_FinalizationProc}
+@ttindex ILU_C_FinalizationProc (C LSR proc type)
+
+Locking:  caller may have any locks -- this means that this finalization procedure can do almost nothing ILU-related without potentially violating locking constraints
+
+The finalization procedure for a class of objects.  It takes a single parameter,
+the @C{@type{void *}} "instance data" pointer provided at the creation of the
+object being finalized.  Ownership of (instanceData) is passed to
+this procedure.  It has a return type of @C{@type{void}}.
+
+@end deftp
+
+@deftypefn Function ILU_C_Class @metavar{T}__MakeClass ( @metavar{method-1-type} @metavar{method-1-proc}, ... @metavar{method-N-type} @metavar{method-N-proc}, ILU_C_FinalizationProc _finalize )
+@mtindex @metavar{objtype}__MakeClass (C objtype static method)
+
+Locking:  Main Invariant holds
+
+Creates a C class of objects that export object type @metavar{T} (and all its supertypes), given implementations for all the methods of that type.  @C{ILU_C_CreateTrueObject} can then be called to create instances of this class.
+
+@end deftypefn
+
+@deftypefn Function ILU_C_Class @metavar{T}__SetDefaultClass ( ILU_C_Class c )
+@mtindex @metavar{objtype}__SetDefaultClass (C objtype static method)
+
+Locking:  Main Invariant holds
+
+Sets the default true class of the type @metavar{T} to be @metavar{c}, and
+returns the previous default true class setting.
+
+@end deftypefn
+
+@deftypefn Function void @metavar{T}__SetDefaultClassFinalization ( ILU_C_FinalizationProc f )
+@mtindex @metavar{objtype}__SetDefaultClassFinalization (C objtype static method)
+
+Locking:  Main Invariant holds
+
+Sets the finalization method of the default class for object type @metavar{T}.
+
+@end deftypefn
+
+@deftypefn Function OPTIONAL(@metavar{T}) @metavar{T}__CreateTrue ( OPTIONAL(RETAIN(char *)) @metavar{instance-id}, OPTIONAL(GLOBAL(ilu_Server)) @metavar{server}, OPTIONAL(PASS(void *)) @metavar{user-data} )
+@mtindex @metavar{objtype}__CreateTrue (C objtype static method)
+
+Locking:  Main Invariant holds
+
+Creates an instance of the default class for type @metavar{T}, exporting it with
+instance-id @metavar{instance-id}, exporting it via server
+@metavar{server}, associating the value @metavar{user-data} with it.
+If @metavar{instance-id} is not specified, a server-relative
+instance-id will be assigned automatically.  If @metavar{server} is
+not specified, a default server will be created automatically.
+
+@end deftypefn
+
+@deftypefn Function OPTIONAL(@metavar{T}) @metavar{T}__OTCreateTrue ( RETAIN(char *) @metavar{instance-id}, GLOBAL(ilu_Server) @metavar{server}, OPTIONAL(PASS(void *)) @metavar{user-data} )
+@mtindex @metavar{objtype}__OTCreateTrue (C objtype static method)
+
+Locking:  Inside(@metavar{server}, @metavar{T})
+
+Similar to @fn{@metavar{T}__CreateTrue()}, but designed to be used
+within the @fn{ot_object_of_ih} function of an object table
+(@ref{Servers and Ports}).  Requires kernel server locks to be
+held before invocation.
+
+Creates an instance of the default class for type @metavar{T}, exporting it with
+instance-id @metavar{instance-id}, exporting it via server
+@metavar{server}, associating the value @metavar{user-data} with it.
+
+@end deftypefn
+
+@deftypefn Function OPTIONAL(@metavar{T}) @metavar{T}__CreateFromSBH ( RETAIN(char *) @metavar{sbh}, RETAIN(CORBA_Environment *) @metavar{Env})
+@mtindex @metavar{objtype}__CreateFromSBH (C objtype static method)
+
+Locking:  Main Invariant holds
+
+Finds or creates an instance of @metavar{T}, using the given object
+reference.
+
+@end deftypefn
+
+@deftypevr {Class Var} extern @C{ilu_Class} @metavar{T}__MSType
+@vtindex @metavar{objtype}__MSType (C objtype static value)
+
+A value, of type @C{ilu_Class} (which, despite its poorly-chosen name, identifies an object type, not a class), that identifies the object type @metavar{T}.
+
+@end deftypevr
+
+In the following example, the @language{ILU} definition is:
+@codeexample
+INTERFACE I;
+ 
+TYPE T = OBJECT
+  METHODS
+    M ( r : REAL ) : INTEGER
+  END;
+@end codeexample
+
+This definition defines an interface @isl{I}, an object type @isl{T}, and a
+method @isl{M}. The method @isl{M} takes a @isl{REAL} as an
+argument and returns an @isl{INTEGER} result. The generated
+@language{C} header file would include the following statements:
+
+@codeexample
+typedef ILU_C_OBJECT I_T;
+
+ILU_C_Class I_T__MakeClass(
+  ilu_integer (*I_T_M__Impl)
+     (I_T _handle, ilu_real r, ILU_C_ENVIRONMENT *_status),
+  ILU_C_FinalizationProc _finalize);
+
+I_T I_T__CreateFromSBH (char *sbh, ILU_C_ENVIRONMENT *Env);
+I_T I_T__CreateTrue (ilu_string ih, ilu_Server server, void *user_data);
+I_T I_T__OTCreateTrue (ilu_string ih, ilu_Server server, void *user_data);
+
+ilu_integer I_T_M (I_T, ilu_real, ILU_C_ENVIRONMENT *);
+
+ilu_integer server_I_T_M (I_T, ilu_real, ILU_C_ENVIRONMENT *);
+
+@end codeexample
+
+The functions @C{I_T__CreateFromSBH}, @C{I_T__CreateTrue},
+and @C{I_T__OTCreateTrue} are used to create instances
+of the class @C{I_T}.  @C{I_T__CreateFromSBH} is used by clients. 
+@C{I_T__CreateTrue} is used by servers for normal circumstances,
+and @C{I_T__OTCreateTrue} is used in object table implementations;
+both return objects whose @isl{M} method is implemented by @C{server_I_T_M}.
+Alternatively, servers and/or object tables could use @C{I_T__MakeClass} and
+@C{ILU_C_CreateTrueObject}.
+The pointer
+returned in each case is the object instance and must be
+passed with each method invocation.
+
+@node Interface Inheritance, Accessing the String Binding Handle or IOR or Object ID, Surrogate and True Objects, Object Types
+@subsubsection Interface Inheritance
+@cindex C object type inheritance
+
+Through interface inheritance, an object type may participate in the
+behaviors of several different types that it inherits from.  These
+types are called @dfn{ancestors} of the object type.  In
+@language{C}, an object type supplies all methods either defined
+directly on that type, or on any of its ancestor types.
+
+Consider the following example:
+@codeexample
+INTERFACE I2;
+ 
+EXCEPTION E1;
+
+TYPE T1 = OBJECT
+  METHODS
+    M1 (a : ilu.CString) : REAL RAISES E1 END
+  END;
+
+TYPE T2 = OBJECT
+  METHODS
+    M2 ( a : INTEGER, Out b : INTEGER )
+  END;
+ 
+TYPE T3 = OBJECT SUPERTYPES T1, T2 END
+  METHODS
+    M3 ( a : INTEGER )
+  END;
+@end codeexample
+
+The object type @isl{T3} inherits from the object types @isl{T1} and @isl{T2}. Thus,
+eight @language{C} procedures are relevant to the interface
+@isl{I2}: the three generic functions @C{I2_T1_M1}, @C{I2_T2_M2}, and @C{I2_T3_M3},
+and the five default method implementations @C{server_I2_T1_M1}, @C{server_I2_T2_M2},
+@C{server_I2_T3_M1}, @C{server_I2_T3_M2}, and @C{server_I2_T3_M3}.  A
+module that implements true instances of @isl{T3} using the default class would
+define the last three procedures (the other two default method implementations, for messy reasons described in the next paragraph).  A client uses only the three generic
+functions.
+
+Sadly, the current state of the C-stubber causes an additional
+complexity for server implementors.  @file{I2-true.c} contains the
+server-side stubs ("skeletons", in OMG parlance) needed in any
+program that implements any object type that is a subtype of any
+object type defined in @file{I2.isl}.  @file{I2-true.c} also contains
+the code that creates the default classes for all the object types defined in @file{I2.isl};
+this code makes external references to the default implementation procedures,
+thus requiring any program that links with @file{I2-true.o} to
+supply those default implementation procedures ---
+even if those default classes are not used.  A simple
+workaround is to supply dummy procedures to satisfy the linker.
+The stubs can also be generated with the command-line options @command{-nodefaulttrueclass} or @command{-nodefaulttrueclassfor}, which will prevent generation of the code that creates the default true classes.  However, if this technique is used, be aware that either a default true class must be registered manually, or true instances must be created with @fn{@C{ILU_C_CreateTrueObject}}.
+
+@node Accessing the String Binding Handle or IOR or Object ID, Distinguishing Between Local and Remote Instances, Interface Inheritance, Object Types
+@subsubsection Accessing the String Binding Handle, IOR, or Object ID
+
+Several functions are provided to give access to various identifiers
+of an instance.  The function @C{ILU_C_SBHOfObject} will return the
+@system{ILU} URL for an instance; the function @C{ILU_C_IOROfObject}
+will return the @system{CORBA} URL for an object, if support for @system{IIOP}
+is configured into @system{ILU}; the function @C{CORBA_ORB_object_to_string}
+will return either the IOR, if @protocol{IIOP} support has been configured
+in, or the SBH, if not; the two parts of the object ID, the server id and
+the instance handle, may be obtained with a call on @C{ILU_C_IDOfObject}.
+See the API reference section of this chapter for more information on these
+functions.
+
+@node Distinguishing Between Local and Remote Instances, Object Implementation, Accessing the String Binding Handle or IOR or Object ID, Object Types
+@subsubsection Distinguishing Between Local and Remote Instances
+
+It is occasionally useful to distinguish between local and remote
+instances.  There are three cases here:  the case where the instance
+is a true object, the case where the instance is a surrogate for
+a true instance implemented in another language in the same address
+space, and the case where the instance is a surrogate for a true
+instance in a different address space.  There is currently no good
+way to distinguish these cases in the @language{C} runtime.
+
+@node Object Implementation, Methods, Distinguishing Between Local and Remote Instances, Object Types
+@subsubsection Object Implementation
+@cindex C object implementation
+
+@emph{This information is provided for those interested in the
+implementation of the C object system.  It is @strong{not} guaranteed
+to remain the same from release to release.}
+
+The interface @file{@metavar{ILUSRC}/runtime/c/ilucstub.h} contains the @language{C} declarations relevant to the material here.
+
+A @language{C} class is represented by a pointer to a struct that holds a finalization procedure and a dispatch table.  The dispatch table is an array of sections, one from each object type implemented by the class.  Each section is a struct containing the @C{ilu_Class} (remember, this identifies a type, not a class) that this section is for, and an array of procedure pointers, one per method introduced at that object type.
+
+For each method directly defined in the type, a generic function is
+defined in the common code for its interface, which dispatches to the
+appropriate method.  It does this by walking down the dispatch table for the
+object's class, until it finds a section that contains the appropriate
+@C{ilu_Class} value (that is, the value of @C{ilu_Class} that matches the
+@C{ilu_Class} at which this method was introduced), then calling the
+method pointer which is indexed in the section's array of method
+pointers by the index of the method.  The generic functions have the
+correct type signature for the method.  They can be referenced with the @C{&} operator.
+
+@node Methods, Parameter Passing Considerations, Object Implementation, Object Types
+@subsubsection Methods
+
+All @language{ISL} methods of an object type map to @language{C} functions
+which operate on instances of the @language{C} object system as described
+above.  @isl{IN}, @isl{OUT}, and @isl{INOUT} parameters appear in the
+@language{C} function in the same order as they appear in the @language{ISL}
+definition of the function.
+
+@isl{ASYNCHRONOUS} methods have no return values and raise no user-specified exceptions.
+They may return before the completion of the true method.  @isl{FUNCTIONAL} methods
+are not cached by the @language{C} @system{ILU} runtime.
+
+In addition to its specified arguments,
+the methods @C{I_T_M} and @C{server_I_T_M} take an
+instance of the type @C{I_T} and a reference to a variable of type
+@C{ILU_C_ENVIRONMENT *}, which is a macro defined to be the
+appropriate @system{CORBA} environment type, and is used to return
+exception codes.  The environment struct pointed to by the environment
+argument must be instantiated in a client; its address is passed as
+the last argument to each method.  True procedures must expect a
+pointer to this structure as the last argument.
+ 
+For instance, the @language{C} client calling the method for @method{M} 
+might be as follows:
+@codeexample
+#include "I.h"
+ 
+int main (int ac, char **av)
+@{
+  double atof( );
+  I_T inst;
+  CORBA_long result;
+  CORBA_double f;
+  ILU_C_ENVIRONMENT ev;
+ 
+  I__Initialize( );
+  f = atof (av[1]);
+  inst = I_T__CreateFromSBH (av[2], &ev);
+  if (!ILU_C_SUCCESSFUL(&ev)) @{
+    printf( "CreateFromSBH raised exception <%s>\n",
+      ILU_C_EXCEPTION_ID(&ev));
+    return(1);
+  @}
+  result = I_T_M (inst, f, &ev);
+  if (!ILU_C_SUCCESSFUL(&ev)) @{
+    printf( "exception <%s> signalled on call to I_T_M\n",
+      ILU_C_EXCEPTION_ID(&ev));
+    return(2);
+  @}
+  printf( "result is %d\n", result );
+  return(0);
+@}
+@end codeexample
+
+Note the call on the interface-specific client initialization
+procdedure @C{I__Initialize}; these are described in a later section.
+
+The
+string binding handle is obtained from standard input along
+with some floating-point value.
+The class specific function @C{I_T__CreateFromSBH} is then called to
+obtain the object instance.  This function was passed
+the string binding handle,
+and a @C{CORBA_Environment} in which to report exceptions.
+The returned object instance is then passed as the first argument
+to the method @C{I_T_M}, along with the environment @C{ev},
+and the single actual @C{CORBA_double} argument @C{f}.  @C{I_T_M} returns
+an @C{CORBA_long} value which is placed in @C{result}.
+
+The true implementation of the method @method{M} might use the default class,
+supplying the implementation of the one method as follows:
+@codeexample
+ilu_integer server_I_T_M ( I_T h, ilu_real u, ILU_C_ENVIRONMENT *s )
+@{
+  return( (ilu_integer) (u + 1) );
+@}
+@end codeexample
+
+In this simple example, the corresponding server, or true, method computes
+some value to be returned.  In this case it adds one
+to its @C{ilu_real} argument @C{u}, converts the value to an integer,
+and returns that value.  Note that the server method, if not signalling
+any exceptions, may ignore the environment parameter.
+
+@node Parameter Passing Considerations, Exceptions, Methods, Object Types
+@subsubsection Parameter Passing Considerations
+@cindex C Parameter Passing Considerations
+
+Here is @system{ILU}'s version of table 20 from the @system{CORBA 2.0} spec.  
+@code{T} is the @language{C} mapping of the type in question.
+The @code{Exn} column describes how exception parameters appear in the parameter-conveying member of a status struct.
+
+@example
+DataType        In      InOut   Out        Return    Exn
+--------        --      -----   ---        ------    ---
+scalar          T       T*      T*         T         T*
+optional        T       T*      T*         T         T*
+object          T       T*      T*         T         T*
+record, fixed   T*      T*      T*         T         T*
+record, var     T*      T*      T**        T*        T*
+union, fixed    T*      T*      T*         T         T*
+union, var      T*      T*      T**        T*        T*
+string          T       T*      T*         T         T*
+other sequence  T*      T*      T**        T*        T*
+array, fixed    T       T       T          T_slice*  T*
+array, var      T       T       T_slice**  T_slice*  T*
+@end example
+
+@node Exceptions, Garbage Collection and COLLECTIBLE Types, Parameter Passing Considerations, Object Types
+@subsubsection Exceptions
+@language{C} has no defined
+exception mechanism. As already indicated, exceptions are passed in @system{ILU} @language{C} by adding to the end of each method 
+an additional status argument
+that can convey an exception code and a value of a type associated with that exception.
+To signal an exception, a method implementation sets the exception code and supplies the parameter value (if any).
+
+An exception parameter is conveyed in the status argument as a @language{C} pointer; the parameter-conveying member is declared to be a @C{void *}.  In particular, this pointer is a pointer to a value of the type that is the @language{C} mapping of the exception's @language{ISL} parameter.  For an exception that has no parameter, the parameter-conveying member is not meaningful.
+
+In the following example, the @isl{div} method can raise the exception
+@isl{DivideByZero}:
+@codeexample
+INTERFACE calc;
+ 
+TYPE numerator = INTEGER;
+ 
+EXCEPTION DivideByZero : numerator;
+ 
+TYPE self = OBJECT
+  METHODS
+    Div( v1 : INTEGER, v2 : INTEGER ) : INTEGER RAISES DivideByZero END
+  END;
+@end codeexample
+
+The generated include file @file{calc.h} contains the exception definitions:
+
+@codeexample
+#ifndef __calc_h_
+#define __calc_h_
+/*
+** this file was automatically generated for C
+** from the interface spec calc.isl.
+*/
+ 
+#ifndef __ilu_c_h_
+#include "ilu-c.h"
+#endif
+ 
+extern ILU_C_ExceptionCode    _calc__Exception_DivideByZero;
+#define ex_calc_DivideByZero _calc__Exception_DivideByZero
+ 
+typedef ilu_integer calc_numerator;
+typedef calc_numerator calc_DivideByZero;
+ 
+typedef ILU_C_OBJECT calc_self;
+ 
+calc_self calc_self__CreateTrue ( char *id, ilu_Server server,
+   void * user_data);
+calc_self calc_self__CreateFromSBH ( char * sbh, ILU_C_ENVIRONMENT *Env );
+
+ilu_integer calc_self_Div( calc_self, ilu_integer, ilu_integer,
+   ILU_C_ENVIRONMENT *Env );
+
+extern void calc__BindExceptionValue (ILU_C_ENVIRONMENT *, ilu_Exception, ...);
+
+#endif 
+@end codeexample
+
+The method implementation for @isl{Div} in the true module must detect the
+divide-by-zero condition and raise the exception:
+
+@codeexample
+long server_calc_self_Div (calc_self h, ilu_integer u, ilu_integer v,
+                           ILU_C_ENVIRONMENT *s)
+@{
+  calc_numerator n = 9;
+
+  if ( v == 0 )
+    @{
+      s->_major = ILU_C_USER_EXCEPTION;
+      s->returnCode = ex_calc_DivideByZero;
+      s->ptr = (void *) malloc(sizeof(calc_numerator));
+      *((calc_numerator *) (s->ptr)) = n;
+      s->freeRoutine = (void (*) (void *)) 0;
+      return( u );
+    @}
+  else
+    return( u / v );
+@}
+@end codeexample
+
+When freeing the parameter requires more than just freeing @C{s->ptr}, a non-NULL @C{s->freeRoutine} is provided that does the additional freeing; @C{s->freeRoutine} is given one argument, @C{s->ptr}, and returns @C{void}.
+
+The generated stubs offer as a convenience a variadic procedure (@C{calc__BindExceptionValue}) that can be used to raise any exception declared in the interface.  For an exception that has no parameter, this procedure takes just two actual arguments.  For an exception with a parameter, the parameter value is given as the third actual argument, using the usual calling convention for passing @isl{IN} arguments of its type.  Using this procedure, the above code would be:
+
+@codeexample
+long server_calc_self_Div (calc_self h, ilu_integer u, ilu_integer v,
+                           ILU_C_ENVIRONMENT *s)
+@{
+  calc_numerator n = 9;
+
+  if ( v == 0 )
+    @{
+      calc__BindExceptionValue(s, ex_calc_DivideByZero, n);
+      return( u );
+    @}
+  else
+    return( u / v );
+@}
+@end codeexample
+
+
+The exception is sent back to the client, which can detect it thusly:
+@codeexample
+  ...
+  calc_self instance;
+  ILU_C_ENVIRONMENT s;
+  ilu_integer i, j;
+  ilu_integer val;
+  ...
+  instance = calc_self__CreateFromSBH (sbh, &s);
+  
+  if (! ILU_C_SUCCESSFUL(&s)) @{
+    fprintf (stderr, "CreateFromSBH(%s) raised %s\n",
+      sbh, ILU_C_EXCEPTION_ID (&s) );
+    exit(1);
+  @}
+
+  val = calc_self_Div (instance, i, j, &s);
+
+  /* check to see if an exception occured */
+
+  if (! ILU_C_SUCCESSFUL(&s)) @{
+    /* report exception to user */
+    char *p;
+
+    p = ILU_C_EXCEPTION_ID (&s);
+
+    if (p == ex_calc_DivideByZero) @{
+      calc_numerator *ip;
+      ip = (calc_numerator *) ILU_C_EXCEPTION_VALUE (&s);
+      fprintf (stderr, "%s signaled:  numerator = %d\n", p, *ip);
+      @}
+    else @{
+      /* odd exception at this point */
+      fprintf (stderr, "Unexpected <%s> on call to Div.\n", p);
+      @}
+    /* free up any transient exception data */
+    ILU_C_EXCEPTION_FREE (&s);
+    @}
+  else @{
+    /* no exception - print the result */
+    printf( "result is %d \n", val );
+    @}
+  ...
+@end codeexample
+
+@noindent
+For more complex exception types, it is often helpful to define
+a procedure in @language{C} specifically to raise them.
+
+@node Garbage Collection and COLLECTIBLE Types, , Exceptions, Object Types
+@subsubsection Garbage Collection of C Instances
+
+Both true and surrogate instances of @C{ILU_C_OBJECT} are @dfn{reference-counted}; that is,
+each instance contains a counter which indicates how many uses are
+currently being made of that object.  When you wish to use an
+object for another purpose, you should increment the reference count
+by calling the procedure @C{CORBA_Object_duplicate}, which will
+return a copy of the instance that you can use for the new purpose.
+When you are finished with an instance, you should call
+@C{CORBA_Object_release} to release your claim on the object's
+resources.  When the reference count of the object returns
+to zero, the object is finalized.
+
+For COLLECTIBLE true instances, the ILU kernel will maintain a distributed
+reference count on the instance automatically.  That is, so long as any
+client of the server has a reference to the object, the true instance
+will not be finalized.
+
+@subsection Issues in Mapping OMG IDL to C
+
+The @system{ILU} system does not support the OMG IDL type @omgidl{fixed},
+which is a representation of binary-coded-decimal, or BCD.  We have
+no immediate plans to support it in the future.
+
+@node Access to Standard ILU Features, Building C/ILU Applications, Mapping Type Constructs Into C, Using ILU with Standard C
+@section Access to Standard ILU Features
+
+@menu
+* Servers and Ports::
+* Threading and Event Loops::
+* Custom Records::
+* Custom Surrogates::
+* String Binding Handle Formation::
+* Simple Binding in C::
+* Identities and Passports::
+* Pipelining in C::
+* Call Order Preservation in C::
+* Batching in C::
+@end menu
+
+@node Servers and Ports, Threading and Event Loops, , Access to Standard ILU Features
+@subsection Servers and Ports
+@ftindex ILU_C_Server (C LSR type)
+
+The @language{C} type which represents an @system{ILU} @dfn{kernel server}
+is @C{ILU_C_Server}.  True servers can be created with the 
+function @C{ILU_C_InitializeServer}.
+
+Instances of @C{ILU_C_Server} are reference-counted, in the same way that instances of @C{ILU_C_OBJECT} are.  Call @C{ILU_C_Server_duplicate} and @C{ILU_C_Server_release} to keep track of your usage of @C{ILU_C_Server} values.  @C{ILU_C_CloseServer} and its relatives perform functions orthogonal to @C{ILU_C_Server_release}.  The actual server will be destroyed only when there is no reason to maintain it; in addition to the reference counting introduced here, the existence of @C{ILU_C_OBJECT} values in that server count as another reason to maintain the server.
+
+A kernel server can export itself via multiple ports.  @C{ILU_C_InitializeServer} may create one, and @C{ILU_C_AddPort} can be called to create more.
+
+@subsubsection Object Tables
+
+It is sometimes useful to have a server create true objects only when they are
+mentioned by a client's actual invocation of a method on them.  This is allowed
+in @system{ILU} by an interface called an @dfn{object table}, associated with a server.  An object table
+contains two functions, one of which creates a new true instance when called with an instance
+handle, and the other of which frees the object table when the server is destroyed.
+Object tables are associated with servers when the server is created.  A value of type @C{ILU_C_ObjectTable}
+may be created by a call on @C{ILU_C_CreateObjectTable}; see the API reference for
+more information about this function.
+
+@subsubsection Server Relocation Functionality in C
+
+The server relocation functionality (@pxref{Server Relocation}) is accessed by @C{ILU_C_SetServerRelocationProc} (@pxref{Server Manipulation}).
+
+@subsubsection Exception Information Functionality in C
+
+@xref{Exception Information in C}.
+
+@node Threading and Event Loops, Custom Records, Servers and Ports, Access to Standard ILU Features
+@subsection Threading and Event Loops
+
+The @system{ILU} @language{C} runtime allows the use of several different kernel threads
+packages, application-specific threads packages, or various kinds of event loops.
+See @ref{Threads and Event Loops} for a general discussion of threads and event loops in @system{ILU}.
+
+The two macros @C{ILU_C_USE_OS_THREADS} and @C{ILU_C_FINISH_MAIN_THREAD} (@pxref{Server Manipulation}) are provided
+to allow use of standard @system{Win32} threads, @system{POSIX} threads, or @system{Solaris}
+threads.  Application-specific threads packages can also be used by explicitly setting the
+@dfn{wait tech}, @dfn{lock tech}, and @dfn{main loop} via calls on the ILU kernel (see @ref{}
+for more information on these functions), then instructing the @language{C} runtime on
+how to fork a new thread by calling @C{ILU_C_SetFork}.
+
+If no thread technology is specified, @system{ILU}'s @language{C} runtime
+will operate in a single-threaded (i.e., event loop) manner, using the default @system{ILU} main loop.
+That main loop can also be replaced with an application-specific event loop
+system if desired; this is often useful when using a toolkit like @system{Xt}
+or @system{Tk}.  This replacement works by calling the kernel procedure
+@C{ilu_SetMainLoop}.  In the case of the @language{C} runtime, moreover,
+several examples of how to set the event loop are provided in the directory
+@file{@metavar{ILUSRC}/runtime/mainloop/}.  They will have been automatically
+built into a library and installed into @file{@metavar{ILUHOME}/lib/} if
+configured in during the build process.  They are useful examples of how to
+set the event loop to override the @system{ILU} default event loop.
+
+For single-threaded operation, the main loop must be invoked.  This can be done with either @C{ILU_C_Stoppable_Run}, @C{ILU_C_Run}, @C{ILU_C_StoppableRun}, or @C{ILU_C_FINISH_MAIN_THREAD} (@pxref{Server Manipulation} --- which is woefully incomplete and out of date).
+
+For multi-threaded operation, no main loop need --- or even really can --- be invoked.  Some of the aforementioned "main loop" procedures also "work" in multi-threaded runtimes --- they simply block the calling thread.
+
+@node Custom Records, Custom Surrogates, Threading and Event Loops, Access to Standard ILU Features
+@subsection Custom Records
+
+Custom record support in the @system{ILU} @language{C} runtime
+provides support for replacing the default generated record type @type{R} with a different struct type @type{S}.
+@type{S} must have a field of type @type{R} as its first field.
+
+Custom record support for a particular @language{ISL} record type can be
+specified by calling @fn{@C{ILU_C_RegisterCustomRecord()}} on the @type{CORBA_TypeCode}
+value for the type.  Note that this allows you to register a function to be called
+just before marshalling the value to another address space (among other functions).
+This `pre-output' function may be called more than once on the same call, if the
+protocol selected requires sizing of arguments.  It should be written so that
+repeated calls on the same value have no effect.
+
+@node Custom Surrogates, String Binding Handle Formation, Custom Records, Access to Standard ILU Features
+@subsection Custom Surrogates
+
+Custom surrogates allow the user to specify custom surrogate object types
+which may have additional functionality in terms of caching or other
+side effects, and have them created instead of the default @system{ILU}
+surrogate object type when an instance is received.
+This functionality is provided in the @language{C} runtime with the function
+@C{ILU_C_RegisterCustomSurrogateType}.
+
+@node String Binding Handle Formation, Simple Binding in C, Custom Surrogates, Access to Standard ILU Features
+@subsection String Binding Handle Formation
+
+When a client program is making a call on an object which is provided via an object table,
+it is often convenient to allow the client to form an appropriate string binding handle
+for the object, then instantiate a surrogate instance from that string binding handle.
+The function @C{ILU_C_FormSBH} is provided to aid client programs in forming string binding handles.
+
+@node Simple Binding in C, Identities and Passports, Custom Surrogates, Access to Standard ILU Features
+@subsection Simple Binding
+
+The @system{ILU} @language{C} runtime provides the standard interface to @system{ILU}'s @dfn{simple binding} mechanism.
+The function @C{ILU_C_PublishObject} publishes a true instance; @C{ILU_C_WithdrawObject} allows it to be withdrawn
+from the registry.  The function @C{ILU_C_LookupObject} finds and returns an instance with the
+specified object ID.
+
+@node Identities and Passports, Pipelining in C, Simple Binding in C, Access to Standard ILU Features
+@subsection Identities and Passports
+
+See @C{ILU_C_CreatePassport}, @C{ILU_C_AddIdentity}, and @C{ILU_C_DestroyPassport} for managing @C{ilu_Passport}s.
+
+To pass/receive an @C{ilu_Passport} in a call, the caller calls @C{ILU_C_SetPassportContext(@metavar{pp})} to store @metavar{pp} in a special hidden per-thread slot, and @C{ILU_C_SetPassportContext()} to retrieve it.  @metavar{pp} will remain in that slot until another call to @C{ILU_C_SetPassportContext} overwrites it.  The callee calls @C{ILU_C_CallerIdentity()} in a true method to fetch @metavar{pp} from the slot.  If the caller and callee are both written in C, and the true method has been invoked directly from the same thread, the returned value will be whatever passport has been set with @C{ILU_C_SetPassportContext()}; otherwise it will be the passport passed by the caller.
+
+@node Pipelining in C, Call Order Preservation in C, Identities and Passports, Access to Standard ILU Features
+@subsection Pipelining in C
+@ftindex ILU_C_Pipeline (C LSR type)
+@ftindex ILU_C_CreatePipeline (C LSR function)
+@ftindex ILU_C_ReleasePipeline (C LSR function)
+@ftindex ILU_C_SetPipelineContext (C LSR function)
+@ftindex ILU_C_GetPipelineContext (C LSR function)
+
+
+A pipeline (@pxref{Pipelining}) is represented in @language{C} by an @C{ILU_C_Pipeline}, and is created by calling @C{ILU_C_CreatePipeline}.  A pipeline is associated with calls via a special hidden per-thread slot; this slot is accessed with @C{ILU_C_SetPipelineContext} and @C{ILU_C_GetPipelineContext}.  When the @C{ILU_C_Pipeline} is no longer needed, the client calls @C{ILU_C_ReleasePipeline}.
+
+
+@node Call Order Preservation in C, Batching in C, Pipelining in C, Access to Standard ILU Features
+@subsection Call Order Preservation in C
+@cindex Serializer
+@cindex Call Order Preservation in C
+@ftindex ILU_C_Serializer (C LSR type)
+@ftindex ILU_C_CreateSerializationContext (C LSR function)
+@ftindex ILU_C_ReleaseSerializer (C LSR function)
+@ftindex ILU_C_SetSerializationContext (C LSR function)
+@ftindex ILU_C_GetSerializationContext (C LSR function)
+
+A serializer (@pxref{Call Order Preservation}) is represented in @language{C} by an @C{ILU_C_Serializer}, and is created by calling @C{ILU_C_CreateSerializationContext}.  A serializer is associated with calls via a special hidden per-thread slot; this slot is accessed with @C{ILU_C_SetSerializationContext} and @C{ILU_C_GetSerializationContext}.  When the @C{ILU_C_Serializer} is no longer needed, the client calls @C{ILU_C_ReleaseSerializer}.
+
+
+@node Batching in C, , Call Order Preservation in C, Access to Standard ILU Features
+@subsection Batching in C
+@cindex Batcher
+@cindex Batching in C
+@ftindex ILU_C_Batcher (C LSR type)
+@ftindex ILU_C_CreateBatcher (C LSR function)
+@ftindex ILU_C_ReleaseBatcher (C LSR function)
+@ftindex ILU_C_SetBatcherContext (C LSR function)
+@ftindex ILU_C_GetBatcherContext (C LSR function)
+@ftindex ILU_C_PushBatcher (C LSR function)
+
+A batcher (@pxref{Batching}) is represented in @language{C} by an @C{ILU_C_Batcher}, and is created by calling @C{ILU_C_CreateBatcher}.  A batcher is associated with calls via a special hidden per-thread slot; this slot is accessed with @C{ILU_C_SetBatcherContext} and @C{ILU_C_GetBatcherContext}.  The application can call @C{_C_PushBatcher} to initiate delivery all of all call messages buffered for a given batcher.  When the @C{ILU_C_Batcher} is no longer needed, the client calls @C{ILU_C_ReleaseBatcher}.
+
+
+@node Building C/ILU Applications, ILU C API, Access to Standard ILU Features, Using ILU with Standard C
+@section Building C/ILU Applications
+
+@menu
+* Using the ILU C Stubber::
+* Using ILU Modules From C::
+* Implementing an ILU Module With C::
+* Libraries and Linking::
+@end menu
+
+@node Using the ILU C Stubber, , Using ILU Modules From C, Building C/ILU Applications
+@subsection Using the ILU C Stubber
+
+To generate @language{C} stubs from an @language{ISL} file, use the
+program @language{c-stubber}.
+@pindex c-stubber
+Four files are generated from the
+@file{.isl} file:
+@itemize @bullet
+@item
+@file{@metavar{interface-name}.h} contains the definitions for the types
+and procedures defined by the interface and used by the generated stubs.
+@item
+@file{@metavar{interface-name}-common.c} contains the general code used
+by both client and server; and
+@item
+@file{@metavar{interface-name}-surrogate.c} contains the client-side and general code
+for the interface; and
+@item
+@file{@metavar{interface-name}-true.c} contains the server-side
+stubs and code for the interface.
+@end itemize
+Typically, clients of a module never have a need for the 
+@file{@metavar{interface-name}-true.c} file.
+
+@transcript
+% @userinput{c-stubber foo.isl}
+header file for interface foo to ./foo.h...
+common code for interface foo to ./foo-common.c...
+code for surrogate stubs of interface foo to ./foo-surrogate.c...
+code for true stubs of interface foo to ./foo-true.c...
+%
+@end transcript
+
+@subsubsection Command-line Options
+
+The program @program{c-stubber} supports the following options:
+@itemize @bullet
+@item @command{-I @metavar{directory}} -- add @metavar{directory} to the list of directories to search for interface definition files.  Note that the @metavar{directory} must be separated from the @command{-I} with whitespace, unlike the convention for C compilers.
+@item @command{-dir @metavar{directory}} -- put output files in @metavar{directory}.  Will attempt to create @metavar{directory} with @code{"mkdir @metavar{directory}"} if not already present.
+@item @command{-true} -- generate true code.
+@item @command{-tname @metavar{filename}} -- put true code in file called @metavar{filename}.
+@item @command{-common} -- generate common code.
+@item @command{-cname @metavar{filename}} -- put common code in file called @metavar{filename}.
+@item @command{-surrogate} -- generate surrogate code.
+@item @command{-sname @metavar{filename}} -- put surrogate code in file called @metavar{filename}.
+@item @command{-headers} -- generate header code.
+@item @command{-hname @metavar{filename}} -- put header code in file called @metavar{filename}.
+@item @command{-removefirst} -- for generated files, remove file before generating a new version of the file.
+@item @command{-nodefaulttrueclass} -- for true code, don't generate the commands which create default true classes for each class in the interface.  This avoids pulling in references to possibly unused default true methods.
+@item @command{-nodefaulttrueclassfor @metavar{classname}} -- for true code, don't generate the commands which creates a default true class for the class @metavar{classname}.  This avoids pulling in references to possibly unused default true methods.  @metavar{classname} is specified as @code{@metavar{INTERFACENAME}.@metavar{TYPENAME}}, using the ISL interface name and type name.
+@item @command{-renames @metavar{filename}} -- use the specified renaming file @metavar{renames-file}.  See the following section on ``Tailoring Identifier Names'' for more information on this.
+@end itemize
+
+If none of @command{-true}, @command{-surrogate}, @command{-common}, @command{-headers} is specified, the default action is to produce all of them.  However, if any of those switches is explicitly specified, only those specified will be produced.
+
+@subsubsection Tailoring Identifier Names
+@cindex C identifier tailoring
+
+The option @code{-renames @metavar{renames-filename}} may be used with 
+@program{c-stubber} to specify particular @language{C} names for 
+@language{ISL} types. 
+
+It is sometimes necessary to have the @language{C} names of an 
+@system{ILU} interface
+match some other naming scheme.  A mechanism is provided to allow the programmer to
+specify the names of @language{C} language artifacts directly, and thus 
+override the automatic @language{ISL} to @language{C} name mappings.
+
+To do this, you place a set of synonyms for @language{ISL} names in a
+@dfn{renames-file}, and invoke the @program{c-stubber} 
+program with the switch @code{-renames},
+specifying the name of the renames-file.  The lines in the file are of the form
+@display
+@metavar{construct} @metavar{@language{ISL}-name} @metavar{@language{C}-name}
+@end display
+@noindent
+where @metavar{construct} is one of @kwd{method}, @kwd{exception}, 
+@kwd{type}, @kwd{interface},
+or @kwd{constant}; @metavar{@language{ISL}-name} is the name of the 
+construct, expressed either
+as the simple name, for interface names, the concatenation
+@code{@metavar{interface-name}.@metavar{construct-name}} for exceptions, 
+types, and constants,
+or @code{@metavar{interface-name}.@metavar{type-name}.@metavar{method-name}} 
+for methods;
+and @metavar{@language{C}-name} is the name the construct should have 
+in the generated
+@language{C} code.  For example:
+
+@example
+# change "foo_r1" to plain "R1"
+type foo_r1 r1
+# change name of method "m1" to "method1"
+method foo_o1_m1 method1
+@end example
+
+@noindent
+Lines beginning with the `sharp' character @samp{#} are treated as comment lines,
+and ignored, in the renames-file.
+
+This feature of the @program{c-stubber} should be used as little and as carefully
+as possible, as it can cause confusion for readers of the @language{ISL} interface,
+in trying to follow the @language{C} code.  It can also create name conflicts
+between different modules, unless names are carefully chosen.
+
+@node Using ILU Modules From C, Implementing an ILU Module With C, Using the ILU C Stubber, Building C/ILU Applications
+@subsection Using ILU Modules From C
+@cindex Using ILU modules From C
+
+Before manipulating surrogate objects, a client module must first call a runtime initialization procedure @C{@metavar{Foo}__Initialize} for each @language{ISL} interface @metavar{Foo} that declares object types whose surrogates are to be manipulated.  Additionally, server modules must also call server initialization procedures (see previous section).  These initialization calls may be made in any order, and each procedure may be called more than once.  However, no two calls may be done concurrently (this is an issue only for those using some sort of multi-threading package).
+
+A client of an exported module may obtain an object instance
+either by calling a method which returns the instance,
+or by calling @C{@metavar{TYPE}__CreateFromSBH()} on the string
+binding handle of an instance.  Once the object instance,
+which is typically a surrogate instance, but may in fact
+be a true instance, is held by the client, it can be used
+simply by making method calls on it, as shown above.
+
+@node Implementing an ILU Module With C, Libraries and Linking, Using ILU Modules From C, Building C/ILU Applications
+@subsection Implementing an ILU Module With C
+
+This section will outline the construction of a true module exported by an address space.
+For the example, we will demonstrate the calculator interface described above.
+We will also use the @system{CORBA} 2.0 names for standard types and exceptions,
+to show that it can be done. 
+
+First, some runtime initialization of the server stubs must be done.
+Call @C{@metavar{Foo}__InitializeServer} for every @language{ISL}
+interface @metavar{Foo} containing an object type implemented by the
+address space.  Due to a misfeature in the current @language{C} support,
+also call @C{@metavar{Bar}__InitializeServer} for every @language{ISL}
+interface @metavar{Bar} containing an object type that is a supertype of
+one defined in @metavar{Foo} (if you don't, the server will get a
+runtime fault --- due to calling through a NULL procedure pointer ---
+when serving a call on an inherited method); this may cause you to have
+to supply dummy procedures, as explained in @ref{Interface Inheritance}.
+Also call any client initialization procedures needed (see next
+section).  These server and client initialization calls can be made in
+any order, and each initialization procedure can be called more than
+once.  However, no two calls may be done concurrently (this is an issue
+only for those using some sort of multi-threading package).
+
+Then we create an instance of @C{calc_self}.
+We then make the string binding handle of the object available by printing it to stdout.
+Finally the @fn{ILU_C_Run} procedure is called. This procedure listens for connections
+and dispatches server methods.
+
+The main program for the server is as follows:
+@codeexample
+#include "I2.h"
+ 
+CORBA_long
+  server_calc_self_Div (calc_self h,
+                        CORBA_long u,
+                        CORBA_long v,
+                        CORBA_Environment *s)
+@{
+  calc_numerator n = 9;
+
+  if ( v == 0 )
+    @{
+      calc__BindExceptionValue(s, ex_calc_DivideByZero, n);
+      return( u );
+    @}
+  else
+    return( u / v );
+@}
+
+main (int ac, char **av)
+@{
+  calc_self s;
+  char * sbh;
+  CORBA_Object the_orb;
+  CORBA_Environment ev;
+
+  the_orb = CORBA_ORB_init (&ac, av, "ilu", &ev);
+  if (!ILU_C_SUCCESSFUL(&ev)) @{
+    fprintf (stderr, "Can't initialize ORB; exception <%s>\n", CORBA_exception_id(&ev));
+    CORBA_exception_free(&ev);
+    exit(1);
+  @};
+
+  calc__InitializeServer( );
+
+  s = calc_self__CreateTrue (NULL, NULL, NULL);
+  if (s == NULL)
+    @{
+      fprintf (stderr, "Unable to create instance of calc_self.\n");
+      exit(1);
+    @}
+  else
+    @{
+      sbh = CORBA_ORB_object_to_string (the_orb, s, &ev);
+      if (ev._major == CORBA_NO_EXCEPTION)
+        @{
+          printf ("%s\n", sbh);
+          ILU_C_Run (); /* enter main loop; hang processing requests */
+        @}
+      else
+        @{
+          fprintf (stderr,
+                   "Attempt to obtain sbh of object %p signalled <%s>.\n",
+                   s, CORBA_exception_id(&ev));
+          CORBA_exception_free(&ev);
+          exit(1);
+        @}
+    @}
+@}
+@end codeexample
+
+@node Libraries and Linking, , Libraries and Linking, Building C/ILU Applications
+@subsection Libraries and Linking
+@cindex C Libraries and Linking
+
+For clients of an @system{ILU} module, it is only necessary to link
+with the @file{@metavar{interface-name}-surrogate.o} and @file{@metavar{interface-name}-common.o}
+files generated from the
+@language{C} files generated for the interface or interfaces
+being used, and with the two libraries
+@file{@metavar{ILUHOME}/lib/libilu-c.a} and @file{@metavar{ILUHOME}/lib/libilu.a} 
+(in this order, as @file{libilu-c.a} uses functions in @file{libilu.a}).
+
+For implementors of servers, the code for the server-side
+stubs, in the file @file{@metavar{interface-name}-true.o} compiled
+from @file{@metavar{interface-name}-true.c}, and
+in the file @file{@metavar{interface-name}-common.o} compiled
+from @file{@metavar{interface-name}-common.c}, should be included along
+with the other files and libraries.
+
+@node ILU C API, , Building C/ILU Applications, Using ILU with Standard C
+@section ILU C API
+@cindex C utility API
+
+In addition to the functions defined by the CORBA mapping, the @system{ILU} @language{C}
+mapping provides some other functions, chiefly for type manipulation, object manipulation,
+and server manipulation.  There are also a number of macros provided for compatibility
+with both versions of @system{CORBA} (revision 2.0).
+
+@menu
+* General::
+* Type Manipulation::
+* Object Manipulation::
+* Identity Functions::
+* Call Management Functions in C::
+* Exception Information in C::
+* Server Manipulation::
+* CORBA Compatibility Macros::
+@end menu
+
+@node General, Type Manipulation, , ILU C API
+@subsection General
+
+@deftypefn Exception CORBA_string ex_CORBA_InvalidName
+@etindex ex_CORBA_InvalidName (C LSR exception)
+
+Raised by @C{@fn{CORBA_ORB_resolve_initial_references}} to indicate that no binding for the specified @metavar{service_name} is known.  The associated value is the service name.  Note that this differs from the strict CORBA definition of this exception, which has no associated value.
+@end deftypefn
+
+@deftypefn Function CORBA_Object CORBA_ORB_init ( {int *} @metavar{argc}, {char **} @metavar{argv}, CORBA_string @metavar{orb_id}, {CORBA_Environment *} env)
+@ftindex CORBA_ORB_init (C LSR function)
+
+Locking:  Main Invariant holds
+
+Called to initialize the @system{ILU} runtime, and acquire the ``orb'' object.  The return value of this call
+is used in subsequent calls to other CORBA utility functions.
+
+If the environment variable @var{ILU_COS_NAMING_IOR} is bound to a string binding handle for a @interface{CosNaming}
+service, this call will bind the service name @C{"NameService"} to the object specified by that string binding handle.
+@end deftypefn
+
+@deftypefn Function CORBA_ORB_ObjectIdList CORBA_ORB_list_initial_services ( CORBA_Object @metavar{the_orb}, {CORBA_Environment *} env)
+@ftindex CORBA_ORB_list_initial_services (C LSR function)
+
+Locking:  Main Invariant holds
+
+Returns a list of service names which can be usefully used in calls to @C{@fn{CORBA_ORB_resolve_initial_references()}}.  The type @C{@type{CORBA_ORB_ObjectIdList}} is a normal CORBA sequence of strings.
+@end deftypefn
+
+@node Type Manipulation, Object Manipulation, General, ILU C API
+@subsection Type Manipulation
+
+@deftypefn Function OPTIONAL(ilu_Class) ILU_C_FindILUClassByTypeName ( RETAIN(ilu_string) @metavar{type-name} )
+@ftindex ILU_C_FindILUClassByTypeName (C LSR function)
+
+Locking:  L1_sup < otmu, L2, Main unconstrained.
+
+Given the @metavar{type-name} of an ILU object type, of the form @C{"Interface.Typename"},
+returns the @C{ilu_Class} value for it.  This value can be used to compare
+types for equality.
+@end deftypefn
+
+@deftypefn Function OPTIONAL(ilu_Class) ILU_C_FindILUClassByTypeID ( RETAIN(ilu_string) @metavar{type-id})
+@ftindex ILU_C_FindILUClassByTypeID (C LSR function)
+
+Locking:  L1_sup < otmu; L2, Main unconstrained.
+
+Given the @metavar{type-id} of an ILU object type, of the form @C{"ilu:gfbSCM7tsK9vVYjKfLole1HOBDc"},
+returns the @C{ilu_Class} value for it.  This value can be used to compare
+types for equality.
+@end deftypefn
+
+@deftypefn Function GLOBAL(OPTIONAL(ilu_string)) ILU_C_ClassName ( RETAIN(CORBA_Object) )
+@ftindex ILU_C_ClassName (C LSR function)
+
+Locking:  unconstrained.
+
+Returns the ILU name for the most specific type of an object instance.
+@end deftypefn
+
+@deftypefn Function GLOBAL(OPTIONAL(ilu_string)) ILU_C_ClassID ( RETAIN(CORBA_Object) )
+@ftindex ILU_C_ClassID (C LSR function)
+
+Locking:  unconstrained.
+
+Returns the ILU type ID for the most specific type of an object instance.
+@end deftypefn
+
+@deftypefn Function ilu_Class ILU_C_ClassRecordOfInstance (CORBA_Object)
+@ftindex ILU_C_ClassRecordOfInstance (C LSR function)
+
+Locking:  unconstrained.
+
+Returns the @C{ilu_Class} value for the most specific type of an object instance.
+@end deftypefn
+
+@deftypefn Function ILU_C_Class ILU_C_RegisterCustomSurrogateType (ilu_Class @metavar{kernel-type}, ILU_C_Class @metavar{C-type})
+@ftindex ILU_C_RegisterCustomSurrogateType (C LSR function)
+
+Locking:  unconstrained.
+
+This function registers @metavar{C-type} as the kind of class to create an instance of
+when unmarshalling a surrogate instance of most specific type @metavar{kernel-type}.  This
+should be used in conjunction with the automatically generated function
+@fn{@C{@metavar{ObjectType}__MakeClass()}} (to create
+an instance of @C{ILU_C_Class}), and the automatically generated constant
+@fn{@C{@metavar{ObjectType}__MSType}} (the appropriate value for @metavar{kernel-type}).
+This functionality can be used to implement application-specific surrogate types with caching and
+other extensions to the basic @system{ILU}model.  The value returned is the previously
+registered surrogate class for this type.
+@end deftypefn
+
+@deftypefn Function void ILU_C_RegisterCustomRecord (CORBA_TypeCode @metavar{record_type}, OPTIONAL(ILU_C_CRCreateFn) @metavar{cfn}, OPTIONAL(ILU_C_CRFreeFn) @metavar{ffn}, OPTIONAL(ILU_C_CRPreOutputFn) @metavar{preoutfn}, OPTIONAL(ILU_C_CRPostOutputFn) @metavar{postoutfn}, OPTIONAL(ILU_C_CRPostInputFn) @metavar{postinfn}, CORBA_Environment * @metavar{env})
+
+Locking:  L1 < otmu
+
+Registers a set of functions to be called for a particular record type @metavar{record_type}.
+The function @metavar{cfn} should create, initialize, and return a value of the desired type;
+it is called when the kernel is about to unmarshall a value of the type and needs storage
+for it.
+The function @metavar{freefn} should perform any clean-up operations necessary for the desired
+value; they are called before the standard free functions are called on the standard slots
+of the record type.
+The function @metavar{preoutfn} should prepare the value to be marshalled to another
+address space.  It may be called repeatedly before the value is actually marshalled,
+due to sizing requirements imposed by various RPC protocols.
+The function @metavar{postoutfn} should perform any necessary
+cleanup after a value has been marshalled; it is expected that this
+will typically be a NIL function.
+The function @metavar{postinfn} should perform any initial setup needed
+after the standard slots of the value have been unmarshalled.  This function
+may raise @exception{BAD_PARAM} (if the type is not a record type),
+@exception{NO_MEMORY}, and @exception{INTERNAL}.
+@end deftypefn
+
+@node Object Manipulation, Identity Functions, Type Manipulation, ILU C API
+@subsection Object Manipulation
+
+@deftypefn Function {ILU_C_Object *} ILU_C_CreateTrueObject ( ILU_C_Class @metavar{c}, OPTIONAL(ilu_string) @metavar{instance_handle}, OPTIONAL(ILU_C_Server) @metavar{server}, void * @metavar{instanceData}, ilu_boolean @metavar{inside_server} )
+@ftindex ILU_C_CreateTrueObject (C LSR function)
+
+Locking:  @metavar{inside_server} ? Inside(@metavar{server}, most specific type implemented by @metavar{c}) : Main Invariant.
+
+Instantiates a true object of class @metavar{c}, in server @metavar{server}.  If the @metavar{instance_handle} is @C{NIL}, one will be invented.  If the @metavar{server} is @C{NIL}, the default server will be used.  The @metavar{instanceData} is for the private use of the methods of the class.  @metavar{inside_server} is @C{FALSE} for normal cases, but @C{TRUE} for use in the implementation of an object table.
+@end deftypefn
+
+@deftypefn Function {(OPTIONAL(ILU_C_Object *))} ILU_C_FindObject ( ilu_string @metavar{server-id}, ilu_string @metavar{instance-handle} )
+@ftindex ILU_C_FindObject (C LSR function)
+
+Locking:  Main invariant holds.
+
+Given the @metavar{server-id} and @metavar{instance-handle} of an object, returns the object if
+it exists in the current address space, or @C{ILU_NIL} if it doesn't exist.  Unlike
+@fn{@C{ILU_C_SBHToObject()}} and @fn{@C{ILU_C_LookupObject()}}, this function will
+not create a surrogate for an instance if does not exist -- @emph{but} if the @metavar{server-id} indicates a
+server with an object table, the @emph{server} may create the object dynamically.
+@end deftypefn
+
+@deftypefn Function ilu_boolean ILU_C_IDOfObject ( CORBA_Object @metavar{instance}, PASS(char **) @metavar{server-id}, PASS(char **) @metavar{instance-handle} )
+@ftindex ILU_C_IDOfObject (C LSR function)
+
+Locking:  Main invariant holds.
+
+Given an @metavar{instance}, returns the server ID and instance handle of that instance.
+The strings returned are copies; the user must free them with @fn{ilu_free} when finished
+with them.
+@end deftypefn
+
+@deftypefn Function ilu_string ILU_C_SBHOfObject ( CORBA_Object @metavar{instance} )
+@ftindex ILU_C_SBHOfObject (C LSR function)
+
+Locking:  Main invariant holds.
+
+Given an @metavar{instance}, returns a reference to that instance.  The CORBA-specified
+routine @C{CORBA_ORB_object_to_string()} should typically be used instead.
+@end deftypefn
+
+@deftypefn Function {OPTIONAL(CORBA_Object)} ILU_C_SBHToObject (char * @metavar{sbh}, ilu_Class @metavar{static_type}, RETAIN(CORBA_Environment *) Env)
+@ftindex ILU_C_SBHToObject (C LSR function)
+
+Locking:  Main invariant holds.
+
+Takes an object reference and returns the object.
+@metavar{static_type} is a type the caller knows the object to have.
+@end deftypefn
+
+@deftypefn Function {OPTIONAL(PASS(char *))} ILU_C_FormSBH (RETAIN(char *) @metavar{server-id}, RETAIN(char *) @metavar{instance-handle}, ilu_Class @metavar{most-specific-type}, RETAIN(ilu_ProtocolInfo) @metavar{pinfo}, RETAIN(ilu_TransportInfo) @metavar{tinfo}, RETAIN(CORBA_Environment *) Env)
+@ftindex ILU_C_FormSBH (C LSR function)
+
+Locking:  Main invariant holds.
+
+Takes necessary information about an object reference, and returns a well-formed @system{ILU} string binding handle for that information.  This SBH can then be used to create a surrogate instance, using @fn{@C{ILU_C_SBHToObject}}.
+
+@end deftypefn
+
+@deftypefn Function {OPTIONAL(PASS(char*))} ILU_C_PublishObject ( CORBA_Object @metavar{instance} )
+@ftindex ILU_C_PublishObject (C LSR function)
+
+Locking:  Main invariant holds.
+
+Publishes the OID of the @metavar{instance} in a domain-wide registry.  This is an experimental
+interface, and may change in the future.
+@end deftypefn
+
+@deftypefn Function ilu_boolean ILU_C_WithdrawObject ( CORBA_Object @metavar{instance}, PASS(char *) @metavar{proof})
+@ftindex ILU_C_WithdrawObject (C LSR function)
+
+Locking:  Main invariant holds.
+
+Removes the OID of the @metavar{instance} from the domain-wide registry.
+@metavar{proof} is the string returned from the call to @C{ILU_C_PublishObject()}.
+@end deftypefn
+
+@deftypefn Function OPTIONAL(GLOBAL(CORBA_Object)) ILU_C_LookupObject ( RETAIN(char *) @metavar{sid}, RETAIN(char *) @metavar{ih}, ilu_Class @metavar{static-class} )
+@ftindex ILU_C_LookupObject (C LSR function)
+
+Locking:  Main invariant holds.
+
+Using the local registry, find and return the object specified by the given
+Server ID and server-relative Instance Handle.
+@metavar{static_type} is one you know the actual object must have;
+it may also have more refined types.
+For an already-reified surrogate this procedure will reconsider
+what contact info to use for reaching the server.
+@end deftypefn
+
+@deftypefn Function OPTIONAL(GLOBAL(CORBA_Object)) ILU_C_CreateSurrogateObject ( ilu_Class @metavar{type}, RETAIN(char *) @metavar{ih}, ilu_Server @metavar{server}, ILU_C_ENVIRONMENT *@metavar{env} )
+@ftindex ILU_C_CreateSurrogateObject (C LSR function)
+
+Locking:  Main invariant holds.
+
+Create a new object instance of the specified @metavar{type}
+on the specified @metavar{server}, with the specified @metavar{ih}.
+If unable to create such an object, return @C{ILU_NIL}, and signal
+the error in @metavar{env}.
+
+This procedure can be used to create new client-side objects for
+which no true object yet exists.  This is the way a client using
+a server with an object table causes the server to create new instances
+`on the fly'.  When used in this way, the @metavar{ih} must contain
+all information necessary to allow the server to create the proper
+true object, as it is the only information passed to the object table's
+object creation procedure.
+@end deftypefn
+
+@deftypefn Function CORBA_Object CORBA_Object_duplicate ( CORBA_Object @metavar{instance}, CORBA_Environment * @metavar{env})
+@ftindex CORBA_Object_duplicate (C LSR function)
+
+Locking:  Main invariant holds.
+
+Increments the reference count of the @metavar{instance}, and returns the instance.
+@end deftypefn
+
+@deftypefn Function void CORBA_Object_release ( CORBA_Object @metavar{instance}, CORBA_Environment * @metavar{env})
+@ftindex CORBA_Object_release (C LSR function)
+
+Locking:  Main invariant holds.
+
+Decrements the reference count of the @metavar{instance}.  The instance may be destroyed as a result of this operation.
+@end deftypefn
+
+@deftypefn Function CORBA_unsigned_long CORBA_Object_hash ( CORBA_Object @metavar{instance}, CORBA_unsigned_long @metavar{max_value}, CORBA_Environment * @metavar{env})
+@ftindex CORBA_Object_hash (C LSR function)
+
+Locking:  Main invariant holds.
+
+Returns a hash value for the @metavar{instance}, less than or equal to @metavar{max_value}.  Mandated by the CORBA spec.
+@end deftypefn
+
+@deftypefn Function CORBA_boolean CORBA_Object_is_equivalent ( CORBA_Object @metavar{instance1}, CORBA_Object @metavar{instance2}, CORBA_Environment * @metavar{env})
+@ftindex CORBA_Object_is_equivalent (C LSR function)
+
+Locking:  Main invariant holds.
+
+Returns @C{ilu_TRUE} if @system{ILU} believes the two instances to be the same object, @C{ilu_FALSE} otherwise.  Compares the servers and kernel objects of the two instances.
+@end deftypefn
+
+@deftypefn Function void ILU_C_PingObject ( ILU_C_Object @metavar{instance}, ILU_C_ENVIRONMENT * @metavar{env})
+@ftindex ILU_C_PingObject (C LSR function)
+
+Locking:  Main invariant holds.
+
+Attempts round-trip effectless call on object.  May raise system exception to indicate failure.
+@end deftypefn
+
+@deftypefn Function CORBA_boolean CORBA_Object_non_existent ( CORBA_Object @metavar{instance}, CORBA_Environment * @metavar{env})
+@ftindex CORBA_Object_non_existent (C LSR function)
+
+Locking:  Main invariant holds.
+
+Returns @C{ilu_TRUE} if object cannot be successfully pinged.  May cause instance to be destroyed.
+@end deftypefn
+
+@deftypefn Function CORBA_boolean CORBA_Object_is_a ( CORBA_Object @metavar{instance}, CORBA_string @metavar{repository_id}, CORBA_Environment * @metavar{env} )
+@ftindex CORBA_Object_is_a (C LSR function)
+
+Locking:  Main invariant holds.
+
+Returns @C{ilu_TRUE} if the @metavar{instance} supports the interface identified by @metavar{repository_id}.  May involve a network round trip.
+@end deftypefn
+
+@deftypefn Function CORBA_boolean CORBA_Object_is_nil ( CORBA_Object @metavar{instance}, CORBA_Environment * @metavar{env} )
+@ftindex CORBA_Object_is_nil (C LSR function)
+
+Locking:  Main invariant holds.
+
+Returns @C{ilu_TRUE} if the @metavar{instance} is the @isl{NIL} object reference.
+@end deftypefn
+
+@deftypefn Function CORBA_string CORBA_ORB_object_to_string ( CORBA_Object @metavar{the_orb}, CORBA_Object @metavar{instance}, CORBA_Environment * @metavar{env} )
+@ftindex CORBA_ORB_object_to_string (C LSR function)
+
+Locking:  Main invariant holds.
+
+Returns a string binding handle for the @metavar{instance}.  The argument @metavar{the_orb} is the result of a call to @C{@fn{CORBA_ORB_init()}}.
+@end deftypefn
+
+@deftypefn Function CORBA_Object CORBA_ORB_string_to_object ( CORBA_Object @metavar{the_orb}, CORBA_String @metavar{string_binding_handle}, CORBA_Environment * @metavar{env} )
+@ftindex CORBA_ORB_string_to_object (C LSR function)
+
+Locking:  Main invariant holds.
+
+Returns a @C{@type{CORBA_Object}} instance for the specified @metavar{string_binding_handle}.  The argument @metavar{the_orb} is the result of a call to @C{@fn{CORBA_ORB_init()}}.
+@end deftypefn
+
+@deftypefn Function {OPTIONAL(CORBA_Object)} CORBA_ORB_resolve_initial_references ( CORBA_Object @metavar{the_orb}, CORBA_String @metavar{service_name}, CORBA_Environment * @metavar{env} )
+@ftindex CORBA_ORB_resolve_initial_references (C LSR function)
+
+Locking:  Main invariant holds.
+
+Returns an instance for the service named by @metavar{service_name}, if the system knows of one.  The argument @metavar{the_orb} is the result of a call to @C{@fn{CORBA_ORB_init()}}.  Raises @exception{ex_CORBA_InvalidName} if the @metavar{service_name} doesn't name a known service.
+@end deftypefn
+
+@deftypefn Function ilu_integer ILU_C_SetObjectGCTimeout ( {ILU_C_Object *} @metavar{the_obj}, ilu_integer @metavar{timeout}, {ILU_C_ENVIRONMENT *} @metavar{env})
+@ftindex ILU_C_SetObjectGCTimeout (C LSR function)
+
+Locking:  Main invariant holds.
+
+Sets the GC timeout of @metavar{the_obj} to @metavar{timeout}.  Returns the previous timeout when successful.  The GC timeout of an instance is the amount of time ILU will wait before collecting an object without references.  This timeout accommodates references to the object that are in transit on the network, and its value should be related to typical maximum network delays on the network being used.  Setting the timeout to a value less than the network delay may result in objects being prematurely collected.
+
+@end deftypefn
+
+@node Identity Functions, Call Management Functions in C, Object Manipulation, ILU C API
+@subsection Identity Functions
+
+@deftypefn {Function} ilu_Passport ILU_C_CreatePassport (OPTIONAL(PASS(ilu_IdentityInfo)) info, ILU_ERRS((no_memory)) *err)
+@ftindex ILU_C_CreatePassport (C LSR function)
+
+Create and return a new passport object.  If an identity @metavar{info}
+is passed in, will put that identity in the new passport.
+
+@end deftypefn
+
+@deftypefn {Function} ilu_IdentityInfo ILU_C_CopyIdentity (RETAIN(ilu_IdentityInfo) @var{info}, ILU_ERRS((no_memory)) *@var{err})
+@ftindex ILU_C_IdentityInfo (C LSR function)
+
+Creates and returns a copy of the identity in @metavar{info}.
+
+@end deftypefn
+
+@deftypefn {Function} ilu_boolean ILU_C_AddIdentity (RETAIN(ilu_Passport) @var{pp}, PASS(ilu_IdentityInfo) @var{info}, ILU_ERRS((no_memory)) *@var{err})
+@ftindex ILU_C_AddIdentity (C LSR function)
+
+Adds the specified identity to the specified passport, which now owns the identity storage.
+
+@end deftypefn
+
+@deftypefn {Function} OPTIONAL(RETAIN(ilu_IdentityInfo)) ILU_C_FindIdentity (RETAIN(ilu_Passport) @var{pp}, RETAIN(ilu_IdentityType) @var{ident_type})
+@ftindex ILU_C_FindIdentity (C LSR function)
+
+If the passport @metavar{pp} contains an identity of the specified type, returns a pointer to it, otherwise returns @C{ILU_NIL}.  The passport retains ownership of the identities storage; the caller may make a copy of the identity by calling @C{@fn{ILU_C_CopyIdentity}}.
+
+Several identity types are pre-defined.  The identity type @C{ilu_ConnectionIdentity} is always defined; it consists of a string which describes the connection used by the caller to communicate with the server in a colloquial fashion.  The identity type @C{ilu_SunRPCAuthUnixIdentity} is defined if the @protocol{Sun RPC} protocol has been configured in; it provides a struct containing the various pieces of information specified by the protocol specification.  The identity type @C{ilu_GSSIdentity} is available if support for the secure transport has been configured in; it supports a variety of identity schemes under the GSS umbrella.  @xref{Security} and the file @file{@metavar{ILUSRC}/runtime/kernel/iluxport.h} for more information on identities and identity schemes.
+
+@end deftypefn
+
+@deftypefn {Function} ilu_cardinal ILU_C_DisplayIdentity ( RETAIN(ilu_IdentityInfo) identity, RETAIN(char *) buf, ilu_cardinal bufsize, {ILU_C_ENVIRONMENT *} env)
+@ftindex ILU_C_DisplayIdentity (C LSR function)
+
+Formats a textual display of the @metavar{identity} into @metavar{buf}, respecting @metavar{bufsize}.
+Returns the actual length of the string (the amount of the buffer that was actually used).  May raise
+an exception through @metavar{env}.
+
+@end deftypefn
+
+@deftypefn {Function} ilu_boolean ILU_C_DecodeGSSIdentity ( RETAIN(ilu_IdentityInfo) identity, OPTIONAL(gss_name_t *) name, OPTIONAL(ilu_FineTime *) good_till, OPTIONAL(gss_OID) mech, OPTIONAL(ilu_boolean) localp, OPTIONAL(OM_uint32 *) flags, {ILU_C_ENVIRONMENT *} env)
+@ftindex ILU_C_DecodeGSSIdentity (C LSR function)
+
+Only available if ILU has been configured with support for the GSS security transport.
+Returns various aspects of the GSS identity in the output parameters @metavar{name}, @metavar{good_till}, @metavar{mech}, @metavar{localp}, and @metavar{flags}.  If no return value is specified for an output parameter, that output
+parameter is not returned.  May raise an exception through @metavar{env}, in which case the return value is @C{ilu_FALSE}.
+If no exception is signalled, the return value is @C{ilu_TRUE}.
+
+The meaning of the output parameters are as follows:
+@itemize @bullet
+@item @metavar{name} -- the name of the principal in the identity.
+@item @metavar{good_till} -- the time when the identity expires.
+@item @metavar{mech} -- the specific security mechanism used to authenticate the identity.  GSS is an `umbrella' system which allows many different security mechanisms to be used through a standard interface.
+@item @metavar{localp} -- @C{ilu_TRUE} if the identity is local, @C{ilu_FALSE} if the identity has been established for a remote principal.
+@item @metavar{flags} -- this parameter is only valid for remote identities (@metavar{localp} => @C{ilu_FALSE}).  These are the context flags returned from @C{@fn{gss_inquire_context}} in the @metavar{ctx_flags} parameter.  See @file{@metavar{ILUSRC}/GSS/doc/draft-ietf-cat-gssv2-cbind-01.txt} for a complete description.
+@end itemize
+
+See @file{@metavar{ILUSRC}/GSS/kernel/gssapi.h} for a definition of the GSS types @type{gss_name_t}, @type{gss_OID}, and @type{OM_uint32}.
+@end deftypefn
+
+@deftypefn {Function} OPTIONAL(PASS(ilu_string)) ILU_C_GSSNameToString ( RETAIN(gss_name_t) gss_name, {ILU_C_ENVIRONMENT *} env)
+@ftindex ILU_C_GSSNameToString (C LSR function)
+
+Returns a newly-malloced string containing a textual representation of the principal name in @metavar{gss_name}.
+May raise an exception through @metavar{env}, in which case returns @C{ILU_NIL}.
+
+See @file{@metavar{ILUSRC}/GSS/kernel/gssapi.h} for a definition of the GSS type @type{gss_name_t}.
+@end deftypefn
+
+@deftypefn {Function} ilu_IdentityInfo ILU_C_AcquireGSSIdentity (gss_cred_id_t @metavar{c}, {ILU_C_ENVIRONMENT *} @metavar{err})
+@ftindex ILU_C_AcquireGSSIdentity (C LSR function)
+
+Available only if the security transport filter has been configured in.  Returns an @C{ilu_IdentityInfo} corresponding to the given @system{GSS} credentials.  May raise an exception through @metavar{err}, in which case returns @C{ILU_NIL}.
+
+See @file{@metavar{ILUSRC}/GSS/kernel/gssapi.h} for a definition of the GSS type @type{gss_cred_id_t}.
+@end deftypefn
+
+@deftypefn {Function} OPTIONAL(gss_cred_id_t) ILU_C_AcquireGSSCredForName (char *@metavar{name}, ilu_cardinal @metavar{lifetime}, gss_OID @metavar{secmech}, ilu_boolean @metavar{accept_only}, {ILU_C_ENVIRONMENT *} @metavar{err})
+@ftindex ILU_C_AcquireGSSCredForName (C LSR function)
+
+Available only if the security transport filter has been configured in.  Returns @system{GSS} credentials given the cannonical inputs, which are
+
+@itemize @bullet
+@item @metavar{name} -- specifies the name of the principal to acquire credentials for.  It should be of the form @C{<namespace-identifier>:<principal-name>}, where the namespace-identifier is a stringified @type{gss_OID}, and the principal-name is a name in that namespace's string formulation.  An example would be @C{"1.2.840.113550.9.1.4:someone@@parc.xerox.com"}.  The namespace-identifier identifies the iso.member-body.US.Xerox.ILU.GSS.rfc822-namespace namespace, which supports RFC 822 style mail addresses for principal names.  See @ref{Security} for a discussion of available namespaces.
+@item @metavar{lifetime} -- specifies the time in seconds that these credentials should be good for.  The value @C{GSS_C_INDEFINITE} may be specified for an infinite period.
+@item @metavar{sechmech} -- a GSS OID specifying the particular security mechanism which should be used to validate the identity.  See @ref{Security} for a discussion of available security mechanisms.
+@item @metavar{accept_only} -- specifies whether the credentials may be used to accept security contexts or initiate them.  When specified as @C{ilu_TRUE}, the returned credentials may only be used to accept security contexts.  When specified as @C{ilu_FALSE}, they may only be used to initiate security contexts.
+@end itemize
+
+May raise an exception through @metavar{err}, in which case a value of @C{ILU_NIL} is returned.
+
+See @file{@metavar{ILUSRC}/GSS/kernel/gssapi.h} for a definition of the GSS types @type{gss_OID} and @type{gss_cred_id_t}.
+@end deftypefn
+
+@deftypefn {Function} ilu_IdentityInfo ILU_C_AcquireSunRPCAuthUnixIdentity (ilu_string @metavar{hostname}, ilu_shortcardinal @metavar{uid}, ilu_shortcardinal @metavar{gid}, ilu_shortcardinal @metavar{ngroups}, ilu_shortcardinal* @metavar{groups}, ILU_C_ENVIRONMENT * @metavar{env})
+@ftindex ILU_C_AcquireSunRPCAuthUnixIdentity (C LSR function)
+
+Available only if SunRPC UNIX Authorization has been configured in.  Returns an @C{ilu_IdentityInfo} corresponding to the given @system{UNIX} credentials.
+
+@end deftypefn
+
+@deftypefn {Function} ilu_boolean ILU_C_SetPassportContext (ilu_Passport @metavar{pp})
+@ftindex ILU_C_SetPassportContext (C LSR function)
+
+Sets the special hidden per-thread slot for passports to contain @metavar{pp}.  The slot retains that value until explicitly changed later.
+
+@end deftypefn
+
+@deftypefn {Function} ilu_Passport ILU_C_GetPassportContext (void)
+@ftindex ILU_C_GetPassportContext (C LSR function)
+
+Returns the value in the special hidden per-thread slot for @C{ilu_Passport}s.
+
+@end deftypefn
+
+@deftypefn {Function} ilu_boolean ILU_C_DestroyPassport (PASS(ilu_Passport) pp, ilu_Error * err)
+@ftindex ILU_C_DestroyPassport (C LSR function)
+
+Deallocates the storage associated with the passport, and any associated identities.
+
+@end deftypefn
+
+@deftypefn {Function} OPTIONAL(ilu_Passport) ILU_C_CallerIdentity (void)
+@ftindex ILU_C_CallerIdentity (C LSR function)
+
+Returns the passport associated with the caller, or possibly @C{ILU_NIL} if being
+invoked directly in a thread with no passport set.  This procedure should only be
+invoked inside the scope of a true method.
+@end deftypefn
+
+@node Call Management Functions in C, Except Information in C, Identity Functions, ILU C API
+@subsection Call Management Functions in C
+
+@deftypefn {Function} ILU_C_Serializer ILU_C_CreateSerializationContext (ILU_C_Server @metavar{S}, ILU_C_ENVIRONMENT *@metavar{env})
+@ftindex ILU_C_CreateSerializationContext (C LSR function)
+
+Creates a new instance of the serialization guarantee; this instance is applicable only to calls on objects of @metavar{S}.
+
+@end deftypefn
+
+@deftypefn {Function} ilu_boolean ILU_C_ReleaseSerializer (ILU_C_Serializer @metavar{si}, ILU_C_ENVIRONMENT *@metavar{env})
+@ftindex ILU_C_ReleaseSerializer (C LSR function)
+
+A client calls this after it is done using the given @C{ilu_Serializer}.
+@end deftypefn
+
+@deftypefn {Function} ilu_boolean ILU_C_SetSerializationContext (ILU_C_Serializer @metavar{x})
+@ftindex ILU_C_SetSerializationContext (C LSR function)
+
+Sets the special hidden per-thread slot for @C{ILU_C_Serializer}s to contain @metavar{x}.  The slot retains that value until explicitly changed later.
+
+@end deftypefn
+
+@deftypefn {Function} ILU_C_Serializer ILU_C_GetSerializationContext (void)
+@ftindex ILU_C_GetSerializationContext (C LSR function)
+
+Returns the value in the special hidden per-thread slot for @C{ILU_C_Serializer}s.
+
+@end deftypefn
+
+@deftypefn {Function} ILU_C_Batcher ILU_C_CreateBatcher (ilu_FineTime @metavar{timeout}, ilu_boolean @metavar{pushable}, ILU_C_ENVIRONMENT *@metavar{env})
+@ftindex ILU_C_CreateBatcher (C LSR function)
+
+Creates a new batcher.
+@end deftypefn
+
+@deftypefn {Function} ilu_boolean ILU_C_ReleaseBatcher (ILU_C_Batcher @metavar{val}, ILU_C_ENVIRONMENT *@metavar{env})
+@ftindex ILU_C_ReleaseBatcher (C LSR function)
+
+A client calls this after it is done using the given @C{ILU_C_Batcher}.
+@end deftypefn
+
+@deftypefn {Function} ilu_boolean ILU_C_SetBatcherContext (ILU_C_Batcher @metavar{x})
+@ftindex ILU_C_SetBatcherContext (C LSR function)
+
+Sets the special hidden per-thread slot for @C{ILU_C_Batcher}s to contain @metavar{x}.  The slot retains that value until explicitly changed later.
+@end deftypefn
+
+@deftypefn {Function} ILU_C_Batcher ILU_C_GetBatcherContext (void)
+@ftindex ILU_C_GetBatcherContext (C LSR function)
+
+Returns the value in the special hidden per-thread slot for @C{ILU_C_Batcher}s.
+@end deftypefn
+
+@deftypefn {Function} ilu_boolean ILU_C_PushBatcher (ILU_C_Batcher @metavar{b}, ILU_C_ENVIRONMENT * @metavar{env})
+@ftindex ILU_C_PushBatcher (C LSR function)
+
+Initiates delivery of all buffered call messages associated with @metavar{b}.
+@end deftypefn
+
+@deftypefn {Function} ILU_C_Pipeline ILU_C_CreatePipeline (ILU_C_ENVIRONMENT *@metavar{env})
+@ftindex ILU_C_CreatePipeline (C LSR function)
+
+Creates a new pipeline.
+
+@end deftypefn
+
+@deftypefn {Function} ilu_boolean ILU_C_ReleasePipeline (ILU_C_Pipeline @metavar{pl}, ILU_C_ENVIRONMENT *@metavar{env})
+@ftindex ILU_C_ReleasePipeline (C LSR function)
+
+A client calls this after it is done using the given @C{ILU_C_Pipeline}.
+
+@end deftypefn
+
+@deftypefn {Function} ilu_boolean ILU_C_SetPipelineContext (ILU_C_Pipeline @metavar{x})
+@ftindex ILU_C_SetPipelineContext (C LSR function)
+
+Sets the special hidden per-thread slot for @C{ILU_C_Pipeline}s to contain @metavar{x}.  The slot retains that value until explicitly changed later.
+
+@end deftypefn
+
+@deftypefn {Function} ILU_C_Pipeline ILU_C_GetPipelineContext (void)
+@ftindex ILU_C_GetPipelineContext (C LSR function)
+
+Returns the value in the special hidden per-thread slot for @C{ILU_C_Pipeline}s.
+
+@end deftypefn
+
+
+@node Exception Information in C, Server Manipulation, Call Management Functions in C, ILU C API
+@subsection Exception Information in C
+
+@deftypefn {Function} {GLOBAL(const char *)} ILU_C_SysExnMinorDescr ( CORBA_Environment * @metavar{Env} )
+@ftindex ILU_C_SysExnMinorDescr
+
+Locking: Main Invariant holds.
+
+If @metavar{Env} indicates a system exception has been raised, and the
+system exception's minor code is @system{ILU}-specific, returns a
+string that describes the minor code.  Otherwise returns nil.
+
+@end deftypefn
+
+@deftypefn {Function} {GLOBAL(const char *)} ILU_C_Exception_SrcFile ( CORBA_Environment * @metavar{Env} )
+@ftindex ILU_C_Exception_SrcFile
+
+Locking: Main Invariant holds.
+
+If @metavar{Env} indicates a system exception has been raised, and it
+was raised locally in the @system{ILU} runtime support, returns the
+name of the source file in which the raise statically occurs.
+Otherwise returns nil.
+
+@end deftypefn
+
+@deftypefn {Function} int ILU_C_Exception_SrcLine ( CORBA_Environment * @metavar{Env} )
+@ftindex ILU_C_Exception_SrcLine
+
+Locking: Main Invariant holds.
+
+If @metavar{Env} indicates a system exception has been raised, and it
+was raised locally in the @system{ILU} runtime support, returns the
+line number where the raise statically occurs.  Otherwise returns 0.
+
+@end deftypefn
+
+@node Server Manipulation, CORBA Compatibility Macros, Exception Information in C, ILU C API
+@subsection Server Manipulation
+
+@deftypefn {Macro Function} ilu_boolean ILU_C_USE_OS_THREADS
+@ftindex ILU_C_USE_OS_THREADS (C LSR function macro)
+
+Locking:  Main invariant holds.
+
+This macro expands to a function call.
+If @system{ILU} has been configured with os-level thread support, calling this
+routine will `turn on' that thread support for use with @language{C}.  This
+means that a new thread will be forked to handle each incoming connection,
+in servers, and if the wire protocol being used permits it, a thread will
+be forked to handle each incoming request.  This routine returns FALSE,
+and emits an error message, if something goes wrong with enabling thread
+support.  It must be called before making any other ILU calls, and before
+initializing any interfaces via calls to @code{@metavar{interface}__Initialize}
+or @code{@metavar{interface}__InitializeServer}.
+@end deftypefn
+
+@deftypefn {Macro Function} void ILU_C_FINISH_MAIN_THREAD ( int @metavar{returnvalue} )
+@ftindex ILU_C_FINISH_MAIN_THREAD (C LSR function macro)
+
+Locking:  Main invariant holds.
+
+This routine will return from the `main' thread with the specified value.  In some
+thread systems, the program will be terminated when the main thread returns from @C{main()},
+regardless of whether other threads are running.  For these thread systems, this call
+will simply cause the main thread to idle forever, instead of returning.
+
+@end deftypefn
+
+@deftypefn Function void ILU_C_Run (void)
+@ftindex ILU_C_Run (C LSR function)
+
+Locking:  Main invariant holds.
+
+Called to animate a server and/or other parts of the program.  Used only in single-threaded mode.  Invokes the event handling loop.  Never returns.
+@end deftypefn
+
+@deftypefn Function OPTIONAL(ILU_C_Server) ILU_C_FullInitializeServer (OPTIONAL(RETAIN(char *)) @metavar{serverID}, OPTIONAL(GLOBAL(ILU_C_ObjectTable)) @metavar{obj_tab}, OPTIONAL(RETAIN(ilu_ProtocolInfo)) @metavar{protocol}, OPTIONAL(RETAIN(ilu_TransportInfo)) @metavar{transport}, OPTIONAL(RETAIN(ilu_Passport)) @metavar{identity}, ilu_boolean @metavar{createPortAnyway}, ilu_boolean @metavar{port_public})
+@ftindex ILU_C_FullInitializeServer (C LSR function)
+
+Locking:  Main invariant holds.
+
+Creates and returns an @C{ilu_Server} with ID @metavar{serverID}, object mapping table @metavar{obj_tab}, using protocol @metavar{protocol} over a transport stack specified by @metavar{transport}.  If @metavar{serverID} is specified as @C{NULL}, a unique string is generated automatically for the server ID.  If @metavar{obj_tab} is specified as @C{NULL}, the default hash table object table is used.
+
+If either @metavar{protocol} or @metavar{transport} is specified, or
+if @metavar{createPortAnyway}, an @C{ilu_Port} will automatically be
+created and added to the @C{ilu_Server}.  @metavar{protocol}, if not
+@C{NULL}, is a string that specifies which RPC protocol to use on the
+port; @C{NULL} causes use of the default protocol.
+@metavar{transport}, if not @C{NULL}, is a sequence of strings that
+specifies the transport stack to use below the RPC protocol; @C{NULL}
+signifies use of the default transport to/from one of the IP addresses
+of this host.  @xref{Protocols and Transports} for details on
+protocols and transports.  If an @metavar{identity} is specified, it
+may be used for communications security purposes.  If an @C{ilu_Port}
+is called for, it will become the default port of the @C{ilu_Server},
+and will be public iff requested.
+
+@end deftypefn
+
+@deftypefn Function ilu_boolean ILU_C_FullAddPort (ILU_C_Server @metavar{server}, OPTIONAL(RETAIN(ilu_ProtocolInfo)) @metavar{protocol}, OPTIONAL(RETAIN(ilu_TransportInfo)) @metavar{transport}, OPTIONAL(RETAIN(ilu_Passport)) @metavar{identity}, ilu_boolean @metavar{makeDefault}, ilu_boolean @metavar{port_public}, ILU_C_ENVIRONMENT * @metavar{env})
+@ftindex ILU_C_FullAddPort (C LSR function)
+
+Locking:  Main invariant holds.
+
+Creates a new @C{ilu_Port} for the @metavar{server}.  @metavar{protocol}, @metavar{transport}, @metavar{identity}, and @metavar{port_public} parameterize the @C{ilu_Port} as for @C{ILU_C_InitializeServer}.
+@end deftypefn
+
+@deftypefn Function ilu_boolean ILU_C_AddCInfo (ILU_C_Server @metavar{server}, OPTIONAL(RETAIN(ilu_ProtocolInfo)) @metavar{protocol}, OPTIONAL(RETAIN(ilu_TransportInfo)) @metavar{transport}, ILU_C_ENVIRONMENT * @metavar{env})
+@ftindex ILU_C_AddCInfo (C LSR function)
+
+Locking:  Main invariant holds.
+
+Adds the given contact info to the given kernel server; used for
+contact info for ports on other kernel servers of the same server.
+
+@end deftypefn
+
+@deftypefn Function ilu_boolean ILU_C_Server_CInfo (ILU_C_Server @metavar{server}, ilu_boolean want_public, char ** @metavar{protocol}, ilu_TransportInfo * @metavar{transport}, ILU_C_ENVIRONMENT * @metavar{env})
+@ftindex ILU_C_Server_CInfo (C LSR function)
+
+Locking:  Main invariant holds.
+
+Obtains the first (if any) public or private (as requsted) contact
+info sequence of the given server.  Caller owns storage pointed to by
+@metavar{protocol} and @metavar{transport}.  On success: callee
+returns TRUE; callee allocates new storage for string and
+@C{ilu_TransportInfo} and returns ownership to caller by storing
+pointers through @metavar{protocol} and @metavar{transport}.  On
+failure: callee returns FALSE.
+
+@end deftypefn
+
+@deftypefn Function (RETAIN(ilu_string)) ILU_C_IDOfServer ( ILU_C_Server @metavar{server} )
+@ftindex ILU_C_IDOfServer (C LSR function)
+
+Locking:  Main invariant holds.
+
+Returns a pointer to the server id of the specified server.
+@end deftypefn
+
+@deftypefn Function ILU_C_ObjectTable ILU_C_CreateObjectTable (CORBA_Object (*@metavar{object_of_ih})(ilu_string instance-handle, ilu_private user-data), void (*@metavar{free_user_data})(ilu_private user-data), ilu_private @metavar{user-data} )
+@ftindex ILU_C_CreateObjectTable (C LSR function)
+
+Locking:  Main invariant holds.
+@*
+Locking for @metavar{object_of_ih}:  L1 >= @{server@}, L1 >= @{gcmu@} if result is true and collectible; L2, Main unconstrained.
+@*
+Locking for @metavar{free_user_data}:  L1 >= @{server@}; L2, Main unconstrained.
+
+Creates and returns a value of type @C{ILU_C_ObjectTable} encapsulating the two procedures @metavar{object_of_ih} and @metavar{free_user_data}, and the user-specified data element @metavar{user-data}.  When @metavar{object_of_ih} is called, it should create an appropriate @C{CORBA_Object} with the specified instance handle, and return it.  When @metavar{free_user_data} is called, it indicates the end of the object table, and @metavar{free_user_data} should free up any storage associated with @metavar{user-data}.
+
+An object table is associated with a kernel server by passing the object table as
+a parameter to the function @fn{ILU_C_InitializeServer}.  A single object
+table may be used with multiple different @C{ilu_Server} instances.
+@end deftypefn
+
+@deftp {C Procedure Type} {ILU_C_ServerRelocateProc}
+@ttindex ILU_C_ServerRelocateProc (C LSR proc type)
+
+Locking:  L1 >= @{ilu_Server@}; L2 unconstrained
+
+@codeexample
+typedef ilu_boolean
+  (*ILU_C_ServerRelocateProc) (ILU_C_Server @metavar{server},
+			       ilu_private @metavar{argument},
+			       OPTIONAL(ilu_ProtocolInfo *) @metavar{new_pinfo},
+			       OPTIONAL(ilu_TransportInfo *) @metavar{new_tinfo});
+@end codeexample
+This function should return TRUE if new pinfo and tinfo have been stored into the
+out parameters; otherwise it should return FALSE.  It has no mechanism
+for signalling errors.  It is called by a protocol implementation to see
+if the server wants the caller to be redirected to another location or
+cinfo stack.
+@end deftp
+
+@deftypefn Function {OPTIONAL(void *)} ILU_C_SetServerRelocationProc (ILU_C_Server @metavar{server}, ILU_C_ServerRelocateProc @metavar{relocation_fn}, {void *} @metavar{relocation_arg}, ILU_C_ENVIRONMENT * metavar{env})
+@ftindex ILU_C_SetServerRelocationProc (C LSR function)
+
+Locking: Main invariant holds
+
+Ensures that the function @metavar{relocation_fn} will be called with @metavar{relocation_arg} as an argument
+whenever a request comes in for an object maintained by @metavar{server}, on any connection which uses
+a relocating protocol (currently only @protocol{w3ng} is a relocating protocol).  See the definition
+of @C{@type{ILU_C_ServerRelocateProc}} for a description of how it is used.  The returned value is
+the previous value of @metavar{relocation_arg}, if any.
+@end deftypefn
+
+@deftypefn Function ilu_cardinal ilu_tcp_SetDefaultBuffersize (ilu_cardinal @metavar{new-buffer-size})
+@ftindex ilu_tcp_SetDefaultBuffersize (C kernel function)
+
+Locking:  Main invariant holds.
+
+Sets the default buffersize, in bytes, for TCP transports to @metavar{new-buffer-size}.  This default
+can be overridded by explicitly specifying a buffersize in the tinfo for the port or
+object.  Returns the previous default value.  
+This function is only available if @system{ILU} has been configured with support
+for the TCP/IP transport.
+@end deftypefn
+
+@deftypefn Function void ilu_tcp_GetStats ( ilu_cardinal * @metavar{bytes-sent}, ilu_cardinal * @metavar{bytes-read}, ilu_cardinal * @metavar{moorings-created}, ilu_cardinal * @metavar{connections-accepted}, ilu_cardinal * @metavar{connections-opened}, ilu_cardinal * @metavar{currently-open-connections}, ilu_cardinal * @metavar{max-simultaneously-open-connections} )
+@ftindex ilu_tcp_GetStats (C kernel function)
+
+Locking:  Main invariant holds.
+
+Returns various statistics about the TCP/IP tranports use of various resources for this process.
+The values returned are the values since the process was started, or since the reset function
+@fn{@C{ilu_tcp_InitializeStats()}} was last called, except for @metavar{currently-open-connections},
+which is unaffected by the reset function.
+This function is only available if @system{ILU} has been configured with support
+for the TCP/IP transport.
+@end deftypefn
+
+@deftypefn Function void ilu_tcp_InitializeStats ()
+@ftindex ilu_tcp_InitializeStats (C kernel function)
+
+Locking:  Main invariant holds.
+
+Resets the statistics counters for this process.
+This function is only available if @system{ILU} has been configured with support
+for the TCP/IP transport.
+@end deftypefn
+
+@deftypefn Function ilu_FineTime ILU_C_SetDefaultGCPingPeriod ( ilu_FineTime @metavar{new_period}, {ILU_C_ENVIRONMENT *} @metavar{env})
+@ftindex ILU_C_SetDefaultGCPingPeriod (C LSR function)
+
+Locking:  L1 < gcmu
+
+The ILU distributed garbage collection protocol detects defunct clients by periodically pinging their GC callback objects.  If a client's callback object cannot be successfully pinged, it is removed from the list of clients which have references to any objects on the server.  This call sets the ping period to @metavar{new_period}.  Only GC callback objects registered after this call will use the new period.  Returns the previous ping period upon success.
+@end deftypefn
+
+@node CORBA Compatibility Macros, , Server Manipulation, ILU C API
+@subsection CORBA Compatibility Macros
+
+@system{ILU} supports @system{CORBA} 2.0, and formerly supported either 1.1 or 1.2, depending
+on how it was installed at your site.  A number of macros are defined
+to make programs less dependent on which version they use.
+
+@defmac ILU_C_OBJECT
+@dtindex ILU_C_OBJECT (C LSR macro)
+
+Expands to @C{CORBA_Object}.
+
+@end defmac
+
+@defmac ILU_C_ENVIRONMENT
+@dtindex ILU_C_ENVIRONMENT (C LSR macro)
+
+Expands to @C{CORBA_Environment}.
+
+@end defmac
+
+@defmac ILU_C_NO_EXCEPTION
+@dtindex ILU_C_NO_EXCEPTION (C LSR macro)
+
+Expands to @C{CORBA_NO_EXCEPTION}.
+
+@end defmac
+
+@defmac ILU_C_USER_EXCEPTION
+@dtindex ILU_C_USER_EXCEPTION (C LSR macro)
+
+Expands to @C{CORBA_USER_EXCEPTION}.
+
+@end defmac
+
+@defmac ILU_C_SYSTEM_EXCEPTION
+@dtindex ILU_C_SYSTEM_EXCEPTION (C LSR macro)
+
+Expands to @C{CORBA_SYSTEM_EXCEPTION}.
+
+@end defmac
+
+@defmac ILU_C_SUCCESSFUL ( ILU_C_ENVIRONMENT * @metavar{ev} )
+@dtindex ILU_C_SUCCESSFUL (C LSR macro)
+
+Evaluates to true if no exception has been raised.
+
+@end defmac
+
+@defmac ILU_C_SET_SUCCESSFUL ( ILU_C_ENVIRONMENT * @metavar{ev} )
+@dtindex ILU_C_SET_SUCCESSFUL (C LSR macro)
+
+Sets @metavar{ev} to a successful result.
+
+@end defmac
+
+@defmac ILU_C_EXCEPTION_ID ( ILU_C_ENVIRONMENT * @metavar{ev} )
+@dtindex ILU_C_EXCEPTION_ID (C LSR macro)
+
+Returns the @C{char *} value that is the exception's ID.
+
+@end defmac
+
+@defmac ILU_C_EXCEPTION_VALUE ( ILU_C_ENVIRONMENT * @metavar{ev} )
+@dtindex ILU_C_EXCEPTION_VALUE (C LSR macro)
+
+Expands to @C{CORBA_exception_value(@metavar{ev})}.
+
+@end defmac
+
+@defmac ILU_C_EXCEPTION_FREE ( ILU_C_ENVIRONMENT * @metavar{ev} )
+@dtindex ILU_C_EXCEPTION_FREE (C LSR macro)
+
+Expands to @C{CORBA_exception_free(@metavar{ev})}.
+
+@end defmac
+
+@ifclear largerdoc
+@page
+@section Index
+@printindex ft
+@printindex cp
+@end ifclear

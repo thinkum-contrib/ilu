@@ -1,0 +1,64 @@
+README for the "cubit" example directory.
+[
+ $Id: README,v 1.5 1999/08/03 01:57:54 janssen Exp $
+ BeginILUCopyright
+
+ Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+ Unlimited use, reproduction, modification, and distribution of this
+ software and modified versions thereof is permitted.  Permission is
+ granted to make derivative works from this software or a modified
+ version thereof.  Any copy of this software, a modified version
+ thereof, or a derivative work must include both the above copyright
+ notice of Xerox Corporation and this paragraph.  Any distribution of
+ this software, a modified version thereof, or a derivative work must
+ comply with all applicable United States export control laws.  This
+ software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+ WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+ LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+ EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+ NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+ OF THE POSSIBILITY OF SUCH DAMAGES.
+
+ EndILUCopyright ]
+
+This interface describs a simple test for the IIOP protocol designed
+by Sun and contributed as part of their free IIOP implementation.  The
+file cubit.isl contains an ISL version of the Sun cubit.idl OMG IDL
+interface.
+
+To build this example, you must first have installed Python.  Then
+copy the files in this directory to another test directory, and cd to
+that directory.
+
+  % ilumkmf
+  % make
+  python-stubber cubit.isl
+  client stubs for interface "cubit" to cubit.py ...
+  server stubs for interface "cubit" to cubit__skel.py ...
+  % 
+
+To run this example, first start the server:
+
+  % python cubitServer.py
+  IOR:00000000000000010000000000000001000000000000001c00010000...
+
+Then try the client, passing as an argument the URL output by the server:
+
+  % python cubitClient.py IOR:00000000000000010000000000000001000000000000001c00010000...
+  cube_octet(13) => 149
+  cube octet:  13 --> 149
+  cube_short(-117) => -28749
+  cube short:  -117 --> -28749
+  cube_long(-117) => -1601613
+  cube long:  -117 --> -1601613
+  cube_struct({'l': -117, 's': -117, 'o': 13}) => {'l': -1601613, 's': -28749, 'o': 149}
+  cube struct:  {'l': -117L, 'o': 13, 's': -117} --> {'l': -1601613, 's': -28749, 'o': 149}
+  %
+
+You can also FTP the original Sun IIOP code from
+ftp://omg.org/pub/interop/iiop.tar.Z, and try building the "clnt" and
+"svr" programs, and running them against these clients and servers, to
+see some inter-ORB interoperability.

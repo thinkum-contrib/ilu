@@ -1,0 +1,63 @@
+README for the "objtable" example.
+[ $Id: README,v 1.8 1999/08/03 01:58:03 janssen Exp $
+ BeginILUCopyright
+
+ Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+ Unlimited use, reproduction, modification, and distribution of this
+ software and modified versions thereof is permitted.  Permission is
+ granted to make derivative works from this software or a modified
+ version thereof.  Any copy of this software, a modified version
+ thereof, or a derivative work must include both the above copyright
+ notice of Xerox Corporation and this paragraph.  Any distribution of
+ this software, a modified version thereof, or a derivative work must
+ comply with all applicable United States export control laws.  This
+ software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+ WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+ LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+ EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+ NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+ OF THE POSSIBILITY OF SUCH DAMAGES.
+
+ EndILUCopyright ]
+
+"objtable" is a C example of the use of an object table, to create
+true instances on the fly when some client uses them.
+
+The model used is that the server is a document repository, which
+manages many `document objects'.  Each object has metadata, data, and
+methods.  The clients manipulate the repository by making calls on the
+document objects.  However, the server doesn't keep all these objects
+`alive' in memory all the time.  Instead, the data for the objects is
+kept in stable storage; the server `rolls in' an object only when a
+client makes a call on it, and rolls it out again when no clients are
+using it.  The document ID of the object is used by the client in a
+call on server-find-file, which returns the document object.  The
+client then makes a call to discover one of the attributes of the
+object, the filename.
+
+The client-side code also illustrates how surrogate object references
+can be constructed for an object without making a call on the server,
+using the C runtime call `ILU_C_CreateSurrogateObject'.
+
+To build:
+
+	% ilumkmf
+	% make
+
+Running the C server looks like this:
+
+% ./server &
+[1]
+ilusbh:13.1.101.26.2609.369eb3a5.0/----;ilut%3Am-DkhjdxzArh5mFFIV5HUba3abN;iiop@tcp_13.1.101.26_38333
+%
+
+The client is invoked with the SBH from the server as an argument:
+
+% ./client 'ilusbh:13.1.101.26.2609.369eb3a5.0/----;ilut%3Am-DkhjdxzArh5mFFIV5HUba3abN;iiop@tcp_13.1.101.26_38333'
+name of file f1 is <foo>
+name of file f2 is <bar>
+name of file f3 is <bletch>
+% 

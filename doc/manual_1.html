@@ -1,0 +1,809 @@
+<!-- This HTML file has been created by timdif2html 1.11
+     from manual.dif on 20 September 1999 -->
+
+<TITLE>ILU Reference Manual - ILU Concepts</TITLE>
+<BODY TEXT=#000000 BGCOLOR=#ffffff>
+<P>Go to the <A HREF="manual_2.html">next</A> section.<P>
+<P>
+(with contributions from Doug Cutting, Frank Halasz, and Denis Seversen)
+<P>
+(typeset 20 September 1999)
+<P>
+Copyright (C) 1991--1999 Xerox Corporation<BR>
+All Rights Reserved.
+<P>
+@defcodeindex ft
+@defcodeindex vt
+@defcodeindex et
+@defcodeindex mt
+@defcodeindex tt
+@defcodeindex dt
+<P>
+This document describes version 2.0beta1 of the
+Inter-Language Unification (ILU) system.
+<P>
+Lots of people contributed significant amounts of code to the ILU system, including (alphabetically):
+Joachim Achtzehnter,
+Judy Anderson,
+Antony Courtney,
+Doug Cutting,
+Mark Davidson,
+Ken Fishkin,
+Frank Halasz,
+Scott Hassan,
+Rob Head,
+Chris Jacobi,
+Bill Janssen,
+Swen Johnson,
+Dan Larner,
+Martin von Loewis,
+Bill Nell,
+Paula Newman,
+Ansgar Rademacher,
+Dennis Seversen,
+Bridget Spitznagel,
+Mike Spreitzer,
+Owen Taylor,
+Farrell Wymore, and
+Rick Yardumian.
+<P>
+Many others have contributed in other ways, including our reviewers, alpha and beta testers, and regular users.  The list includes (but is not limited to):
+Shridhar Acharya,
+Joachim Achtzehnter,
+Judy Anderson,
+Maria Perez Ayo,
+Mike Beasley,
+Erik Bennett,
+Dan Brotsky,
+David Brownell,
+Bruce Cameron,
+George Carrette,
+Philip Chou,
+Daniel W. Connolly,
+Antony Courtney,
+Doug Cutting,
+Mark Davidson,
+Jim Davis,
+Larry Edelstein,
+Paul Everitt,
+Bill Fenner,
+Josef Fink,
+Jeanette Figueroa,
+James Flagg,
+Steve Freeman,
+Mark Friedman,
+Jim Gettys,
+Gabriel Sanchez Gutierrez,
+Jun Hamano,
+Bruno Haible,
+Scott W. Hassan,
+Carl Hauser,
+Rob Head,
+Michi Henning,
+Andrew Herbert,
+Angie Hinrichs,
+Ben Hurwitz,
+Roberto Invernici,
+Christian Jacobi,
+Swen Johnson,
+Gabor Karsai,
+Nobu Katayama,
+Dan `Bud' Keith,
+Sangkyun Kim,
+Ted Kim,
+Don Kimber,
+Steve Kirsch,
+Dan Larner,
+Carsten Malischewski,
+Larry Masinter,
+Fernando D. Mato Mira,
+Fazal Majid,
+Steven D. Majewski,
+Fernando D. Mato Mira,
+Michael McIlrath,
+Scott Minneman,
+Masashige Mizuyama,
+Curtis McKelvey,
+Chet Murthy,
+Farshad Nayeri,
+Bill Nell,
+Les Niles,
+T. Owen O'Malley,
+Annrai O'Toole,
+Andreas Paepcke,
+Jan Pedersen,
+Karin Petersen,
+Steve Putz,
+George Robertson,
+Joerg Schreck,
+Ian Smith,
+Bridget Spitznagel,
+Peter Swain,
+Marvin Theimer,
+Lindsay Todd,
+P. B. Tune,
+Bill Tutt,
+Kevin Tyson,
+Bill van Melle,
+Guido van Rossum,
+Brent Welch,
+Jody Winston,
+Rick Yardumian.
+<P>
+<H1><A NAME="SEC1" HREF="manual_toc.html#SEC1">ILU Concepts</A></H1>
+<P>
+<A NAME="IDX1"></A>
+<A NAME="IDX2"></A>
+<A NAME="IDX3"></A>
+<A NAME="IDX4"></A>
+<H2><A NAME="SEC2" HREF="manual_toc.html#SEC2">What ILU Does</A></H2>
+<P>
+ILU is primarily about interfaces between units of program
+structure; we call these units <I>modules</I>.
+The notion is that each module enscapsulates some logical part
+of a program, that has high `cohesiveness' internally, and low `coupling' to
+other parts of the program.  ILU provides
+you with a way of writing down an object-oriented <I>interface</I> to the module;
+that is, a set of object types and other types, constants, and exceptions that another
+module would use to communicate with it.  This interface can then be processed
+by various ILU tools to implement that communication.
+<P>
+ILU allows many different binding relationships between modules.
+The modules can be parts of one program instance, all written in the same language;
+they can be parts written in different languages, sharing runtime
+support in one memory image; they can be parts running in different
+program instances on different machines (on different sides of the planet).
+A module could even be a distributed system implemented by many program instances
+on many machines.  A particular module might be part of several
+different program instances at the same time.  ILU does all the translating
+and communicating necessary to use all these kinds of modules in a single program.
+It optimizes calls across module
+interfaces to involve only as much mechanism as necessary for the
+calling and called modules to interact.  In particular, when the two
+modules are in the same memory image and use the same data
+representations, the calls are direct local procedure calls -- no stubs
+or other RPC mechanisms are involved.  The notion of a `module' should
+not be confused with the independent concept of a <I>program instance</I>;
+by which we mean the combination of code and data running in one memory
+image.  A UNIX process is (modulo the possibilities introduced by the
+ability, in some UNIX sytems, to share memory between processes) an
+example of a program instance.
+<P>
+Because ILU standardizes many of the issues involved in
+providing proper inter-module independence, such as memory management
+and error detection and recovery strategies, it can be used to
+build language-independent <I>class libraries</I>, collections of
+re-usable object definitions and implementations.
+Because one of the design goals of ILU was to use existing
+standards for various pieces, rather than inventing anything new,
+ILU can be used to implement ONC RPC or Xerox Courier
+services, or clients for existing ONC RPC or Xerox Courier
+services.  ILU also includes an implementation of the
+Object Management Group's CORBA Internet Inter-Orb Protocol (<I>IIOP</I>),
+and can be used to write CORBA services or clients, as well.
+<P>
+<H2><A NAME="SEC3" HREF="manual_toc.html#SEC3">How ILU Works</A></H2>
+<P>
+The approach used by ILU is one common to standard RPC systems such
+as Sun's ONC RPC, Xerox's Courier, and most implementations of OMG's CORBA.
+An interface is described once in some `language-neutral' interface specification language.
+Types and exceptions are described; exported functionality is specified by defining <I>methods</I> on object types.
+Tools are then run against the interface description to produce <I>stubs</I>
+for particular programming languages; these stubs can bind to, call, and be called from stubs
+generated from the same interface description for a different
+programming language.
+The stub code is then linked with the application code, some language-specific
+code containing any necessary ILU support for that programming language,
+and the <I>ILU kernel library</I>, which is code written in ANSI C.
+The following diagram illustrates the process:
+<P>
+<P><CENTER><IMG SRC="two-ilu-modules.idraw.jpeg"></CENTER><P><P>
+Several modules may be linked together, for a standalone use.
+ILU stubs are generated in such a way that
+applications which link a caller and callee written in the same
+language directly together suffer
+no calling overhead.  This makes ILU useful for defining
+interfaces between modules even in programs that do not use RPC.
+<P>
+Different modules of the program may be written in different programming languages.
+These can either be linked together in the same address space, if the runtimes
+of the different languages allow that, or they
+can be used to make separate network servers and clients.  In the case of
+a network service, the memory layout for the program would be something like
+<P>
+<P><CENTER><IMG SRC="ilu-addr-space.idraw.jpeg"></CENTER><P><P>
+<H2><A NAME="SEC4" HREF="manual_toc.html#SEC4">Core ILU Concepts</A></H2>
+<P>
+<A NAME="IDX5"></A>
+<H3><A NAME="SEC5" HREF="manual_toc.html#SEC5">Objects</A></H3>
+<P>
+ILU is <I>object-oriented</I>.  By this, we mean that
+objects serve as the primary encapsulation mechanism in ILU.
+All functionality is exported from a module as methods that can be
+invoked on instances of object types, rather than as simple
+procedures.  The object instance provides
+the context within which methods are executed.  The object type system provides
+subtyping (`inheritance' of interfaces -- ILU does not address object implementation), to aid in structuring of interfaces.
+<P>
+With respect to a particular ILU object instance,
+a module is called the <I>server</I>
+<A NAME="IDX6"></A>
+if it implements the methods of that object, or a <I>client</I>
+<A NAME="IDX7"></A>
+if it calls, but does not implement, the methods of that object.  One
+module can thus be a client of one object, and the server of another.
+An ILU object can be passed as a parameter to or result of a
+method call, and can be (in) the parameter to an exception.  An object
+may be passed from its server to a client, from a client to its server,
+or between two clients, in any of the above three kinds of position.
+Unlike some RPC systems, there can be multiple ILU objects of
+the same type, even on one machine, even within one program instance.
+<P>
+For a given ILU object, there will, in general, be multiple <I>language-specific objects</I>;
+each is an "object" in one of the
+programming languages used in the system.  One language-specific object,
+designated the <I>true object</I>,
+<A NAME="IDX8"></A>
+actually provides the implementation of the ILU object; it is
+thus part of the server module.  The true object's methods are written
+by the programmer, not generated by ILU.  The other
+language-specific objects are <I>surrogate objects</I>;
+<A NAME="IDX9"></A>
+their methods are actually RPC stubs (generated by ILU) that
+call on the true object.  A surrogate object is used by a client module
+when the server module is in a different program instance or uses
+different data representations.
+<P>
+<A NAME="IDX10"></A>
+<H4><A NAME="SEC6" HREF="manual_toc.html#SEC6">Servers</A></H4>
+<P>
+Each object instance has exactly one module that implements it; that
+modules is called the object's server, as introduced above.  Each
+server has a <I>server ID</I>, a universally unique string ID.  The
+server ID makes up part of the object ID of the instances implemented by
+the server.
+<P>
+<H4><A NAME="SEC7" HREF="manual_toc.html#SEC7">Kernel Servers</A></H4>
+<A NAME="IDX11"></A>
+<A NAME="IDX12"></A>
+<A NAME="IDX13"></A>
+<P>
+Each language-specific object in an ILU address space is
+associated with a <I>kernel server</I>, a data structure that
+represents the server that implements the object.  Both true and
+surrogate language-specific objects have kernel servers, called
+<I>true servers</I> and <I>surrogate servers</I>, respectively.
+<A NAME="IDX14"></A>
+<A NAME="IDX15"></A>
+<P>
+Kernel servers serve as the locus of communication between two address
+spaces.  A true kernel server may have a number of <I>ports</I>
+associated with it; a port is a mechanism by which other address
+spaces can interact with objects implemented by the server.  Another
+address space uses the port by creating a surrogate server which
+mirrors the true server, and opening a <I>connection</I> from the
+surrogate server to the true server.  Calls from surrogate objects
+to true objects are carried along this connection.  A true server
+may have multiple ports, each of which may provide connectability via
+different RPC protocols or transport mechanisms.
+<P>
+<H4><A NAME="SEC8" HREF="manual_toc.html#SEC8">Subtyping (interface inheritance)</A></H4>
+<P>
+The object model specified here provides for multiple interface inheritance.  It is
+intended that the subtype provide all the methods described by its
+supertypes, plus possibly other methods described directly in the subtype
+description.  It is expected that in languages which support
+multiple-inheritance object models,
+that an ILU inheritance tree
+will be reflected in the language-specific inheritance tree.  In a single-inheritance language, or a non-object-oriented one, an ILU-specific multiple-(interface-)inheritance object system must be embedded.
+<P>
+<H4><A NAME="SEC9" HREF="manual_toc.html#SEC9">Subtype Relationships</A></H4>
+<P>
+In the ILU type system, the only subtyping questions that arise
+are between two object types.  This is because ILU employs only
+those OOP features common to all languages supported.
+<P>
+Subtyping in ILU is based on structure and name;
+we include the names in the structure, and thus need only talk about
+structure.  An object type declaration of
+the form defined later constructs a structure of the form
+<P>
+<PRE>
+(OBJTYPE
+     SINGLETON: <VAR>singleton-protocol-info</VAR>
+     OPTIONAL: <CODE>Boolean</CODE>
+     COLLECTIBLE: <CODE>Boolean</CODE>
+     AUTHENTICATION: <VAR>authentication-type</VAR>
+     SUPERTYPES: <VAR>supertype-structure, ...</VAR>
+     METHODS: <VAR>method-structure, ...</VAR>
+     LEVEL-BRANDS: (<VAR>interface-name</VAR>, <VAR>interface-brand</VAR>,
+                <VAR>type-name</VAR>, <VAR>type-brand</VAR>))
+</PRE>
+<P>
+Structure A is a subtype of structure B iff either (1) A and B are equal
+structures, or (2) one member of A's <VAR>supertype-structure</VAR>s
+is a subtype of B.
+<P>
+Note that the level-brands include the interface name and (optional)
+brand, as well as the name and (optional) brand of the type being
+declared.  Thus, two declarations of subtypes of the same type
+normally create distinct subtypes, because they would declare types of
+different names, or in interfaces with different names.  When the
+interface name and the type name are the same, this does not cause a
+distinction, although other structural differences might.  If the
+programmer wants to indicate that there's a semantic distinction, even
+though it doesn't otherwise show up in the structure, s/he can use
+different interface brands and/or different type brands.
+These distinctions can be made between
+declarations in different files, or between successive versions of a
+declaration in a file that's been edited.
+<P>
+<A NAME="IDX16"></A>
+<H4><A NAME="SEC10" HREF="manual_toc.html#SEC10">Singleton Object Types</A></H4>
+<P>
+Many existing RPC protocols and servers do not have the notion of
+multiple instances of a type co-existing at the same server, so cannot
+use the instance discrimination information passed in ILU
+procedure calls.  To support the use of these protocols and servers, we
+introduce the notion of a <I>singleton</I>
+object type, of which there is only one instance (of each singleton
+type) at a kernel server.  Note that because a single address space may
+support multiple kernel servers, this means that in a single address
+space, there may be multiple instances of the same singleton type.  When
+a method is being called on an instance of a singleton type, no instance
+discrimination information is passed.  Singleton types may not be
+subclassed.
+<P>
+<H4><A NAME="SEC11" HREF="manual_toc.html#SEC11">Instantiation</A></H4>
+<P>
+To use (e.g., call the methods of) an ILU object, a client must
+first obtain a language-specific object for that ILU object.
+This can be done in one of two ways: (1) the client can call on a
+language-specific object of a different ILU object to return
+the object in question (or receive the object in a call made on the
+client, or in the parameter of an exception caught and handled by the
+client); or (2) certain standard facilities can be used to acquire a
+language-specific object given either addressing or naming information
+about the ILU object.  The addressing information is called a <I>string binding handle</I>
+<A NAME="IDX17"></A>
+(SBH), and the ILU runtime library includes a procedure to
+acquire a language-specific object given a string binding handle for an
+ILU object (in strongly-typed languages, this procedure is
+typed to return an object of the base type common to all ILU
+objects in that language).
+<P>
+Every creation of a surrogate instance
+implies communication with the server module,
+and binding of the surrogate instance to the true instance.
+ILU may attempt to perform this communication when it is actually
+necessary, rather than immediately on surrogate instance creation.
+<P>
+The process of creating an instance may bootstrapped via a <I>name
+service</I>, such as ILU's Simple Binding (see section <A HREF="manual_1.html#SEC21">Simple Binding</A>) or
+the PARC Name-and-Maintenance-Server
+(<CODE>NMS</CODE>), which allows servers to register instances on a
+net-wide basis.  A server registers a mapping from naming information to
+a string binding handle.  The client-side stubs for an interface include
+a procedure that takes naming information, looks up the corresponding
+string binding handle in the name service, and calls the above-mentioned
+library routine to map the SBH to a language-specific object.
+Alternatively, a client can do those steps itself, using an ILU
+runtime library procedure to acquire a language-specific object for the
+name service.
+<P>
+<H4><A NAME="SEC12" HREF="manual_toc.html#SEC12">String Binding Handle</A></H4>
+<P>
+In ILU, there is a string-based representation for a reference to an object.
+That representation consists of a single string, called a <I>string binding handle</I>.  ILU uses string binding handles when marshalling object references for RPC.
+ILU also allows applications to interconvert between objects and string binding handles.
+This is necessary when dealing with name services, and useful in other circumstances.
+<P>
+A string binding handle contains several different
+pieces of information:
+<P>
+<UL>
+<P>
+<LI>The <I>server ID</I>, a string which identifies the particular
+<I>server</I> that implements the object; as the alignment between
+modules (such as servers) and program instances is entirely
+unconstrained by ILU, any program can separate its objects
+into one or more groups, each group associated with a different
+server.  Two objects from the same server are called
+<I>sibling</I> objects.
+<P>
+<LI>The <I>instance handle</I>, a (server-relative) string that
+uniquely identifies a particular object among those implemented by its
+server.
+<P>
+<LI>The <I>most specific type ID</I> (also called the <I>MSTID</I>), a
+type fingerprint for the most specific type of the object.
+<A NAME="IDX18"></A>
+<P>
+<LI>The <I>contact info</I>, specifies one or more of the ways by
+which a client of the object can communicate with it.
+<P>
+</UL>
+<P>
+The server ID, instance handle, and MSTID may each contain any ASCII character other than NUL.
+They are composed into the string binding handle according the the IETF rules for URLs, but the precise
+form of the URL is not specified here.  (In versions of ILU before 2.0, string binding handles had a completely different syntax.)
+<P>
+The pair <CODE>(<VAR>server ID</VAR>, <VAR>instance handle</VAR>)</CODE> are also
+known as the <I>object ID</I> (or <I>OID</I>) of the object, because together they form
+a universally unique ID for the object.
+<P>
+The <VAR>contact info</VAR> part contains one or more contact info sequences,
+each describing one particular way of communicating with the object's kernel server.
+Each contact info sequence consists of a series of fields.
+The first field is known as the <I>protocol info</I>, and names a particular RPC protocol, and any
+parameters that might influence the way in which this protocol would be used.
+Each of the succeeding fields specifies <I>transport info</I>, which defines
+a way of transforming or communicating data, and any parameters which might influence
+that transport method.  There may be many sequences of contact info in any one string
+binding handle (but ILU currently ignores all but the first).
+<P>
+<H4><A NAME="SEC13" HREF="manual_toc.html#SEC13">Siblings</A></H4>
+<P>
+Some ILU object instances may have implementation
+dependencies on private communication with other instances.  For
+example, imagine an object type <CODE>time-share-system</CODE>, which
+provides the method <CODE>ListUsers()</CODE>, which returns a list of
+"user" instances.  Imagine that <CODE>time-share-system</CODE> also
+provides the method <CODE>SetUserPriority(u : user, priority : integer)</CODE>.
+We would like to be able to provide some assurance that
+the user instance used as a parameter to <CODE>SetUserPriority</CODE> is an
+instance returned from a call to <CODE>ListUsers</CODE> on the same instance
+of a <CODE>time-share-system</CODE>, because the way in which
+<CODE>SetUserPriority</CODE> is implemented relies on the user being a user
+of that particular <CODE>time-share-system</CODE>.
+<P>
+The ILU model provides the notion of a <I>sibling object</I>.
+<A NAME="IDX19"></A>
+Two instances are siblings if their methods are handled by the same kernel server.
+Instances that are non-discriminator parameters to methods may be specified
+in ISL as having to be siblings of the discriminator.
+<P>
+<A NAME="IDX20"></A>
+<A NAME="IDX21"></A>
+<H4><A NAME="SEC14" HREF="manual_toc.html#SEC14">Object Tables (or, Just-in-Time Objects)</A></H4>
+<P>
+True objects may either be created explicitly, or upon arrival of calls
+on them.  The second option is exercised via a feature currently called
+<I>object tables</I> (from "hash tables", since they map a string, the
+instance handle, to an object -- "object factories" might be a less
+surprising term).  After the object table creates an object, the server
+module then continues to manage the object's existence -- in the same
+way(s) it manages other objects it creates.  This means a server need
+not hold in memory all of its objects at once, which may be quite
+important.
+<P>
+A true kernel server may optionally include an object table, whose job
+is to map an instance handle (see section <A HREF="manual_1.html#SEC12">String Binding Handle</A>) to the
+object it identifies.  ILU's runtime will consult the object
+table when a call is received for an object not currently reified.  The
+object table can either explicitly create the named object, or refuse
+(thus declaring the instance handle invalid).
+<P>
+This mapping operation is invoked with certain of the ILU
+runtime's mutexes (see section <A HREF="manual_13.html#SEC468">Thread Synchronization</A>) held, because it is
+an extension of a delicate part of that runtime.  The server's mutex is
+held in all cases, and the global mutex "gcmu" is also held if the
+resulting object is expected to be of a <CODE>COLLECTIBLE</CODE> type.  The
+fact that these mutexes are held restricts what an application can do
+inside this mapping procedure.
+<P>
+<A NAME="IDX22"></A>
+<A NAME="IDX23"></A>
+<A NAME="IDX24"></A>
+<A NAME="IDX25"></A>
+<H4><A NAME="SEC15" HREF="manual_toc.html#SEC15">Server Relocation</A></H4>
+<P>
+A server (i.e., object-implementing module) may be distributed among
+multiple program instances, as has already been stated for modules in
+general.  While a server may be distributed, ILU does not
+require that each object implementation of a server be as fully
+distributed as the server as a whole.  Thus, a request may be received
+by a true kernel server (the part of a server specific to a particular
+program instance) that does not actually have direct access to the
+implementation of the receiving object.  In this case, the kernel
+server can request that the client redirect the call to a different
+kernel server for the same server -- hopefully one that has, or is at
+least closer to, the relevant object's implementation.  The
+redirection is done via a mechanism called <I>server relocation</I>.
+This mechanism allows a function to be associated with a true kernel
+server, which is called when a request arrives at that kernel server
+over a connection that uses a <I>relocating protocol</I>.  A
+relocating protocol is an RPC protocol in which a reply can indicate a
+relocation instead of results; examples are the CORBA
+<CODE>IIOP</CODE>, <CODE>HTTP/1</CODE>, and the HTTP-NG
+<CODE>w3ng</CODE> protocol.  The relocation function returns new contact
+info for the kernel server, which is sent back to the caller.  The
+caller then retries the call using the specified contact info
+(see section <A HREF="manual_1.html#SEC12">String Binding Handle</A>).
+<P>
+Among relocating protocols there appear three different scopes for the
+use of the new contact info: (1) for the call that was redirected
+(e.g., <CODE>HTTP/1.1</CODE>'s 307 response code), (2) in place of the
+connection over which the redirection was sent (e.g., in
+<CODE>IIOP</CODE>), and (3) for all uses (e.g., <CODE>HTTP</CODE>'s 301
+response code).  In the first two cases, ILU's client-side
+runtime retries the call automatically, using the new contact info in
+the appropriate scope.  In the third case, ILU's client-side
+runtime raises a system exception, to notify the client of the
+permanant move (so that, e.g., the "link editing" specified for
+<CODE>HTTP/1.1</CODE>'s 301 response can be done).
+<A NAME="IDX26"></A>
+<P>
+Each piece of contact info in an SBH points at a particular port,
+which is specific to a particular kernel server.  Thus, the contact
+info for a given server may point to multiple kernel servers.  It is
+up to the application programmer to ensure that each kernel server of
+a given server knows an appropriate set of contact info to put in SBHs
+for that server's objects.  Contact info for ports associated with a
+given kernel server is (naturally) automatically available to that
+kernel server.  Contact info that points to a port of kernel server
+<VAR>X</VAR> can be added to kernel server <VAR>Y</VAR> (when
+<VAR>X</VAR> is not equal to <VAR>Y</VAR> but both are part of the same
+server) with a certain runtime support call, documented in the chapter
+for each language.
+<A NAME="IDX27"></A>
+<A NAME="IDX28"></A>
+<P>
+Each port of a kernel server is considered either <I>public</I> or
+<I>private</I>.  A public port contributes its contact info to its
+objects' SBHs; a private port's contact info does not appear in SBHs.
+Contact info for both public and private ports can be obtained by
+application programs using certain runtime support calls.  There are
+also certain runtime support calls to obtain public and private
+contact info for a given kernel server.
+<P>
+As an extreme example of how to use these features, it is sometimes
+useful to have a `dummy' true kernel server, that will redirect any
+requests to it to a `real' true kernel server somewhere else.  This
+can be used for load balancing, automatic start-up of services,
+implementation of a redirecting name service, code migration, and
+other various purposes.  The dummy true kernel server would have one
+public port, whose contact info is the only contact info that appears
+in SBHs for objects of the relevant server.  The real true kernel
+server would have one private port, whose contact info is extracted by
+the application and passed to the dummy side.  Conversely, the contact
+info for the public port of the dummy true kernel server is also
+extracted by the application and passed to the real side, where it is
+attached to the real true kernel server so it can appear in SBHs
+generated there.  The dummy true kernel server would use server
+relocation to redirect calls to the real true kernel server.
+<P>
+<A NAME="IDX29"></A>
+<H3><A NAME="SEC16" HREF="manual_toc.html#SEC16">Garbage Collection</A></H3>
+<P>
+A simple form of <I>garbage collection</I>
+is defined for ILU objects.  If an object type is tagged as
+being collectible, a server that implements objects of that type expects
+clients holding surrogate instances to register with it, passing an
+instance of a callback object.  When a client finishes with the
+surrogate, the client unregisters itself.  Thus the server may maintain
+a list of clients that hold surrogate instances.  If no client is
+registered for an object, and the object has been dormant (had no
+methods called on it) for a period of time <VAR>T1</VAR>, the server may
+feel free to garbage collect the instance.  <VAR>T1</VAR> is determined
+by human concerns, not network performance: <VAR>T1</VAR> is set long
+enough to allow useful debugging of a client.
+<P>
+To deal with possible failure of a client process, we introduce another
+time-out parameter.  If an instance with registered clients has been dormant
+for a period of time <VAR>T2</VAR>, the server uses the callback instance
+associated with each client to see if the client still exists.
+If the client cannot be
+contacted for the callback, the server may remove it from the list of
+registered clients for that instance.
+<P>
+If a client calls a method on a surrogate instance of a true instance which
+has been garbage-collected (typically because of partitioning), it will
+receive the <CODE>ilu.ProtocolError</CODE> exception, with detail code
+<CODE>ilu.NoSuchInstanceAtServer</CODE>.
+<P>
+<A NAME="IDX30"></A>
+<H3><A NAME="SEC17" HREF="manual_toc.html#SEC17">Connections</A></H3>
+<P>
+ILU does not (directly) expose to the application programmer any notion of "connections".  That is, the called module has no pointer
+back to the caller, and no notion of how to do anything with the caller aside from returning
+a result message.  Credentials passed in the request message can identify the caller, but
+not necessarily the location the call is made from.  Protocols that need such information should
+pass it explicitly as an argument (an instance of an object type with methods
+defined on it) to the method.
+<P>
+<A NAME="IDX31"></A>
+<H3><A NAME="SEC18" HREF="manual_toc.html#SEC18">Pipelining</A></H3>
+<P>
+ILU's mechanisms avoid introducing blocking into a distributed program.  This is because ILU does not try to track the identity of a thread of execution as it crosses program boundaries.  So if ILU were to make one call wait for the completion of another, this would be a potential cause of deadlock.
+<P>
+It is possible for the programmer to explicitly inform ILU that one call's execution is not necessary for the completion of another.  This is done indirectly, via a concept called a <I>pipeline</I>.  A client can create a pipeline (any number, actually), and associate any collection of its calls with a pipeline (at most one pipeline per call).  Making such associations asserts to ILU that none of the calls is needed for any other of them to complete.  This allows ILU to block some of them until others complete.
+<P>
+Which will be blocked, and why would a client want to do this to itself?  The answer has to do with connections.  You remember, those things the previous section says are not exposed to applications.  It's true that they're not directly exposed.  But we'll admit here that they exist, and consume resources.  Sometimes it's important to minimize those resources.  When using a non-concurrent RPC protocol, ILU avoids introducing blocking by opening as many parallel connections as the client has concurrent calls to the same server.  Some clients would prefer that their concurrent calls block instead of consume multiple connections.  Such clients can use pipelines to enable this behavior.
+<P>
+<A NAME="IDX32"></A>
+<A NAME="IDX33"></A>
+<A NAME="IDX34"></A>
+<A NAME="IDX35"></A>
+<H3><A NAME="SEC19" HREF="manual_toc.html#SEC19">Call Order Preservation</A></H3>
+<P>
+ILU does not normally guarantee that the server application will receive calls in the same order that the client makes them (of course, ILU doesn't promise to violate causality -- it just doesn't do any work to give you anything more).  This is a particularly interesting issue when making a series of asynchronous calls (because there are no replies to carry causality).  You might think that when using a transport, such as TCP, that guarantees ordering, call order preservation will follow as a consequence.  But it's not that simple (i.e., ILU may use multiple connections in parallel and series, and TCP provides no ordering guarantees between connections).
+<P>
+However, it's possible for a client application to explicitly request a guarantee of call order preservation for a given collection of its calls.  This is done indirectly through an object called a <I>serializer</I>.  A serializer represents an instance of the serialization guarantee.  This guarantee is with respect to a particular server and collection of calls.  It guarantees that those calls will be received by the server application in the same order as they were made by the client application -- except that client calls that return after a <I>barrier call</I> may be received before client calls that return before that same barrier call.  A barrier call is one that raises the BARRIER exception, which is an ILU-specific system exception.  Remember that ASYNCHRONOUS calls <EM>do</EM> return, they just do so particularly quickly.
+<P>
+Special considerations apply when these calls are issued concurrently.  Two calls are considered to have been issued concurrently if each call is initiated before the other returns.  In a multi-threaded runtime, they client may issue concurrent calls under the same instance of the serialization guarantee, and the ILU runtime will put them in some serial order.  Note that for two concurrently issued calls, either: (a) the one put first is ASYNCHRONOUS, (b) they both are in the same pipeline, or (c) the one put second is delayed until the one put first returns.  In a single-threaded runtime, the client may issue two calls "concurrently" (taking advantage of a nested main loop), but both will execute successfully only if the client is lucky; otherwise, the second one will raise the system exception BAD_PARAM with minor code ilu_bpm_serialConcurrent.  Furthermore, when single-threaded, issuing concurrent calls under the same instance of the serialization guarantee but different pipelines will also cause some to raise BAD_PARAM/serialConcurrent.
+<P>
+A client can create any number of serializers, and associate each one of its calls with at most one serializer.  This guarantee is only available for servers exported over non-concurrent RPC protocols and reliable transports.  Due to current implementation limitations, the default port of the server must satisfy the protocol and transport restriction.  If that port does not meet the protocol restriction, serialized calls will fail with the system exception INV_OBJREF with a minor code of ilu_iom_conc_serial (where no other error is noticed first)
+<P>
+<A NAME="IDX36"></A>
+<A NAME="IDX37"></A>
+<A NAME="IDX38"></A>
+<H3><A NAME="SEC20" HREF="manual_toc.html#SEC20">Batching</A></H3>
+<P>
+In ILU, a call between address spaces involves sending an <EM>call message</EM> from the caller to the callee.  The call message is usually sent immediately upon initiation of the call.  However, there is a way for these call messages to be delayed and gathered into <EM>batches</EM> under application control.  An application specifies this by use of a meta-object called a <EM>batcher</EM>.  A given call may optionally be associated with a batcher, and a batcher may use either or both of two ways to specify when delivery of its buffered call messages should be initiated.  The first method is by explicit application call to <EM>push</EM> the batcher.  The second is by timeout: a call message's delivery is initiated at most some time constant past the time when composition of the call message completed.  Which of these two ways are applicable is specified when the batcher is created, as is the timeout value (if any).  Note that we speak here only of <EM>initiation</EM> of delivery, not receipt by any particular layer of the receiver.  This feature involves only client-side mechanism, and so may be used with non-ILU servers.
+<P>
+<A NAME="IDX39"></A>
+<A NAME="IDX40"></A>
+<A NAME="IDX41"></A>
+<A NAME="IDX42"></A>
+<A NAME="IDX43"></A>
+<H3><A NAME="SEC21" HREF="manual_toc.html#SEC21">Simple Binding</A></H3>
+<P>
+ILU includes a simple binding/naming facility.  It allows a
+module to <I>publish</I> an object, so that another module can import
+that object knowing only its object ID (as defined in section <A HREF="manual_1.html#SEC1">ILU Concepts</A>).  It is essentially just a way of binding a URN (the object's
+ID) to a URL (the object's string binding handle).  The interface to
+this facility is deliberately quite simple; one reason is to allow
+various implementations.
+<P>
+The interface consists of three operations: <I>Publish</I>,
+<I>Withdraw</I>, and <I>Lookup</I>.  <CODE>Publish</CODE> takes one argument, an
+ILU object.  <CODE>Publish</CODE> returns a string that is needed to
+successfully invoke <CODE>Withdraw</CODE>.  <CODE>Withdraw</CODE> undoes the effects of
+<CODE>Publish</CODE>, and takes two arguments: (1) the object in question, and
+(2) the string returned from <CODE>Publish</CODE>.  In some langauge mappings,
+the string is not explicitly passed, but conveyed in the language
+mapping's representation of ILU objects.  <CODE>Lookup</CODE> takes two
+arguments: an object ID and a type the identified object should have.
+If the object with that ID is currently being published, and has the
+given type (among others), <CODE>Lookup</CODE> returns that object.
+<P>
+The implementation of simple binding shipped with ILU can use
+either an ILU service, or a shared filesystem directory, to
+store information on the currently published objects.  This choice must
+be specified at system configuration time.  If the shared filesystem
+approach is used, this directory must be available by the same name, on
+all machines which wish to interoperate.  The way in which clients
+interact with binding is the same, regardless of which approach is
+selected.  See section <A HREF="manual_12.html#SEC456">Binding Names in ILU</A> for more information on these
+implementations.
+<P>
+<A NAME="IDX44"></A>
+<A NAME="IDX45"></A>
+<H3><A NAME="SEC22" HREF="manual_toc.html#SEC22">Error Signalling</A></H3>
+<P>
+ILU uses the notion of an <I>exception</I> to signal errors
+between modules.  An exception
+is a way of passing control outside the normal flow of control.
+It is typically used for handling of errors.  The routine which detects the
+error signals an exception, which is caught by some error-handling mechanism.
+The exception type supported in ILU is a termination-model
+exception, in
+which the calling stack is unrolled back to the frame which defined the
+exception handler.  Exceptions are signalled and caught using the native
+exception mechanisms for the servers and clients.  A raised exception may
+carry a single parameter value, which is typed.
+<P>
+<A NAME="IDX46"></A>
+<A NAME="IDX47"></A>
+<A NAME="IDX48"></A>
+<A NAME="IDX49"></A>
+<A NAME="IDX50"></A>
+<H2><A NAME="SEC23" HREF="manual_toc.html#SEC23">ILU and OMG CORBA</A></H2>
+<P>
+The type and exception model used by ILU is quite similar
+to that used by the Object Management Group's Common Object Request
+Broker Architecture (CORBA).  We have in fact changed ILU
+in some ways to more closely match CORBA.  Our tools will
+optionally parse the OMG's Interface Definition Language (OMG IDL)
+as well as ILU's ISL.
+<P>
+ILU also attempts to address issues that are already upon us,
+but are not addressed in CORBA 2.0,
+particularly a uniform way of indicating optional values, and
+distributed garbage collection.
+<P>
+ILU provides two different interface definition languages,
+OMG IDL and ILU ISL to enhance portability of
+ILU modules.  The OMG IDL subset understood by
+ILU is a strict subset of OMG IDL; this means that
+any ILU modules developed using OMG IDL interfaces
+should be interoperable with any other CORBA system.  Any
+non-CORBA extensions may only be expressed in ILU
+ISL, so that any modules which use these extensions must use
+ILU ISL to express their interfaces, thereby underlining the
+fact that these modules are not CORBA-compliant.  We feel that
+this dual-interface-language approach will tend to enhance both
+portability and CORBA-compliance of ILU modules.
+<P>
+ILU does not yet provide some of the features required
+by a full CORBA implementation.  Notably it does not
+provide a Dynamic Invocation Interface or Dynamic Server Interface,
+or implementations of
+either Interface Repository or Implementation Repository.  It does
+not provide the Basic Object Adapter interface, either, but does provide
+an object adapter with most of the BOA's capabilities, except for
+those connected with the Interface Repository and/or Implementation
+Repository.
+<P>
+A number of concepts in CORBA that seem to require further
+thought are not yet directly supported in ILU: the use of
+<CODE>#include</CODE> (ILU uses a more limited notion of "import");
+the notion of using an IDL "interface" as both an object
+type and a name space (this seems to be a "tramp idea" from the
+language C++; in ILU the "interface" defines a
+name space, and the object type defines a type); the notion that all BOA
+objects are persistent (in ILU, the question of whether an
+object is persistent is left up to that object's implementation); the
+notion that type definitions can exist outside the scope of any module
+or namespace (in ILU, all definitions occur in some interface).
+Currently, there is no support in ILU for CORBA
+<CODE>context</CODE>s.
+<P>
+ILU offers a little more information about system exceptions
+than is required by CORBA.  Given a system exception,
+ILU can produce an English string describing the significance
+of the system exception's minor code -- if it's
+ILU-specific.  Also, for system exceptions raised in the
+local ILU runtime, the source location (file name and line
+number) of the raise can be obtained; this won't be useful to users or
+developers, but is useful in bug reports.
+<P>
+<A NAME="IDX51"></A>
+<H2><A NAME="SEC24" HREF="manual_toc.html#SEC24">Pickle versus Any</A></H2>
+<P>
+Rather than supporting CORBA's <CODE>any</CODE>, ILU supports something
+called a <CODE>pickle</CODE>.  The major difference is that while an
+<CODE>any</CODE> is an `open' tuple containing a <CODE>Typecode</CODE> and
+a value, a <CODE>pickle</CODE> is an <I>encapsulation</I> of a type indicator
+and a value.  This means that a <CODE>pickle</CODE> contains a marshalled form of
+the value and type indicator, rather than containing a language-specific
+representation of both, as the CORBA <CODE>any</CODE> does.  The value in the
+<CODE>pickle</CODE> is not directly accessible without unmarshalling it.  However,
+the marshalled form of the pickled value is available as a sequence of bytes.
+This sequence can be used to provide external representations of any value
+expressible in ISL, for use in persistent state applications, etc.
+The byte sequence can be put back "into" an empty pickle, and the
+original value then retrieved from the pickle.
+<P>
+Another difference is that when a <CODE>pickle</CODE> is sent over a network
+connection, it is by default sent as a simple sequence of octets, instead of being
+marshalled as a <CODE>Typecode</CODE> and value, as CORBA <CODE>any</CODE> values are.
+The receiving side will not "look inside" the pickle, thus unmarshalling the value, unless the
+application explicitly asks for the value.  This means that pickles are a
+very efficient way of implementing generic data-passing services similar to
+the CORBA event service, since the server need not incur the overhead of
+marshalling and unmarshalling complex typecodes and values.
+<P>
+Despite these differences, CORBA's <CODE>any</CODE> and ILU's <CODE>pickle</CODE>
+provide similar mechanisms for using dynamically-typed data.  Because of this,
+the ILU mapping for <CODE>pickle</CODE> attempts to use the CORBA mapping for
+<CODE>any</CODE> whereever possible.  In addition, when a pickle is sent over
+an IIOP connection to another address space, the pickle is unmarshalled
+on the sender's side, and re-marshalled according to the IIOP rules for CORBA <CODE>any</CODE>.
+When a CORBA <CODE>any</CODE> is received by
+an ILU process via IIOP, the <CODE>any</CODE> is converted into an ILU <CODE>pickle</CODE>
+before being given to the application.  Generally
+speaking, CORBA IIOP typecode marshalling provides enough information
+to transfer the pickle successfully.  In the case of pickled object references,
+however, the IIOP form of the CORBA typecode does not provide enough information
+for the receiving end to re-create the original object type for the pickle.
+A number of heuristics are used to overcome this problem.  Where both the receiving
+end and the true address space of the object reference are ILU-based, enough
+proprietary ILU mechanisms exist for these heuristics to succeed in re-creating
+the type information for the object type, so long as the pickled object reference
+is not a Nil object.  In the case of a Nil object, the type information in the pickle
+may be somewhat degraded -- it may indicate an object type that is a supertype of the
+actual object type in the original pickle.
+<P>
+<P>Go to the <A HREF="manual_2.html">next</A> section.<P>

@@ -1,0 +1,1489 @@
+@c $Id: installation.tim,v 1.204 1999/09/16 17:50:24 janssen Exp $
+@setfilename ilu-installation.info
+@settitle ILU Installation Instructions, release RELEASE_NUMBER
+@ifset ilucopyright
+BeginILUCopyright
+
+Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+Unlimited use, reproduction, modification, and distribution of this
+software and modified versions thereof is permitted.  Permission is
+granted to make derivative works from this software or a modified
+version thereof.  Any copy of this software, a modified version
+thereof, or a derivative work must include both the above copyright
+notice of Xerox Corporation and this paragraph.  Any distribution of
+this software, a modified version thereof, or a derivative work must
+comply with all applicable United States export control laws.  This
+software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+OF THE POSSIBILITY OF SUCH DAMAGES.
+  
+EndILUCopyright
+@end ifset
+@ifclear largerdoc
+@titlepage
+@title ILU Installation Instructions, release RELEASE_NUMBER
+@author Bill Janssen @code{<janssen@@parc.xerox.com>}
+@sp
+(typeset @today{})
+@sp
+Copyright @copyright{} 1994, 1995, 1996, 1997 Xerox Corporation@*
+All Rights Reserved.
+@end titlepage
+@ifinfo
+@node Top, ILU Installation Instructions, (dir), (dir)
+@top ILU Installation Instructions
+@menu
+* ILU Installation Instructions:: chapter contents
+@end menu
+@end ifinfo
+@node ILU Installation Instructions, , , Top
+@chapter ILU Installation Instructions
+@end ifclear
+
+This document describes the installation of version RELEASE_NUMBER of the
+Inter-Language Unification (@system{ILU}) system.
+
+@emph{If you succeed in installing @system{ILU} on a particular platform,
+we'd appreciate it if you could send a note to @code{ilu-core@@parc.xerox.com}
+telling us (1) what operating system you succeeded with, and what version
+of that OS, (2) which versions of what compilers you used, and (3) which
+version of @system{ILU} you used.  We're accumulating
+a list of operating systems and compilers that work with @system{ILU}.  If you
+had to make any changes to make it work on your system, please send them
+along, and we'll incorporate them into the next release.}
+
+@menu
+* Installing on a Windows NT or 95 System::
+* Installing on a UNIX System::
+* Examples::
+* Name Servers::
+* Documentation::
+* Mailing Lists::
+* Changes::
+* Bug Reporting and Comments::
+@end menu
+
+
+@node Installing on a Windows NT or 95 System, Examples, , ILU Installation Instructions
+@section Installing on a Windows NT or 95 System
+For information on Windows systems, see the "Using ILU with Microsoft Windows" section of the manual.
+
+
+@node Installing on a UNIX System, Examples, , ILU Installation Instructions
+@section Installing on a UNIX System
+
+@menu
+* Prerequisites::
+* Unpacking the Distribution::
+* For the Impatient::
+* Real Configuration::
+* Building::
+* Environment Variables::
+* Testing the Build::
+* Notes on Specific Systems::
+@end menu
+
+@node Prerequisites, Unpacking the Distribution, , Installing on a UNIX System
+@subsection Prerequisites
+
+You will need an @language{ANSI C} compiler to build and install
+@system{ILU}, along with an @language{ANSI C}-compliant @file{libc.a}.
+Note that @system{GNU} @program{gcc} doesn't always work as an @language{ANSI C} compiler.
+The simple test we use to qualify a compiler is whether it can compile and link
+the following program without warnings or errors:
+
+@codeexample
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <limits.h>
+int main(int ac, char **av) @{
+ int i = INT_MAX;
+ char *p = (char *) malloc(1048);
+ memmove(p, *av, strlen(*av)+1);
+ printf("%s %d\n", p, i);
+ return 0;
+@}
+@end codeexample
+
+@system{ILU} requires the @program{imake} program from the MIT X Consortium release
+of the @system{X Window System}, version 4 or later.  This is available via FTP
+from the ftp servers @code{ftp.x.org} on the East Coast, or @code{gatekeeper.dec.com}
+on the West Coast.  You can also get it from@*
+@code{ftp://ftp.parc.xerox.com/pub/ilu/imake/imake.tar.gz}.
+
+@system{ILU} normally provides support for a number of languages, currently
+@language{ANSI C}, @language{C++}, @language{Java}, @language{Python}, and
+@language{Common Lisp} (Franz Allegro 4.3), but the
+2.0beta release only contains solid support for @language{ANSI C}, @language{Java}, @language{C++}, and
+@language{Python}.  The @language{C++} support provided conforms to the @system{CORBA} 2.0 specication.
+The old ILU mapping for @language{C++} support is still provided, but no longer maintained more
+than minimally.
+There is good support for @language{Common Lisp} in 2.0beta, but it lacks
+some of the features provided for @language{C}, @language{Java}, and @language{Python}.
+There is rough support for @language{Guile Scheme}, contributed
+by Siemens Corporate Research, Inc.  @system{ILU} support for the @language{Perl} programming
+language is available from Owen Taylor; see @url{http://www.msc.cornell.edu/~otaylor/ilu/} for
+details.
+
+@itemize @bullet
+@item
+If you wish to build the support for @language{ANSI C}, you will need a @language{C}
+compiler, and an @language{ANSI C}-compliant libc.  But you already need that to build @system{ILU}.
+@item
+This release contains the old @language{C++} support in
+@file{@metavar{ILUSRC}/@{stubbers,runtime@}/cpp/}.
+The old version of @system{ILU} @language{C++} support has a number of problems.
+There are known leaks in the generated stubs, and in the runtime itself.
+We do not recommend serious use of the old
+@language{C++} support, but it is included for use in testing other parts of the system.
+If you wish to build the support for @language{C++}, you will need a @language{C++}
+compiler that conforms to at least version 2.0 of the C++ specification.  @system{ILU}'s old @language{C++}
+does not use either @language{C++} templates or exceptions.
+ The @system{GNU} @language{C}/@language{C++} compiler @program{g++} seems
+to work well with @system{ILU}.  It has also been tested with Lucid's Energize @program{lcc} compiler,
+CenterLine's @program{CC} compiler, and Sun's @program{CC} compiler.
+@item
+If you wish to build the support for @language{Common Lisp}, you will need a copy
+of Franz Allegro Common Lisp, version 4.2 or later on Unix, or 3.0 or later on Windows.
+@item
+If you wish to build support for @language{Python}, you will need the @language{Python} 1.3 (or later)
+release, available via FTP from @file{ftp://ftp.cwi.nl/pub/python/}.  When installing @language{Python} on your system,
+be sure to do a "make inclinstall", so that the include files are installed for @system{ILU}'s use.
+It's also advisable to do "make libainstall", if you wish to try the `multiple languages in the same
+address space' example.
+@item
+If you wish to build support for @language{Java}, our current release works against Sun JDK 1.1, Sun JDK 1.2, Microsoft Java SDK 2.0 and Microsoft Java SDK 3.1.     
+See @url{http://java.sun.com/products/JDK/} for instructions on obtaining and installing the Sun JDK.  If you are building for Linux, you should give the command line switch @switch{--with-java-nopoll} to the configure script, to ensure the Java runtime uses the @C{select} system call instead of @C{poll} (which is present but decidecly inferior on Linux).  @system{ILU} also supports various beta releases (some of which might require special handling).  Support for applets or Netscape is not generally available.  Hotspot is not yet supported.
+@item
+If you wish to build support for @language{Guile Scheme}, you will need to have both
+Guile 1.2 (@file{ftp://prep.ai.mit.edu/pub/gnu/guile-1.2.tar.gz}) and SLIB 2b1
+@file{http://www-swiss.ai.mit.edu/~jaffer/SLIB.html}.  Guile must be installed so that
+SLIB support works; try using @program{guile -c '(use-module '(ice-9 slib))'} to see
+if yours is configured properly.
+@item
+If you wish to build support for @language{Perl}, you will need @language{Perl} 5.004
+or later.  See @url{http://www.perl.com/} for details on acquiring and installing @language{Perl}.
+The Perl support is not provided directly in this ILU release; you have to 
+download and unpack the @language{Perl} support tar file
+from @url{http://www.msc.cornell.edu/~otaylor/ilu/}.
+@item
+If you wish to build support for the zlib compression transport filter, you will
+need to get and install a copy of the zlib library, version 1.1.3, and specify its location
+to the configure script with the @switch{--with-zlib=} command-line switch.
+See @url{http://www.cdrom.com/pub/infozip/zlib/} for details on acquiring and installing @system{zlib}.
+@item
+If you wish to build the @system{SSL} mechanism for @system{GSS}, you will need to first get and install copies of the @system{RSAREF-2.0} and @system{libdes 3.0} libraries, and specify their locations to the configure script with two command-line switches.  For @system{RSAREF}, use @switch{--with-rsaref=@metavar{LIB}:@metavar{INSTALLDIR}} to specify the absolute filename of the library file (@metavar{LIB}) and installation directory (@metavar{INSTALLDIR}); the installation directory is the one that includes the "source" directory as a child.  For @system{libdes}, use @switch{--with-libdes=@metavar{LIB}:@metavar{INCLUDEDIR}} to specify the location of the library file (@metavar{LIB}) and include directory (@metavar{INCLUDEDIR}); actually, it appears there is no directory structure in the @system{libdes 3.0} distribution --- the include files are found in the source directory.  Note that @system{SSL} support is not included in the freeware version of @system{ILU}.
+@end itemize
+
+@node Unpacking the Distribution, For the Impatient, Prerequisites, Installing on a UNIX System
+@subsection Unpacking the Distribution
+
+Begin by creating two directories:  one, @metavar{ILUHOME}, to install the @system{ILU} in,
+and the other, @metavar{ILUSRC}, to unpack the sources in, and build the system in.
+It is often convenient if @metavar{ILUSRC} is a sub-directory of @metavar{ILUHOME}, but
+it is not necessary.  At PARC, we use @file{/import/ilu} for @metavar{ILUHOME}, and @file{/import/ilu/src}
+for @metavar{ILUSRC}.
+
+Copy the compressed tar file @file{ilu-RELEASE_NUMBER.tar.Z} or @file{ilu-RELEASE_NUMBER.tar.gz} to
+@metavar{ILUSRC}.  Uncompress it if necessary with
+the @program{uncompress} or @program{gunzip} program:
+
+@transcript
+% @userinput{uncompress ilu-RELEASE_NUMBER.tar.Z}
+@end transcript
+
+or
+
+@transcript
+% @userinput{gunzip ilu-RELEASE_NUMBER.tar.gz}
+@end transcript
+
+Then unpack the tar file:
+
+@transcript
+% @userinput{tar xf ilu-RELEASE_NUMBER.tar}
+@end transcript
+
+We suggest you then look at the ILU home page, @url{ftp://ftp.parc.xerox.com/pub/ilu/ilu.html},
+to see whether a patch file for release RELEASE_NUMBER exists.  If so, fetch that patch file
+and apply it according to the instructions at the top of the file.  It's best to fetch the
+patch file using FTP instead of the Web; the additional line-ending transformations that
+Web browsers (particularly Netscape) apply can render the patches in the file worthless.
+
+@node For the Impatient, Real Configuration, Unpacking the Distribution, Installing on a UNIX System
+@subsection For the Impatient
+
+You can try just unpacking it, and then typing
+
+@transcript
+% @userinput{make}
+@end transcript
+
+at the top of the source tree.  A minimal configuration using defaults will be built,
+sufficient for testing.  This takes you up through step 2 of the "Building" section below.
+
+@node Real Configuration, Building, For the Impatient, Installing on a UNIX System
+@subsection Real Configuration
+
+@system{ILU} uses the GNU @system{autoconf} system to configure the
+release, before building.  The very simplest way to configure your
+system is type type 
+
+@transcript
+% @userinput{./configure}
+@end transcript
+
+@noindent
+at the top of the source tree.
+
+What will happen is that @program{@metavar{ILUSRC}/imake/configure} will go out and look along
+the value of your PATH environment variable for various executable
+programs.  If it finds @program{cc}, it will assume that you want to build
+@language{ANSI C} support for @system{ILU}.  If it finds @program{java}, it will assume
+that you want to build @language{Java} support for @system{ILU}.  If it
+finds @program{cl} or @program{franz}, it will assume that you want to build
+@language{Lisp} support for @system{ILU}.  If it finds @program{python}, it will
+assume that you want to build @language{Python} support for
+@system{ILU}.  If it finds @program{CC} or @program{cxx} or @program{c++}, it will assume that you want to build
+@language{C++} support for @system{ILU}.  It will also assume that the
+first executable with an appropriate name is the one you wish to use for
+compiling programs in that language.  By default, it will assume that you
+wish to include support only for using @protocol{ONC RPC} over @transport{TCP/IP}.
+By default, it will assume that you do not wish to provide support for @language{OMG IDL}.
+
+@program{imake} must be on your path, or in @file{/usr/bin/X11/}, for the build to work properly.
+
+Since our Makefiles are constructed via imake from
+Imakefiles, which involves running the C preprocessor, watch out for use
+of predefined C preprocessor symbols in pathnames!  Common boobytraps
+include names of processors, vendors, and operating systems (e.g.,
+"sparc", "sun", "hpux"), which are used (as isolated tokens according to
+C rules) in some folks' conventions for naming directories.  If you're
+lucky, you can solve these problems with quoting.  A more heavy-duty
+approach is to configure, then #undef the offending macros at the start of
+@file{@metavar{ILUSRC}/imake/ilu.defs.new}, and re-#define them at the end of that file.
+
+@menu
+* Configuration Options::
+* Manual Fixups for Threading::
+@end menu
+
+@node Configuration Options, Manual Fixups for Threading, , Real Configuration
+@subsubsection Configuration Options
+
+The program @program{configure} can be invoked with a number of command line options, to customize
+the build for your site.  It actually supports more options than shown here, but these
+are the only options that will work at this point in the release process.  For those options
+that begin @switch{--enable-@metavar{FEATURE}}, you can specify the switch either with @switch{--enable-@metavar{FEATURE}}, to enable the feature or option, or @switch{--disable-@metavar{FEATURE}}, to disable the feature or option.
+
+@itemize @bullet
+@item
+@var{--with-destdir=PATH} -- this should be the name of the directory you would like
+the files installed into, in the @userinput{make Install} step.  The default
+is @file{/usr/local/ilu}, which may be OK for your system.
+@item
+@var{--with-iluhome=PATH} -- this should be the name of the directory
+users will expect @system{ILU} to be installed under, the value of @metavar{ILUHOME}.  The two options
+@var{--with-destdir} and @var{--with-iluhome} are provided separately because a directory may have
+two different names that are used to access it in different ways.  At PARC, for instance,
+installation directories are often write-protected if named with their ordinary names,
+and a special name has to be given to enable writing in that directory.  If your site
+does not have this type of restriction, the switches for @var{--with-destdir} and @var{--with-iluhome}
+should probably have the same values.  Note that the default is @file{/usr/local/ilu}, which
+may be OK for your system.
+@item
+@var{--prefix=PATH} -- if specified, this becomes the default for @metavar{ILUHOME} and @metavar{DESTDIR},
+if they are not specified explicitly.
+@item
+@var{--with-binding-dir=PATH} -- a world-writable directory in a shared file system,
+for supporting the "simple binding" service described in Chapter 1.  This option and the use
+of a binding service (see next item) are mutually exclusive.
+@item
+@var{--with-binding-server=REALM:HOST:PORT} -- an alternative to using the shared file system for simple
+binding, this says that a binding registration server for the binding realm called @metavar{REALM} will be available
+on port @metavar{PORT} of host @metavar{HOST}.  The binding server will be built and installed as part of
+the build process, but still has to be started manually.  This option and the use of a binding directory are mutually exclusive.
+@item
+@var{--enable-version-2-type-uids} -- compiles in support for documented type UID hash algorithm instead of the old default type UID hash algorithm.  Versions of ILU configured with one algorithm are not generally compatible with versions configured with the other algorithm.
+@item
+@var{--enable-debugging} -- compiles in debugging printfs and a small amount of additional
+debugging code.  Recommend enable.  Enabled by default.
+@item
+@var{--enable-testing-scripts} -- allows support for some testing scripts.  Enabled by default.
+@item
+@var{--enable-os-threads[=TYPE]} -- compiles in support for using either "solaris2", "posix", or "dce" (also known as POSIX.4) threads with the @language{C} support.  If the TYPE isn't specified, it will attempt to guess the right default.  The default is to enable thread support for platforms where the configure script knows thread support exists (currently only Solaris 2 (Solaris 2 threads), OSF 3 (DCE threads), OSF 4 (POSIX threads), AIX 4.x (POSIX threads), IRIX 6.x (POSIX threads), and linux-gnu (POSIX threads if @file{/usr/lib/libpthread.a} is present)).  See the following section on ``Manual Fixups for Threading'', as well.
+@item
+@var{--enable-new-keywords-plain} -- normally, keywords added to ISL subsequent to 2.0alpha11 begin with "ILU", to avoid conflicts with user interfaces.  However, by throwing this switch, this prefix will be omitted, and new keywords such as "string" and "state" will be recogized directly, rather than as "ilustring" and "ilustate".
+@item
+@var{--enable-type-support} -- includes support for runtime type registration.  If either the @protocol{IIOP} or @protocol{w3ng} protocols is included, type support must be enabled.  (Enabled by default).
+@item
+@var{--enable-pickle-support} -- includes support for a dynamically typed data type, called @kwd{pickle} in @system{ILU} and @omgidl{@kwd{any}} in @system{CORBA}.  (Enabled by default)
+@item
+@var{--enable-pickle-format-2} -- includes support for type 2 pickles.  (The @type{pickle} type is supported with several formats, currently with version numbers 2 and 3.)  (Enabled by default).
+@item
+@var{--enable-pickle-format-3} -- includes support for type 3 pickles.  (The @type{pickle} type is supported with several formats, currently with version numbers 2 and 3.)  (Enabled by default if the @protocol{w3ng} protocol is included; disabled by default otherwise.)
+@item
+@var{--enable-omg-idl-support} -- includes support for parsing interface description files written in @language{OMG IDL}.  (Enabled by default.)
+@item
+@var{--enable-idl2isl-support} -- builds old @system{ILU} @language{OMG IDL} support program called @program{idl2isl}.  You will need to have a @language{C++} compiler (CFRONT 3.0 or later) on your path.  @program{g++} seems to work fine.  You will need to have fetched the source tar file from @file{ftp://ftp.parc.xerox.com/pub/ilu/misc/idl2isl.tar.gz}, and to have unpacked it in the @metavar{ILUSRC} directory, before configuring.  The version of OMG IDL recognized by this parser is no longer current valid OMG IDL.  (Disabled by default.)
+@item
+@var{--enable-xml-parser-library} -- includes a validating @language{XML} parser library.  (Disabled by default.)
+@item
+@var{--enable-security} -- causes the @system{GSS}-based transport filter to be built, and also the @system{GSS} implementation.  Default is disabled.
+@item
+@var{--enable-ssl-security} -- causes the @system{SSL} mechanism for @system{GSS} to be built.  Not for public use (the public distribution of @system{ILU} does not contain the @system{SSL} mechanism in either source or binary form because of our inability to enforce export controls).  Requires @switch{--with-rsaref=...} and @switch{--with-libdes=...}.  Default is disabled.
+@item
+@var{--with-rsaref=@metavar{LIB}:@metavar{INSTALLDIR}} -- specifies the location of the @system{RSAREF-2.0} library file and installation directory.  The installation directory is the parent of the @file{source} directory.  This is only needed if you are building the @system{SSL} mechanism for the @system{GSS} shell (the @system{SSL} mechanism is not distributed publicly due to our inability to implement export controls).
+@item
+@var{--with-libdes=@metavar{LIB}:@metavar{INCLUDEDIR}} -- specifies the location of the @system{libdes 3.0} library file and include directory.  This is only needed if you are building the @system{SSL} mechanism for the @system{GSS} shell (the @system{SSL} mechanism is not distributed publicly due to our inability to implement export controls).
+@item
+@var{--enable-sunrpc-protocol} -- compiles in support for using @protocol{ONC RPC} across address spaces.  (Enabled by default.)  This is probably our most flexible and most widely tested protocol.
+@item
+@var{--enable-courier-protocol} -- compiles in support for using @protocol{XNS Courier RPC} across address spaces.  (Disabled by default)  This protocol is more efficient than the @protocol{ONC RPC} protocol in terms of bytes-on-the-wire, but may have slightly higher marshalling and unmarshalling overhead.
+@item
+@var{--enable-corba-iiop} -- includes support for using the @system{CORBA} @protocol{Internet Inter-Orb Protocol} across address spaces.  (Enabled by default)  @protocol{IIOP} is the standard interoperability protocol for @system{CORBA}; people using @system{ILU} mainly for @system{CORBA} purposes should probably also specify @protocol{IIOP} as their default protocol (see @switch{--with-default-protocol}).
+@item
+@var{--enable-http-protocol} -- compiles in support for using the @system{World Wide Web} @protocol{HTTP 1.x} between address spaces.  (Disabled by default)  This also provides support for implementing Web servers and clients with @system{ILU}.
+@item
+@var{--enable-w3ng-protocol} -- compiles in support for using a prototype of the @system{HTTP-NG} wire protocol between address spaces.  (Disabled by default)  This is a relatively new protocol which is probably the most efficient of all our supported protocols.
+@item
+@var{--with-default-protocol=@metavar{PROTOCOL}} -- specifies which `wire protocol' to use as the default one for inter-process communication.  The default default protocol is "sunrpc".  If you're interested in doing CORBA work with ILU, you may want to specify "iiop" as the default protocol, since IIOP is the standard CORBA interoperability protocol.
+@item
+@var{--enable-tcp-transport} -- includes support for using @transport{TCP/IP} to transport messages.  (Enabled by default.)
+@item
+@var{--enable-sunrpcrm-transport} -- compiles in support for the @system{ONC RPC} record-marking transport filter.  This transport filter can be used with the @protocol{w3ng} or @protocol{sunrpc} protocols to provide record-marking on top of a byte-stream layer.  (Enabled by default.)
+@item
+@var{--enable-w3mux-transport} -- compiles in support for using a prototype of the @system{HTTP-NG} multiplexing transport filter.  (Disabled by default.)  The current implementation of this transport requires the use of threads.
+@item
+@var{--enable-zlib-transport} -- compiles in support for using @transport{zlib} message compression on messages.  You also need to specify @switch{--with-zlib=FOO} for this transport.  (Disabled by default.)
+@item
+@var{--with-zlib=@metavar{LIB}:@metavar{INCLUDE_DIR}} -- specifies the location of the zlib library and include directory.  This is only needed if you are including support for the zlib compression transport.  (No default.)
+@item
+@var{--enable-c-support} -- includes @system{ILU} support for the @language{ANSI C} programming language.  (Enabled by default.)
+@item
+@var{--enable-c-shared-library} -- causes shared-library version of the @language{C} runtime to be built.  (Disabled by default.)
+@item
+@var{--enable-c-timing-statistics} -- if enabled, adds code to the @language{C} runtime to collect statistics on call times.  (Disabled by default.)
+@item
+@var{--enable-corba-cplusplus-support[=@metavar{PROG}]} -- enables CORBA-style @language{C++} support.  This support is not compatible with the original @system{ILU} style of mapping for @language{C++}.  The two options are mutually exclusive; if neither is specified, but a C++ compiler is available, the CORBA-style C++ support will be selected.  If @metavar{PROG} is specified, treats @metavar{PROG} as the command to use for @language{C++} compilation; @metavar{PROG} must be the full path name.  Default is to enable @language{C++} support iff the environment variable @metavar{CXX} is defined,
+in which case @metavar{CXX} should be the full path name of the compilation command, or if any of the programs @program{CC}, @program{CXX}, @program{cxx}, @program{c++}, or @program{g++} are available on your @metavar{PATH} environment variable.
+@item
+@var{--with-cplusplus-mapping=@metavar{OPTION}} -- only valid if CORBA C++ support is specified.  Controls which of the three major @system{CORBA} @language{C++} mapping genres is produced, depending on whether your @language{C++} compiler has support for namespaces, nested classes, or neither.  @metavar{OPTION} must be one of @kwd{Namespaces}, @kwd{NestedClasses}, or @kwd{Underscores}.  If not specified, the configuration process attempts to choose something reasonable (and usually succeeds).
+@item
+@var{--with-cplusplus-libs=@metavar{LIBS}} -- defines the Makefile symbol @var{CPLUSPLUS_LIBRARIES} to be the value of @metavar{LIBS}, with all colon characters in @metavar{LIBS} replaced with space characters.  This is used to record the libraries your C++ code must be linked with to function properly.  This information can then be used to build libraries of C++ code that can be used with other programming languages.  If not specified, this symbol is defined as `not specified'.  If your C++ really doesn't need any extra libraries, you should still specify @var{--with-cplusplus-libs} explicitly, but give the special value of @code{none} for @metavar{LIBS}.  If you are planning to use ILU true modules implemented in @language{C++} interoperate with other non-@language{C++} modules in a single address space, you will have to figure out the correct setting for this switch.
+@item
+@var{--enable-old-cplusplus-support[=@metavar{PROG}]} -- enables old original ILU-style @language{C++} support.  This support is not compatible with the @system{CORBA} 2.0 style of mapping for @language{C++}.  If @metavar{PROG} is specified, treats @metavar{PROG} as the command to use for @language{C++} compilation; @metavar{PROG} must be the full path name.  Default is to enable ILU-style @language{C++} support iff (1) the CORBA-style C++ support has been explicitly disabled, and (2) the environment variable @metavar{CXX} is defined, in which case @metavar{CXX} should be the full path name of the compilation command, or if any of the programs @program{CC}, @program{CXX}, @program{cxx}, @program{c++}, or @program{g++} are available on your @metavar{PATH} environment variable.  Note that this option is incompatible with the option @var{--enable-corba-cplusplus-support}; only one of the two may be selected.
+@item
+@var{--enable-java-support} -- enables @language{Java} support.  (Default is to enable it if a program called @program{java} is on your @var{PATH} environment variable, and if the configuration script decides that the @language{Java} installation is well-formed; disabled otherwise.)
+@item
+@var{--with-java-nopoll} -- specifies that the Java runtime must use the @C{select} system call rather than @C{poll}.  This is needed only on Linux, where we haven't yet figured out how to make @system{autoconf} make the right decision automatically.
+@item
+@var{--with-java-threads=KINDS} -- specifies which version(s) of Java's runtime multi-threading support to configure ILU for.  Possible choices for KINDS are green, native, or both.  Use this only if the default configuration logic gets it wrong.  Don't use this if ILU is being configured to use JNI for native methods.
+@item
+@var{--enable-java-jni} -- specifies that the Java runtime must use JNI for the Java native method implementation.  Use this only on Java releases jdk1.2 and later as ILU requires JNI features not available on previous releases.  Default is: use JNI only if the older native method implementation is not available and the Java release is jdk1.2 or later. 
+@item
+@var{--enable-java-with-omg} -- specifies that the Java runtime should includes ILU's own version of org.omg.CORBA classes.  Default behaviour is to use ILU's classes with jdk 1.1 and the standard classes with jdk1.2.
+@item
+@var{--enable-java-cosnaming-prefix} -- force use of standard (but conflicting) CosNaming prefix for @language{Java} classes.  (Disabled by default.)
+@item
+@var{--enable-python-support@{=@metavar{PYTHON-HOME}@}} -- enables @language{Python} support.  If @metavar{PYTHON-HOME} is specified, treats @metavar{PYTHON-HOME} as the directory in which the @language{Python} system is installed.  Default is: enabled if the program @program{python} is on your @var{PATH} environment variable; disabled otherwise.
+@item
+@var{--enable-old-python-gc-behavior} -- Prevents @language{Python} true objects from being garbage collected by the Python runtime, even if there are no Python references to the object.  This was the default in versions of @system{ILU} previous to 2.0alpha10.  The default is to disable this.
+@item
+@var{--enable-corba-python-mapping} -- Causes the Python stubber to produce, and the runtime to expect, the proposed CORBA mapping of OMG IDL (and ILU ISL) to Python, instead of the `classic' ILU mapping.  This CORBA mapping is a work in progress; we expect significant changes to it in the future.  Use at your own risk.  The default is to disable this.
+@item
+@var{--enable-python-dictionaries} -- In both the `classic' and CORBA mappings of @language{ILU ISL} to @language{Python}, causes all sequence types matching a certain profile to be mapped to and from @language{Python} dictionaries instead of @language{Python} lists.  The sequence type must have a name that ends with either "dict" or "Dict"; the base type of the sequence type must be a record type; the record type must have exactly two fields; the two fields must be named @code{name} and @code{value}; and the type of the @code{name} field must be either an integer, byte, string, or cardinal type.  The default is to disable this.
+@item
+@var{--enable-perl-support@{=@metavar{PERL-HOME}@}} -- enables @language{Perl} support.  If @metavar{PERL-HOME} is specified, treats @metavar{PERL-HOME} as the directory in which the @language{Perl} system is installed.  Default is to enable this iff the PERL environment variable is defined (and in that case it should be defined to be the absolute filename of the Perl interpreter).
+@item
+@var{--enable-guile-support} -- enables @language{Guile Scheme} support.  Default is:  enabled if the program @program{guile} is on your @var{PATH} environment variable, disabled otherwise.
+@item
+@var{--enable-lisp-support[=@metavar{PROG}]} -- enables @language{Franz Allegro Common Lisp} support.  Default is:  enabled if any of the programs @program{franz}, @program{cl}, or @program{lisp} (in that order) are on your @var{PATH} environment variable, disabled otherwise.  You can also explicitly specify the full pathname of the Lisp interpreter with @metavar{PROG}.
+@item
+@var{--enable-old-lisp-method-names} -- at one point, the mapping of method names to @language{Common Lisp} was @code{interface:methodname}.  This was ambiguous; it was changed to @code{interface:typename.methodname}.  If this switch is specified, both old and new names will be available.  (Disabled by default.)
+@item
+@var{--enable-xview-support} -- builds the libraries to interface the @system{XView} GUI library to the @system{ILU} main loop.  (Disabled by default)
+@item
+@var{--enable-xt-support} -- builds the libraries to interface @system{Xt}-based GUI libraries to the @system{ILU} main loop.  (Disabled by default)
+@item
+@var{--enable-tk-support} -- builds the libraries to interface @system{Tk}-based GUI libraries to the @system{ILU} main loop.  If this is enabled, the switches @switch{--with-tk-includes-dir} and @switch{--with-tcl-includes-dir} should also be specified.  (Disabled by default)
+@item
+@var{--with-tk-includes-dir=DIR} -- specifies where to find the @system{Tk} header files.
+@item
+@var{--with-tcl-includes-dir=DIR} -- specifies where to find the @language{Tcl} header files.
+@item
+@var{--with-testing-python=EXECUTABLE} -- can be used to specify a @language{Python} executable of version 1.5 or later, for use with the @language{Python} testing scripts.  This is useful if you are not configuring in support for @language{Python}, or if you are configuring in support for a pre-1.5 @language{Python}.  If not specified, reasonable attempts to find a good @language{Python} are taken.
+@end itemize
+
+The particular @language{ANSI C} compiler to use may be specified by setting the environment variable @var{CC} to the full path name of the C compilation command before running @program{configure}.  Similarly, the particular C++ compiler to use may be specified by setting the environment variable @var{CXX} to the full path name of the C++ compilation command to use.
+
+Once you've run the configure script, the output is stored in several files.  The file which contains the symbols which control all of the Makefiles in the system is in @metavar{ILUSRC}/imake/ilu.defs.new.  If you wish to fiddle with compiler options or things of that sort, that's the file to hack, before doing the make.
+
+@node Manual Fixups for Threading, , Configuration Options, Real Configuration
+@subsubsection Manual Fixups for Threading
+
+Sadly, our @system{autoconf} stuff is not yet fully up to the task of configuring for use of threads; you sometimes have to do a manual step or two, before and/or after running @program{configure}.  This is better than it used to be; manual fixups should no longer be required for @system{Solaris 2}, @system{OSF 3--4}, @system{IRIX 6.2--6.7}, @system{Linux 2.0}, or @system{AIX 4.1.4--4.4}.
+
+On some operating systems, linking @system{POSIX} threads programs requires a special flag, @var{-lpthread}, to appear at the end of the linkage command line.  On others, the special flag is @var{-lthreads} or @var{-lpthreads}.  If you operating system is not one of those listed above and you've configured with @var{--enable-os-threads}, you should find out out what the appropriate library for your system is and then edit @file{@metavar{ILUSRC}/imake/ilu.defs.new} after running @program{configure} but before running @program{make}.  You should find a definition of the @program{make} variable @var{SYSAUX_LIBRARIES} and fix it (if necessary) to end with the appropriate @var{-l@metavar{whatever}} for your system's threads.
+
+On some operating systems the @language{C} and @language{C++} compilers require a certain preprocessor symbol be @C{#define}d when compiling sources to be included in threaded programs (and it's OK to @C{#define} these symbols for single-threaded programs too).  If configuring to include OS-supplied thread support on an operating system not listed above but requiring such a symbol definition, make sure you also explicitly supply a @language{C} compilation command, and that it includes @var{-D@metavar{whatever}} to @C{#define} this symbol.
+
+On @system{Linux}, when using Provenzano's pthreads (POSIX threads) library, you use special scripts provided instead of @program{gcc} and @program{g++}.  Those scripts are normally located at @file{/usr/local/pthreads/bin/pgcc} and @file{/usr/local/pthreads/bin/pg++}.  Use the facilities described above to configure these scripts as your @language{C} and @language{C++} (if you're doing @language{C++}) compilers.  It's OK to compile even single-threaded programs this way.  On our Linux systems, these scripts produce the following warning messages when linking executables:
+
+@transcript
+bfd assertion fail /opt/release/pub/bin/binutils/bfd/elf32-i386.c:624
+bfd assertion fail /opt/release/pub/bin/binutils/bfd/elfcode.h:4716
+@end transcript
+
+Despite the dire-sounding warnings, the linker seems to produce working executables.  Provenzano knows about this, but hasn't tracked it down yet.  Sadly, the warning messages trick our @system{autoconf} script into thinking this compilation failed, and thus that the requested compilers aren't @language{ANSI-C} compliant.  To cope with this, we configure to compile with scripts that call the Provenzano scripts and filter out these messages; here's the one for @language{C}:
+
+@transcript
+#!/bin/sh -f
+/usr/local/pthreads/bin/pgcc $* 2>/tmp/$$-cctmp
+ccstatus=$?
+fgrep -v "bfd assertion fail /opt/release/pub/bin/binutils/bfd/elf32-i386.c:624" </tmp/$$-cctmp | fgrep -v "bfd assertion fail /opt/release/pub/bin/binutils/bfd/elfcode.h:4716" >&2
+rm -f /tmp/$$-cctmp
+exit $ccstatus
+@end transcript
+
+
+@node Building, Environment Variables, Real Configuration, Installing on a UNIX System
+@subsection Building
+
+Now that you have configured the release, do the following to build the system.  Note
+that the capitalization of the arguments to @program{make} is important.
+
+@enumerate
+@item
+Set your working directory to @metavar{ILUSRC}:
+@transcript
+% @userinput{cd @metavar{ILUSRC}}
+@end transcript
+
+@item
+Build the system with the command:
+@transcript
+% @userinput{make}
+@end transcript
+
+@item
+You can then try a simple test with:
+@transcript
+% @userinput{cd @metavar{ILUSRC}/examples/test1}
+% @userinput{make test}
+../../stubbers/c/c-stubber  Test1.isl
+header file for interface Test1 to ./Test1.h...
+common code for interface Test1 to ./Test1-common.c...
+code for surrogate stubs of interface Test1 to ./Test1-surrogate.c...
+code for true stubs of interface Test1 to ./Test1-true.c...
+../../stubbers/c/c-stubber  Test2.isl
+header file for interface Test2 to ./Test2.h...
+common code for interface Test2 to ./Test2-common.c...
+code for surrogate stubs of interface Test2 to ./Test2-surrogate.c...
+code for true stubs of interface Test2 to ./Test2-true.c...
+../../stubbers/c/c-stubber  Test3.isl
+header file for interface Test3 to ./Test3.h...
+common code for interface Test3 to ./Test3-common.c...
+code for surrogate stubs of interface Test3 to ./Test3-surrogate.c...
+code for true stubs of interface Test3 to ./Test3-true.c...
+rm -f clnt.o
+cc -c  -g -I. -I../../runtime/c -I../../runtime/kernel clnt.c
+rm -f Test1-surrogate.o
+cc -c  -g -I. -I../../runtime/c -I../../runtime/kernel Test1-surrogate.c
+rm -f Test1-common.o
+cc -c  -g -I. -I../../runtime/c -I../../runtime/kernel Test1-common.c
+rm -f Test2-surrogate.o
+cc -c  -g -I. -I../../runtime/c -I../../runtime/kernel Test2-surrogate.c
+rm -f Test2-common.o
+cc -c  -g -I. -I../../runtime/c -I../../runtime/kernel Test2-common.c
+rm -f Test3-surrogate.o
+cc -c  -g -I. -I../../runtime/c -I../../runtime/kernel Test3-surrogate.c
+rm -f Test3-common.o
+cc -c  -g -I. -I../../runtime/c -I../../runtime/kernel Test3-common.c
+rm -f client
+cc  -g -I. -o client  clnt.o Test1-surrogate.o Test1-common.o \
+  Test2-surrogate.o Test2-common.o Test3-surrogate.o Test3-common.o \
+  ../../runtime/c/libilu-c.a ../../runtime/kernel/libilu.a 
+rm -f srvr.o
+cc -c  -g -I. -I../../runtime/c -I../../runtime/kernel srvr.c
+rm -f Test1-true.o
+cc -c  -g -I. -I../../runtime/c -I../../runtime/kernel Test1-true.c
+rm -f Test3-true.o
+cc -c  -g -I. -I../../runtime/c -I../../runtime/kernel Test3-true.c
+rm -f server
+cc  -g -I. -o server  srvr.o Test1-common.o Test1-true.o \
+  Test2-common.o Test3-common.o Test3-true.o \
+  ../../runtime/c/libilu-c.a ../../runtime/kernel/libilu.a
+./testserver
+Starting server...
+Running client against server...
+Client run successful.
+Killing server...
+./testserver: 27469 Terminated
+Exiting with status 0.
+% 
+@end transcript
+
+@item
+If the build goes well, install the system with the command
+@transcript
+% @userinput{cd @metavar{ILUSRC}}
+% @userinput{make Install}
+@end transcript
+
+@item
+After the installation is complete, you may remove extra files in @metavar{ILUSRC}
+with the command
+@transcript
+% @userinput{make Clean}
+@end transcript
+You may wish to use @command{make Clean} at any time, to get your
+system into a consistent state.
+
+@item
+If you change the configuration files, you should clean the system with the command
+`@command{make Clean}', and redo the installation starting at step 2.  If you run
+into problems that can be fixed without changing the configuration files, you can re-build
+the system by starting at step 3.
+@end enumerate
+
+@node Environment Variables, Testing the Build, Building, Installing on a UNIX System
+@subsection Environment Variables
+
+@system{ILU} tools use a number of @system{UNIX} environment variables under the covers.  Note three distinct phases when these variables might have significance: (1) when building and installing @system{ILU}, (2) when developing an @system{ILU} application, and (3) when running an @system{ILU} applicaiton.
+
+@itemize @bullet
+@item
+@var{ILUHOME}: there are @language{C} preprocessor and @language{make} variables of this name, holding the value of @metavar{ILUHOME}.  The environment variable of this name is rarely, if ever, significant.  The only possibilities are in: phase 2 use of the @language{LISP} stubber, phase 3 use of @language{LISP}, and phase 3 use of @language{Scheme}.
+@item
+The environment variables @var{ILUPATH} and @var{ILUPATH_NO_ILUHOME} are significant to the stubbers and other interface-processing tools, normally used in phase (2).  They collectively define a set of directories to be appended to the interface search path given on the relevant tool's command line.  If @var{ILUPATH} is not defined, @file{.} and @file{@metavar{ILUHOME}/interfaces} are appended.  If @var{ILUPATH} is defined, it should contain a colon-separated list of directories, and they are appended, followed --- unless @var{ILUPATH_NO_ILUHOME} is defined (with any value) --- by @file{@metavar{ILUHOME}/interfaces}.
+@item
+You may want your @var{PATH}
+environment variable to include the directory @file{@metavar{ILUHOME}/bin} during phase (2).  This makes it possible to invoke @system{ILU} development tools (e.g., stubbers, @language{TIM} tools) by short names.  Most of the @system{ILU} development tools can be invoked by their full pathnames, without @file{@metavar{ILUHOME}/bin} being on your @var{PATH}; some of the @language{TIM} tools require @file{@metavar{ILUHOME}/bin} to be on your @var{PATH}.
+@item
+After phase (1), your @var{MANPATH} variable can have the directory @file{@metavar{ILUHOME}/man} on it.
+@item
+If you are using @language{Common Lisp}, the portable DEFSYSTEM included with
+@system{ILU} uses the value of @var{SYSDCLPATH} to find system descriptions.  It should
+be a colon-separated list of directories.  A good initial value might be
+@code{.:$@{ILUHOME@}/lisp}.  See Appendix A of the reference manual for more details on the portable
+DEFSYSTEM.
+@item
+If you are using @language{Python}, in phase (3) the environment variable @var{PYTHONPATH}
+should include the directory in which the @module{ilu} library for
+@language{Python} has been installed;
+that's normally @file{@metavar{ILUHOME}/lib}.  Also, in most environments, the ILU @language{Python}
+module is dynamically linked against a shared-library version of the ILU kernel; this typically
+means that the environment variable @var{LD_LIBRARY_PATH} should have @file{@metavar{ILUHOME}/lib} on it.
+@item
+If you are using the language @language{Java}, make sure the @program{java}
+interpreter is on your @var{PATH}, and that @file{@metavar{ILUHOME}/bin} is on
+your @var{PATH}.  The value of the environment variable @var{CLASSPATH} should
+have @file{@metavar{ILUHOME}/lib/ilu.jar} on it, or if on Windows,
+@file{@metavar{ILUHOME}/lib/classes} on it.  Add the @file{@metavar{ILUHOME}/lib/ilujavaobv.jar} to the class path, if the program uses the Java object by value feature.  The value of the environment
+variable @var{LD_LIBRARY_PATH} should have @file{@metavar{ILUHOME}/lib} on it.
+@item
+If you are using @language{Guile Scheme}, the value of the environment variable @var{LD_LIBRARY_PATH}
+should include the directory in which the @module{ilu} library for @language{Guile} has been installed;
+that's normally @file{@metavar{ILUHOME}/lib}.  Additionally, the environment variable @var{SCHEME_LOAD_PATH}
+should contain @file{@metavar{ILUHOME}/guile}, so that the @system{ILU} Guile files can be found.
+@item
+During phase (2), the variable @var{ISLDEBUG} can optionally be set to any value to enable tracing
+in the @language{ISL} parser.
+@item
+During phase (2), the variable @var{ILU_TYPE_UID_VERBOSE} can optionally be set to any value to enable tracing the calculations of type UIDs in the stubbers.
+@item
+During phase (3), the variable @var{ILU_DEBUG} can be optionally be set to a colon-separated list of
+trace values to enable tracing in the @system{ILU} runtime, and @var{ILU_DEBUG_FILE} can optionally be set to a file name pattern for where to write the tracing output.  @xref{Debugging ILU Programs}, for more information.
+@item
+If you are using the ``shared filesystem'' approach to @system{ILU} simple binding, the default directory for
+registration files may be overridden at run-time by setting the environment variable @var{ILU_BINDING_DIRECTORY}
+to the path of a different directory.
+@item
+If you are using the ``@system{ILU} service'' approach to @system{ILU} simple binding, the default values for
+the @metavar{REALM-NAME}, @metavar{HOST}, and @metavar{PORT} may be overridden by setting the value of the
+environment variable @var{ILU_BINDING_SERVICE} to a string of the form @code{"@metavar{realm-name}:@metavar{host}:@metavar{port}"}.  Any of the three fields may be empty, so you could override just the port, for example, by using a value of the form @code{"::2034"}, which would mean to use the default values for @system{REALM-NAME} and @system{HOST}, and the value of @code{2034} for the port.
+@item
+Certain language runtimes, including the @language{ANSI C}, @language{Java}, and @language{Python} language runtimes, support the standard @system{CORBA} method @omgidl{CORBA::ORB::list_initial_services()} during phase (3).  If the environment variable @var{ILU_COS_NAMING_IOR} is set to the IOR of a CosNaming service, @system{ILU} will offer the @interface{NameService} service, using that IOR to access the service.
+@item
+During phase (3), ILU can experience three kinds of internal error conditions:  assertion failures, memory allocation failures, and `check' failures (similar to an assertion failure).  What it does when any of these three are experienced can be set, in the @language{C} and @language{Python} runtimes, by setting the environment variables @var{ILU_ASSERTION_FAILURE_ACTION}, @var{ILU_MEMORY_FAILURE_ACTION}, and @var{ILU_CHECK_FAILURE_ACTION} to an integer value, which is then used to set the respective ILU kernel failure mode.  See @file{@metavar{ILUSRC}/runtime/kernel/iluxport.h} for the documentation of which integer codes are appropriate for @fn{ilu_SetAssertionFailureAction()} (note -2 for coredump with message, -1 for loop forever with message, positive value to exit with that value), @fn{ilu_SetMemFailureAction()} (same as for @fn{ilu_SetAssertionFailureAction}), and @fn{ilu_SetCheckFailureAction()} (briefly, -3 to raise the error internally, -2 to coredump with message, -1 to loop forever).
+@item
+During phase (3), in the @language{Python} runtime, the @language{Python} import mechanism is augmented by default with an additional module loader which will load support for @language{ILU ISL} or @language{OMG IDL} interfaces found on the @var{ILUPATH} environment variable directly into @language{Python}.  Automatic enabling of this mechanism can be defeated by setting the environment variable @var{ILU_PYTHON_DISABLE_AUTOIMPORT} to any value before loading the @system{ILU} module into @language{Python}.  In addition, setting the variable @var{ILU_PYTHON_IMPORT_VERBOSE} will cause the auto-import mechanism to print status messages when loading an interface.
+@item
+When using any of the Sun RPC protocols in phase (3) on a UNIX platform, the default UNIX authentication information for the current user-id is automatically inserted into each request message.  This can be prevented by setting the environment variable @var{ILU_NO_SUNRPC_UNIX_AUTH} to any value.  Also with Sun RPC, setting the variable @var{ILU_SUNRPC_PREFERRED_IDENTITY} to the name of an identity type will cause an identity of that type to be passed in the request message, if such an identity can be found in the client-side passport.
+@end itemize
+
+@node Testing the Build, Notes on Specific Systems, Environment Variables, Installing on a UNIX System
+@subsection Testing the Build
+
+There are several ways to test the build.  The most straightforward is to build and install it somewhere.
+Set up your environment variables as described above.
+Then make a scratch directory, which we'll refer to as @metavar{TESTDIR}, and
+do the following:
+
+@transcript
+% @userinput{cd @metavar{TESTDIR}}
+% @userinput{cp @metavar{ILUHOME}/examples/test1/* .}
+% @userinput{ilumkmf}
+% @userinput{make client server}
+@metavar{ILUHOME}/bin/c-stubber  Test1.isl
+header file for interface Test1 to ./Test1.h...
+common code for interface Test1 to ./Test1-common.c...
+code for surrogate stubs of interface Test1 to ./Test1-surrogate.c...
+code for true stubs of interface Test1 to ./Test1-true.c...
+@metavar{ILUHOME}/bin/c-stubber  Test2.isl
+header file for interface Test2 to ./Test2.h...
+common code for interface Test2 to ./Test2-common.c...
+code for surrogate stubs of interface Test2 to ./Test2-surrogate.c...
+code for true stubs of interface Test2 to ./Test2-true.c...
+@metavar{ILUHOME}/bin/c-stubber  Test3.isl
+header file for interface Test3 to ./Test3.h...
+common code for interface Test3 to ./Test3-common.c...
+code for surrogate stubs of interface Test3 to ./Test3-surrogate.c...
+code for true stubs of interface Test3 to ./Test3-true.c...
+rm -f clnt.o
+cc -c -g -I. -I@metavar{ILUHOME}/include  clnt.c
+rm -f Test1-surrogate.o
+cc -c -g -I. -I@metavar{ILUHOME}/include  Test1-surrogate.c
+rm -f Test1-common.o
+cc -c -g -I. -I@metavar{ILUHOME}/include  Test1-common.c
+rm -f Test2-surrogate.o
+cc -c -g -I. -I@metavar{ILUHOME}/include  Test2-surrogate.c
+rm -f Test2-common.o
+cc -c -g -I. -I@metavar{ILUHOME}/include  Test2-common.c
+rm -f Test3-surrogate.o
+cc -c -g -I. -I@metavar{ILUHOME}/include  Test3-surrogate.c
+rm -f Test3-common.o
+cc -c -g -I. -I@metavar{ILUHOME}/include  Test3-common.c
+rm -f client
+cc -g -o client clnt.o Test1-surrogate.o Test1-common.o \
+  Test2-surrogate.o Test2-common.o Test3-surrogate.o \
+  Test3-common.o  @metavar{ILUHOME}/lib/libilu-c.a \
+  @metavar{ILUHOME}/lib/libilu.a
+rm -f srvr.o
+cc -c -g -I. -I@metavar{ILUHOME}/include  srvr.c
+rm -f Test1-true.o
+cc -c -g -I. -I@metavar{ILUHOME}/include  Test1-true.c
+rm -f Test3-true.o
+cc -c -g -I. -I@metavar{ILUHOME}/include  Test3-true.c
+rm -f server
+cc -g -o server srvr.o Test1-common.o Test1-true.o \
+  Test2-common.o Test3-common.o Test3-true.o \
+  @metavar{ILUHOME}/lib/libilu-c.a @metavar{ILUHOME}/lib/libilu.a
+% @userinput{./server &}
+[1] 7079
+% exported ilu:Test1-Server/Test1_Initial_Object;ilu%3AiX2w6hjR-...
+% @userinput{./client}
+Test1.O1.U-CSS-to-U
+u._d=5, u._u.boolean = 1, u._u.O1 = 0x1ffee7c
+Test1.O1.f-CSS-to-R0
+ro->i=9
+Test1.O1.R-ScS-to-F
+f=39.700001
+Test1.O1.a-RO
+Test1.O1.get-O2
+got O2, sbh = ilu:Test1-SunRPC-Server/1;ilu%3AaUtts57Ywbp2fxe6+-...
+Test1.o2.OO-A0-to-CSS
+Test1.O2.R-I-A1-to-I-A0
+Test1.O1.get-O3
+making O3...
+got O3, sbh = ilu:Test1-Server/2;ilu%3An+eRrvAZ8JB9v2qoX7sJGPxdX...
+Test1.O3.RS-R-to-R-IS
+Test1.O3.O1-U-to-U
+u._d=3, u._u.boolean = 0, u._u.O1 = 0xd2b78
+Test1.O1.get-O3
+got O3, sbh = ilu:Test1-Server/3;ilu%3Ab-mNa9uj0TsJAp7YrlEh0AUfX...
+Test3.O.RS-R-to-R-IS
+Test3.O.O1-U-to-U(0xd7520, @{3@})
+u._d=3, u._u.boolean = 0, u._u.O1 = 0xd2b78
+Test3.O.I-to-Test1U(397)
+Test3_O_I_to_Test1U:  u2._d=5, u2._u.boolean = 1, u2._u.O1 = 0x10a88d0
+Test1.O1.get-O3
+making O4...
+got O3, sbh = ilu:Test1-Server/4;ilu%3Ad8sZGQLLpVsJ2PBL5BoIX45qO...
+Test1.O4.R_to_R (12345.6789000000) => 1020304.0506070800
+doubles:  r1 is 12345.6789000000, r2 is 1020304.0506070800
+%
+@end transcript
+
+@noindent
+You can proceed to test the various other clients and servers in different languages against
+each other.  See the file @file{@metavar{ILUHOME}/examples/test1/README} for more information.
+
+@node Notes on Specific Systems, , Testing the Build, Installing on a UNIX System
+@subsection Notes on Specific Systems
+
+@subsubsection AIX 4.2
+
+From Yongjun Zhang, @code{zhang@@quickturn.com}:  ``When using plain xlc on AIX 4.2, when configured with support for OS threads with --enable-os-threads, my images would SEGFAULT.  Switching to the xlc_r compiler fixed that.''
+
+@subsubsection HP/UX
+
+From @code{hassan@@db.stanford.edu}:  ``In order to get ILU 2.0a to compile on HP/UX, I had to set the CC
+environment variable to the following before running configure:  @code{setenv CC "/bin/cc -Aa +z -D_HPUX_SOURCE"}.''
+
+@subsubsection DEC ALPHA with OSF OS
+
+From @code{hassan@@db.stanford.edu}:  ``Use @program{cc} instead of @program{gcc} as the C compiler,
+and make sure to include the `-taso' switch.''
+
+From @code{jg@@w3.org}:  ``I built [ILU 2.0 alpha on OSF 3.2B] without the `-taso' switch.
+Is this still needed?  @program{c-stubber} certainly ran without it this release.''
+
+@subsubsection SunOS 4.1.x
+
+Note that the default Sun C compiler is not @language{ANSI C}, nor is @program{gcc} when
+installed against the normal Sun header files and @file{/lib/libc.a}.  You will have to use either
+@program{gcc} with the GNU C Library @system{glibc}, or the SunPro @language{ANSI C} compiler @program{acc}, or Lucid Energize @program{lcc}, or some other ANSI compiler.
+
+@subsubsection Linux
+
+On RedHat 5.2 (and perhaps other Linux systems), you will need to have the @kwd{stdc++-devel} RPM
+installed to build the CORBA @language{C++} support.  If you want to build the @language{Python}
+support with support for linking @language{Python} modules into other programs, you'll want the
+development RPM for @language{Python} installed.
+
+@node Examples, Name Servers, Installing on a UNIX System, ILU Installation Instructions
+@section Examples
+
+The following example uses of @system{ILU} are provided in the installed
+tree as subdirectories of @file{@metavar{ILUHOME}/examples/} (those of any given language are listed roughly in order of increasing complexity/obscurity):
+
+@itemize @bullet
+
+@item @file{timeit} -- a simple, crude timing test.  In @language{C}, and one of our simplest examples in that language.
+
+@item @file{dialog} -- This simple example pauses for user input everywhere the application gets control.  By deliberately breaking network connectivity at one of these pauses, one can test @system{ILU}'s reaction to network failures.  Available only in @language{C}, and another of the simplest examples in that language.
+
+@item @file{cubit} -- our simplest example in @language{Python}, using a simple @language{OMG IDL} interface designed by Sun and contributed as part of their free IIOP implementation.  If you use the Sun tools to build their clients and servers, they should interoperate with the @system{ILU}-built servers and clients.
+
+@item @file{cpp2foo} -- a very simple example used to demonstrate @system{ILU}'s @system{CORBA 2} @language{C++} stubber and runtime.  Available for @system{UNIX} and @system{Windows}.
+
+@item @file{test1} -- this is a rambling, random example, which serves as a basic informal
+regression test.  It uses one client program and one server program, and tests a variety of basic features and data types.  The clients and servers are built for: @language{C}, @language{C++}, @language{Python}, @language{Java}, @language{Common Lisp}, and @language{Guile} (or whichever of those you have configured @system{ILU} to support); they should interoperate in all combinations.
+If you are interested in working with @language{Common Lisp}, or our old @language{C++} support,
+or @language{Guile Scheme} support, we recommend starting here.
+
+@item @file{javatest1} -- the simplest possible @language{Java} example for our new @language{Java} support.
+
+@item @file{tutorial} -- this contains the code for a small @system{ILU} tutorial,
+implemented in @language{Java}, @language{ANSI C} and @language{Python}.  If you are interested
+in using either of these languages with @system{ILU}, we suggest starting with the code
+in this directory, and one of the files @file{@metavar{ILUHOME}/doc/tutorial-Java.ps}, @file{@metavar{ILUHOME}/doc/tutorial-C.ps} and
+@file{@metavar{ILUHOME}/doc/tutorial-Python.ps}.  Even if you want to use a different
+programming language, it's probably worth your while reading one of these tutorials.
+
+@item @file{multlang} -- an example of using
+multiple languages (@language{ANSI C} and @language{Python}) in the same address space, communicating via @system{ILU}.
+
+@item @file{ml2} -- an example of using an @system{ILU} service implemented in @language{C++} from either @language{Python} or @language{Java}, in the same address space.
+
+@item @file{changeup} -- a test of closing servers and connections, and of recovery from such things; used in our informal regression testing.  Available only in @language{C}.
+
+@item @file{objtable} -- a @language{C} example of the use of an object table, to create true instances on the fly when some client uses them.
+
+@item @file{black-widow-bank} -- a tiny banking example in @language{Python}, based on the @system{VisiBroker} for @language{Java} "bank" example.  Should interoperate with the @system{VisiBroker} for @language{Java} "bank" example.
+
+@item @file{orbix-grid} -- a simple example in @language{Python}, based on the @system{Orbix} "grid" example.  Uses @language{OMG IDL} and IIOP.
+
+@item @file{orbplus-bank3} -- a modest example in @language{Python} and @language{LISP}, based on the @system{HP OrbPlus} "bank3" example.  Uses @language{OMG IDL} and IIOP.
+
+@item @file{httest} -- three programs that test and demonstrate the use of the HTTP protocol within @system{ILU}.  They show @system{ILU} communicating with an existing Web server, an existing Browser communicating with @system{ILU}, and @system{ILU} communicating with @system{ILU} over HTTP.  All in @language{C}.
+
+@item @file{iiop} -- a simple example that exercises the IIOP
+support in @system{ILU}, according to the test pattern originally developed
+by David Brownell for the Sun IIOP example code.  All in @language{C}.
+
+@item @file{pickle} -- a simple example that exercises the pickle support in the IIOP protocol, mainly via @language{Python}.  You must have @language{Python} support to use this test, though there is also a @language{C} server, which can be used with Purify to test memory usage of pickle code, and a @language{Java} server which is good for nothing except testing @language{Java}.
+
+@item @file{test2} -- a collection of tests of non-basic features, used in our informal regression testing.  The collection consists of: a test of concurrent protocols, a test of
+@kwd{ASYNCHRONOUS} methods, a test of pipelining,
+and a test of call order preservation (AKA serialization),
+and a test of both pipelining and call order preservation.
+All are available only in @language{C}.
+
+@item @file{javaserial} -- a simple example that demonstrates
+support for "full custom" mapping in @system{ILU}.  All in @language{Java}.
+
+@item @file{blob} -- a contributed @language{Python} example that uses @system{Tk}.
+
+@end itemize
+
+@noindent
+Read the @file{README} file in each directory first.
+
+@node Name Servers, Documentation, Examples, ILU Installation Instructions
+@section Name Servers
+
+No standard ``name service'' or binding service that works with all ILU objects
+is provided (though we do provide an implementation of the CORBA name service
+CosNaming).  We feel that this is an area
+to be addressed independently, and we may include a name service in future releases of @system{ILU}.
+An experimental simple name service bootstrap interface is available as the @dfn{simple binding system}.
+See the @language{ANSI C} @C{ILU_C_PublishObject}, @C{ILU_C_WithdrawObject}, and @C{ILU_C_LookupObject},
+and corresponding routines in the other languages, for more details.  This interface is intended to
+be only sufficient to find the real name service.
+
+Two implementations of this are available, one using an @system{ILU} service to store the information,
+the other using a shared filesystem.  They can be selected at configuration time, by specifying either
+"--with-binding-dir=DIRECTORYNAME", or "--with-binding-service=REALM:HOST:PORT", where REALM may
+be a user-specified string identifier, that is the name of some conceptual space which the
+simple binding server serves.  These values are compiled into the @system{ILU} kernel library,
+but may be overridden with environment variables at runtime.
+
+An implementation of the CORBA name service, @program{ILUCosNaming}, is included.  It will by default start
+up with the object key of "NameService" for its root context, and listening on port 9999, as
+specified in the OMG INS specification.  You can only register objects on it which inherit
+from the ILU type @type{ilu.CORBA-Object}.  See the man page for @program{ILUCosNaming} for more information.
+
+@node Documentation, Mailing Lists, Name Servers, ILU Installation Instructions
+@section Documentation
+
+@system{ILU} documentation is provided in a pre-formatted form, @language{PostScript}.  The source form
+of the documentation is called @language{TIM}, and is documented in the @system{ILU} reference manual.
+If for some reason you do need to rebuild the documentation, you should have the systems @TeX{}, @language{Perl}, @system{ghostscript}, @program{dvips},
+and @system{pbmplus}; if you can't find these yourself,
+please send mail to @code{ilu-core@@parc.xerox.com} for info on how to find them.
+
+@node Mailing Lists, Changes, Documentation, ILU Installation Instructions
+@section Mailing Lists
+
+To be added to, or deleted from, any ILU mailing list, please send mail to @code{ilu-request@@parc.xerox.com}.  @strong{Do not} send mail to the list itself.
+
+The general ILU discussion mailing list is @code{ilu@@parc.xerox.com}.  People post questions, discuss changes, and help each other out on that list.  Another list, used only for announcements of ILU things, and consequently much lower-volume, is @code{ilu-interest@@parc.xerox.com}.  The @code{ilu} list receives everything that the @code{ilu-interest} list receives; there is no need to be on both lists.  Again, send mail to @code{ilu-request@@parc.xerox.com} to be added to or removed from either of these lists.
+
+Archives of these lists can be found at @url{http://www.findmail.com/listsaver/ilu/?archive/}.
+
+@node Changes, Bug Reporting and Comments, Mailing Lists, ILU Installation Instructions
+@section Changes
+
+@subsection Changes from 2.0alpha14 to 2.0beta1
+@cindex changes from 2.0alpha14 to 2.0beta1
+@itemize @bullet
+@item @b{New CORBA 2 @language{C++} stubber.}
+Thanks to the efforts of Paula Newman and Dan Larner, a new stubber for @language{C++} has been added.
+This @language{C++} support is now the default, if no configuration switches are used, and a @language{C++} compiler
+is on your PATH.  To get the old @language{C++} support instead, specify @var{--disable-corba-cplusplus-support}
+during the configuration step.
+It is written with with a new, non-language-specific, stubber generator,
+@program{genstub}, sources for which can be found in @file{@metavar{ILUSRC}/stubbers/genstub/},
+along with documentation on how it can be used to create new stubbers. 
+@item @b{Multiple language support for threaded address spaces.}
+True modules written in @language{C}, @language{C++}, or @language{Python} can now be used by other languages in the same address space, even when the `other language' is threaded, as @language{Java} is.  This should make it possible to develop single shared libraries which can be loaded into @language{Java}, @language{Python}, @language{C++}, and @language{Lisp} address spaces without change.  More examples of multiple-language use have been added in @file{@metavar{ILUHOME}/examples/ml2} and @file{@metavar{ILUHOME}/examples/ml3}.  The manual section
+on multiple languages in the same address space has been expanded.
+@item @b{New default for Type UID Hash Algorithm.}  The version 2 type uid hash algorithm is now the default for
+calculating type uids.  The old algorithm can still be selected by the configuration switch @switch{--disable-version-2-type-uids}, but we recommend against it, as it re-injects various bugs.  ILU configured with the version 2 type uids will @emph{not} be on-the-wire compatible with ILU configured with the old type uids.
+@item @b{Python and Java extensions now dynamically linked against ILU kernel.}
+In this release, the @language{Python} and @language{Java} run-time modules are now dynamically linked
+against the ILU kernel library where possible, instead of statically including it as they did previously.
+This typically means that the environment variable @var{LD_LIBRARY_PATH} must contain
+@file{@metavar{ILUHOME}/lib} for ILU to work properly with @language{Python} or @language{Java}.
+@item @b{Common Lisp improvements.}
+In @language{Common Lisp}, the instantiation procedure for
+@cl{ilu:kernel-server} has been changed.  If no protocol or transport is specified, the default
+protocol and transport will now be used, instead of "sunrpc".  The keyword @cl{:default-server} can
+be used to control whether the new @cl{kernel-server} becomes the default.  The keyword @cl{:noport}
+can be used to keep the instantiation from explicitly creating a port.  New methods @cl{add-port},
+@cl{native-cinfo}, and @cl{add-cinfo} have been added to the @cl{kernel-server} type.
+Various bugs in the support of pickles with @language{Common Lisp} have been fixed.
+@item @b{New zlib compression transport included.}  Thanks to Paul Bennett, we now have a compressing
+transport filter, which can cut down on the bandwidth used by a remote client.
+@item @b{CORBA Python mapping improved.}
+Support for the CORBA Python mapping has been improved.
+@item @b{Support for CORBA Interoperable Name Service specification.}
+The ILU implementation of the CORBA Naming Service, @program{ILUCosNaming}, has been updated
+to support OMG's Interoperable Name Service specification.  By default, it now starts listening
+on port 9999, and the default object key of the root naming context is @code{"NameService"}.
+A bug in @program{ILUCosNaming} about re-binding of the same object has been fixed.
+The normal ILU string-to-object functions now support both the @code{iioploc} and @code{iiopname}
+URL forms.  The INS-specified command-line switches @switch{-ORBInitRef} and @switch{-ORBDefaultInitRef}
+are now supported by @language{Python}, @language{C}, and @language{C++}.
+@item @b{Improved support for load-balancing and implementation repositories.}
+Procedures have been added to allow better control over the connection info data that
+goes into string binding handles and URLs.  In particular, the real connection info can
+be masked by other connection info which can point to a relocation server or implementation
+repository.
+@item @b{Improved minor codes on error messages.}
+ILU minor codes on errors are now registered in an OMG VMCID subspace.  Most language mappings
+have been updated to provide descriptive messages for minor codes, instead of just integer
+values.
+@end itemize
+
+@subsection Changes from 2.0alpha13 to 2.0alpha14
+@cindex changes from 2.0alpha13 to 2.0alpha14 
+@itemize @bullet
+@item @b{New Type UID Hash Algorithm.}
+This release introduces a documented algorithm for producing the ILU `type hash' for an ISL type.  It's documented in the ILU manual, in the section entitled ``Algorithm for Generation of Structural-Hash Type IDs''.  This algorithm will become the default algorithm for the next release, but the old algorithm is still the default for this release.  You can enable the new algorithm with the configuration switch @switch{--enable-version-2-type-uids}.  We recommend that you do this, if possible.  ILU configured with the version 2 type uids will @emph{not} be on-the-wire compatible with ILU configured with the old type uids.
+@item @b{Directives in ISL.}
+The ISL syntax has an experimental directives concept.  Expect changes before this is made final. 
+@item @b{Java support}.  Supports running ILU and a standard CORBA ORB in the same address space.  Optional support for JNI based native methods.  Support for jdk1.2.  Support for Microsoft sdk3.1.  Switchable usage of org.omg.CORBA classes (Java core for jdk1.2 or provided by ILU for jdk1.1).   No more problems with the boot class path.  Configuration process slightly improved.
+@item @b{Java API changes}.  Default use of org.omg.CORBA.Object interface as base type for all ILU stubbed objects.  Corba system exceptions are no longer subclassed; other minor API changes required for sharing address space with standard ORBs.  Most users shouldn't notice these changes.
+@item @b{Java serialization support}.  Most Java classes and interfaces corresponding to ISL types are now serializable.  Among other things, this allows ILU objects to be passed via @protocol{Java RMI}.  Also, a new ILU interface exists which allows transport of arbitrary Java serializable objects with ILU.  Third, a very experimental @kwd{DIRECTIVE-EXPERIMENTAL} mechanism which optionally allows classes implementing ILU object types to avoid extending org.omg.CORBA.Object (and optionally, extend java.rmi.Remote).
+Also, custom mapping may now be specified in the ISL file using the @kwd{DIRECTIVE-EXPERIMENTAL} keyword.
+@item @b{Support for Python CORBA mapping.}  This release includes a preliminary version of the CORBA mapping for Python.  You should configure ILU with @switch{--enable-corba-python-mapping} to get this form of Python support, instead of the ``classic'' version documented in the ILU reference manual.  See @url{http://www.informatik.hu-berlin.de/~loewis/python/pymap.htm} for more information on this mapping.
+@item @b{Python has experimental support for passing dictionaries.}  If @switch{--enable-python-dictionaries} is specified during configuration, the mapping of ISL to Python generated by the stubber will be modified as follows:  If a sequence type has a base type which is a record type with two fields, @code{name} and @code{value}, and the type of the @code{name} field is an integer or string type, and the name of the sequence type ends with @code{"dict"} or @code{"Dict"}, the sequence type will be mapped to a Python dictionary instead of to a list.  The key value of each item in the dictionary will be the value of the @code{name} field of a record value, and the value value of the item will be the value of the corresponding @code{value} field of the same record value.  This mapping may change in the future.
+@item @b{Python `auto-import' of ILU interfaces now enabled by default.}  In this release, loading of the @language{Python} @module{ilu} module will cause a call to @Python{ilu.AutoImport()}, with no parameters.  This can be defeated by setting the environment variable @var{ILU_PYTHON_DISABLE_AUTOIMPORT} before loading the @module{ilu} module, and @Python{ilu.AutoImport} can still be called manually at a later time.
+@item @b{Lisp "old-style" method names not produced by default.}  The default for lisp is to not produce the old-style method names.  Users who need them should specify the @switch{--enable-old-lisp-method-names} configuration switch to get them.
+@end itemize
+
+@subsection Changes from 2.0alpha12 to 2.0alpha13
+@cindex changes from 2.0alpha12 to 2.0alpha13
+@itemize @bullet
+@item @b{Clarified copyright}.  We have clarified the terms of the ILU copyright to make it clear that it conforms to the requirements of free software.
+@item @b{Java support more robust}.  Support for different java environments more robust.  Added JDK1.2betaX.  Added support for native threads on unix.  On NT, supports developping ilu applications from within a few commercial IDE's.  Many bug fixes.
+@item @b{GSS security transport}.  This provides the ability to wrap arbitrary security contexts around communication between two address spaces.  It includes the ability to identify callers by arbitrary GSS namespaces schemes.  A generic @system{GSS} @emph{shell} (into which various mechanisms can be plugged) is included.  See the security chapter of the ILU manual for more information.
+@item @b{More CORBA-ization of the C runtime}.  The pseudo-ORB initialization functions are now present for the C runtime.
+@item @b{Conforming implementations of the HTTP-NG wire protocol and MUX transport}.  Implementations of the HTTP-NG wire protocol and webmux transport now conform to the Internet drafts for these protocols.  Note that the mux transport only works in threaded mode (both client and server).
+@item @b{Proper sending of clean shutdown messages}.  It is now possible for RPC and transport protocols to send clean shutdown messages.  Currently only the HTTP-NG wire protocol, @protocol{w3ng}, does so.
+@item @b{Reaping idle incoming connections on multi-threaded servers}.  It used to be the case that incoming connections to multi-threaded servers would not be closed when the server was trying to reduce its FD (File Descriptor, an OS-level resource) usage; this has now been fixed.
+@item @b{@language{XML} parser}.  This release includes an early version of a @language{C}-based validating @language{XML} parser.  It is a general-purpose @language{XML} parser that may be used in future releases of @system{ILU} for various purposes.  Information on the use of the parser and its current (known) limitations is found in @file{@metavar{ILUSRC}/stubbers/XML-parser/README}.
+@item @b{Optimized marshalling of data structures from @language{C}}.  The @language{C} marshalling code for @system{ILU} now matches data structures in memory against their marshalled representation in the particular wire protocol selected.  If they match, the data structure is written directly to the wire, instead of having each element manipulated independently.  This can speed up the I/O processing of a large array of floating-point values, say, by over 2000 percent.
+@item @b{Bug fixes in Python and Java stubbers may cause type UID changes}.  If you stub multiple files on the same command line with the Java and Python stubbers, past releases of ILU may have given different type UIDs to the resulting types than if you stubbed each file separately.  This bug has been fixed, and the Python and Java stubbers now always give the same type UID as the other stubbers produce.
+@item @b{Better configuration support for Linux}.  @system{ILU} should configure `out of the box' properly for Red Hat 5.1 Linux.  In general, updates to the configuration machinery should make Linux configuration easier.
+@end itemize
+
+@subsection Changes from 2.0alpha11 to 2.0alpha12
+@cindex changes from 2.0alpha11 to 2.0alpha12
+
+@itemize @bullet
+@item @b{Many bug fixes}.  This release primarily fixes a number
+of bugs in 2.0alpha11, including various problems with the direct IDL support,
+the Common Lisp support, the `serializer' construct in the kernel, and
+the new CosNaming name service.
+@item @b{First release of IETF Generic Security Service API shell.}  This
+is an implementation of a `shell' library providing the API
+defined by @url{Internet RFC 2078,http://info.internet.isi.edu:80/in-notes/rfc/files/rfc2078.txt}, which
+provides a generic interface for providing security contexts around
+communications between parties.  The ILU GSS shell provides a `back-end'
+API, into which specific namespace schemes and authentication mechanisms can
+be `plugged'.  It also includes one example of a (non-secure) namespace
+scheme (called @namespacescheme{rfc822}),
+and one example of a (non-secure) authentication mechanism (called @authenticationscheme{nil}).
+Due to U.S. export controls on cryptographic technology, we don't
+plan to release publicly any `secure' namespace or authentication mechanisms,
+as all of those that we're aware of rely on controlled cryptographic algorithms
+to provide that security.  We expect that serious users of the GSS will provide
+their own namespaces and mechanisms.  See @file{@metavar{ILUSRC}/GSS/README} for more
+information on this GSS shell.  Note that this release does @emph{not} provide support for
+the ILU @transport{gss} transport filter.
+@item @b{Support for the w3ng wire protocol.}  This release
+includes support for a new wire protocol called @protocol{w3ng}.  This
+is the first wire protocol actually designed for use with @system{ILU}.  It exhibits
+a number of efficiency improvements over existing wire protocols supported
+by @system{ILU}.
+@item @b{Java support now includes `full custom mapping'.}  This allows
+a @language{Java} programmer to specify non-standard @language{Java} classes
+to be used for any @system{ILU} @language{ISL} constructed type.
+See the @language{Java} chapter of the manual to find out how to use this.
+@item @b{Server relocation supported.}  It is sometimes useful
+to have a `dummy' server, that will redirect any requests
+to it to a real server somewhere else.  This can be used for load balancing,
+automatic start-up of services, redirecting name service, code migration, and other
+various purposes.  @system{ILU} supports this via a mechanism called @dfn{server relocation},
+currently available only in the @language{C}, @language{Python}, and @language{Java} runtimes,
+and only with the @protocol{w3ng} and @protocol{IIOP} protocols.
+@item @b{TCP affordances.}  It is now possible to control the size
+of TCP/IP transport buffers, either as an optional parameter in the tinfo
+when creating a Port, or by setting the default buffer size directly
+from @language{C} or @language{Python}.  It is also possible to get some
+elementary statistics about TCP/IP resource usage from either @language{C}
+or @language{Python}.
+@item @b{Simple use of ISL types in Java.}  ISL types of any kind except @type{PICKLE}
+no longer automatically interact with the @system{ILU} runtime, so the @system{ILU}
+runtime library for @language{Java} no longer needs to be loaded to support non-@system{ILU}
+use of these types.
+@item @b{Mechanism for discovering caller identity in @language{C} has changed.}
+You should now call @C{@fn{ILU_C_CallerIdentity()}}, instead of
+@C{@fn{ILU_C_GetPassportContext()}}, in a true method to determine the
+identity of the caller.
+@end itemize
+
+@subsection Changes from 2.0alpha10 to 2.0alpha11
+@cindex changes from 2.0alpha10 to 2.0alpha11
+
+@itemize @bullet
+@item @emph{Documentation re-done.}  The documentation for the various language
+runtimes has been re-done to a standard template.
+
+@item @emph{New OMG IDL parser.}  A very nice parser for OMG IDL has been
+contributed by Martin von Loewis, and has been incorporated.  It consists
+of two C files which are integrated into the parser library, instead of the huge
+and buggy C++ idl2isl program previously supplied (and no longer part of the
+distribution).  Many thanks, Martin!
+
+@item @emph{New ISL to IDL program.} The file @file{stubbers/pprint/isl2idl}
+converts isl2idl when possible.
+
+@item @emph{Guile Scheme support.} Bill Nell at Siemens Corporate Research, Inc,
+has contributed the beginnings of support for Guile Scheme, including a
+@language{Scheme} stubber, a working @system{ILU} LSR for @language{Guile},
+and working versions of the @file{examples/test1/} example client and server programs.
+
+@item @emph{Multiple ports on server.}  It is now possible to add multiple
+ports to an ILU server, so that the same set of objects can be exported via
+multiple protocols.  All languges provide hooks to add multiple ports to
+a server.
+
+@item @emph{Serialization and pipelining on non-concurrent protocols.}
+The ability to have calls delivered to the callee in serial order over
+a single connection has been added for non-concurrent protocols with an
+abstraction called @dfn{serialization}.  In addition,
+the ability to have multiple outstanding calls on connection that uses
+a non-concurrent protocol has been added via an abstraction called
+@dfn{pipelining}.  Access to this kernel functionality is currently only
+provided via the @language{C} LSR.
+
+@item @emph{Custom surrogate support added for all languages.}  The ability to
+specify a user-implemented class for surrogate instances has been added to all
+languages.  This allows implementation of custom caching strategies and similar
+techniques.
+
+@item @emph{Custom record support added for all languages.}  The ability to
+override record type marshalling in languages where the type system allows it
+has been added.  This capability is useful for support of objects-by-value.
+Not yet available in @language{Common Lisp} or @language{Guile}.
+
+@item @emph{HTTP support improved.}
+The @system{ILU} @protocol{HTTP} support will now properly redirect for responses.
+It also responds to non-1.0 versions of the @protocol{HTTP} protocol more
+kindly, and has the beginnings of support for @protocol{HTTP 1.1}.
+
+@item @emph{IIOP improved.}  The IIOP support will now respond
+appropriately to relocation replies, common with other ORBs,
+though not used in @system{ILU}.
+It now supports CORBA 2.1 character set negotiation.
+A non-concurrent version of @protocol{IIOP} is available as @code{"siiop"};
+note that since the OMG spec clearly identifies @protocol{IIOP} as
+concurrent (in the @system{ILU} sense), @code{"siiop"} should only
+be used between @system{ILU} clients and servers.
+
+@item @emph{World Wide Web MUX transport included.}
+This release includes an implementation of the MUX transport described
+in @url{http://www.w3.org/Protocols/MUX/WD-mux-961023.html},
+but with the modifications suggested in @url{http://lists.w3.org/Archives/Member/w3c-mux/msg00039.html}.
+This transport, called @code{"w3mux"}, allows for multiple simultaneous sessions
+or connections over a single TCP/IP connection.  It supports message fragmentation
+and interleaving of streams.  It supports bi-directional connections over
+the TCP/IP connection, thereby supporting callbacks through firewalls.
+
+@item @emph{Java improvements.}  @language{Java} support for @system{Win32} platforms (using
+Javasoft JDK 1.1.x and Microsoft Java SDK 2.0 beta 2) is now included.
+The @system{ILU} support no longer works with JDK 1.0, but now supports
+JDK 1.1.x.  Lots of minor improvements have been made.  The generated
+stubs are now by default (mostly) compatible with the original
+@language{Java} mapping document
+(@url{ftp://ftp.omg.org/pub/docs/orbos/97-03-01.pdf}).  The original
+@system{ILU} mapping is available as a stubber option.
+
+@item @emph{CORBA 2.0 C++ support - limited}  CORBA 2.0 @language{C++} is currently working for 
+Visual C++ (sans nested modules and pickles/anys support).
+[This is very new software - it has received very limited testing.]
+
+@item @emph{CosNaming service included.}
+The distribution now includes an implementation of the CORBA name service,
+under @file{@metavar{ILUSRC}/etc/CosNaming/}.  It is automatically built
+and installed if @language{OMG IDL} and @language{IIOP} support are
+configured in.
+
+@item @emph{Sun RPC portmapper support included.}
+A C library for use with the @system{Sun RPC} @program{portmapper} is now included,
+in @file{@metavar{ILUSRC}/etc/portmapper/}.  Included is an @language{ILU ISL}
+description of the @program{portmapper} interface, which can be used directly with other
+languages.
+
+@item @emph{Auto-stubbing of modules supported for Python.}  The @Python{import}
+mechanism in @language{Python} can now be augmented by calling the function @fn{@Python{ilu.AutoImport()}};
+this modifies @Python{import} so that, when
+attempting to import a module called @Python{foo}, if it fails to find @file{foo.py}
+and @file{foo.pyc} on the @var{PYTHONPATH} environment variable, it will then
+walk down the directories listed in the @var{ILUPATH} environment variable, looking
+for either @file{foo.isl}, or, if @language{OMG IDL} support is enabled, @file{foo.idl}.
+If either of these are found, it will run the @language{Python} stubber on the file,
+putting the results in a temporary directory, and then load the resulting surrogate-side
+@file{foo.py} file.
+
+@item @emph{FUNCTIONAL caching is now supported for Python and Lisp.}
+
+@end itemize
+
+@subsection Changes from 2.0alpha9 to 2.0alpha10
+@cindex changes from 2.0alpha9 to 2.0alpha10
+
+@itemize @bullet
+
+@item @emph{Default garbage collection behavior of Python true objects changed.}
+In previous @system{ILU} releases, the @system{ILU} kernel held an extra
+reference to each @language{Python} true object, so that they were never garbage
+collected.  This extra reference has been removed in 2.0alpha10, so that the
+application must be careful to maintain references to objects which it wishes to
+preserve.
+
+@item @emph{Aggressive garbage collection of C objects.}  @language{C} objects
+(@C{ILU_C_Object *}) are now reference counted.  An application must be careful
+to use @C{CORBA_Object_duplicate} and @C{CORBA_Object_release} correctly to
+avoid memory smashes.
+
+@item @emph{Full type information cached.}  If both
+@kwd{--enable-pickle-support} and @kwd{--enable-corba-iiop} have been selected,
+full type information on all compiled-in or dynamically-loaded @language{ISL}
+types is now cached in memory.  This makes it theoretically possible for someone
+to write a @system{CORBA} Interface Repository service for ILU (or something
+more useful).  Note changes in @C{ilu_DefineMethod}, @C{ilu_DefineException},
+and the new function @C{ilu_DefineMethodArg}.
+
+@item @emph{HTTP persistence supported.}  The @protocol{HTTP} protocol may now
+be selected with the string @C{"http_1_0p"}, which causes it to send
+@C{Connection: "Keep-Alive"} headers, and not close the connection between calls
+(assuming of course that the other end of the connection also supports this
+behavior - fairly common.) The programs in examples/httest have been updated 
+accordingly.  In addition, it is now possible to use @protocol{HTTP} over
+a boundaried transport.
+
+@item @emph{OMG IDL exceptions with values handled.}  The @program{idl2isl}
+compiler now, for an @language{OMG IDL} exception @omgidl{E}, generates an
+@language{ISL} exception called @isl{E}, and an @language{ISL} type called
+@isl{ilu--prefix-idlExceptionType-E}.  The stubbers handle this type variously;
+the @language{C} stubber renames it to @C{E}, as required by the @system{CORBA}
+spec; the @language{Python} stubber renames it to @Python{E__omgidl_exctype};
+the @language{Lisp} stubber folds it into the definition of the @cl{condition}
+@cl{E}, and doesn't support the type directly at all.
+
+@item @emph{Java support improved.}  The @language{Java} support has been
+improved, and brought closer to the emerging @system{CORBA} specification for
+it.  Pickles are now supported, and work with IIOP; enumerations are now
+mapped according to the @system{CORBA} standard; system exceptions are now
+@language{Java} runtime exceptions; interfaces can be specified in @language{OMG IDL};
+works with select-based (BSD) systems as well as poll-based (SVR4) systems; holder
+classes can be mapped the OMG way; many bug fixes.
+
+@item @emph{Common Lisp support improved.}  The @language{Common Lisp} work by
+Joachim Achtzehnter has been incorporated, and various other fixes have been
+added, including PICKLE support.  @language{Common Lisp} support is still missing
+type registration, but in other respects should be fully working.
+
+@item @emph{ilu_Server leaks fixed.}  In previous versions, @system{ILU} kernel
+servers which had become empty were not garbage collected.  This has been
+fixed.  The fix also changes the @class{iluMainLoop} class in the old
+@language{C++} runtime.
+
+@item @emph{Default protocol and transport selected dynamically.}  The default
+protocol and transport are now selected dynamically, so that @system{ILU}
+installations without @protocol{Sun RPC} can be created.
+
+@item @emph{idl2isl now provided on Win32.}  The @program{idl2isl}
+is now part of the @system{Windows} build.
+
+@item @emph{Python 1.4 now provided on Win32.}  @language{Python} 1.4 is
+now the version used on @system{Windows} systems.
+
+@item @emph{WINIO no longer part of release.}  @system{WINIO}, a subsystem
+no longer needed by ILU on @system{Windows}, but included in previous
+releases, has been dropped from the release distribution.
+
+@end itemize
+
+@subsection Changes from 2.0alpha8 to 2.0alpha9
+@cindex changes from 2.0alpha8 to 2.0alpha9
+
+@itemize @bullet
+
+@item @emph{PICKLE support for dynamic types added.}  This allows you to use a new ISL type, @isl{PICKLE}, to pass arbitrary typed values across interfaces.  Pickle support is implemented in such a fashion as to be interoperable with @system{CORBA} @omgidl{any}, and our OMG IDL to ISL translator in fact maps @omgidl{any} directly to @isl{PICKLE}.
+
+@item @emph{Proper collection of dead connections.}  The kernel now properly frees connections after they have been closed.
+
+@item @emph{Prototype @language{Java} support.}  This release contains a first pass at @language{Java} support for @system{ILU}.
+
+@item @emph{Prototype @language{Common Lisp} support.}  This release contains a first pass at @language{Common Lisp} support for @system{ILU} 2.0.  Many thanks to Joachim Achtzehnter for contributing it!
+
+@item @emph{Prototype @language{Guile} @language{Scheme} support.}  Bill Nell and Siemens have been kind enough to contribute preliminary support for @language{Guile}, the GNU variant of @language{Scheme}.  This contribution is provided ``as is'', in the @file{@metavar{ILUSRC}/contrib/siemens-guile/} subdirectory.
+
+@item @emph{Support for @language{Python} 1.4.}  A number of patches are incorporated to make @system{ILU} support for @language{Python} with @language{Python} 1.4  build ``out of the box'', on Unix.  Python 1.3 is still the supported system for Windows.
+
+@item @emph{Support for Xt fixed.}  The support for using @system{ILU} with @system{Xt} now works.
+
+@item @emph{Simplification of Windows support.}  The Windows build has been simplified.  WINIO has been removed, and everything builds with one set of makefiles.  Support for WIN16 has been removed.
+@end itemize
+
+@subsection Changes from 2.0alpha7 to 2.0alpha8
+@cindex changes from 2.0alpha7 to 2.0alpha8
+
+@itemize @bullet
+
+@item @emph{HTTP protocol added.}  This allows you to use the standard World Wide Web @protocol{HTTP}, version 1.0, between address spaces.  This makes @system{ILU} programs Web servers and clients, though only in a very limited sense.  See the `Protocols and Transports' chapter of the user manual for more information.
+
+@item @emph{OS threading added.}  We've added support for use of the operating system's threads, if available, with the languages @language{C}, @language{C++}, and @language{Python}.  The threading systems supported are @system{POSIX threads}, @system{Solaris 2 threads}, and @system{Windows/NT threads}.  See @file{examples/test1/srvr.c} for an example of using threads.
+
+@item @emph{@system{ILU} Simple Binding via an @system{ILU} service.}  You can now choose to `simple binding' via either a shared file system or via an ILU service.  See the chapter on `ILU Concepts' for more information.
+
+@item @emph{@program{ilusbls}.}  A program, @program{ilusbls}, that will list the objects known to the simple binding service, is provided.  @program{ilusbls} will work with either the shared files simple binding or the @system{ILU} service simple binding.
+
+@item @emph{Identities exported via a meta-object protocol.}  Application-specific identity types may now be registered with the @system{ILU} kernel, and procedures to `pickle' and `unpickle' them are supported.  Application-specific protocols and transports have access to these identity objects, and can use them for various security, accounting, and authorization strategies.  See @file{runtime/kernel/iluxport.h} for more information on @C{ilu_IdentityInfo}.
+
+@item @emph{Python threading supported.}  If @system{ILU} is configured with @var{--enable-os-threads}, and your @language{Python} installation has been built with thread support, thread support will also be available in the @language{Python} @system{ILU} runtime.  A new @language{Python} function, @Python{ilu.ThreadedOperation()}, has been added to enable use of threads.
+
+@item @emph{ILU/Python support for Windows NT.}
+
+@item @emph{Change in default marshalling of discriminant references.}  We switched to using a more efficient representation for server IDs when marshalling the discriminant of a call on the wire.  This changes our @system{ONC RPC} and @system{XNS Courier} wire formats; the program numbers used have been changed to reflect this.
+
+@item @emph{Change in algorithm to compute type UIDs.}  We switched to a much more efficient algorithm for computing the structural fingerprint of a type.  As a result, all stubbed files should be re-stubbed; the type IDs from @system{ILU} 2.0alpha7 will not be compatible with those of 2.0alpha8.
+
+@item Various fixes, to all the problems reported in @url{ftp://ftp.parc.xerox.com/pub/ilu/2.0/2.0alpha7-patches.html}, and more.
+
+@end itemize
+
+@subsection Changes from 1.8 to 2.0alpha
+@cindex changes from 1.8 to 2.0alpha1
+
+This release contains some major changes, and is NOT compatible "on
+the wire" with any previous version of ILU.  There are also a few API
+changes.  There may be further changes in 2.0beta and 2.0.
+
+@itemize @bullet
+
+@item We now use GNU autoconf (and still use imake).
+
+@item Support for C and C++ use on Windows 95 and Windows NT (Windows 3.1
+coming soon), thanks to Dan Larner.  Windows binaries are available
+(as well as source code).
+
+@item Thanks to Bridget Spitznagel, we now have support for
+cross-language calls within the same address space.  Because we're not
+a compiler vendor, and can't keep up with all the compiler vendors in
+the world (not to mention all the combinations of them), we don't
+solve your problem of getting multiple language runtimes to co-exist.
+But where you *have* solved that problem (perhaps because you've got
+an easy instance, such as C and XXX), you can now just call through an
+ILU interface --- rather than having to write messy "foreign function"
+interfaces from one language to another.  Each part of your program
+looks mono-lingual and normal, and we provide the control-flow and
+data-conversion glue to put them together.  Data conversion is
+currently done by serializing and de-serializing to/from a normalized
+form in a memory buffer; we plan to investigate more direct methods
+(but not necessarily for release 2.0).
+
+@item Our "transport" abstraction has been re-organized.  Among other
+things, this makes it (relatively) easy to introduce "filters" at the
+transport level.  Of course, ILU remains open and extensible in this
+regard.  Want to add a compression filter?  Go ahead!
+
+@item ILU string binding handles become IETF URLs.
+
+@item We've made it possible for a calling application to interrupt a
+call in progress.
+
+@item The documentation (and of course, TIM) has diagrams and URLs!
+
+8) Generalized cleanup and bug fixing.  This includes more attention
+to making it practical for others to add transport and protocol
+meta-objects.  This also includes a more rigorous treatment of
+exceptions in the kernel and runtimes, with a taxonomy of exceptions
+aligned with CORBA's.  It also includes fixes that change the type
+ID's and protocol mappings, which caused us to bump the major version
+number.  All ONC RPC and Courier program numbers, and ISO object IDs
+are now official.  The Courier type-ID-to-program-number mapping
+registry has been eliminated.
+
+@end itemize
+
+@subsection Changes from 1.7 to 1.8
+@cindex changes from 1.7 to 1.8
+
+@itemize @bullet
+
+@item A kernel memory leak caused by having many clients connect to,
+then drop, a server was fixed.
+
+@item File descriptors are now removed from the event loop registry
+when a connection is closed, which fixes some errors in various
+runtimes.
+
+@item The kernel routines ilu_ConsiderSBH() and ilu_ReLookupObject() are
+now provided to change the binding of a surrogate kernel server.  This
+allows a client to track changes caused when a server goes down and is
+re-started with different contact info.  This should also handle the
+relocation requirement of CORBA's IIOP.  They have not been fully tied
+into the language runtimes yet.  Some language runtime code may still
+improperly keep a cache of an earlier SBH.
+
+@item The Common Lisp garbage collector is now tied in to the ILU network
+GC scheme, so that client interest in collectible true objects is
+communicated and used properly between Lisp clients and servers.
+Collectible true objects are now GC'ed.
+
+@item A new appendix to the ILU manual documents the process of adding
+ILU support for a different variety of Common Lisp.
+
+@item Various fixes to the Python support have been made to fix various
+bugs, and to allow unregistration of Tk event handlers when
+connections are closed.  Python true objects must still be manually
+held onto by the server.
+
+@item References into freed data structures have been fixed in the C
+and C++ runtime, thanks to Purify.
+
+@item An authentication framework has been added, but no protocols
+currently pass any identity information except for the Sun RPC
+protocol's default authentication of "AUTH_UNIX".  This identity is
+now available in C true method code, but the access method is not yet
+documented, as it will surely change.
+
+@item An obscure bug in the Lisp generic process code, responsible for
+causing an occasional "Bad Process-Lock" message, has been fixed.
+
+@item The XView X toolkit code in ILUSRC/etc/xview/ has been
+successfully used.
+
+@item Memory leaks in C true stubs have been fixed, and C true stubs
+now report unexpected exceptions properly.
+
+@item Fixes from hassan@@db.stanford.edu for the DEC Alpha system with
+OSF/1 have been incorporated.
+
+@end itemize
+
+@subsection Changes from 1.6.4-p9 to 1.7
+
+@itemize @bullet
+
+@item The way of associating a Sun RPC (program number, version) tuple
+with an object type has changed.  In release 1.6.4, the (program
+number, version) was assigned either manually or automatically, and a
+file maintained a list of (type ID, program #, version) tuples.  Each
+client and server consulted this file when mapping between Sun RPC
+program #'s and ILU type ID's.  This led to a number of problems.
+This scheme has been changed in release 1.7 to a scheme in which the
+Sun RPC program # is always the value 0x31000400, and the (32-bit) Sun
+RPC version is computed from the ILU type ID, using the CRC-32 hash
+algorith.  Thus the version number is the CRC-32 of the ILU type ID.
+This has been tested for collisions, and they have been found to be
+extremely rare -- much rarer than collisions would have been under the
+ILU 1.6.4 scheme.
+
+This means that if you wish to use ILU 1.6.4 clients or servers with
+ILU 1.7, you should edit the 1.6.4 SunRPCRegistry file to use the 1.7
+program number and version for each particular object type.
+
+@item The C runtime now offers an interface to threads, so that C servers
+can handle requests in different threads.  This has been tested with
+the PPCR implementation of POSIX threads.
+
+@item Untested pseudo-threads libraries for the Xt and XView X toolkits
+are provided, under ILUSRC/etc/@{Xt,xview@}/.
+
+@item Support for the Python programming language has been added.
+
+@item All languages now support IN, OUT, and INOUT method parameters.
+
+@item Support for CORBA NIL object references has been added, via the new
+OPTIONAL keyword on object types.  All object types defined with OMG
+IDL will be tagged automatically with OPTIONAL; object types defined
+with ILU ISL have the option of being OPTIONAL.  Note that this keyword is
+different from the ISL OPTIONAL type constructor.  The use of this
+keyword in ISL is deprecated in favor of the OPTIONAL type constructor.
+
+This also means that the ILU on-the-wire mapping for objects has been
+changed (slightly) to allow for NIL object references.  Applications
+that do not use NIL objects will not encounter this change.
+
+@item The usage of the SINGLETON keyword on object types has changed.  It
+now takes a string argument which defines the particular ``pinfo'' and
+``tinfo'' to be used with the object type.
+
+@item Network GC now works.
+
+@item Numerous bugs have been fixed.
+
+@end itemize
+
+@node Bug Reporting and Comments, , Changes, ILU Installation Instructions
+@section Bug Reporting and Comments
+
+@subsection Known Bugs and Gotchas
+
+KNOWN BUGS:
+
+Release 2.0beta1:
+
+@itemize @bullet
+
+@item @i{kernel}  UDP support is still broken.
+
+@item @i{MOP} If ilu_AddRegisterersToDefault is used, callers of
+ilu_Register@{Input,Output@}Source must be prepared for false callbacks.
+
+@end itemize
+
+Release 2.0alpha10:
+
+@itemize @bullet
+
+@item @i{Java, C++}  Network GC doesn't work with @language{Java} yet, and has never worked with our old @language{C++} support.
+
+@item @i{C++}  The current @language{C++} support is old and buggy.  There are known
+leaks in the generated stubs, and in the runtime itself.  It is being completely re-worked
+for version 2.0 of @system{ILU}.  We do not recommend serious use of the current
+@language{C++} support, but it is included for use in testing other parts of the system.
+
+@item @i{Security} Still not released yet!  We're updating our @system{GSS} implementation
+to the latest version of the spec, so we decided to hold it back for this release.
+
+@item @i{ISL} "TYPE X = OBJECT SUPERTYPES Y ...; TYPE Y = OBJECT
+SUPERTYPES X ..."  crashes the parser (and thus
+islscan and all the stubbers).  Don't do this!
+
+@end itemize
+
+Release 2.0alpha9:
+
+@itemize @bullet
+
+@item @i{OMG IDL}  The @language{Java}, @language{Lisp}, and @language{C++} support
+in this release is fairly flakey, and in particular will not work with interfaces
+written in @language{OMG IDL}.
+
+@item @i{Java, C++}  Network GC doesn't work with @language{Java} yet, and has never worked
+with our old @language{C++} support.
+
+@item @i{kernel}  UDP support is still broken.
+
+@item @i{[C++]}  The current @language{C++} support is old and buggy.  There are known
+leaks in the generated stubs, and in the runtime itself.  It is being completely re-worked
+for version 2.0 of @system{ILU}.  We do not recommend serious use of the current
+@language{C++} support, but it is included for use in testing other parts of the system.
+
+@item @i{[Security]} Still not released yet!  We're updating our @system{GSS} implementation
+to the latest version of the spec, so we decided to hold it back for this release.
+
+@item @i{[configuration]} Since our Makefiles are constructed via imake from
+Imakefiles, which involves running the C preprocessor, watch out for use
+of predefined C preprocessor symbols in pathnames!  Common boobytraps
+include names of processors, vendors, and operating systems (e.g.,
+"sparc", "sun", "hpux"), which are used (as isolated tokens according to
+C rules) in some folks' conventions for naming directories.  If you're
+lucky, you can solve these problems with quoting.  A more heavy-duty
+approach is to #undef the offending macros at the start of
+imake/ilu.defs.new, and re#define them at the end.
+
+@item @i{[ISL]} "TYPE X = OBJECT SUPERTYPES Y ...; TYPE Y = OBJECT
+SUPERTYPES X ..."  crashes the parser (and thus
+islscan and all the stubbers).  Don't do this!
+
+@item @i{[MOP]} If ilu_AddRegisterersToDefault is used, callers of
+ilu_Register@{Input,Output@}Source must be prepared for false callbacks.
+
+@end itemize
+
+@subsection Reporting Bugs
+
+Report bugs (nah! -- couldn't be!) to the Internet address @code{ilu-bugs.parc@@xerox.com},
+or to the XNS address @code{ILU-bugs:PARC:Xerox}.  Bug reports are more helpful with
+some information about the activity; @emph{please} read @ref{Debugging ILU Programs},
+for more information on how to look at problems.  General comments and suggestions can
+be sent to either @code{ILU@@parc.xerox.com} or @code{ILU-bugs}.

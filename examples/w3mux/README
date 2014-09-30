@@ -1,0 +1,54 @@
+README for the "w3mux" interface example.
+[ $Id: README,v 1.3 1999/08/03 01:58:52 janssen Exp $
+ BeginILUCopyright
+
+ Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+ Unlimited use, reproduction, modification, and distribution of this
+ software and modified versions thereof is permitted.  Permission is
+ granted to make derivative works from this software or a modified
+ version thereof.  Any copy of this software, a modified version
+ thereof, or a derivative work must include both the above copyright
+ notice of Xerox Corporation and this paragraph.  Any distribution of
+ this software, a modified version thereof, or a derivative work must
+ comply with all applicable United States export control laws.  This
+ software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+ WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+ LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+ EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+ NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+ OF THE POSSIBILITY OF SUCH DAMAGES.
+
+ EndILUCopyright ]
+
+"w3mux" contains a simple test of the w3mux transport functionality.
+The server exports an object which squares numbers sent to it.
+The client exports the same object.  The client connects to the
+server, squares a few numbers, then sends ``itself'' to the server,
+to test the callback transport mechanism in w3mux.  The server then
+squares a number using the client.  There is no output unless things
+go wrong, but it's interesting to set ILU_DEBUG to "call:packet:w3mux"
+and watch the debugging messages.
+
+To build and run, use the following commands:
+
+% ilumkmf
+% make server client
+
+% ./server &
+[1]
+exported ilu:w3muxtest.1.watson.parc.xerox.com/0;ilu%3AoAIRNReC24FHCanUU4YtQPEZzoo;sunrpc@w3mux_7=tcp_13.1.101.26_50046
+% ./client
+% ./client
+%
+
+You can specify "-threads" to either the client or the server to use
+the threaded implementation of w3mux instead of the event-driven one.
+You can specify any protocol to the server with "-p", and any transport
+with "-t".
+
+There's also a "-v" switch on the server to tell it to output a line
+every ping1 call.
+

@@ -1,0 +1,351 @@
+<!-- This HTML file has been created by timdif2html 1.11
+     from manual.dif on 20 September 1999 -->
+
+<TITLE>ILU Reference Manual - Porting ILU to Common Lisp Implementations</TITLE>
+<BODY TEXT=#000000 BGCOLOR=#ffffff>
+<P>Go to the <A HREF="manual_24.html">previous</A>, <A HREF="manual_26.html">next</A> section.<P>
+<H1><A NAME="SEC652" HREF="manual_toc.html#SEC652">Porting ILU to Common Lisp Implementations</A></H1>
+<P>
+<H2><A NAME="SEC653" HREF="manual_toc.html#SEC653">Introduction</A></H2>
+<P>
+The ILU runtime for Common Lisp is largely written
+in vanilla Common Lisp.  The lisp-implementation-specific
+details are confined to a small number of macros and functions which
+need to be defined.  (This assumes that you have a
+working port of ILU and its C support already on your operating system
+platform.  If not, you will have to begin by doing that.)  
+Aside from these macros and functions, you do
+not require anything not specified in the Common Lisp standard.  You
+do not need Lisp code for TCP/IP or socket support.
+The major work is to write ilu-xxx.lisp, where "xxx" is the specifier for the
+particular implementation of Common Lisp in use, and any
+necessary xxx-to-C shims in ilu-xxx-skin.c.  There are a number of
+things that have to be done in ilu-xxx.lisp.  They can be regarded in
+three major sections: providing the ILU notion of
+foreign-function calls, connecting the Lisp's garbage collector to the
+ILU network GC, and providing either a threaded or event-loop
+model of operation.  In addition, there is a small hook that has to be
+provided to convert between character sets.
+<P>
+<H2><A NAME="SEC654" HREF="manual_toc.html#SEC654">Providing the ILU notion of foreign-function calls.</A></H2>
+<P>
+Perhaps the trickiest is to provide an implementation of the macro
+"define-c-function".  This maps the ILU notion of a call into C into
+the native lisp notion.  "define-c-function" has the signature
+<P>
+<A NAME="IDX883"></A>
+<U>Macro:</U> <B>ilu::define-c-function</B> <I>(LISP-NAME <CODE>symbol</CODE>) (DOC-STRING <CODE>string</CODE>) (C-NAME <CODE>string</CODE>) (ARGS <CODE>list</CODE>) (RETURN-TYPE <CODE>keyword</CODE>) &key (INLINE <CODE>boolean</CODE> <CODE>cl:nil</CODE>)</I><P>
+<P>
+The <VAR>LISP-NAME</VAR> is a symbol which will be the name of the function in
+Common Lisp.  The <VAR>C-NAME</VAR> is a string which will be the "regular" C name of
+the C function to be called; that is, the name as it would be named in
+a C program, rather than the name of the symbol for the entry point of
+the function.  <VAR>ARGS</VAR> is a list of arg which describe the signature of
+the C function, where each arg is either a keyword or a 2-tuple.  If a
+keyword, the keyword indicates the type of the argument.  Allowable
+argument types are
+<UL>
+<LI>
+<CODE>:short-cardinal</CODE> (unsigned-byte 16)
+<LI>
+<CODE>:cardinal</CODE> (unsigned-byte 32)
+<LI>
+<CODE>:short-integer</CODE> (signed-byte 16)
+<LI>
+<CODE>:integer</CODE> (signed-byte 32)
+<LI>
+<CODE>:short-real</CODE> (single-float)
+<LI>
+<CODE>:real</CODE> (double-float)
+<LI>
+<CODE>:byte</CODE> (0 &#60;= fixnum &#60; 256)
+<LI>
+<CODE>:boolean</CODE> (t or nil)
+<LI>
+<CODE>:fixnum</CODE> (-2^27 &#60;fixnum &#60; 2^27 (about))
+<LI>
+<CODE>:string</CODE> (string)
+<LI>
+<CODE>:constant-string</CODE> (string)
+<LI>
+<CODE>:bytes (vector of (unsigned-byte 8))</CODE>
+<LI>
+<CODE>:unicode</CODE> (Unicode if your Lisp supports it, vector of (unsigned-byte 16) otherwise)
+<LI>
+<CODE>:ilu-call</CODE> (unsigned-byte 32)
+<LI>
+<CODE>:ilu-object</CODE> (unsigned-byte 32)
+<LI>
+<CODE>:ilu-class</CODE> (unsigned-byte 32)
+<LI>
+<CODE>:ilu-server</CODE> (unsigned-byte 32)
+<LI>
+<CODE>:char*</CODE> (unsigned-byte 32)
+<LI>
+<CODE>:pointer</CODE> (unsigned-byte 32)
+</UL>
+If the arg is a 2-tuple, the cadr is
+the type, and the car is the "direction", which may be either :in,
+<CODE>:out</CODE>, or <CODE>:inout</CODE>.  Args with no "direction" are by default of
+direction <CODE>:in</CODE>.  The <VAR>RETURN-TYPE</VAR> argument is a keyword for the return
+type of the function, which is drawn from the same set of keywords as
+the argument types.  Return-types may also use the keyword :void,
+which specifies that no value is returned.  The <VAR>INLINE</VAR> keyword is a
+boolean value which, if <CODE>cl:t</CODE>, indicates that the necessary type-checking
+has been assured by the application code, and that the C function may
+be called directly without type-checking the parameters.
+<P>
+<CODE>define-c-function</CODE> defines a Common Lisp function with a possibly
+different signature from the C function.  This function has arguments
+which consist of all the <CODE>:in</CODE> and <CODE>:inout</CODE> arguments of the C function,
+in the order in which they occur in the signature of the C function.
+It returns possibly multiple values, which consist of the specified
+return type, if not <CODE>:void</CODE>, followed by any <CODE>:out</CODE> and <CODE>:inout</CODE> arguments
+to the C function, in the order in which they occur in the signature
+of the C function.
+<P>
+<CODE>define-c-function</CODE> assumes that the C function will call back into
+Common Lisp, and that gc may occur during the invocation of the C function.
+Therefore, any objects passed to C which are not values must be
+registered in some way to prevent them from moving during the call.
+Often this means that the actual call must be surrounded by code which
+makes static copies of, for example, strings, calls the C function,
+then frees the static copy after the call.  In addition, when
+"catching" <CODE>:out</CODE> arguments and <CODE>:inout</CODE> arguments, it is usually
+necessary to pass a pointer to the appropriate argument, rather than
+the argument directly.  Typically 1-element arrays have to be
+allocated to do this.  The Franz ACL implementation uses a resource of
+arrays to minimize consing for this.
+<P>
+We should probably add another keyword, <VAR>NO-CALLBACKS</VAR>, to indicate that
+the C function will not call back into Common Lisp (and therefore some of the
+GC protection can be skipped when calling this function).  Providing
+for <VAR>NO-CALLBACKS</VAR> in your implementation would probably be a good idea.
+<P>
+<H2><A NAME="SEC655" HREF="manual_toc.html#SEC655">Network Garbage Collection</A></H2>
+<P>
+The Common Lisp-specific runtime must provide three calls which allow the
+kernel to map the kernel's C ILU object to a CLOS object.  These are
+register-lisp-object, lookup-registered-lisp-object, and
+unregister-lisp-object.  The idea behind these is to provide the C
+runtime with a handle on a CLOS object that is a small integer that
+will not be moved by Common Lisp GC, and to provide a layer which weak
+references can hide behind.
+<P>
+<A NAME="IDX884"></A>
+<U>Function:</U> <B>ilu::register-lisp-object</B> <I>(OBJ <CODE>ilu:ilu-object</CODE>) &key (REFTYPE <CODE>keyword</CODE> :strong) => <CODE>fixnum</CODE></I><P>
+<P>
+The OBJ is an ILU CLOS object (the Franz ACL implementation accepts
+any Common Lisp value except NIL, but this is only because it uses it
+internally in <TT>`ilu-franz.lisp'</TT>).  The <VAR>REFTYPE</VAR> keyword may be either the
+keyword <CODE>:weak</CODE> or the keyword <CODE>:strong</CODE>, which determines whether the
+reference to the object is a weak reference or a strong reference.  A
+weak reference is one that is not "followed" by the Common Lisp collector.
+The returned value is a fixnum that can be used with
+<CODE>lookup-registered-lisp-object</CODE> and <CODE>unregister-lisp-object</CODE> to find the
+object or remove the reference to the object, respectively.
+<P>
+<A NAME="IDX885"></A>
+<U>Function:</U> <B>ilu::lookup-registered-lisp-object</B> <I>(INDEX <CODE>fixnum</CODE>) => <CODE>ilu:ilu-object</CODE></I><P>
+<P>
+This function follows the reference indicated by <VAR>INDEX</VAR> and returns the
+object, or <CODE>cl:nil</CODE> if the <VAR>INDEX</VAR> is invalid.
+<P>
+<A NAME="IDX886"></A>
+<U>Function:</U> <B>ilu::unregister-lisp-object</B> <I>(INDEX <CODE>fixnum</CODE>)</I><P>
+<P>
+Causes any reference indicated by <VAR>INDEX</VAR> to be removed.
+<P>
+<A NAME="IDX887"></A>
+<U>Macro:</U> <B>ilu::optional-finalization-hook</B> <I>(OBJ <CODE>ilu:ilu-object</CODE>)</I><P>
+<P>
+This is a macro which should be defined in such a way as to indicate a
+finalization action for <VAR>OBJ</VAR> when the Common Lisp collector collects it.  This
+finalization action will interact with the ILU kernel to ensure that
+remote peers of this Common Lisp will know that it no longer has an interest
+in the object.  In addition, the finalization action will be able to
+prevent <VAR>OBJ</VAR> from being actually collected, should any peer have an
+active reference to it.
+<P>
+The Franz ACL implementation only allows the
+collector to run the finalization when it knows that no peer has a
+reference, by keeping the Common Lisp reference to the object as a strong
+reference until the C ILU kernel informs the Common Lisp ILU runtime that no
+peer has a reference, in which case the Common Lisp reference is changed to a
+weak reference.  In time this allows the collector to GC the object,
+and the finalization action is called.  The action that needs to be
+taken is "null out" both the pointer from the CLOS object to the C
+object, via <CODE>(setf (ilu-cached-kernel-obj lisp-obj) nil)</CODE>, and "null
+out" the reference from the C object to the CLOS object, via
+<CODE>(register-language-specific-object (kernel-obj lisp-obj) 0)</CODE>.  See
+<TT>`ilu-franz.lisp'</TT>, <CODE>ilu::franz-shutdown-ilu-object</CODE>, for an example.  The Franz ACL
+example also does these shutdowns in a separate thread, instead of
+doing them directly in the GC finalization process.  This is because
+the shutdown actions may cause arbitrary callbacks into Common Lisp, some of
+which may not occur on the stack of the ACL scheduler, which may
+invoke the collector.
+<P>
+If you feel that it just isn't possible to hook your Common Lisp collector
+into the network GC, you can simply define <CODE>register-lisp-object</CODE> to
+ignore the <VAR>REFTYPE</VAR> parameter, and define <CODE>optional-finalization-hook</CODE>
+to expand to nothing.  The result will be that no ILU object in your
+address space will ever be GC'ed, and that no true instance of a
+collectible ILU object type referenced by your process will ever be
+GC'ed anywhere in its true address space until your Common Lisp image
+disappears.  This might also be a good starting point, just to get the
+other parts working.
+<P>
+<H2><A NAME="SEC656" HREF="manual_toc.html#SEC656">Thread and/or Event Loops</A></H2>
+<P>
+Every address space into which ILU is loaded is implicitly a server.
+This is partially because ILU uses method calls internally, such as
+pinging garbage collection callbacks, and partially because it
+provides for recursive protocols, in which a "server" might call
+back to a "client" during the execution of a method call.  This
+means that any implementation of ILU has to provide a way to execute
+incoming calls; which means that it has to provide a stack and thread
+of control in which to execute the "true" code of the method call.
+There are two mechanisms supported by ILU to associate a thread of
+control with an incoming request, threads and event loops.  In the
+thread model, each request is executed in a thread associated with
+either the specific request (thread-per-request) or the connection on
+which the thread arrives (thread-per-client).  In the event loop
+model, one thread of control is multiplexed between all uses by means
+of calls into particular "event handler" routines when some
+"event" is delivered to the process.  Typical events are timer
+expirations, I/O available on file descriptors, UNIX signals.  Other
+more application-specific events are possible, such as X Window System
+events or XView toolkit events.
+<P>
+For a threaded Common Lisp, the thread model is preferred.  To support this,
+the implementor of the Common Lisp runtime must call the C procedure
+<CODE>ilu_SetWaitTech()</CODE> with two C-callable routines that provide ways to
+block the current thread until input or output is available on a
+particular file descriptor.  He must call <CODE>ilu_SetMainLoop()</CODE> with a
+main loop struct that provides NULL procedures for the <CODE>ml_run</CODE>,
+<CODE>ml_exit</CODE>, <CODE>ml_register_input</CODE>, and <CODE>ml_register_output</CODE> fields, simple
+procedures that return <CODE>ilu_FALSE</CODE> for the <CODE>ml_unregister_input</CODE> and
+<CODE>ml_unregister_output</CODE> fields, and three C-callable procedures that
+implement creation, setting, and unsetting of alarms for the
+<CODE>ml_create_alarm</CODE>, <CODE>ml_set_alarm</CODE>, and <CODE>ml_unset_alarm</CODE> fields.  Finally, he
+must provide C-callable procedures to describe his thread system's
+mutex and condition variable system to the ILU C kernel, and register
+them by calling <CODE>ilu_SetLockTech()</CODE>.  See the Franz ACL implementation
+for an example of this.  Note that the file <TT>`ilu-process.lisp'</TT> provides
+an implementation-independent veneer over various process systems.  It
+would be useful to extend that, then use it in providing the specific
+thread mechanisms, rather than using your Common Lisp's threads directly.
+<P>
+For an non-threaded Common Lisp, the event loop model is available.  In this,
+you divide up all computation in your application into event handlers,
+separate functions that are run when some event occurs, and initialize
+the system by calling some event handler dispatcher routine, often
+called the "main loop" of the system.  ILU provides a default main
+loop in the kernel, which provides support for two kinds of events:
+timer expiration (ILU calls timers "alarms"), and input or output
+available on a UNIX file descriptor.  This means that handler
+functions can be registered to be called when an event of one of these
+types occurs.  The ILU event loop is also "recursive"; this means
+that event handlers can call back into the main loop to wait for
+something to occur.  To use the ILU main loop, you must provide mainly
+a way to invoke the main loop, probably something like
+<CODE>ilu:xxx-main-loop</CODE>, where "xxx" is the name of your flavor of Common Lisp.
+<P>
+If the ILU main loop is for some reason not satisfactory, a
+Common Lisp-runtime-specific main loop can be substituted via a call to the
+ILU C kernel routine <CODE>ilu_SetMainLoop()</CODE>.  This is often necessary to
+interoperate with UI toolkits like XView or Tk which believe that they
+own the main loop.  Note that this main loop must provide all the
+functionality provided by the ILU main loop.  A less-powerful main
+loop can be used <EM>in addition to</EM> the ILU main loop, by calling the
+ILU C kernel routine <CODE>ilu_AddRegisterersToDefault()</CODE>.  See the comments
+in <TT>`<VAR>ILUSRC</VAR>/runtime/kernel/iluxport.h'</TT> for documentation of all of this.
+<P>
+In addition to making the appropriate calls into the ILU kernel to set
+up either threaded mode or event-loop mode, the Common Lisp runtime
+implementor must provide a few required function calls:
+<P>
+<A NAME="IDX888"></A>
+<U>Function:</U> <B>ilu::initialize-locking</B><P>
+<P>
+This misnamed function is called by the generic ILU Common Lisp runtime to
+set up the interaction mode, start the scheduler if necessary, and in
+general do anything necessary to initialize the Common Lisp-flavor-specific
+Common Lisp runtime.
+<P>
+<A NAME="IDX889"></A>
+<U>Function:</U> <B>ilu::setup-new-connection-handler</B> <I>(FN <CODE>function</CODE>) (SERVER <CODE>C-pointer</CODE>) (PORT <CODE>C-pointer</CODE>)</I><P>
+<P>
+This is called when a client connects to a kernel server, <VAR>SERVER</VAR>,
+implemented in this address space.  It should arrange to apply <VAR>FN</VAR> to
+<CODE>(list <VAR>SERVER</VAR> <VAR>PORT</VAR>)</CODE> if a new incoming connection is received on <VAR>PORT</VAR>.
+<VAR>FN</VAR> should return <CODE>cl:nil</CODE> if no handler could be established, non-<CODE>cl:nil</CODE>
+otherwise.  <VAR>SERVER</VAR> is the C address of an ILU kernel <CODE>ilu_Server</CODE>, <VAR>PORT</VAR>
+is the C address of an ILU kernel <CODE>ilu_Port</CODE>.  The ILU C kernel routine
+<CODE>ilu_FileDescriptorOfMooringOfPort()</CODE> will return the UNIX file
+descriptor of the <CODE>ilu_Mooring</CODE> of an <CODE>ilu_Port</CODE>.  In threaded Common Lisps, this
+will typically cause a thread to be forked, which will watch for
+connections to this port.  In event-loop Common Lisps, this will typically
+register <VAR>FN</VAR> as an event handler for "input available on the file
+descriptor of the mooring of <VAR>PORT</VAR>".
+<P>
+<A NAME="IDX890"></A>
+<U>Function:</U> <B>ilu::setup-connection-watcher</B> <I>(FN <CODE>function</CODE>) (CONN <CODE>C-pointer</CODE>) (SERVER <CODE>C-pointer</CODE>)</I><P>
+<P>
+This is called when a new connection is setup.  It should arrange
+things so that <VAR>FN</VAR> is applied to <CODE>(list <VAR>CONN</VAR> <VAR>SERVER</VAR>)</CODE> whenever input is
+available on <VAR>CONN</VAR>.  <VAR>FN</VAR> should return non-<CODE>cl:nil</CODE> if the input was
+successfully handled, <CODE>cl:nil</CODE> otherwise.  If <VAR>FN</VAR> ever returns <CODE>cl:nil</CODE>, the
+connection-watcher should be demolished.  <VAR>CONN</VAR> is the C address of an
+ILU kernel <CODE>ilu_Connection</CODE>, and <VAR>SERVER</VAR> is the C address of an ILU
+kernel <CODE>ilu_Server</CODE>.  The ILU C kernel routine
+<CODE>ilu_FileDescriptorOfConnection()</CODE> will return the UNIX file descriptor
+for an <CODE>ilu_Connection</CODE>.  In threaded Common Lisps, this will typically fork a
+thread which will handle requests coming in on this connection.  In
+event-loop Common Lisps, this will typically register <VAR>FN</VAR> as an event handler
+for "input available on the file descriptor of the connection".
+<P>
+<H2><A NAME="SEC657" HREF="manual_toc.html#SEC657">Converting between character sets.</A></H2>
+<P>
+<EM>This section is not currently correct, but we are changing the Lisp runtime to make it correct.</EM>
+<P>
+ILU uses the ISO Latin-1 and Unicode (ISO 10646) character sets.
+Common Lisp uses a somewhat different version of `character'.  To
+provide for a mapping back and forth between ILU and Common Lisp, the
+runtime implementor must provide four macros:
+<P>
+<A NAME="IDX891"></A>
+<U>Macro:</U> <B>ilu::construct-lisp-character-from-unicode</B> <I>(UNICODE <CODE>(unsigned-byte 16)</CODE>)) => <CODE>character</CODE></I><P>
+<P>
+<A NAME="IDX892"></A>
+<U>Macro:</U> <B>ilu::determine-unicode-of-character</B> <I>(LISP-CHAR <CODE>character</CODE>) => <CODE>Unicode-code</CODE></I><P>
+<P>
+<A NAME="IDX893"></A>
+<U>Macro:</U> <B>ilu::construct-lisp-character-from-latin-1</B> <I>(LATIN-1-CODE <CODE>(unsigned-byte 8)</CODE>) => <CODE>character</CODE></I><P>
+<P>
+<A NAME="IDX894"></A>
+<U>Macro:</U> <B>ilu::determine-latin-1-of-character</B> <I>(LISP-CHAR <CODE>character</CODE>) => <CODE>ISO-Latin-1-code</CODE></I><P>
+<P>
+which I trust are self-explanatory.
+<P>
+<H2><A NAME="SEC658" HREF="manual_toc.html#SEC658">Support for Dynamic Object Creation</A></H2>
+<P>
+ILU allows the dynamic creation of objects.  This means that
+a true module can create the true CLOS object for an ILU object in a lazy
+manner, when it is referenced.  The mechanism for doing this is
+called <I>object tables</I>.  An object table consists of 2 C-callable
+functions, one to create an object, given its instance handle, and one to
+free any storage associated with the object table.  To support this
+mechanism, the Common Lisp port of ILU has to
+provide the following function:
+<P>
+<A NAME="IDX895"></A>
+<U>Function:</U> <B>ilu::create-object-table</B> <I>(<VAR>OBJECT-OF-IH-FN</VAR> <CODE>function</CODE>) (<VAR>FREE-SELF-FN</VAR> <CODE>function</CODE>) => <CODE>C-pointer</CODE></I><P>
+<P>
+The function accepts two Lisp functions, and returns a pointer
+to a C struct of type <CODE>ilu_ObjectTable</CODE>, or the value <CODE>0</CODE>,
+if no object table pointer can be produced.  The function will have to
+call into C space to actually produce the object table.  Look
+at the Franz ACL implementation for an example of how to do this.
+<P>
+<P>Go to the <A HREF="manual_24.html">previous</A>, <A HREF="manual_26.html">next</A> section.<P>

@@ -1,0 +1,247 @@
+@setfilename ilu-new.info
+@settitle Guide To ILU New Language Implementation
+@ifset ilucopyright
+BeginILUCopyright
+
+Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+Unlimited use, reproduction, modification, and distribution of this
+software and modified versions thereof is permitted.  Permission is
+granted to make derivative works from this software or a modified
+version thereof.  Any copy of this software, a modified version
+thereof, or a derivative work must include both the above copyright
+notice of Xerox Corporation and this paragraph.  Any distribution of
+this software, a modified version thereof, or a derivative work must
+comply with all applicable United States export control laws.  This
+software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+OF THE POSSIBILITY OF SUCH DAMAGES.
+  
+EndILUCopyright
+@end ifset
+@ifclear largerdoc
+@titlepage
+@title Guide To ILU New Language Implementation
+@author Farrell Wymore @code{<wymore@@parc.xerox.com>}
+@sp
+@today{}
+@sp
+Copyright @copyright{} 1993 Xerox Corporation@*
+All Rights Reserved.
+@end titlepage
+@end ifclear
+
+@section Introduction
+This is a guide to implementing a new target language for @system{ILU}. This
+guide will cover client/server stub generation and related artifacts, the
+object model, data marshalling functions, exception models, and the language 
+specific runtime.
+
+Readers of this document should be familier with @system{ILU} terms
+and concepts. Some familiarity with @system{CORBA} concepts would also be helpful.
+
+The typical language specific components of the @system{ILU} system are the
+stub generator, referred to as the ``stubber'' and the language specific runtime. 
+The stubber is responsible for generating the class/method hierarchy, the method
+interfaces, the data marshalling routines, type declarations, and the
+exception handling routines. The runtime is responsible for interfacing
+between the generated stubs, client, server and the @system{ILU} kernel.
+
+The stubber typically generates a stub source file for clients, a stub file
+for servers, and an include file of interface definitions. The @language{Fortran}
+stubber, for example,  generates a client specific file in @language{C}, a server 
+specific source file in @language{C}, a file of
+functions common to both client and server in @language{C}, a @language{C} 
+include file for the stubs, and a @language{Fortran} include file for the 
+fortran client and server. Thus, five (5) files are
+generated in the @language{Fortran} stubber.
+
+@section Getting Started
+There are number of issues involved in implementing a new stubber;
+naming conventions used for types, methods, exceptions, etc., how
+arguments will be passed to methods, the data allocation model, how to model certain
+data types, and finally, how to model the class hierarchy and method overloading.
+The following sections will attempt to outline the critical issues
+involved for each item.
+
+The next question is, do the stubs need to be generated in the target
+language or is another target language for the stubs adequate. The issues
+here are principally one of calling sequences, argument referencing, and
+function naming. 
+
+Other issues are involved in deciding which definitions/functions belong
+in which output files. For the most part, this type of decision may
+have obvious answers. In the @language{C} stubber, everything of a declarative
+nature that does not instanciate data goes into the header file. This
+includes type definitions, enumeration defintions, constant definitions,
+record, union, sequence, and class definitons, and exception definitions.
+The @file{*-common.c} contains the data marshalling functions, the exception 
+handling functions, the method dispatching functions, and an instanciation
+of the class structure. The @file{*-server-stubs.c} file contains the
+stubs for the server and the method dispatching table for the server
+methods. Finally the @file{*.c} file contains the stubs for the client
+and the method dispatching table for the client methods.
+
+Perhaps the best way to get started implementing a stubber for a new
+language is to begin with a preexisting stubber that is as close as
+possible to the target language. There is a large similarity among most 
+of the existing stubbers. The overall structure, and algorithms are largely 
+the same and differ in the syntax of the generated code and in the nuances of 
+the target language.
+
+@section Structure of a Stubber
+The overall structure of a stubber is simple typically following a heirarchy of
+generated files, definitions, and procedures. The first thing a stubber does
+after reading the command line is to parse the @language{isl} file. This
+yields a syntax tree which is usually traversed via accessor functions.
+
+The strategy for generating stubber files is simple: traverse the
+syntax tree generating one file on each traversal. 
+
+@section Naming
+In order to differenciate an item from multiple interface definitions used
+within a single client/server and multiple class definitions within a single 
+interface, item names must be considered carefully. Object oriented target 
+languages such as @language{C++} would have a very different naming scheme 
+than a target language with a flat or scoped name space such as @language{C}
+or @language{Fortran}. In many ways, mapping @system{ILU} names into a flat
+name space is more difficult since unique names for items must be managed and
+generated by the stubber rather than the target language as is the case for
+@language{C++}.
+
+The typical strategy used in the @language{C} and @language{Fortran} stubbers
+is to prefix the type, constant, and exception names with the interface
+name and to prefix method names with the interface name and class name
+concatenated together. This strategy uniquely identifies item names from
+other interfaces and/or classes used in a client, one interface imported 
+into another, or a class using another class as a superclass.
+
+The @language{C} stubber is intended to be @system{CORBA} compliant. Thus
+the naming strategy for the stubs is specified by the @system{CORBA}
+committee. The input language for the @language{C} stubber is not
+always @language{ISL} but occasionally the @system{CORBA} specified
+@language{IDL}. @system{CORBA}specifies that names are formed using
+the <module name>_<interface name> prefix. When using @language{ISL}, the 
+<module name> is equivalent to the <interface name> and the <interface name>
+is equivalent to the <type class name>. Thus, in @language{ISL}, names are formed 
+with the <interface name>_<type class name> prefix.
+
+@section Methods
+Both client and server methods are implemented by the @system{ILU/ISL}
+user. The stubber simply generates stubs for interfacing between
+client and server.
+@subsection Client Stubs
+The basic algorithm applied by each client stub is as follows:
+@itemize @bullet
+@item perform some class-instance/method specific initialization
+@item output argument values that will be input to the method
+@item wait for the server response
+@item if there is an error - prepare an exception
+@item read the output argument values and the method return value 
+		from the server
+@end itemize
+@subsection Server Stubs
+The basic algorithm applied by each server stub is as follows:
+@itemize @bullet
+@item read the input arguments into local memory
+@item call the server method
+@item if the return status is not OK send an exception
+@item write any output argument values and the return value to the client
+@end itemize
+@subsection Object Model
+The object model used in @system{ILU} is a single inheritance model.
+Consequently, when a method is specified in an interface, several things
+are generated by the stubber. As already indicated client and server stubs
+are generated for the method. In addition, an entry is made in the 
+client and server method dispatching tables and a corresponding dispatching
+method is generated. 
+
+When a client application calls a method procedure,
+the procedure that is actually called is the method dispatching procedure.
+The method dispatching procedure calls the client stub through a pointer 
+in the method dispatching table. The client stub moves the necessary argument
+data over the network to the server. The server invokes the corresponding
+server side stub. The server stub reads the input argument data and calls
+the method dispatching procedure. This is the same piece of code executed
+by the client only in another process and potentially on a different machine
+and the procedure is referencing a different dispatching table. The actual
+server method is invoked through the method dispatching table. The server
+method does whatever is necessary and returns to the dispatching procedure
+which in turn returns to the server stub which sends the return values
+back to the client stub who reads the values from the network and returns 
+them to the calling client application.
+
+The method dispatching procedures and dispatching tables are set up by the
+stubber and exist to match the object oriented inheritance model. In this
+way methods may be inherited from superclasses.
+@section Arguments
+Arguments may be specified in the @system{ILU} interface and rendered
+as part of the stub generation. Arguments are specified with typing and
+in/out characteristics.
+@subsection In, Out, InOut
+The @code{In}, @code{Out}, and @code{InOut} @language{ISL} 
+specifications indicate that the 
+associated argument
+is to be read only, write only, or read/write respectively. These indications
+in an @language{ISL} interface definition tell the  stubber to either
+send the argument data, receive the argument data, or both. 
+
+Many languages
+have the corresponding call-by-value and call-by-reference arguments.
+When an argument is declared to be an @code{In} argument, for example, the 
+@language{C} stubber, expects an argument that is passed by value. If an 
+argument is declared to be an @code{Out} argument, the @language{C} stub
+is generated to expect a pointer to the data area in a call-by-reference manner.
+
+@language{Fortran} stubs are generated to expect all of the arguments 
+to be call-by-reference. Thus data is obtained by dereferencing the
+argument pointer for @code{In} and @code{InOut} arguments.
+@subsection Data Types
+@language{ISL} and @language{IDL} both have some large number of primitive
+data types which must be supported by the stubbers. In addition, there are
+four (4) derived types which are supported: arrays, records, unions, and sequences.
+In the @language{C} stubber, all of the derived data types are passed by
+reference whether they are declared to be @code{In}, @code{Out}, or @code{InOut}.
+
+The sequence data type are of particular interest. Sequences of short character
+are special cased throughout many of the stubbers to simply be a pointer
+to char. This is what is generated for the special @language{ISL} type
+@code{ilu.CString}.
+
+@language{Fortran} character strings are modeled in @language{ISL} as
+@code{array of short character}.
+@section Data Marshalling
+Data marshalling referrs to the way in which data is moved from client to server
+and back again. For primitive data types this is a simple and straight forward
+operation. The @language{ILU} kernel provides builtin data marshalling procedures
+for all of the primitive data types. For aggregate  data types, the operation 
+is more complex. The data
+must be disassembled down to its primitive component types, sent to the
+requestor and reassembled in its original form.  
+
+Stubbers must generate special data marshalling
+functions for all aggregate data types in an interface definition. These
+data marshalling functions can become quite complex.  Consider: a sequence
+of record; each record contains a string and a union which contains an
+array of record, etc. This kind of type declaration would generate a
+series of marshalling functions which would decompose and send/receive more
+primitive types until a true primitive type is read or written.
+
+@section Exceptions
+
+
+@section Runtime
+Most, if not all, generated stubs will require a language specific
+runtime system to interface with the @system{ILU} kernel. The language
+specific runtime must initialize the kernel, register objects, and
+respond to messages sent. One of the principal tasks of the runtime
+is the invocation of the ``select'' system call in server applications.
+The select system call is usually done in a procedure called
+@code{LoopEndlessly}. It is the job of this procedure to listen for
+new connections and to dispatch to various input handling routines
+or a method invocation. 

@@ -1,0 +1,1079 @@
+<!-- This HTML file has been created by timdif2html 1.11
+     from manual.dif on 20 September 1999 -->
+
+<TITLE>ILU Reference Manual - Defining Interfaces</TITLE>
+<BODY TEXT=#000000 BGCOLOR=#ffffff>
+<P>Go to the <A HREF="manual_1.html">previous</A>, <A HREF="manual_3.html">next</A> section.<P>
+<H1><A NAME="SEC25" HREF="manual_toc.html#SEC25">Defining Interfaces</A></H1>
+<P>
+Module interfaces may be defined in either the Object Management Group's CORBA
+OMG IDL, or in ILU's native Interface Specification
+Language (aka ISL).  This document describes the syntax and
+semantics of ISL, and how to translate OMG IDL interfaces
+into ISL; see <CITE>CORBA 2.0</CITE> for a specification of the syntax and semantics
+of OMG IDL.
+<P>
+<H2><A NAME="SEC26" HREF="manual_toc.html#SEC26">General Syntax of ISL</A></H2>
+<P>
+The conventional file suffix for ISL files is <TT>`.isl'</TT>.  Some of the
+ILU tools rely on the name of the file being the same as the name of the
+interface defined in it, and rely on having only one interface defined in each
+<TT>`.isl'</TT> file.
+<P>
+An ISL interface contains four kinds of statements:  the interface header,
+type declarations, exception declarations, and constant declarations.  Each
+statement is terminated with a semi-colon.
+<P>
+Many statements in ISL contain lists:  lists of the fields in a record,
+the types in a union, the methods in an object type.  All lists in ISL are
+terminated with an <CODE>END</CODE> keyword, and the items in the list are separated by commas.
+<P>
+Comments may be placed in an ISL file.  They are introduced with the character sequence
+<CODE>(*</CODE>, and terminated with <CODE>*)</CODE>.  Comments nest.
+<P>
+<H3><A NAME="SEC27" HREF="manual_toc.html#SEC27">Identifiers</A></H3>
+<P>
+All identifiers that appear in ISL are alphanumeric, begin with an
+alphabetic character, and may contain hyphens.<A NAME="FOOT1" HREF="manual_foot.html#FOOT1">(1)</A>  Differences in case are not sufficient to distinguish between two identifiers; however, the case of an identifier may be preserved in its mapping to a specific programming language.
+<P>
+All ILU type names, exception names, and constant names have two parts, an interface identifier and a local identifier.  When writing the full name, the interface identifier comes first, followed by a period, followed by the local identifier.  If the interface identifier is ommitted in a name, it defaults to the interface identifier of the most recently encountered interface header.
+<P>
+Interface names, type names, exception names, and constant names occur in different name spaces.  Thus is is possible to have a type and an exception with the same name.<A NAME="FOOT2" HREF="manual_foot.html#FOOT2">(2)</A>
+<P>
+<H3><A NAME="SEC28" HREF="manual_toc.html#SEC28">Reserved Words</A></H3>
+<P>
+The following words are reserved words in ISL:
+<CODE>[ILU]ALIASED</CODE>,
+<CODE>ALLOWS</CODE>,
+<CODE>ARRAY</CODE>,
+<CODE>ASYNCHRONOUS</CODE>,
+<CODE>AUTHENTICATION</CODE>,
+<CODE>BOOLEAN</CODE>,
+<CODE>BRAND</CODE>,
+<CODE>BYTE</CODE>,
+<CODE>CARDINAL</CODE>,
+<CODE>CHARACTER</CODE>,
+<CODE>[ILU]CHARSET</CODE>,
+<CODE>CLASS</CODE>,
+<CODE>COLLECTIBLE</CODE>,
+<CODE>CONSTANT</CODE>,
+<CODE>DEFAULT</CODE>,
+<CODE>[ILU]DENOMINATOR</CODE>,
+<CODE>[ILU]DIRECTIVE</CODE>,
+<CODE>[ILU]DIRECTIVE-EXPERIMENTAL</CODE>,
+<CODE>DOCUMENTATION</CODE>,
+<CODE>END</CODE>,
+<CODE>ENUMERATION</CODE>,
+<CODE>EXCEPTION</CODE>,
+<CODE>EXTENSIBLE</CODE>,
+<CODE>FALSE</CODE>,
+<CODE>[ILU]FIXED</CODE>,
+<CODE>[ILU]FIXEDPOINT</CODE>,
+<CODE>FROM</CODE>,
+<CODE>FUNCTIONAL</CODE>,
+<CODE>ILUSTRING</CODE>,
+<CODE>IMPORTS</CODE>,
+<CODE>IN</CODE>,
+<CODE>INOUT</CODE>,
+<CODE>INTEGER</CODE>,
+<CODE>INTERFACE</CODE>,
+<CODE>LATIN1-CHARSET</CODE>,
+<CODE>[ILU]LANGUAGE</CODE>,
+<CODE>LIMIT</CODE>,
+<CODE>[ILU]LOCAL</CODE>,
+<CODE>LONG</CODE>,
+<CODE>METHODS</CODE>,
+<CODE>MAX-NUMERATOR</CODE>,
+<CODE>MIN-NUMERATOR</CODE>,
+<CODE>OBJECT</CODE>,
+<CODE>OF</CODE>,
+<CODE>OPTIONAL</CODE>,
+<CODE>OTHERS</CODE>,
+<CODE>OUT</CODE>,
+<CODE>PICKLE</CODE>,
+<CODE>RAISES</CODE>,
+<CODE>REAL</CODE>,
+<CODE>RECORD</CODE>,
+<CODE>[ILU]REFERENCE</CODE>,
+<CODE>[ILU]SEALED</CODE>,
+<CODE>SEQUENCE</CODE>,
+<CODE>SHORT</CODE>,
+<CODE>SIBLING</CODE>,
+<CODE>SINGLETON</CODE>,
+<CODE>SINK</CODE>,
+<CODE>SOURCE</CODE>,
+<CODE>[ILU]STATE</CODE>,
+<CODE>[ILU]STRING</CODE>,
+<CODE>SUPERCLASS</CODE>,
+<CODE>SUPERCLASSES</CODE>,
+<CODE>SUPERTYPES</CODE>,
+<CODE>TRUE</CODE>,
+<CODE>TYPE</CODE>,
+<CODE>TYPEID</CODE>,
+<CODE>UNICODE-CHARSET</CODE>,
+<CODE>UNION</CODE>.
+<P>
+Those words prefixed with <CODE>[ILU]</CODE> will begin with the three characters <CODE>ILU</CODE>
+unless the configuration option <I>--enable-new-keywords-plain</I> has been specified
+in configuring your ILU distribution, in which case
+the <CODE>ILU</CODE> prefix will be omitted.
+<P>
+Reserved words may be used as identifiers, by placing them in double quotes,
+but may not be used as identifiers without quoting.
+<P>
+Other identifiers are worth avoiding, as they may cause problems with
+specific language implementations.  The identifier <CODE>t</CODE> or <CODE>T</CODE>,
+for instance, causes problems with Common Lisp.
+Language-specific mappings of ISL should try to avoid these
+problems.
+<P>
+<H2><A NAME="SEC29" HREF="manual_toc.html#SEC29">Statement Syntax</A></H2>
+<P>
+<H3><A NAME="SEC30" HREF="manual_toc.html#SEC30">The Interface Header</A></H3>
+<P>
+Each interface is introduced with exactly one interface header of the form
+<P>
+<PRE>
+<CODE>INTERFACE</CODE> <VAR>interface-name</VAR> [ <CODE>BRAND</CODE> <VAR>brand</VAR> ] [ <CODE>IMPORTS</CODE> <VAR>list-of-imported-interfaces</VAR> <CODE>END</CODE> ] <CODE>;</CODE>
+</PRE>
+<P>
+The <VAR>interface-name</VAR> is used by various language-specific productions to
+create name spaces in which the types, exceptions, and constants defined in the
+interface are declared.
+<P>
+The optional <VAR>brand</VAR> is a quoted string of printable US-ASCII characters (using the codes
+from 0x20 to 0x7E, inclusive).  It is included into the type UID hash for types and exceptions defined
+in the interface, and can be used to make the type UIDs for otherwise-identical interfaces distinct.
+<P>
+The optional
+<VAR>list-of-imported-interfaces</VAR> is a comma-separated list of fields, each of the
+form
+<PRE>
+<VAR>interface-name</VAR> [ <CODE>FROM</CODE> <VAR>interface-file</VAR> ]
+</PRE>
+where <VAR>interface-file</VAR> is the name of the file containing the interface definition.
+Importing an interface allows
+the current interface to mention the types, exceptions, and constants
+defined in the imported interface, by referring to them as
+<PRE>
+<VAR>interface-name</VAR><CODE>.</CODE><VAR>type-or-value-name</VAR>
+</PRE>
+The graph of imported interfaces must be acyclic; that is, interfaces may
+not mutually refer to each other, either directly or through some other
+interfaces.  If the optional "FROM <VAR>interface-file</VAR>" is not specified for an imported
+interface, a sensible site-dependent search policy is followed in an attempt
+to locate that interface, typically looking down a path (environment variable <CODE>ILUPATH</CODE> on POSIX systems) of
+directories for a file with the name <TT>`<VAR>interface-name</VAR>.isl'</TT>.
+<P>
+<H3><A NAME="SEC31" HREF="manual_toc.html#SEC31">Interface Directives</A></H3>
+<P>
+Interface directives are experimental and might be changed in the next release.
+<P>
+After the header and before the types, an interface can have  
+an arbitrary list of interface directives of the form
+<P>
+<PRE>
+<CODE>DIRECTIVE-EXPERIMENTAL</CODE> <VAR>list-of-directives</VAR> <CODE>;</CODE>
+</PRE>
+<P>
+where <VAR>list-of-directives</VAR> is a comma separated list of quoted strings. 
+<P>
+In certain stubbers the  <VAR>list-of-directives</VAR> of some directive
+statements may contain language specific instructions about the mapping.  Tools which
+convey special meaning to directive statements currently ignore directive statements
+which are not recognized by their first quoted string.   It is typical that each 
+directive statement is
+recognized only by tools in a few of the ILU languages; Directive statements
+influence mapping within one address space but unless understood by all languages
+don't change the inter address space interfaces.     
+<P>
+<H3><A NAME="SEC32" HREF="manual_toc.html#SEC32">Type Declarations</A></H3>
+<P>
+In general, a type is defined with a statement of the form
+<P>
+<PRE>
+<CODE>TYPE</CODE> <VAR>type-name</VAR> <CODE>=</CODE> <VAR>type-reference</VAR> | <VAR>construction</VAR> [ <CODE>TYPEID</CODE> <VAR>type-id-string</VAR> ] <CODE>;</CODE>
+</PRE>
+<P>
+The form <CODE>TYPE <VAR>type-name</VAR> = <VAR>type-reference</VAR></CODE> is used when you want
+to rename an existing type to make its usage clear or give it a name in the current interface.  A <VAR>type-reference</VAR> is
+just a <VAR>type-name</VAR>, or a reference to a type name defined in another
+interface: <VAR>interface-name</VAR>.<VAR>type-name</VAR>.  The new name is then a `nickname' for the previously
+defined type.
+<P>
+The optional <CODE>TYPEID</CODE> attribute is provided for use with CORBA interfaces, which allow
+specification of type ID information.  Type IDs should conform to the syntax for URIs.
+It's probably safest <STRONG>not</STRONG> to use <CODE>TYPEID</CODE>, as ILU
+will automatically generate unique type ID's for your types.
+<P>
+<H4><A NAME="SEC33" HREF="manual_toc.html#SEC33">Primitive types</A></H4>
+<P>
+The following type "names" are pre-defined:
+<P>
+<UL>
+<LI>
+<CODE>INTEGER,</CODE> a 32-bit signed integer value;
+<LI>
+<CODE>SHORT INTEGER,</CODE> a 16-bit signed integer value;
+<LI>
+<CODE>LONG INTEGER,</CODE> a 64-bit signed integer value;
+<LI>
+<CODE>CARDINAL,</CODE> a 32-bit unsigned integer value;
+<LI>
+<CODE>SHORT CARDINAL</CODE>, a 16-bit unsigned integer value;
+<LI>
+<CODE>LONG CARDINAL</CODE>, a 64-bit unsigned integer value;
+<LI>
+<CODE>BYTE</CODE>, an unsigned 8-bit byte value;
+<LI>
+<CODE>BOOLEAN</CODE>, a logical value either True or False;
+<LI>
+<CODE>REAL</CODE>, an IEEE 64-bit double-precision floating-point value;
+<LI>
+<CODE>SHORT REAL</CODE>, an IEEE 32-bit single-precision floating-point value;
+<LI>
+<CODE>LONG REAL</CODE>, a 128-bit quadruple-precision floating-point value;
+<LI>
+<CODE>CHARACTER</CODE>, a 16-bit UNICODE/IS-10646 character; and
+<LI>
+<CODE>SHORT CHARACTER</CODE>, an 8-bit ISO 8859-1 character code (but excluding the octet 8_000).
+<LI>
+<CODE>PICKLE</CODE>, an opaque value containing some other value (see below).
+</UL>
+<P>
+There is also a special type <CODE>NULL</CODE>, which cannot be used
+directly; it has a single value, NULL.
+<P>
+<CODE><CODE>PICKLE</CODE></CODE> is an abstract type, values of which contain a `pickled' or `frozen' value
+of any other ISL type, and is thus used when a dynamically typed
+element is needed in an interface.  Functionally, it is quite similar to the
+CORBA <CODE><CODE>any</CODE></CODE> type, but has more efficient semantics.  <CODE><CODE>PICKLE</CODE></CODE>
+is only available if ILU has been configured with VARIANT support.
+<P>
+<H4><A NAME="SEC34" HREF="manual_toc.html#SEC34">Constructor overview</A></H4>
+<P>
+The form <CODE><CODE>TYPE</CODE> <VAR>type-name</VAR> = <VAR>construction</VAR></CODE> is used when a user needs to
+define a new type.  Several simple constructors for more complex data types
+are specified:
+<P>
+<UL>
+<LI>
+<CODE>ARRAY</CODE>, a fixed-length N-dimensional array of some specified type;
+<LI>
+<CODE>SEQUENCE</CODE>, a variable-length one-dimensional array of some specified type;
+<LI>
+<CODE>RECORD</CODE>, a sequence of typed fields, each of which may be of a different type;
+<LI>
+<CODE>UNION</CODE>, one of a set of specified types;
+<LI>
+<CODE>OPTIONAL</CODE>, a union with <CODE>NULL</CODE>;
+<LI>
+<CODE>ENUMERATION</CODE>, a type consisting of an explicitly enumerated set of values;
+<LI>
+<CODE>OBJECT</CODE>, an ILU object type.
+<LI>
+<CODE>FIXEDPOINT</CODE>, a rational type with a fixed denominator value (<EM>not yet implemented</EM>);
+</UL>
+<P>
+In addition, the automatically-imported interface ILU defines the
+short sequence <CODE>CString</CODE> of short character.
+<P>
+<H4><A NAME="SEC35" HREF="manual_toc.html#SEC35">Array Declarations</A></H4>
+<P>
+An <CODE>ARRAY</CODE> is a fixed-length N-dimensional array of some type.  It is defined
+with a declaration of the form
+<P>
+<PRE>
+<CODE>TYPE</CODE> <VAR>type-name</VAR> <CODE>=</CODE> <CODE>ARRAY</CODE> <CODE>OF</CODE> <VAR>dimension-list</VAR> <VAR>base-type-reference</VAR> <CODE>;</CODE>
+</PRE>
+<P>
+where <VAR>dimension-list</VAR> is a comma-separated list of non-negative integers,
+each integer specifying the size of a dimension of the array, and
+<VAR>base-type-reference</VAR> is a <VAR>type-reference</VAR> to some other ILU type.  For example,
+<P>
+<PRE>
+TYPE SymbolTable = ARRAY OF 400 Symbol;
+TYPE Matrix3030 = ARRAY OF 30, 30 REAL;
+</PRE>
+<P>
+The total number of elements in the array may not exceed 4294967295 (2^32-1).
+<P>
+<H4><A NAME="SEC36" HREF="manual_toc.html#SEC36">Sequence Declarations</A></H4>
+<P>
+A sequence is a variable-length one-dimensional array of some type.  It is
+defined with a declaration of the form
+<P>
+<PRE>
+<CODE>TYPE</CODE> <VAR>type-name</VAR> <CODE>=</CODE> [ <CODE>SHORT</CODE> ] <CODE>SEQUENCE</CODE> <CODE>OF</CODE> <VAR>base-type-reference</VAR> [ <CODE>LIMIT</CODE> <VAR>size</VAR> ] <CODE>;</CODE>
+</PRE>
+<P>
+where <VAR>base-type-reference</VAR> is a <VAR>type-reference</VAR> to some other ILU type.  If the <CODE>LIMIT</CODE>
+parameter <VAR>size</VAR> is used, it limits the sequences to having at most <VAR>size</VAR> elements; otherwise the sequences are limited to having at most 4294967295 (2^32-1) elements.
+Use of the <CODE>SHORT</CODE> modifier is shorthand for a <CODE>LIMIT</CODE> of 65535 (2^16-1).  Use of the <CODE>LONG</CODE>
+modifier is not defined for sequences.
+<P>
+<H4><A NAME="SEC37" HREF="manual_toc.html#SEC37">Generalized Array Declarations</A></H4>
+<P>
+This is a proposed language change, not yet accepted.  <EM>It is not supported in any of the language bindings.</EM>
+<P>
+The existing language has a weakness: it cannot express coordinated multidimensional variable-length arrays.  Coordinated means that there is only one length per dimension, regardless of how many arrays there are at that level.  An example is a bitmap of variable height and width: all rows are the same length, and all columns are the same length.
+<P>
+A generalized array type is defined with a declaration of the form
+<P>
+<PRE>
+<CODE>TYPE</CODE> <VAR>type-name</VAR> <CODE>=</CODE> <CODE>ARRAY</CODE> <VAR>dim</VAR> , ... <VAR>dim</VAR> <CODE>OF</CODE> <VAR>base-type-reference</VAR> <CODE>;</CODE>
+</PRE>
+where each <VAR>dim</VAR> is of the form
+<PRE>
+<VAR>length</VAR> | [ <CODE>LIMIT</CODE> <VAR>maxlen</VAR> | <CODE>SHORT</CODE> ]
+</PRE>
+<P>
+A dimension can be given a fixed length by simply specifying that length.  A variable-length dimension is either left blank (meaning the maximum length is 2**32-1), specified as <CODE>SHORT</CODE> (meaning the maximum length is 2**16-1), or given an explicit maximum length.
+<P>
+Note that putting the dimensions after the <CODE>OF</CODE> would create a syntactic ambiguity in some cases, concerning grouping of a <CODE>SHORT</CODE>.
+ 
+<H4><A NAME="SEC38" HREF="manual_toc.html#SEC38">Record Declarations</A></H4>
+<P>
+<PRE>
+<CODE>TYPE</CODE> <VAR>type-name</VAR> <CODE>= </CODE><CODE>RECORD</CODE> <VAR>fields...</VAR> <CODE>END</CODE><CODE> ;</CODE>
+</PRE>
+<P>
+where <VAR>fields</VAR> is a comma-separated list of <VAR>field</VAR>, which has the form
+<P>
+<PRE>
+<VAR>field-name</VAR> <CODE>:</CODE> <VAR>field-type-reference</VAR>
+</PRE>
+<P>
+A sample record declaration:
+<P>
+<PRE>
+TYPE Symbol = RECORD
+  name : string,
+  ltype : TypeInfo,
+  address : cardinal
+END;
+</PRE>
+<P>
+<H4><A NAME="SEC39" HREF="manual_toc.html#SEC39">Union Declarations</A></H4>
+<P>
+A union is a type which may take on values of several different types.  To be compliant
+with the CORBA notion of unions, the union declaration is much more baroque and complicated
+than it really should be.  The declaration has the form:
+<P>
+<PRE>
+<CODE>TYPE</CODE> <VAR>type-name</VAR> <CODE>=</CODE> [ <VAR>tag-type</VAR> ] <CODE>UNION</CODE> <VAR>arm-list</VAR> <CODE>END</CODE> [ <CODE>OTHERS</CODE> ] <CODE>;</CODE>
+</PRE>
+<P>
+where <VAR>arm-list</VAR> is a comma-separated list of <VAR>arm</VAR>, each of the form:
+<P>
+<PRE>
+[ <VAR>union-case-name</VAR> <CODE>:</CODE> ] <VAR>type-name</VAR> [ <VAR>arm-valuator</VAR> ]
+</PRE>
+<P>
+where each <VAR>arm-valuator</VAR> is either of the form
+<PRE>
+<CODE>=</CODE> <CODE>DEFAULT</CODE>
+</PRE>
+or of the form
+<PRE>
+<CODE>=</CODE> <VAR>value-list</VAR> <CODE>END</CODE>
+</PRE>
+and where a <VAR>value-list</VAR> is a comma-separated list of constant values of the tag type.  The tag type must be one of: <CODE>SHORT INTEGER</CODE>, <CODE>SHORT CARDINAL</CODE>, <CODE>INTEGER</CODE>, <CODE>CARDINAL</CODE>, <CODE>BYTE</CODE>, <CODE>BOOLEAN</CODE>, or an enumerated type.  (We should also allow <CODE>SHORT CHARACTER</CODE> and <CODE>CHARACTER</CODE>.)  The tag type is <CODE>SHORT INTEGER</CODE> if not explicitly specified.
+<P>
+A <VAR>arm-valuator</VAR> must be given for either all or none of the <VAR>arm</VAR>s; if none, the <VAR>arm</VAR>s are assigned single integral values, starting with 0.  <VAR>arm-valuator</VAR>s must be given if the tag type isn't numeric.  All the values appearing in the <VAR>value-list</VAR>s of a union must be different from one another.  <CODE>DEFAULT</CODE> can appear in at most one arm of a union type construction.  <CODE>DEFAULT</CODE> and <CODE>OTHERS</CODE> cannot both appear in the same union.
+<P>
+A union value consists of a tag value, possibly paired with a second value.  When the tag value is one that appears in, or is implicitly assigned to, an arm of the union type construction, the second value is of the type named in that arm.  Otherwise, the union value is well-formed only if <CODE>DEFAULT</CODE> or <CODE>OTHERS</CODE> appears in the union type construction.  If an arm is valued with <CODE>DEFAULT</CODE>, the second value is of that arm's type.  If <CODE>OTHERS</CODE> appears, there is no second value; it is as if there were a default arm of some trivial type (like C's <CODE>void</CODE> or ML's <CODE>unit</CODE>).
+<P>
+A simple example:
+<PRE>
+TYPE StringOrInt = UNION ilu.CString, CARDINAL END;
+</PRE>
+<P>
+A more complex example, that uses an explicit tag type, union case names, and a default arm:
+<PRE>
+TYPE ColorType = ENUMERATION RGB, CMY, HSV, YIQ, HLS END;
+TYPE U2 = ColorType
+  UNION
+    rgb-field : RGBObject = RGB END,
+    others : COLORObject = DEFAULT
+  END;
+</PRE>
+<P>
+The union case name is not guaranteed to be present in language-specific mappings.
+<P>
+ISL unions are logically (and sometimes actually, depending on the programming language)
+tagged.  There is a difference between
+<PRE>
+TYPE T1 = UNION Bar, Baz END;
+TYPE T2 = UNION Foo, T1 END;
+</PRE>
+and
+<PRE>
+TYPE T1 = UNION Bar, Baz END;
+TYPE T2 = UNION Foo, Bar, Baz END;
+</PRE>
+<P>
+<H4><A NAME="SEC40" HREF="manual_toc.html#SEC40">Optional Declarations</A></H4>
+<P>
+A variable of type <CODE><CODE>OPTIONAL</CODE> Foo</CODE> can have either a value of <CODE>Foo</CODE> or of type <CODE>NULL</CODE>.  It is declared with the form
+<P>
+<PRE>
+<CODE>TYPE</CODE> <VAR>type-name</VAR> <CODE>= </CODE><CODE>OPTIONAL</CODE> <VAR>base-type-reference</VAR> <CODE>;</CODE>
+</PRE>
+<P>
+This should be thought of as roughly equivalent to the declaration
+<P>
+<PRE>
+<CODE>TYPE</CODE> <VAR>type-name</VAR> <CODE>=</CODE> <CODE>BOOLEAN</CODE> <CODE>UNION</CODE> <VAR>base-type-reference</VAR> <CODE>= TRUE</CODE> <CODE>END</CODE> <CODE>END</CODE> <CODE>OTHERS</CODE> <CODE>;</CODE>
+</PRE>
+<P>
+The difference is that <CODE>OPTIONAL</CODE> types are logically un-tagged.  An optional value is not a pair of (<CODE>BOOLEAN</CODE>, <VAR>base-type-reference</VAR>); rather it is a single value, either a special, distinguished, "null" value or a value of the <VAR>base-type-reference</VAR>.  There is thus no difference between
+<PRE>
+TYPE Bar = OPTIONAL Foo;
+TYPE Baz = OPTIONAL Bar;
+</PRE>
+and
+<PRE>
+TYPE Bar = OPTIONAL Foo;
+TYPE Baz = OPTIONAL Foo;
+</PRE>
+<P>
+<EM>This type is not yet implemented.</EM>
+<P>
+<H4><A NAME="SEC41" HREF="manual_toc.html#SEC41">Enumeration Declarations</A></H4>
+<P>
+An enumeration is an abstract type whose values are explicitly enumerated.  It is declared with the form
+<P>
+<PRE>
+<CODE>TYPE</CODE> <VAR>type-name</VAR> <CODE>=</CODE> <CODE>ENUMERATION</CODE> <VAR>values...</VAR> <CODE>END</CODE> <CODE>;</CODE>
+</PRE>
+<P>
+where <VAR>values</VAR> is a comma-separated list of value names, with optional value
+ID's that are constants of type <CODE>SHORT CARDINAL</CODE> that
+specify the value used to represent the enumeration value
+"on the wire".<A NAME="FOOT3" HREF="manual_foot.html#FOOT3">(3)</A>  <EM>Use of value ID's is deprecated.</EM>
+<P>
+<PRE>
+<VAR>value-name</VAR> [ <CODE>=</CODE> <VAR>value-id</VAR> ]
+</PRE>
+<P>
+For example,
+<P>
+<PRE>
+TYPE TapeAction = ENUMERATION
+  SkipRecord = 1,
+  Rewind = 23,
+  Backspace = 49,
+  WriteEOF = 0
+END;
+</PRE>
+<P>
+All <VAR>value-name</VAR>s and <VAR>value-ID</VAR>s must be unique within an enumeration.  If
+<VAR>value-ID</VAR>s are not assigned explicitly, appropriate values will be assigned
+automatically in some unspecified way.  An enumeration may have at most 65535 (2^16-1) values.
+<P>
+<H4><A NAME="SEC42" HREF="manual_toc.html#SEC42">Object Type Declarations</A></H4>
+<P>
+Object types are described in the following way:
+<P>
+<PRE>
+<CODE>TYPE</CODE> <VAR>type-name</VAR> <CODE>=</CODE> <CODE>OBJECT</CODE>
+                        [ <CODE>SINGLETON</CODE> <VAR>protocol-description-string</VAR> ]
+                        [ <CODE>DOCUMENTATION</CODE> <VAR>documentation-string</VAR> ]
+                        [ <CODE>COLLECTIBLE</CODE> ]
+                        [ <CODE>OPTIONAL</CODE> ]
+                        [ <CODE>TYPEID</CODE> <VAR>type-id-string</VAR> ]
+                        [ <CODE>SUPERTYPES</CODE> <VAR>supertype-list</VAR> <CODE>END</CODE> ]
+                        [ <CODE>METHODS</CODE> <VAR>method-list...</VAR> <CODE>END</CODE> ]
+                        [ <CODE>BRAND</CODE> <VAR>brand-string</VAR> ] <CODE>;</CODE>
+</PRE>
+<P>
+The keyword <CODE>CLASS</CODE> is a deprecated synonym for <CODE>OBJECT</CODE>, and <CODE>SUPERCLASSES</CODE> is a deprecated synonym for <CODE>SUPERTYPES</CODE>.  Also,
+<PRE>
+                        [ <CODE>SUPERCLASS</CODE> <VAR>supertype-name</VAR> ]
+</PRE>
+is a deprecated equivalent to
+<PRE>
+                        [ <CODE>SUPERTYPES</CODE> <VAR>supertype-name</VAR> <CODE>END</CODE> ]
+</PRE>
+<P>
+The <CODE>SINGLETON</CODE> keyword specifies that instances of this type are
+singleton servers, and implies that the discriminator object (the
+subject of the call) should not be implicitly marshalled as the first
+argument in an RPC.  This is typically used in describing an instance of
+an existing RPC service, which is to be modelled in ILU.  The
+argument to <CODE>SINGLETON</CODE> is a string in the form of ILU
+"protocol-info", which specifies particular protocol-specific
+parameters to be used in implementing this object type `on the wire'.  For
+example, the Sun RPC calendar manager would use a
+<VAR>protocol-description-string</VAR> of <CODE>"sunrpc_2_100068_3"</CODE>,
+indicating that it uses a Sun RPC program number of 100068 and
+a Sun RPC version of 3.
+<P>
+The optional <VAR>documentation-string</VAR> is a quoted string, which is passed
+on to language-specific bindings where possible, such as with the doc-string
+capability in Common Lisp.
+<P>
+The <CODE>COLLECTIBLE</CODE> keyword specifies that instances of this type are meant to
+be garbage collectible, and that methods necessary for this should be
+automatically added to its method suite.  For an object type to be collectible,
+all ancestor object types must also be collectible.
+<P>
+The <CODE>OPTIONAL</CODE> keyword specifies that the language-specific <CODE>nil</CODE> value
+may be passed, instead of an instance of this object type, anywhere this object type is used.
+<EM>This is a CORBA mis-feature, and its use is strongly deprecated.  Better
+to explicitly use a different type constructed with the ILU <CODE>OPTIONAL</CODE> keyword.</EM>
+<P>
+The optional <VAR>supertype-list</VAR> defines an inheritance relationship between the object
+types named in the list and the type <VAR>type-name</VAR>.
+<P>
+The optional <VAR>type-id-string</VAR> can be used to explicitly assign an MSTID
+for an object type.  Doing so effectively <I>seal</I>s the object type; that is,
+changes to the structure of the object type will not be reflected in the MSTID,
+so version mismatches will not be caught automatically by ILU.  This is
+a dangerous feature (mandated by CORBA).
+<P>
+The <VAR>brand-string</VAR> in the <CODE>BRAND</CODE> clause, if any, contributes an arbitrary
+tag to the structure of the type; omitting the <CODE>BRAND</CODE> clause is equivalent to
+giving one with the empty string.  The brand is included in the type UID hash of the
+type, and thus gives the programmer a way to make
+two types distinct despite their otherwise having the same structure.  The <VAR>brand-string</VAR>
+should be a quoted string of printable US-ASCII characters.
+<P>
+The <VAR>method-list</VAR> is a comma-separated list of procedure
+descriptions.  All the methods of an object type have distinct names.
+This means that independently-developed supertypes might not be usable together.
+<P>
+Methods have the syntax:
+<P>
+<PRE>
+[ <CODE>FUNCTIONAL</CODE> ] [ <CODE>ASYNCHRONOUS</CODE> ] <VAR>method-name</VAR> <CODE>(</CODE> [ <VAR>args...</VAR> ] <CODE>)</CODE>
+        [ <CODE>:</CODE> <VAR>return-type-reference</VAR> ]
+        [ <CODE>RAISES</CODE> <VAR>exceptions...</VAR> <CODE>END</CODE> ]
+        [ <CODE>=</CODE> <VAR>procedure-id</VAR> ]
+        [ <VAR>documentation-string</VAR> ]
+</PRE>
+<P>
+where the discriminator (the implicit first argument to the method,
+the subject of the call, an instance of the object type in question) is not
+explicitly listed in the signature.  Each method has zero or more arguments in
+a comma-separated list, each element of which is a colon-separated two-ple
+<PRE>
+[ <VAR>argument-direction</VAR> ] <VAR>argument-name</VAR> <CODE>:</CODE> [ <CODE>SIBLING</CODE> ] <VAR>argument-type-reference</VAR>
+</PRE>
+The <CODE>SIBLING</CODE>
+keyword may only appear on arguments of an object type, to indicate that the
+argument should be a sibling object to the discriminator of the method.
+The <CODE>FUNCTIONAL</CODE> keyword indicates that the method, for a given set of arguments, is idempotent (i.e., the side effects of one call are the same as the side effects of more than one call) and will always return the same result (or raise the same exception); this
+information may be used for caching of return values in the client side stubs.
+The optional <VAR>argument-direction</VAR> information is one of the three keywords <CODE>IN</CODE>, <CODE>OUT</CODE>, <CODE>INOUT</CODE>,
+specifying whether the parameter is being used as an input parameter, an output parameter, or both.
+<P>
+A method return type is allowed (again separated from the procedure argument
+list by a colon), and a list of possible exceptions may be specified as a
+comma-separated list of exception names, bracketed with the keywords RAISES
+and END.
+<P>
+The optional <VAR>procedure-id</VAR> field allows a service description to specify the
+procedure code that is used in the RPC request packet for this method.
+Procedure ID's are restricted to the range [0,65279], and must be unique
+within an interface.  This may only be used in methods on objects marked
+with the <CODE>SINGLETON</CODE> attribute.
+<P>
+If a method is marked with the <CODE>ASYNCHRONOUS</CODE> keyword and does not return a
+value or raise an exception, the RPC method call of a surrogate instance will
+return after sending the request packet to the RPC partner, as the success of
+the call does not depend on the completion of the associated code.  Other RPC
+methods  will block in such a way as to allow the scheduler to handle other
+events while it is waiting for the call to complete, if the user has
+registered the appropriate scheduler hooks with the ILU runtime.
+<P>
+The optional <VAR>documentation-string</VAR> is a quoted string, which is passed
+on to language bindings for which it is meaningful, such as the doc-string
+capability in Common Lisp.
+<P>
+For example:
+<P>
+<PRE>
+TYPE FancyString = OBJECT
+  METHODS
+    FUNCTIONAL Length () : cardinal,
+    Substring (start : cardinal, end : cardinal) : string
+      RAISES StartGreaterThanEnd, StartTooLarge, EndTooLarge END,
+    Char (index : cardinal) : character
+      RAISES BadIndex END
+  END;
+</PRE>
+<P>
+Note that the object language in ILU is not intended to be used to fully
+<EM>define</EM> an object type, but rather to <EM>describe</EM> it in a simple language
+that can be transformed into the different object type definition systems of several
+other languages.
+<P>
+<H4><A NAME="SEC43" HREF="manual_toc.html#SEC43">Fixed-point Declarations</A></H4>
+<P>
+A <CODE>FIXEDPOINT</CODE> type is a rational type with a fixed denominator.  It is defined
+with a declaration of the form
+<P>
+<PRE>
+<CODE>TYPE</CODE> <VAR>type-name</VAR> <CODE>=</CODE> <CODE>FIXEDPOINT</CODE> <CODE>[</CODE> <CODE>MIN-NUMERATOR</CODE> <VAR>min-num-value</VAR> <CODE>]</CODE> <CODE>[</CODE> <CODE>MAX-NUMERATOR</CODE> <VAR>max-num-value</VAR> <CODE>]</CODE> <CODE>[</CODE> DENOMINATOR <VAR>denom-value</VAR> <CODE>]</CODE> <CODE>;</CODE>
+</PRE>
+<P>
+where <VAR>denom-value</VAR> specifies the denominator of all values of the type, the optional <VAR>min-num-value</VAR> specifies the minimum numerator value allowed for values of the type, and the optional <VAR>max-num-value</VAR> specifies the maximum numerator value allowed for values of the type.  If <VAR>denom-value</VAR> is negative, it is interpreted as the reciprocal of its absolute value.  If either <VAR>min-num-value</VAR> or <VAR>max-num-value</VAR> is not specified, the numerator value is not bounded in that direction.  If the denominator is not specified, it defaults to 1.
+<P>
+<EM>This type is still experimental and may not be supported in any of the ILU language bindings.</EM>
+<P>
+<H3><A NAME="SEC44" HREF="manual_toc.html#SEC44">Exception Declarations</A></H3>
+<P>
+Exceptions in ILU are raised by ILU methods.  They allow error conditions to
+be signalled back to the calling code.  They are declared with a statement of
+the form:
+<P>
+<PRE>
+<CODE>EXCEPTION</CODE> <VAR>exception-name</VAR> [ <CODE>:</CODE> <VAR>type-reference</VAR> ] [ <VAR>documentation-string</VAR> ] <CODE>;</CODE>
+</PRE>
+<P>
+The optional <VAR>type-reference</VAR> part of the declaration allows the exception to have
+an associated value, to be used in interpretation of the exception.  For
+example, an exception BadFilename might have the type <CODE>ilu.CString</CODE>, so that the
+actual bad filename can be associated with the exception:
+<P>
+The optional <VAR>documentation-string</VAR> is a quoted string, which is passed
+on to language bindings for which it is meaningful, such as the doc-string
+capability in Common Lisp.
+<P>
+<PRE>
+TYPE Filename = ilu.CString;
+EXCEPTION BadFileName : Filename "The value is the bad filename";
+</PRE>
+<P>
+Because of the uncertain nature of life in distributed systems, the pre-defined exception
+<CODE>ilu.ProtocolError</CODE> (defined in the ILU interface) may be raised by any
+method, to indicate that the method could not be handled, for some reason.  It
+has the following form:
+<P>
+<PRE>
+TYPE ProtocolErrorDetail = ENUMERATION
+                NoSuchClassAtServer = 1,
+                BrandMismatch = 2,
+                NoSuchMethodOnClass = 3,
+                InvalidArguments = 4,
+                UnknownObjectInstance = 5,
+                UnreachableModule = 6,
+                RequestRejectedByModule = 7,
+                TimeoutOnRequest = 8,
+                UnknownError = 9
+        END;
+
+EXCEPTION ProtocolError : ProtocolErrorDetail;
+</PRE>
+<P>
+Signalling of <CODE>ProtocolError</CODE> is never done by user-written server code; it is
+reserved to the transport and runtime layers of ILU.
+<P>
+<H3><A NAME="SEC45" HREF="manual_toc.html#SEC45">Constant Declarations</A></H3>
+<P>
+For convenience of interface design, constant values for certain simple types
+may be defined in ISL with statements of the form
+<P>
+<PRE>
+<CODE>CONSTANT</CODE> <VAR>constant-name</VAR> <CODE>:</CODE> <VAR>constant-type</VAR> <CODE>=</CODE> <VAR>constant-value</VAR> <CODE>;</CODE>
+</PRE>
+<P>
+<H4><A NAME="SEC46" HREF="manual_toc.html#SEC46">Integer, Cardinal, and Byte Constants</A></H4>
+<P>
+A <VAR>constant-value</VAR> for types that are sub-types of <CODE>INTEGER</CODE>, <CODE>CARDINAL</CODE>, or <CODE>BYTE</CODE>
+is specified with the syntax
+<P>
+<PRE>
+[ <VAR>sign</VAR> ] [ <VAR>base-indicator</VAR> ] <VAR>digits</VAR>
+</PRE>
+<P>
+where the optional <VAR>base-indicator</VAR> allows selection of bases 2, 8, 10 or 16.
+It is a digit '0' (zero) followed by either the character 'B' for base 2, 'X'
+for base 16, 'O' (oh) for base 8, or 'D' for base 10.  The <VAR>sign</VAR> is only
+valid for subtypes of <CODE>INTEGER</CODE>; it is either '+' or '-'; if not specified, '+'
+is assumed.  The <VAR>base-indicator</VAR> and <VAR>digits</VAR> fields are case-insensitive.
+<P>
+<H4><A NAME="SEC47" HREF="manual_toc.html#SEC47">Real Constants</A></H4>
+<P>
+A <VAR>constant-value</VAR> for subtypes of <CODE>REAL</CODE> has the syntax:
+<P>
+<PRE>
+[ <VAR>sign</VAR> ] <VAR>integer</VAR><CODE>.</CODE><VAR>fraction</VAR> [ <CODE>e</CODE> <VAR>exponent</VAR> ]
+</PRE>
+<P>
+where <VAR>integer</VAR> and <VAR>fraction</VAR> are sequences of decimal digits, <VAR>sign</VAR> is
+either '+' or '-' ('+' is the default), and <VAR>exponent</VAR> is the power of 10
+which the rest of the value is multiplied by (defaults to 0).
+<P>
+<H4><A NAME="SEC48" HREF="manual_toc.html#SEC48">ilu.CString Constants</A></H4>
+<P>
+A <VAR>constant-value</VAR> for a sub-type of <CODE>ilu.CString</CODE> has the form
+<P>
+<PRE>
+<CODE>"</CODE><VAR>characters</VAR><CODE>"</CODE>
+</PRE>
+<P>
+where <VAR>characters</VAR> are any ISO-Latin-1 characters except for 8_000.  The
+escape character is defined to be '#' (hash).  The escape character may occur
+in the string only in the following ways:
+<P>
+<PRE>
+#" -- a single double-quote character
+## -- a single escape character
+#<VAR>hex-digit</VAR><VAR>hex-digit</VAR> -- the octet 16_<VAR>hex-digit</VAR><VAR>hex-digit</VAR>
+#n -- newline
+#r -- carriage return
+</PRE>
+<P>
+<H4><A NAME="SEC49" HREF="manual_toc.html#SEC49">Examples of Constants</A></H4>
+<P>
+<PRE>
+CONSTANT Newline : byte = 10;
+CONSTANT Pi : short real = 3.14159;
+CONSTANT Big : long real = -1.1349e27;  (*  -1.1349 * 10**27   *)
+TYPE Filename = ilu.CString;
+CONSTANT MyLogin : Filename = "~/.login";
+CONSTANT Prompt : ilu.CString = "OK#n ";
+CONSTANT HeapBound : cardinal = 0xFFFF39a0;
+CONSTANT Pattern1 : cardinal = 0b000001000001;
+</PRE>
+<P>
+<A NAME="IDX52"></A>
+<H2><A NAME="SEC50" HREF="manual_toc.html#SEC50">ilu.isl</A></H2>
+<P>
+The standard interface <CODE>ilu</CODE> can be found in the file <TT>`<VAR>ILUHOME</VAR>/interfaces/ilu.isl'</TT>; it is maintained as <TT>`<VAR>ILUHOME</VAR>/src/stubbers/parser/ilu.isl'</TT>.  Here are its contents:
+<P>
+<PRE>
+INTERFACE ilu BRAND "version 2";
+
+(*
+Copyright (c) 1991-1997 Xerox Corporation.  All Rights Reserved.  
+   
+Unlimited use, reproduction, and distribution of this software is
+permitted.  Any copy of this software must include both the above
+copyright notice of Xerox Corporation and this paragraph.  Any
+distribution of this software must comply with all applicable United
+States export control laws.  This software is made available AS IS,
+and XEROX CORPORATION DISCLAIMS ALL WARRANTIES, EXPRESS OR IMPLIED,
+INCLUDING WITHOUT LIMITATION THE IMPLIED WARRANTIES OF MERCHANTABILITY
+AND FITNESS FOR A PARTICULAR PURPOSE, AND NOTWITHSTANDING ANY OTHER
+PROVISION CONTAINED HEREIN, ANY LIABILITY FOR DAMAGES RESULTING FROM
+THE SOFTWARE OR ITS USE IS EXPRESSLY DISCLAIMED, WHETHER ARISING IN
+CONTRACT, TORT (INCLUDING NEGLIGENCE) OR STRICT LIABILITY, EVEN IF
+XEROX CORPORATION IS ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+
+$Id: isl.tim,v 1.54 1999/08/03 01:56:51 janssen Exp $
+*)
+
+TYPE CString = SEQUENCE OF SHORT CHARACTER;
+
+TYPE CORBA-Object = OBJECT OPTIONAL TYPEID "IDL:omg.com/CORBA/Object:1.0";
+</PRE>
+<H2><A NAME="SEC51" HREF="manual_toc.html#SEC51">Using OMG IDL with ILU</A></H2>
+<P>
+ILU allows the use of CORBA OMG IDL
+<A NAME="FOOT4" HREF="manual_foot.html#FOOT4">(4)</A> instead
+of ILU ISL.  It does this by translating the OMG IDL
+to its equivalent form in ISL.  Most ILU tools will do this automatically,
+based on whether the suffix of the filename argument is <TT>`.isl'</TT> or <TT>`.idl'</TT>.
+In addition, the program <CODE>idl2isl</CODE> can be invoked explicitly to create
+an ISL version of an OMG IDL interface file.
+The program idl2isl translates from IDL to ISL.
+IDL is the Interface Definition Language defined by the
+Object Management Group.<A NAME="FOOT5" HREF="manual_foot.html#FOOT5">(5)</A>
+<P>
+<H3><A NAME="SEC52" HREF="manual_toc.html#SEC52">Translation</A></H3>
+<P>
+On the whole, the translation from IDL to ISL is
+a straightforward change of syntax.  There are a few cases, however, where a bit more is needed.
+<P>
+<H4><A NAME="SEC53" HREF="manual_toc.html#SEC53">Anonymous types</A></H4>
+<P>
+OMG IDL allows type declarators to be used in certain places in the
+syntax (for example, struct members and operation parameters).
+ISL does not;
+it requires a type name in the corresponding situations.
+As a result, it is sometimes necessary for the translator to introduce
+a name in the ISL output for those types that are
+anonymous in the OMG IDL input.
+These names are always of the form
+<CODE>AnonType-<VAR>nnn</VAR>-</CODE>, where <VAR>nnn</VAR> is an integer.
+<P>
+For example, the OMG IDL declaration
+<P>
+<PRE>
+struct str {
+	long	f1;
+	long	f2[5];
+};
+</PRE>
+is translated into the following ISL:
+<PRE>
+TYPE AnonType-1- = ARRAY OF 5 INTEGER;
+TYPE str = RECORD
+	f1 : INTEGER,
+	f2 : AnonType-1-
+	END;
+</PRE>
+<P>
+<H4><A NAME="SEC54" HREF="manual_toc.html#SEC54">Topmodules mode</A></H4>
+When the translator is in this mode (which it is by default),
+only <CODE>module</CODE> declarations are allowed at the topmost level.
+Each <CODE>module</CODE> translates into an <CODE>INTERFACE</CODE> declaration
+in ISL, and the declarations inside each <CODE>module</CODE> go
+into the corresponding ISL <CODE>INTERFACE</CODE>.
+<P>
+If the translator is not in this mode,
+all the declarations in the IDL file go into one
+ISL <CODE>INTERFACE</CODE> whose name is taken from the OMG IDL
+input filename, less the <TT>`.idl'</TT> suffix.
+<P>
+<H4><A NAME="SEC55" HREF="manual_toc.html#SEC55">Imports mode</A></H4>
+When the translator is in this mode (which it is by default),
+<CODE>#include</CODE> preprocessor directives are, roughly speaking, turned into
+ISL <CODE>IMPORT</CODE> statements.
+This mode allows for separate compilation (stub generation) of interfaces.
+There are some restrictions:
+the <CODE>#include</CODE> directives must occur before any declarations in the
+file, and the files that are included must not be fragments.
+That is, each must consist of a sequence of whole declarations
+(more specifically, <CODE>module</CODE> declarations if in <CODE>topmodules</CODE> mode).
+The included files may in turn include other files.
+<P>
+If the translator is not in this mode,
+the input is considered to be the result of preprocessing the file first
+and textually substituting the included files,
+following the usual behavior of C and C++ compilers.
+<P>
+<H4><A NAME="SEC56" HREF="manual_toc.html#SEC56">Unsupported constructs</A></H4>
+<P>
+If VARIANT support has not been configured in,
+the IDL type <CODE>any</CODE> is disallowed
+by the translator.
+<P>
+Use of <CODE>context</CODE> clauses on operations is not supported.
+<P>
+<H3><A NAME="SEC57" HREF="manual_toc.html#SEC57">Manual Invocation of <CODE>idl2isl</CODE></A></H3>
+<P>
+The program is run automatically as an intermediate step
+by any of the ILU tools that
+take ISL files (normally ending in <TT>`.isl'</TT>)
+if the filename ends in <TT>`.idl'</TT>.
+<P>
+The program may also be run directly, with the following arguments:
+<PRE>
+<CODE>idl2isl</CODE> { <CODE>-Wb,<VAR>toggle</VAR></CODE> | <CODE>-Wb,!<VAR>toggle</VAR></CODE> }* <CODE><VAR>source</VAR>.idl</CODE>
+</PRE>
+In this case, it writes the ISL to its standard output.
+A toggle is set with an argument
+<CODE>-Wb,<VAR>toggle</VAR></CODE>
+and cleared with an argument
+<CODE>-Wb,!<VAR>toggle</VAR></CODE>.
+Toggle settings may also be effected by setting the environment variable
+<TT>`IDL2ISL_OPTS'</TT> to a comma-separated list of toggle names,
+each of which is either preceded by a <TT>`!'</TT> character (which clears it)
+or not (which sets it).
+Command-line arguments take precedence over the environment variable
+settings.
+<P>
+The toggles are:
+<UL>
+<LI>
+<CODE>dump</CODE> (default off): produce a dump of the abstract syntax tree.
+Used for debugging the translator itself.
+<LI>
+<CODE>imports</CODE> (default on): set the <CODE>imports</CODE> mode on (explained below).
+<LI>
+<CODE>topmodules</CODE> (default on): set the <CODE>topmodules</CODE> mode on
+(explained below).
+</UL>
+<P>
+<H2><A NAME="SEC58" HREF="manual_toc.html#SEC58">ISL Grammar</A></H2>
+<P>
+In this grammar, parentheses are used for grouping, vertical-bar
+indicates selection, braces indicated optionality, quotation marks
+indicate literal keywords or literal punctuation.
+<P>
+No whitespace is allowed between the parts of a <CODE>radix</CODE>, <CODE>number</CODE>,
+or <CODE>quoted-string</CODE>.  Aside from that, whitespace is used to separate
+fields where necessary, and excess whitespace is ignored outside of
+<CODE>quoted-string</CODE>s.
+<P>
+Three primitives are used:
+<UL>
+<LI>
+<VAR>name-string</VAR>,
+which is a
+string consisting of decimal digits, upper and lower-case letters, and
+hyphens, beginning with a letter.  It may not be a keyword, unless it
+is quoted with double-quotes.
+<LI>
+<VAR>string</VAR>,
+which is any sequence of
+characters.
+<LI>
+<VAR>digits</VAR>,
+which is a sequence of digits drawn from the digits
+for the particular radix.  The default radix is decimal.
+</UL>
+<P>
+<PRE>
+interface = interface-def | interface interface-def
+
+interface-def = interface-declaration interface-directive-list other-declarations
+
+interface-declaration = "INTERFACE" <VAR>name-string</VAR>
+                        [ "BRAND" brand-string ]
+                        [ "IMPORTS" import-list "END" ]
+                        ";"
+
+import-name = <VAR>name-string</VAR> [ "FROM" filename ]
+
+import-list = import-name | import-list "," import-name
+
+interface-directive-list = [ interface-directive interface-directive-list ]
+
+interface-directive = "DIRECTIVE-EXPERIMENTAL" quoted-string-list ";"
+
+quoted-string-list = quoted-string | quoted-string-list "," quoted-string
+
+other-declarations = [ other-declaration other-declarations ]
+
+other-declaration = constant-decl | exception-decl | type-decl
+
+constant-decl = "CONSTANT" <VAR>name-string</VAR> ":" ( integer-const
+                                           | cardinal-const
+                                           | boolean-const
+                                           | byte-const
+                                           | float-const
+                                           | string-const ) ";"
+
+integer-const = [ "SHORT" | "LONG" ] "INTEGER" "=" [ sign ] number
+
+boolean-const = "BOOLEAN" "=" boolean-value
+
+cardinal-const = [ "SHORT" | "LONG" ] "CARDINAL" "=" number
+
+byte-const = "BYTE" "=" number
+
+float-const = [ "SHORT" | "LONG" ] "REAL" "="
+              [sign] <VAR>digits</VAR> [ "." <VAR>digits</VAR> ] [ "e" <VAR>digits</VAR> ]
+
+number = [ radix ] <VAR>digits</VAR>
+
+radix = "0" ( binary | octal | hexadecimal )
+
+binary = "b"
+
+octal = "o"
+
+hexadecimal = "x"
+
+string-const = "ilu.CString" "=" quoted-string
+
+exception-decl = "EXCEPTION" excp-name [ ":" type ] [ typeid ] [ doc-string ] ";"
+
+excp-name = <VAR>name-string</VAR>
+
+type-decl = "TYPE" <VAR>name-string</VAR> "=" ( type | type-cons ) [ typeid ]";"
+
+type = primitive-type-name | [ <VAR>name-string</VAR> "." ] <VAR>name-string</VAR>
+
+typeid = "TYPEID" type-id-string
+
+primitive-type-name = "BYTE"
+                    | [ "SHORT" | "LONG" ] "CARDINAL"
+                    | [ "SHORT" | "LONG" ] "INTEGER"
+                    | [ "SHORT" | "LONG" ] "REAL"
+                    | [ "SHORT" ] "CHARACTER"
+                    | "BOOLEAN"
+                    | "PICKLE"
+
+type-cons =   record-cons
+                | array-cons
+                | sequence-cons
+                | union-cons
+                | optional-cons
+                | enum-cons
+                | object-cons
+
+record-cons = "RECORD" field-list "END"
+
+field-list = field | field-list "," field
+
+field = <VAR>name-string</VAR> ":" type
+
+sequence-cons = [ "SHORT" ] "SEQUENCE" "OF" type [ "LIMIT" number ]
+
+array-cons = "ARRAY" "OF" dimensions-list type
+
+dimensions-list = number | dimensions-list "," number
+
+union-cons = [ <VAR>int-enum-or-boolean-type</VAR> ] "UNION" union-field-list "END"
+
+union-field-list = union-field | union-field-list "," union-field
+
+union-field = [ <VAR>field-name-string</VAR> ":" ] type [ "=" const-list "END" ]
+
+const-list = const | const-list "," const
+
+const = number | enum-field-name | boolean-value
+
+enum-cons = "ENUMERATION" enum-field-list
+
+enum-field-list = enum-field | enum-field-list "," enum-field
+
+enum-field = <VAR>string</VAR>
+
+boolean-value = "TRUE" | "FALSE"
+
+optional-cons = "OPTIONAL" type
+
+object-cons = "OBJECT" object-attributes
+
+object-attributes = object-feature | object-attributes object-feature
+
+object-feature =  "SINGLETON" singleton-protocol-info
+                | "COLLECTIBLE"
+                | "OPTIONAL"
+                | "DOCUMENTATION" doc-string
+                | "BRAND" brand-string
+                | "SUPERTYPES" supertype-list "END"
+                | "METHODS" method-list "END"
+
+supertype-list = type | supertype-list "," type
+
+singleton-protocol-info = quoted-string
+
+method-list = method | method-list "," method
+
+method = [ "FUNCTIONAL" | "ASYNCHRONOUS" ] <VAR>name-string</VAR>
+         arguments [ ":" return-type ] [ "RAISES" exception-list "END"]
+         [ doc-string ]
+
+return-type = type
+
+exception-list = excp-name | exception-list "," excp-name
+
+arguments = "(" [ argument-list ] ")"
+
+argument-list = argument | argument-list "," argument
+
+argument = [ "IN" | "OUT" | "INOUT" ] <VAR>name-string</VAR> ":" [ "SIBLING" ] type
+
+brand-string = printable-ascii-quoted-string
+
+doc-string = quoted-string
+
+quoted-string = "\"" <VAR>string</VAR> "\""
+
+printable-ascii-quoted-string = "\"" <VAR>string consisting of only printable ASCII characters</VAR> "\""
+
+type-id-string = "\"" scheme-name ":" <VAR>string</VAR> "\""
+
+scheme-name = <VAR>string-without-colon-char</VAR>
+</PRE>
+<P>
+<P>Go to the <A HREF="manual_1.html">previous</A>, <A HREF="manual_3.html">next</A> section.<P>

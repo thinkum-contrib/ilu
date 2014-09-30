@@ -1,0 +1,352 @@
+@setfilename mappings.info
+@settitle Possible ISL Name Mappings for Target Languages
+@ifset ilucopyright
+BeginILUCopyright
+
+Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+Unlimited use, reproduction, modification, and distribution of this
+software and modified versions thereof is permitted.  Permission is
+granted to make derivative works from this software or a modified
+version thereof.  Any copy of this software, a modified version
+thereof, or a derivative work must include both the above copyright
+notice of Xerox Corporation and this paragraph.  Any distribution of
+this software, a modified version thereof, or a derivative work must
+comply with all applicable United States export control laws.  This
+software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+OF THE POSSIBILITY OF SUCH DAMAGES.
+  
+EndILUCopyright
+@end ifset
+@ifclear largerdoc
+@titlepage
+@title Possible ISL Name Mappings for Target Languages
+@author Mike Spreitzer
+@sp
+@today{}
+@end titlepage
+@end ifclear
+
+This note outlines a proposal for name mappings and restrictions; this
+proposal is not yet accepted.  (Thanks to external standards such as
+@system{CORBA}, this proposal cannot be implemented for some languages,
+such as @language{ANSI C}.)  @strong{The mappings outlined here are not
+necessarily the ones used in the current @system{ILU} release.}
+
+This proposal is about how to name things in the various programming
+languages, in a way that avoids name clashes.  It imposes no
+restrictions on the @language{ISL} source.  However, the mappings will
+be more straightforward if the @language{ISL} source avoids two things:
+(1) two or more concsecutive hyphens in a name, and (2) starting an
+interface or type name with ``ilu-'' (in any casing).
+
+The first step in mapping an @language{ISL} to a programming language is
+to scan type and interface names for the substring ``ilu-'' (in any
+casing); wherever it occurs, we insert a trailing digit zero.
+
+In a similar way, we next scan the name for sequences of hyphens.
+Wherever two or more hyphens appear consecutively, the digit zero (`0')
+is inserted after every other one, starting with inserting a zero after
+the second hyphen.
+
+The following steps assume the first two steps have already been done.
+
+Where tuples <N1, N2, ... Nk> of @language{ISL} names must be mapped into a flat programming namespace, we concatenate the @language{ISL} names, with a double hyphen (``--'') inserted between each.
+
+Where @language{ISL} names (or tuples thereof) must be mapped, together with @system{ILU}-chosen names derived from the @language{ISL} names, into a flat programming namespace, the derived names begin with fixed strings specific to the derivation, where the fixed strings begin with ``ilu-'' (with any case), and a double hyphen is inserted between the fixed string and the @language{ISL} name.
+
+Where @language{ISL} names (or tuples thereof), and possibly @system{ILU}-chosen names derived from the @language{ISL} names, must be mapped, together with a fixed set of @system{ILU}-chosen names, into a flat programming namespace, the fixed @system{ILU}-chosen names begin with ``ilu-'' (with any case) and do not include a double hyphen.
+
+The final step is to translate hyphens to underscores, for programming languages that accept underscores but not hyphens in names.
+
+Following is a specification of how names are mapped in each language.  The notation "[N]" is used to denote the application of the first two steps and the last step.  Examples of "[..]" are:
+@codeexample
+[Foo] => Foo
+[foo-bar] => foo-bar
+[wait----for---it-] => wait--0--0for--0-it-
+[iluminate] => iluminate
+[ilu---uli] => ilu-0--0uli
+@end codeexample
+The mappings also use the notation "[[..]]" to denote the mapping of a type-reference.
+
+@section C mapping
+
+[ This mapping, while clean, will never be adopted because of the more problematic mapping specified by the OMG's CORBA document. ]
+
+Item @code{N} from interface @code{I} is mapped to @code{[I]__[N]}.  @code{[[I.N]] = [I]__[N]}; @code{[[N]] = [I]__[N]}, where @code{I} is the current interface.
+
+An enumerated value named @code{V}, of type @code{T} in interface @code{I} is mapped to @code{[I]__[T]__[V]}.
+
+A declaration of a record type @code{T} in interface @code{I} with fields @code{F1:TR1}, ... @code{Fn:TRn} is mapped to
+@codeexample
+typedef struct @{[[TR1]] F1; ... [[TRn]] Fn@} [I]__[T];
+@end codeexample
+
+A declaration of a union type @code{T} in interface @code{I} of types @code{TR1}, ... @code{TRn} is mapped to
+@codeexample
+typedef enum @{[[I.T]]__[[TR1]], ... [[I.T]]__[[TRn]]@} ilu_tags__[[I.T]];
+typedef struct @{ilu_tags__[[I.T]] tag;
+    union @{
+        [[TR1]] [[TR1]];
+        ...
+        [[TRn]] [[TRn]];
+    @} val;
+@} [[I.T]];
+@end codeexample
+
+For passing exceptions through the method calls in interface @code{I}, the following auxiliary declaration is generated (supposing exceptions @code{ER1:TR1}, ... @code{ER2:TR2} are raised):
+@codeexample
+typedef struct @{
+    ilu_Exception returnCode;
+    union @{
+        [[TR1]] [[ER1]];
+        ...
+        [[TRn]] [[ERn]];
+    @} val;
+@} ilu_Status__[I];
+@end codeexample
+
+An object type named @code{T} in interface @code{I} with methods @code{M1}, ... @code{Mn} maps to
+@codeexample
+typedef ilu_Ojbect [[I.T]];
+[result-type-1] [I]__[T]__[M1]([[I.T]] ilu_self,
+    [[arg-type-1-1]] [arg-name-1-1], ...
+    [[arg-type-1-k]] [arg-name-1-k]);
+...
+@end codeexample
+
+@section C++ mapping
+
+Item @code{N} from interface @code{I} is mapped to @code{[I]__[N]}.  @code{[[I.N]] = [I]__[N]}; @code{[[N]] = [I]__[N]}, where @code{I} is the current interface.
+
+A declaration of an enumerated type named @code{T} in interface @code{I} containing values @code{V1}, ... @code{Vn} is mapped to @code{typedef enum @{[V1], ... [Vn]@} [I]__[T]}.
+
+Record and union declarations are mapped as for C.  The exception status declaration is as for C.
+
+@section Modula-3 mapping
+
+@section Mapping ILU ISL to Modula-3
+@cindex Mapping to Modula-3
+
+Version 1 of @system{ILU} supported Modula-3, and this section describes the mapping we worked out for it.
+
+@subsection Names
+@cindex Mapping ISL names to Modula-3 names
+
+An item named @code{Bar} in @language{ISL} interface @interface{Foo} becomes an item named @code{Bar} in the @language{Modula-3} interface @interface{Foo}.  A hyphen in an @language{ISL} name becomes an underscore in the corresponding @language{Modula-3} name.
+
+@subsection Types
+@cindex Mapping ISL types to Modula-3 types
+
+@language{ISL} types appear in @language{Modula-3} as follows:
+
+@enumerate
+@item
+@kwd{SHORT INTEGER} becomes @code{[-32768 .. 32767]}.
+@item
+@kwd{INTEGER} becomes @code{INTEGER}.
+@item
+@kwd{LONG INTEGER} becomes
+@codeexample
+TYPE LongInt = RECORD
+                 high: [-16_80000000 .. 2147483647];
+                 low : Word.T (*[0 ..  4294967295]*)
+               END;
+@end codeexample
+This represents the number @code{high*2^32 + low}.  We always have the invariants @code{-2^31 <= high < 2^31} and @code{0 <= low < 2^32}, even on systems whose natural word size is greater than 32 bits.
+@item
+@kwd{BYTE} becomes @code{[0 .. 255]}.
+@item
+@kwd{SHORT CARDINAL} becomes @code{[0 .. 65535]}.
+@item
+@kwd{CARDINAL} becomes @code{Word.T}.
+@item
+@kwd{LONG CARDINAL} becomes @code{RECORD high, low: Word.T END}.  This representation works analogously to that for @kwd{LONG CARDINAL}.
+@item
+@kwd{SHORT REAL} becomes @code{REAL}.
+@item
+@kwd{REAL} becomes @code{LONGREAL}.
+@item
+@kwd{LONG REAL} becomes an opaque type.  Values of this type can only be handed around; no other operations are provided, not even equality testing.  @kwd{LONG REAL} is not really supported yet.
+@item
+@kwd{SHORT CHARACTER} becomes @code{['\000' .. '\377']}.
+@item
+@kwd{CHARACTER} becomes @code{[0 .. 65535]}.
+@item
+Variable-length @kwd{ARRAY}s of @kwd{SHORT CHARACTER} become @code{TEXT}.
+@item
+Other variable-length arrays become @code{REF ARRAY OF}.
+@item
+Fixed-length arrays of @kwd{SHORT CHARACTER} become arrays of @code{BITS 8 FOR ['\000' .. '\377']}.
+@item
+Fixed or variable-length @kwd{ARRAY}s of @kwd{BYTE} become arrays of @code{BITS 8 FOR [0 .. 255]}.
+@item
+No other arrays specify packing in the @language{Modula-3}.
+@item
+A fixed length array, @code{ARRAY OF @metavar{L1}, ... @metavar{Ln}}, becomes @code{ARRAY [0 .. @metavar{L1}-1] OF ... ARRAY [0 .. @metavar{Ln}-1] OF}.
+@item
+An @language{ISL} record becomes a @language{M3} record.
+@item
+An @language{ISL} union becomes a @language{M3} object type and some subtypes.  The @language{ISL}
+@codeexample
+TYPE @metavar{Foo} = @metavar{DiscT} UNION
+    @metavar{case1}: @metavar{T1} = @metavar{val1-1}, ... @metavar{val1-j} END,
+    ...
+    @metavar{casen}: @metavar{Tn} = @metavar{valn-1}, ... @metavar{valn-k} END
+    END OTHERS;
+@end codeexample
+maps to the @language{Modula-3}
+@codeexample
+TYPE @metavar{Foo} = BRANDED OBJECT d: @metavar{DiscT} END;
+TYPE  @metavar{Foo}_@metavar{case1} = @metavar{Foo} BRANDED OBJECT v: @metavar{T1} END;
+CONST @metavar{Foo}_@metavar{case1}__Code : @metavar{DiscT} = @metavar{val1-1};
+...
+TYPE  @metavar{Foo}_@metavar{casen} = @metavar{Foo} BRANDED OBJECT v: @metavar{Tn} END;
+CONST @metavar{Foo}_@metavar{casen}__Code : @metavar{DiscT} = @metavar{valn-1};
+TYPE  @metavar{Foo}_OTHERS = @metavar{Foo} BRANDED OBJECT END;
+(* Where every @metavar{Foo} is of one of the subtypes enumerated here,
+   and the tag field (d) is consistent with the subtype. *)
+@end codeexample
+The @code{@metavar{Foo}_OTHERS} subtype appears only for union constructions including the @kwd{OTHERS} keyword.
+If the @language{ISL} union has a @kwd{DEFAULT} arm
+@codeexample
+    @metavar{cased}: @metavar{Td} = DEFAULT
+@end codeexample
+it maps to another subtype in @language{Modula-3}:
+@codeexample
+TYPE  @metavar{Foo}_@metavar{cased} = @metavar{Foo} BRANDED OBJECT v: @metavar{Td} END;
+@end codeexample
+The @code{@metavar{Foo}_@metavar{casen}__Code} constants are conveniences for filling in and decoding the @code{d} field.
+Note that code that creates a @metavar{Foo} is responsible for filling in the @code{d} field.
+@item
+An @language{ISL} enumeration becomes a @language{M3} enumeration.  Due to the fact that @language{Modula-3} offers no way to specify the codes used to represent enumerated values, the codes specified in @language{ISL}, if any, have no effect on the translation.
+@item
+When a @metavar{Foo} becomes a @metavar{Bar}, an @code{OPTIONAL @metavar{Foo}} becomes a @code{REF @metavar{Bar}}, unless @metavar{Bar} is a subtype of @kwd{REFANY}, in which case @code{OPTIONAL @metavar{Foo}} becomes @metavar{Bar}; @kwd{NIL} encodes the @kwd{NULL} case.
+@item
+An @language{ISL} object type becomes a @language{Modula-3} object type.  The @language{ISL} adjectives @kwd{SINGLETON}, @kwd{DOCUMENTATION}, @kwd{COLLECTIBLE}, @kwd{OPTIONAL}, @kwd{AUTHENTICATION}, and @kwd{BRAND} have no effect on the mapping into the @language{Modula-3} type system.
+
+@kwd{OUT} and @kwd{INOUT} method parameters in @language{ISL} become @kwd{VAR} parameters in @language{Modula-3}; @kwd{IN} parameters become @kwd{VALUE} (by default) parameters.  The @kwd{SIBLING} constraint in @language{ISL} has no manifestation in the @language{Modula-3} type system.
+
+The methods are declared to raise the exceptions @code{IluBasics.Failed} and @code{Thread.Alerted} in addition to the exceptions declared in the @language{ISL}.  Exception @code{IluBasics.Failed} is used to convey all the errors that can arise from the RPC mechanism, except @code{Thread.Alerted}.  Is the surrogate (and the other surrogates from the same server?) broken after either of these exceptions is raised?
+
+Because @system{ILU} has multiple inheritance (i.e., an object type can have more than one direct supertype), the @language{Modula-3} subtype relation is a sub-relation of the @system{ILU} subtype relation.    In general, an @system{ILU} object type is mapped to a suite of @language{Modula-3} object types, and a cohort of @language{Modula-3} objects (one of each of the suite of @language{Modula-3} types) correspond to one @system{ILU} object.  There will be only one @language{Modula-3} object (type) when only single-inheritance is used in constructing the @system{ILU} object type: when every ancestor type has at most one direct ancestor.  Except where the programmer knows this is the case, and plans for it to remain so, she must abandon the native @language{Modula-3} @kwd{TYPECASE}/@kwd{NARROW}/automatic-widen facilities for explicit calls that invoke the @system{ILU} subtype relation.
+
+To generalize the @language{Modula-3} @kwd{TYPECASE}/@kwd{NARROW}/automatic-widen facilities, the @language{Modula-3} object type @code{Ilu.Object} includes the following method:
+@codeexample
+PROCEDURE ILU_Qua_Type(ot: ObjectType): Object;
+@end codeexample
+If the object has, in @system{ILU}, the given object type, the @language{Modula-3} object of the appropriate @language{Modula-3} type is returned; otherwise, NIL is returned.  As an added convenience, the @language{Modula-3} mapping of interface @metavar{Foo} will contain, for each of its object types @metavar{Bar}:
+@codeexample
+PROCEDURE ILU_Qua_@metavar{Bar}(x: Ilu.Object): @metavar{Bar};
+@end codeexample
+This procedure takes a non-@kwd{NIL} argument.  If the argument is, in @system{ILU}, an instance of @metavar{Bar} or one of its subtypes, the corresponding language-specific object is returned; otherwise, @code{NIL} is returned.
+@end enumerate
+
+@subsection Exceptions
+@cindex Mapping ISL exceptions to Modula-3 exceptions
+
+@language{ISL} exceptions are exactly like @language{Modula-3} exceptions, and are mapped directly.
+
+@subsection Example
+@cindex Modula-3 mapping example
+
+Here's a sample @language{ISL} spec, and the resulting @language{Modula-3} mappings:
+
+@codeexample
+INTERFACE Foo;
+
+TYPE String = ilu.CString;
+TYPE UInt = CARDINAL;
+
+TYPE E1 = ENUMERATION val1, val2, val3 = 40 END;
+TYPE R1 = RECORD field1 : CARDINAL, field2 : E1 END;
+TYPE FAB = ARRAY OF 200 BYTE;
+TYPE VAB = SEQUENCE OF BYTE;
+TYPE FASC = ARRAY OF 10 SHORT CHARACTER;
+TYPE VASC = SEQUENCE OF SHORT CHARACTER;
+TYPE FAC = ARRAY OF 5 CHARACTER;
+TYPE VAC = SEQUENCE OF CHARACTER;
+TYPE A2 = ARRAY OF 41, 3 R1;
+TYPE S1 = SEQUENCE OF E1;
+TYPE U1 = UNION R1, A2 END;
+
+EXCEPTION Except1 : String;
+
+CONSTANT Zero : CARDINAL = 0;
+
+TYPE O1 = OBJECT
+    METHODS
+        M1(r1: R1, INOUT v: VASC, OUT s1: S1): UInt RAISES Except1 END,
+        FUNCTIONAL Hash(v: VASC): FASC,
+        ASYNCHRONOUS Note(x: LONG REAL)
+    END;
+@end codeexample
+
+The @language{Modula-3} mapping:
+
+@codeexample
+INTERFACE Foo;
+
+IMPORT Ilu, IluBasics, Thread;
+IMPORT ilu; <*NOWARN*>
+
+TYPE UInt = CARDINAL;
+TYPE E1 = @{
+  val1,
+  val2,
+  val3@};
+TYPE R1 = RECORD
+   field1 : CARDINAL;
+   field2 : E1;
+END;
+TYPE VASC = TEXT;  (* NIL not allowed *)
+TYPE S1 = REF ARRAY OF E1;  (* NIL not allowed *)
+TYPE FASC = ARRAY [0..9] OF Ilu.PackedShortChar;
+
+
+(* declaration of M3 type "Foo.O1" from ILU class "Foo:O1"  *)
+
+TYPE O1 = Ilu.Object OBJECT
+  METHODS
+    M1 (r1: R1; VAR v: VASC; VAR s1: S1): UInt
+       RAISES @{IluBasics.Failed, Thread.Alerted, Except1@};
+    Hash (v: VASC): FASC RAISES @{IluBasics.Failed, Thread.Alerted@};
+    Note (x: Ilu.LongReal) RAISES @{IluBasics.Failed, Thread.Alerted@};
+  OVERRIDES
+    ILU_Get_Type := ILU_Get_Type_O1
+  END;
+
+PROCEDURE ILU_SBH_To_O1 (sbh: TEXT; mostSpecificTypeID: TEXT := NIL): O1
+  RAISES @{IluBasics.Failed, Thread.Alerted@};
+
+PROCEDURE ILU_Get_Type_O1 (self : Ilu.Object): Ilu.ObjectType;
+
+PROCEDURE ILU_Qua_O1 (x: Ilu.Object): O1;
+
+TYPE A2 = ARRAY [0..40] OF ARRAY [0..2] OF R1;
+TYPE  U1 = BRANDED OBJECT d: Ilu.ShortInt END;  (* NIL not allowed *)
+TYPE  U1_R1       = U1 BRANDED OBJECT v: R1 END;
+CONST U1_R1__Code : [-32768..32767] = 0;
+TYPE  U1_A2       = U1 BRANDED OBJECT v: A2 END;
+CONST U1_A2__Code : [-32768..32767] = 1;
+TYPE VAC = REF ARRAY OF Ilu.Character;  (* NIL not allowed *)
+TYPE FAC = ARRAY [0..4] OF Ilu.Character;
+TYPE VAB = REF ARRAY OF BITS 8 FOR Ilu.Byte;  (* NIL not allowed *)
+TYPE FAB = ARRAY [0..199] OF Ilu.PackedByte;
+TYPE String = TEXT;  (* NIL not allowed *)
+
+CONST Zero : CARDINAL = 0;
+
+(* Exceptions *)
+
+EXCEPTION Except1 (String);
+
+END Foo.
+@end codeexample
+

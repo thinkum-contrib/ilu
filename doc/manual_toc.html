@@ -1,0 +1,1038 @@
+<!-- This HTML file has been created by timdif2html 1.11
+     from manual.dif on 20 September 1999 -->
+
+<TITLE>ILU Reference Manual - Table of Contents</TITLE>
+<BODY TEXT=#000000 BGCOLOR=#ffffff>
+<H1>ILU 2.0beta1 Reference Manual</H1>
+<ADDRESS>Bill Janssen <CODE>&#60;janssen@parc.xerox.com&#62;</CODE></ADDRESS>
+<ADDRESS>Mike Spreitzer <CODE>&#60;spreitzer.parc@xerox.com&#62;</CODE></ADDRESS>
+<ADDRESS>Dan Larner <CODE>&#60;larner.parc@xerox.com&#62;</CODE></ADDRESS>
+<ADDRESS>Chris Jacobi <CODE>&#60;jacobi.parc@xerox.com&#62;</CODE></ADDRESS>
+<P>
+<UL>
+<LI><A NAME="SEC1" HREF="manual_1.html#SEC1">ILU Concepts</A>
+<UL>
+<LI><A NAME="SEC2" HREF="manual_1.html#SEC2">What ILU Does</A>
+<LI><A NAME="SEC3" HREF="manual_1.html#SEC3">How ILU Works</A>
+<LI><A NAME="SEC4" HREF="manual_1.html#SEC4">Core ILU Concepts</A>
+<UL>
+<LI><A NAME="SEC5" HREF="manual_1.html#SEC5">Objects</A>
+<UL>
+<LI><A NAME="SEC6" HREF="manual_1.html#SEC6">Servers</A>
+<LI><A NAME="SEC7" HREF="manual_1.html#SEC7">Kernel Servers</A>
+<LI><A NAME="SEC8" HREF="manual_1.html#SEC8">Subtyping (interface inheritance)</A>
+<LI><A NAME="SEC9" HREF="manual_1.html#SEC9">Subtype Relationships</A>
+<LI><A NAME="SEC10" HREF="manual_1.html#SEC10">Singleton Object Types</A>
+<LI><A NAME="SEC11" HREF="manual_1.html#SEC11">Instantiation</A>
+<LI><A NAME="SEC12" HREF="manual_1.html#SEC12">String Binding Handle</A>
+<LI><A NAME="SEC13" HREF="manual_1.html#SEC13">Siblings</A>
+<LI><A NAME="SEC14" HREF="manual_1.html#SEC14">Object Tables (or, Just-in-Time Objects)</A>
+<LI><A NAME="SEC15" HREF="manual_1.html#SEC15">Server Relocation</A>
+</UL>
+<LI><A NAME="SEC16" HREF="manual_1.html#SEC16">Garbage Collection</A>
+<LI><A NAME="SEC17" HREF="manual_1.html#SEC17">Connections</A>
+<LI><A NAME="SEC18" HREF="manual_1.html#SEC18">Pipelining</A>
+<LI><A NAME="SEC19" HREF="manual_1.html#SEC19">Call Order Preservation</A>
+<LI><A NAME="SEC20" HREF="manual_1.html#SEC20">Batching</A>
+<LI><A NAME="SEC21" HREF="manual_1.html#SEC21">Simple Binding</A>
+<LI><A NAME="SEC22" HREF="manual_1.html#SEC22">Error Signalling</A>
+</UL>
+<LI><A NAME="SEC23" HREF="manual_1.html#SEC23">ILU and OMG CORBA</A>
+<LI><A NAME="SEC24" HREF="manual_1.html#SEC24">Pickle versus Any</A>
+</UL>
+<LI><A NAME="SEC25" HREF="manual_2.html#SEC25">Defining Interfaces</A>
+<UL>
+<LI><A NAME="SEC26" HREF="manual_2.html#SEC26">General Syntax of ISL</A>
+<UL>
+<LI><A NAME="SEC27" HREF="manual_2.html#SEC27">Identifiers</A>
+<LI><A NAME="SEC28" HREF="manual_2.html#SEC28">Reserved Words</A>
+</UL>
+<LI><A NAME="SEC29" HREF="manual_2.html#SEC29">Statement Syntax</A>
+<UL>
+<LI><A NAME="SEC30" HREF="manual_2.html#SEC30">The Interface Header</A>
+<LI><A NAME="SEC31" HREF="manual_2.html#SEC31">Interface Directives</A>
+<LI><A NAME="SEC32" HREF="manual_2.html#SEC32">Type Declarations</A>
+<UL>
+<LI><A NAME="SEC33" HREF="manual_2.html#SEC33">Primitive types</A>
+<LI><A NAME="SEC34" HREF="manual_2.html#SEC34">Constructor overview</A>
+<LI><A NAME="SEC35" HREF="manual_2.html#SEC35">Array Declarations</A>
+<LI><A NAME="SEC36" HREF="manual_2.html#SEC36">Sequence Declarations</A>
+<LI><A NAME="SEC37" HREF="manual_2.html#SEC37">Generalized Array Declarations</A>
+<LI><A NAME="SEC38" HREF="manual_2.html#SEC38">Record Declarations</A>
+<LI><A NAME="SEC39" HREF="manual_2.html#SEC39">Union Declarations</A>
+<LI><A NAME="SEC40" HREF="manual_2.html#SEC40">Optional Declarations</A>
+<LI><A NAME="SEC41" HREF="manual_2.html#SEC41">Enumeration Declarations</A>
+<LI><A NAME="SEC42" HREF="manual_2.html#SEC42">Object Type Declarations</A>
+<LI><A NAME="SEC43" HREF="manual_2.html#SEC43">Fixed-point Declarations</A>
+</UL>
+<LI><A NAME="SEC44" HREF="manual_2.html#SEC44">Exception Declarations</A>
+<LI><A NAME="SEC45" HREF="manual_2.html#SEC45">Constant Declarations</A>
+<UL>
+<LI><A NAME="SEC46" HREF="manual_2.html#SEC46">Integer, Cardinal, and Byte Constants</A>
+<LI><A NAME="SEC47" HREF="manual_2.html#SEC47">Real Constants</A>
+<LI><A NAME="SEC48" HREF="manual_2.html#SEC48">ilu.CString Constants</A>
+<LI><A NAME="SEC49" HREF="manual_2.html#SEC49">Examples of Constants</A>
+</UL>
+</UL>
+<LI><A NAME="SEC50" HREF="manual_2.html#SEC50">ilu.isl</A>
+<LI><A NAME="SEC51" HREF="manual_2.html#SEC51">Using OMG IDL with ILU</A>
+<UL>
+<LI><A NAME="SEC52" HREF="manual_2.html#SEC52">Translation</A>
+<UL>
+<LI><A NAME="SEC53" HREF="manual_2.html#SEC53">Anonymous types</A>
+<LI><A NAME="SEC54" HREF="manual_2.html#SEC54">Topmodules mode</A>
+<LI><A NAME="SEC55" HREF="manual_2.html#SEC55">Imports mode</A>
+<LI><A NAME="SEC56" HREF="manual_2.html#SEC56">Unsupported constructs</A>
+</UL>
+<LI><A NAME="SEC57" HREF="manual_2.html#SEC57">Manual Invocation of <CODE>idl2isl</CODE></A>
+</UL>
+<LI><A NAME="SEC58" HREF="manual_2.html#SEC58">ISL Grammar</A>
+</UL>
+<LI><A NAME="SEC59" HREF="manual_3.html#SEC59">Using ILU with Standard C</A>
+<UL>
+<LI><A NAME="SEC60" HREF="manual_3.html#SEC60">C Mapping Introduction</A>
+<LI><A NAME="SEC61" HREF="manual_3.html#SEC61">The ISL Mapping to C</A>
+<UL>
+<LI><A NAME="SEC62" HREF="manual_3.html#SEC62">Names</A>
+<LI><A NAME="SEC63" HREF="manual_3.html#SEC63">Interface</A>
+<LI><A NAME="SEC64" HREF="manual_3.html#SEC64">Basic Types</A>
+<LI><A NAME="SEC65" HREF="manual_3.html#SEC65">Constants</A>
+<LI><A NAME="SEC66" HREF="manual_3.html#SEC66">Strings and Characters</A>
+<LI><A NAME="SEC67" HREF="manual_3.html#SEC67">Pickles and Typecodes</A>
+<LI><A NAME="SEC68" HREF="manual_3.html#SEC68">Constructed Types</A>
+<UL>
+<LI><A NAME="SEC69" HREF="manual_3.html#SEC69">Enumeration</A>
+<LI><A NAME="SEC70" HREF="manual_3.html#SEC70">Array</A>
+<LI><A NAME="SEC71" HREF="manual_3.html#SEC71">Sequence</A>
+<LI><A NAME="SEC72" HREF="manual_3.html#SEC72">Record</A>
+<LI><A NAME="SEC73" HREF="manual_3.html#SEC73">Union</A>
+<LI><A NAME="SEC74" HREF="manual_3.html#SEC74">Optional</A>
+</UL>
+<LI><A NAME="SEC75" HREF="manual_3.html#SEC75">Object Types</A>
+<UL>
+<LI><A NAME="SEC76" HREF="manual_3.html#SEC76">Surrogate and True Objects</A>
+<LI><A NAME="SEC77" HREF="manual_3.html#SEC77">Interface Inheritance</A>
+<LI><A NAME="SEC78" HREF="manual_3.html#SEC78">Accessing the String Binding Handle, IOR, or Object ID</A>
+<LI><A NAME="SEC79" HREF="manual_3.html#SEC79">Distinguishing Between Local and Remote Instances</A>
+<LI><A NAME="SEC80" HREF="manual_3.html#SEC80">Object Implementation</A>
+<LI><A NAME="SEC81" HREF="manual_3.html#SEC81">Methods</A>
+<LI><A NAME="SEC82" HREF="manual_3.html#SEC82">Parameter Passing Considerations</A>
+<LI><A NAME="SEC83" HREF="manual_3.html#SEC83">Exceptions</A>
+<LI><A NAME="SEC84" HREF="manual_3.html#SEC84">Garbage Collection of C Instances</A>
+</UL>
+<LI><A NAME="SEC85" HREF="manual_3.html#SEC85">Issues in Mapping OMG IDL to C</A>
+</UL>
+<LI><A NAME="SEC86" HREF="manual_3.html#SEC86">Access to Standard ILU Features</A>
+<UL>
+<LI><A NAME="SEC87" HREF="manual_3.html#SEC87">Servers and Ports</A>
+<UL>
+<LI><A NAME="SEC88" HREF="manual_3.html#SEC88">Object Tables</A>
+<LI><A NAME="SEC89" HREF="manual_3.html#SEC89">Server Relocation Functionality in C</A>
+<LI><A NAME="SEC90" HREF="manual_3.html#SEC90">Exception Information Functionality in C</A>
+</UL>
+<LI><A NAME="SEC91" HREF="manual_3.html#SEC91">Threading and Event Loops</A>
+<LI><A NAME="SEC92" HREF="manual_3.html#SEC92">Custom Records</A>
+<LI><A NAME="SEC93" HREF="manual_3.html#SEC93">Custom Surrogates</A>
+<LI><A NAME="SEC94" HREF="manual_3.html#SEC94">String Binding Handle Formation</A>
+<LI><A NAME="SEC95" HREF="manual_3.html#SEC95">Simple Binding</A>
+<LI><A NAME="SEC96" HREF="manual_3.html#SEC96">Identities and Passports</A>
+<LI><A NAME="SEC97" HREF="manual_3.html#SEC97">Pipelining in C</A>
+<LI><A NAME="SEC98" HREF="manual_3.html#SEC98">Call Order Preservation in C</A>
+<LI><A NAME="SEC99" HREF="manual_3.html#SEC99">Batching in C</A>
+</UL>
+<LI><A NAME="SEC100" HREF="manual_3.html#SEC100">Building C/ILU Applications</A>
+<UL>
+<LI><A NAME="SEC101" HREF="manual_3.html#SEC101">Using the ILU C Stubber</A>
+<UL>
+<LI><A NAME="SEC102" HREF="manual_3.html#SEC102">Command-line Options</A>
+<LI><A NAME="SEC103" HREF="manual_3.html#SEC103">Tailoring Identifier Names</A>
+</UL>
+<LI><A NAME="SEC104" HREF="manual_3.html#SEC104">Using ILU Modules From C</A>
+<LI><A NAME="SEC105" HREF="manual_3.html#SEC105">Implementing an ILU Module With C</A>
+<LI><A NAME="SEC106" HREF="manual_3.html#SEC106">Libraries and Linking</A>
+</UL>
+<LI><A NAME="SEC107" HREF="manual_3.html#SEC107">ILU C API</A>
+<UL>
+<LI><A NAME="SEC108" HREF="manual_3.html#SEC108">General</A>
+<LI><A NAME="SEC109" HREF="manual_3.html#SEC109">Type Manipulation</A>
+<LI><A NAME="SEC110" HREF="manual_3.html#SEC110">Object Manipulation</A>
+<LI><A NAME="SEC111" HREF="manual_3.html#SEC111">Identity Functions</A>
+<LI><A NAME="SEC112" HREF="manual_3.html#SEC112">Call Management Functions in C</A>
+<LI><A NAME="SEC113" HREF="manual_3.html#SEC113">Exception Information in C</A>
+<LI><A NAME="SEC114" HREF="manual_3.html#SEC114">Server Manipulation</A>
+<LI><A NAME="SEC115" HREF="manual_3.html#SEC115">CORBA Compatibility Macros</A>
+</UL>
+</UL>
+<LI><A NAME="SEC116" HREF="manual_4.html#SEC116">Using ILU with Python</A>
+<UL>
+<LI><A NAME="SEC117" HREF="manual_4.html#SEC117">Introduction</A>
+<LI><A NAME="SEC118" HREF="manual_4.html#SEC118">The ISL Mapping to Python</A>
+<UL>
+<LI><A NAME="SEC119" HREF="manual_4.html#SEC119">Names</A>
+<LI><A NAME="SEC120" HREF="manual_4.html#SEC120">Interface</A>
+<LI><A NAME="SEC121" HREF="manual_4.html#SEC121">Basic Types</A>
+<UL>
+<LI><A NAME="SEC122" HREF="manual_4.html#SEC122">Constant</A>
+</UL>
+<LI><A NAME="SEC123" HREF="manual_4.html#SEC123">Strings</A>
+<LI><A NAME="SEC124" HREF="manual_4.html#SEC124">Pickles and Typecodes</A>
+<LI><A NAME="SEC125" HREF="manual_4.html#SEC125">Constructed Types</A>
+<UL>
+<LI><A NAME="SEC126" HREF="manual_4.html#SEC126">Enumeration</A>
+<LI><A NAME="SEC127" HREF="manual_4.html#SEC127">Array</A>
+<LI><A NAME="SEC128" HREF="manual_4.html#SEC128">Sequence</A>
+<LI><A NAME="SEC129" HREF="manual_4.html#SEC129">Record</A>
+<LI><A NAME="SEC130" HREF="manual_4.html#SEC130">Union</A>
+<LI><A NAME="SEC131" HREF="manual_4.html#SEC131">Optional</A>
+</UL>
+<LI><A NAME="SEC132" HREF="manual_4.html#SEC132">Object Types</A>
+<UL>
+<LI><A NAME="SEC133" HREF="manual_4.html#SEC133">Surrogate and True Object Types</A>
+<LI><A NAME="SEC134" HREF="manual_4.html#SEC134">Methods, Parameters, and Exceptions</A>
+<LI><A NAME="SEC135" HREF="manual_4.html#SEC135">Garbage Collection and COLLECTIBLE</A>
+</UL>
+</UL>
+<LI><A NAME="SEC136" HREF="manual_4.html#SEC136">Access to standard ILU features</A>
+<UL>
+<LI><A NAME="SEC137" HREF="manual_4.html#SEC137">Servers and Ports</A>
+<UL>
+<LI><A NAME="SEC138" HREF="manual_4.html#SEC138">Object Tables</A>
+<LI><A NAME="SEC139" HREF="manual_4.html#SEC139">Server Relocation</A>
+</UL>
+<LI><A NAME="SEC140" HREF="manual_4.html#SEC140">Threading and Event Loops</A>
+<UL>
+<LI><A NAME="SEC141" HREF="manual_4.html#SEC141">Animating Servers</A>
+<LI><A NAME="SEC142" HREF="manual_4.html#SEC142">Using Alarms</A>
+</UL>
+<LI><A NAME="SEC143" HREF="manual_4.html#SEC143">Custom Records</A>
+<LI><A NAME="SEC144" HREF="manual_4.html#SEC144">String Binding Handle Formation</A>
+<LI><A NAME="SEC145" HREF="manual_4.html#SEC145">Simple Binding</A>
+<LI><A NAME="SEC146" HREF="manual_4.html#SEC146">Principal Identities and Passports</A>
+</UL>
+<LI><A NAME="SEC147" HREF="manual_4.html#SEC147">Building Python/ILU Applications</A>
+<UL>
+<LI><A NAME="SEC148" HREF="manual_4.html#SEC148">Stub Generation</A>
+<UL>
+<LI><A NAME="SEC149" HREF="manual_4.html#SEC149">Command-line Options</A>
+</UL>
+<LI><A NAME="SEC150" HREF="manual_4.html#SEC150">Implementing an ILU module in Python</A>
+<UL>
+<LI><A NAME="SEC151" HREF="manual_4.html#SEC151">Implementation Inheritance</A>
+<LI><A NAME="SEC152" HREF="manual_4.html#SEC152">Exporting Objects</A>
+</UL>
+<LI><A NAME="SEC153" HREF="manual_4.html#SEC153">Using an ILU module in Python</A>
+<LI><A NAME="SEC154" HREF="manual_4.html#SEC154">CORBA Support in Python</A>
+<LI><A NAME="SEC155" HREF="manual_4.html#SEC155">Freezing a Python Application Containing ILU</A>
+<LI><A NAME="SEC156" HREF="manual_4.html#SEC156">Python/ILU Environment Variables</A>
+</UL>
+<LI><A NAME="SEC157" HREF="manual_4.html#SEC157">Python/ILU API Reference</A>
+<UL>
+<LI><A NAME="SEC158" HREF="manual_4.html#SEC158">Identifiers Exported From Module <CODE>ilu</CODE></A>
+<LI><A NAME="SEC159" HREF="manual_4.html#SEC159">Identifiers Exported from the <CODE>CORBA</CODE> Module</A>
+<LI><A NAME="SEC160" HREF="manual_4.html#SEC160">Methods and Attributes of ILU Objects</A>
+</UL>
+</UL>
+<LI><A NAME="SEC161" HREF="manual_5.html#SEC161">Using ILU with CORBA 2.0 C++</A>
+<UL>
+<LI><A NAME="SEC162" HREF="manual_5.html#SEC162">Introduction</A>
+<LI><A NAME="SEC163" HREF="manual_5.html#SEC163">Mapping ILU ISL to C++</A>
+<UL>
+<LI><A NAME="SEC164" HREF="manual_5.html#SEC164">ISL to IDL Correspondences</A>
+<LI><A NAME="SEC165" HREF="manual_5.html#SEC165">ISL Specific Mappings</A>
+<LI><A NAME="SEC166" HREF="manual_5.html#SEC166">Correspondence between C++ Types and Kernel Types</A>
+<LI><A NAME="SEC167" HREF="manual_5.html#SEC167">C++ Classes Produced for an Object</A>
+<LI><A NAME="SEC168" HREF="manual_5.html#SEC168">Misc. Mapping Details</A>
+<UL>
+<LI><A NAME="SEC169" HREF="manual_5.html#SEC169">Unions</A>
+<LI><A NAME="SEC170" HREF="manual_5.html#SEC170">Optionals</A>
+<LI><A NAME="SEC171" HREF="manual_5.html#SEC171">Overloading problems for <VAR>T</VAR>_vars.</A>
+<LI><A NAME="SEC172" HREF="manual_5.html#SEC172">Exceptions</A>
+<LI><A NAME="SEC173" HREF="manual_5.html#SEC173">ISL Asynchronous Methods</A>
+<LI><A NAME="SEC174" HREF="manual_5.html#SEC174">ISL Functional Methods</A>
+<LI><A NAME="SEC175" HREF="manual_5.html#SEC175">ISL Collectible Objects</A>
+<LI><A NAME="SEC176" HREF="manual_5.html#SEC176">Inheritance from CORBA::Object</A>
+<LI><A NAME="SEC177" HREF="manual_5.html#SEC177">Portability and Mapping Variations</A>
+</UL>
+</UL>
+<LI><A NAME="SEC178" HREF="manual_5.html#SEC178">Concepts</A>
+<UL>
+<LI><A NAME="SEC179" HREF="manual_5.html#SEC179">Servers and Ports</A>
+<LI><A NAME="SEC180" HREF="manual_5.html#SEC180">Object Tables</A>
+<LI><A NAME="SEC181" HREF="manual_5.html#SEC181">Threading</A>
+<LI><A NAME="SEC182" HREF="manual_5.html#SEC182">Custom Surrogates</A>
+<LI><A NAME="SEC183" HREF="manual_5.html#SEC183">String Binding Handle Manipulation</A>
+<LI><A NAME="SEC184" HREF="manual_5.html#SEC184">Simple Binding</A>
+<LI><A NAME="SEC185" HREF="manual_5.html#SEC185">Object Activation</A>
+<LI><A NAME="SEC186" HREF="manual_5.html#SEC186">Security</A>
+<LI><A NAME="SEC187" HREF="manual_5.html#SEC187">Static Initialization</A>
+</UL>
+<LI><A NAME="SEC188" HREF="manual_5.html#SEC188">Building an Application</A>
+<UL>
+<LI><A NAME="SEC189" HREF="manual_5.html#SEC189">Running the Stubber</A>
+<LI><A NAME="SEC190" HREF="manual_5.html#SEC190">Stubber Generated Files</A>
+<LI><A NAME="SEC191" HREF="manual_5.html#SEC191">Server Basics</A>
+<LI><A NAME="SEC192" HREF="manual_5.html#SEC192">Client Basics</A>
+</UL>
+<LI><A NAME="SEC193" HREF="manual_5.html#SEC193">Relevant examples</A>
+<LI><A NAME="SEC194" HREF="manual_5.html#SEC194">Runtime Classes</A>
+<UL>
+<LI><A NAME="SEC195" HREF="manual_5.html#SEC195">Overview</A>
+<LI><A NAME="SEC196" HREF="manual_5.html#SEC196">iluCppRuntime</A>
+<UL>
+<LI><A NAME="SEC197" HREF="manual_5.html#SEC197">iluCppRuntime - Initialization Related</A>
+<LI><A NAME="SEC198" HREF="manual_5.html#SEC198">iluCppRuntime - Character Utilities</A>
+<LI><A NAME="SEC199" HREF="manual_5.html#SEC199">iluCppRuntime - String Binding Handle Utilities</A>
+<LI><A NAME="SEC200" HREF="manual_5.html#SEC200">iluCppRuntime - File Descriptor Budget</A>
+<LI><A NAME="SEC201" HREF="manual_5.html#SEC201">iluCppRuntime - Memory  Management</A>
+</UL>
+<LI><A NAME="SEC202" HREF="manual_5.html#SEC202">iluServer</A>
+<UL>
+<LI><A NAME="SEC203" HREF="manual_5.html#SEC203">iluServer - Setup and Destruction</A>
+<LI><A NAME="SEC204" HREF="manual_5.html#SEC204">iluServer - Controlling Cinfo</A>
+<LI><A NAME="SEC205" HREF="manual_5.html#SEC205">iluServer - Default Accessors</A>
+</UL>
+<LI><A NAME="SEC206" HREF="manual_5.html#SEC206">iluObject</A>
+<UL>
+<LI><A NAME="SEC207" HREF="manual_5.html#SEC207">iluObject - Creation and Destruction</A>
+<LI><A NAME="SEC208" HREF="manual_5.html#SEC208">iluObject - Object Publication</A>
+<LI><A NAME="SEC209" HREF="manual_5.html#SEC209">iluObject - Accessors</A>
+<LI><A NAME="SEC210" HREF="manual_5.html#SEC210">iluObject - Informational</A>
+<LI><A NAME="SEC211" HREF="manual_5.html#SEC211">iluObject - Reference Counting</A>
+</UL>
+<LI><A NAME="SEC212" HREF="manual_5.html#SEC212">iluObjectTable</A>
+<LI><A NAME="SEC213" HREF="manual_5.html#SEC213">iluPassport</A>
+<LI><A NAME="SEC214" HREF="manual_5.html#SEC214">iluGSS</A>
+<LI><A NAME="SEC215" HREF="manual_5.html#SEC215">iluMainLoop</A>
+</UL>
+<LI><A NAME="SEC216" HREF="manual_5.html#SEC216">CORBA 2.0 C++ Considerations</A>
+<UL>
+<LI><A NAME="SEC217" HREF="manual_5.html#SEC217">ORB_init</A>
+</UL>
+</UL>
+<LI><A NAME="SEC218" HREF="manual_6.html#SEC218">Using ILU with C++</A>
+<UL>
+<LI><A NAME="SEC219" HREF="manual_6.html#SEC219">Introduction</A>
+<LI><A NAME="SEC220" HREF="manual_6.html#SEC220">Mapping ILU ISL to C++</A>
+<UL>
+<LI><A NAME="SEC221" HREF="manual_6.html#SEC221">Names</A>
+<LI><A NAME="SEC222" HREF="manual_6.html#SEC222">Types</A>
+<UL>
+<LI><A NAME="SEC223" HREF="manual_6.html#SEC223">Sequence types</A>
+</UL>
+<LI><A NAME="SEC224" HREF="manual_6.html#SEC224">Object types</A>
+<LI><A NAME="SEC225" HREF="manual_6.html#SEC225">Exceptions</A>
+<LI><A NAME="SEC226" HREF="manual_6.html#SEC226">Constants</A>
+<LI><A NAME="SEC227" HREF="manual_6.html#SEC227">Examples</A>
+</UL>
+<LI><A NAME="SEC228" HREF="manual_6.html#SEC228">Using an ILU module from C++</A>
+<LI><A NAME="SEC229" HREF="manual_6.html#SEC229">Implementing an ILU Module in C++</A>
+<UL>
+<LI><A NAME="SEC230" HREF="manual_6.html#SEC230">Servers</A>
+<LI><A NAME="SEC231" HREF="manual_6.html#SEC231">Event dispatching</A>
+<LI><A NAME="SEC232" HREF="manual_6.html#SEC232">Publishing</A>
+</UL>
+<LI><A NAME="SEC233" HREF="manual_6.html#SEC233">ILU API for C++</A>
+<LI><A NAME="SEC234" HREF="manual_6.html#SEC234">Generating ILU stubs for C++</A>
+<UL>
+<LI><A NAME="SEC235" HREF="manual_6.html#SEC235">Tailoring C++ Names</A>
+</UL>
+<LI><A NAME="SEC236" HREF="manual_6.html#SEC236">Threading</A>
+<LI><A NAME="SEC237" HREF="manual_6.html#SEC237">Other ILU Considerations For C++</A>
+<UL>
+<LI><A NAME="SEC238" HREF="manual_6.html#SEC238">Libraries and Linking</A>
+<LI><A NAME="SEC239" HREF="manual_6.html#SEC239">Initialization order</A>
+<LI><A NAME="SEC240" HREF="manual_6.html#SEC240">Makefiles</A>
+</UL>
+</UL>
+<LI><A NAME="SEC241" HREF="manual_7.html#SEC241">Using ILU with Java</A>
+<UL>
+<LI><A NAME="SEC242" HREF="manual_7.html#SEC242">Introduction</A>
+<UL>
+<LI><A NAME="SEC243" HREF="manual_7.html#SEC243">ILU and CORBA</A>
+</UL>
+<LI><A NAME="SEC244" HREF="manual_7.html#SEC244">The ISL Mapping to Java</A>
+<UL>
+<LI><A NAME="SEC245" HREF="manual_7.html#SEC245">Names</A>
+<LI><A NAME="SEC246" HREF="manual_7.html#SEC246">Interfaces</A>
+<LI><A NAME="SEC247" HREF="manual_7.html#SEC247">Basic Types</A>
+<UL>
+<LI><A NAME="SEC248" HREF="manual_7.html#SEC248">Constant</A>
+</UL>
+<LI><A NAME="SEC249" HREF="manual_7.html#SEC249">Strings</A>
+<LI><A NAME="SEC250" HREF="manual_7.html#SEC250">Pickles and Typecodes</A>
+<LI><A NAME="SEC251" HREF="manual_7.html#SEC251">Constructed Types</A>
+<UL>
+<LI><A NAME="SEC252" HREF="manual_7.html#SEC252">About Java Object serialization</A>
+<LI><A NAME="SEC253" HREF="manual_7.html#SEC253">Enumeration</A>
+<LI><A NAME="SEC254" HREF="manual_7.html#SEC254">Array</A>
+<LI><A NAME="SEC255" HREF="manual_7.html#SEC255">Sequence</A>
+<LI><A NAME="SEC256" HREF="manual_7.html#SEC256">Record</A>
+<LI><A NAME="SEC257" HREF="manual_7.html#SEC257">Union</A>
+<LI><A NAME="SEC258" HREF="manual_7.html#SEC258">Optional</A>
+</UL>
+<LI><A NAME="SEC259" HREF="manual_7.html#SEC259">Object Types</A>
+<UL>
+<LI><A NAME="SEC260" HREF="manual_7.html#SEC260">Surrogate and True Object Types</A>
+<LI><A NAME="SEC261" HREF="manual_7.html#SEC261">Methods, Parameters, and Exceptions</A>
+<LI><A NAME="SEC262" HREF="manual_7.html#SEC262">Java Garbage Collection, Distributed Garbage Collection, and/or COLLECTIBLE</A>
+<LI><A NAME="SEC263" HREF="manual_7.html#SEC263">Java serialization</A>
+</UL>
+<LI><A NAME="SEC264" HREF="manual_7.html#SEC264">How to make your idl Java friendly</A>
+</UL>
+<LI><A NAME="SEC265" HREF="manual_7.html#SEC265">Access to standard ILU features</A>
+<UL>
+<LI><A NAME="SEC266" HREF="manual_7.html#SEC266">Servers and Ports</A>
+<UL>
+<LI><A NAME="SEC267" HREF="manual_7.html#SEC267">True Servers</A>
+<LI><A NAME="SEC268" HREF="manual_7.html#SEC268">Object Tables</A>
+</UL>
+<LI><A NAME="SEC269" HREF="manual_7.html#SEC269">Threading and Event Loops</A>
+<LI><A NAME="SEC270" HREF="manual_7.html#SEC270">Custom Records</A>
+<LI><A NAME="SEC271" HREF="manual_7.html#SEC271">Custom Surrogates</A>
+<LI><A NAME="SEC272" HREF="manual_7.html#SEC272">String Binding Handle Formation</A>
+<LI><A NAME="SEC273" HREF="manual_7.html#SEC273">Simple Binding</A>
+<LI><A NAME="SEC274" HREF="manual_7.html#SEC274">Principal Identities and Passports</A>
+</UL>
+<LI><A NAME="SEC275" HREF="manual_7.html#SEC275">Building ILU-for-Java Applications</A>
+<UL>
+<LI><A NAME="SEC276" HREF="manual_7.html#SEC276">Stub Generation</A>
+<UL>
+<LI><A NAME="SEC277" HREF="manual_7.html#SEC277">Problems and Solutions</A>
+<LI><A NAME="SEC278" HREF="manual_7.html#SEC278">Java Compilation</A>
+<LI><A NAME="SEC279" HREF="manual_7.html#SEC279">Execution</A>
+<LI><A NAME="SEC280" HREF="manual_7.html#SEC280">Debugging</A>
+<LI><A NAME="SEC281" HREF="manual_7.html#SEC281">Debugging native ILU code</A>
+</UL>
+<LI><A NAME="SEC282" HREF="manual_7.html#SEC282">Implementing an ILU module in Java</A>
+<LI><A NAME="SEC283" HREF="manual_7.html#SEC283">Hints about implicit registration</A>
+<UL>
+<LI><A NAME="SEC284" HREF="manual_7.html#SEC284">Java's single inheritance classes.</A>
+</UL>
+</UL>
+<LI><A NAME="SEC285" HREF="manual_7.html#SEC285">Notes for ILU for Java in applets</A>
+<LI><A NAME="SEC286" HREF="manual_7.html#SEC286">Notes for Java on particular architectures</A>
+<UL>
+<LI><A NAME="SEC287" HREF="manual_7.html#SEC287">Notes for Java on Windows</A>
+<LI><A NAME="SEC288" HREF="manual_7.html#SEC288">Notes for Java on Linux</A>
+<LI><A NAME="SEC289" HREF="manual_7.html#SEC289">Native threads versus green threads</A>
+<LI><A NAME="SEC290" HREF="manual_7.html#SEC290">JNI versus ONI vesus RNI</A>
+<LI><A NAME="SEC291" HREF="manual_7.html#SEC291">Java releases</A>
+</UL>
+<LI><A NAME="SEC292" HREF="manual_7.html#SEC292">CosNaming</A>
+<UL>
+<LI><A NAME="SEC293" HREF="manual_7.html#SEC293">CosNaming Naming Server</A>
+<LI><A NAME="SEC294" HREF="manual_7.html#SEC294">Bootstrapping with CosNaming</A>
+</UL>
+<LI><A NAME="SEC295" HREF="manual_7.html#SEC295">ILU for Java Reference</A>
+<UL>
+<LI><A NAME="SEC296" HREF="manual_7.html#SEC296">javadoc documentation</A>
+<UL>
+<LI><A NAME="SEC297" HREF="manual_7.html#SEC297">Build of the javadoc documentation</A>
+</UL>
+<LI><A NAME="SEC298" HREF="manual_7.html#SEC298">Description of Java classes</A>
+<UL>
+<LI><A NAME="SEC299" HREF="manual_7.html#SEC299">CORBA Exceptions</A>
+<LI><A NAME="SEC300" HREF="manual_7.html#SEC300">Holder classes</A>
+<LI><A NAME="SEC301" HREF="manual_7.html#SEC301">CORBA classes</A>
+<LI><A NAME="SEC302" HREF="manual_7.html#SEC302">Basic environment classes</A>
+<LI><A NAME="SEC303" HREF="manual_7.html#SEC303">ILU exceptions</A>
+<LI><A NAME="SEC304" HREF="manual_7.html#SEC304">ILU public classes</A>
+<LI><A NAME="SEC305" HREF="manual_7.html#SEC305">Internal or esoteric classes</A>
+</UL>
+</UL>
+<LI><A NAME="SEC306" HREF="manual_7.html#SEC306">Full Custom Mapping</A>
+<UL>
+<UL>
+<LI><A NAME="SEC307" HREF="manual_7.html#SEC307">Stubbing</A>
+<LI><A NAME="SEC308" HREF="manual_7.html#SEC308">Runtime features</A>
+</UL>
+<LI><A NAME="SEC309" HREF="manual_7.html#SEC309">Java objects by value, Java marshalled objects</A>
+<UL>
+<LI><A NAME="SEC310" HREF="manual_7.html#SEC310">Interoperability of Java objects by value, Java marshalled objects</A>
+</UL>
+</UL>
+</UL>
+<LI><A NAME="SEC311" HREF="manual_8.html#SEC311">Using ILU with Common Lisp</A>
+<UL>
+<LI><A NAME="SEC312" HREF="manual_8.html#SEC312">Introduction</A>
+<LI><A NAME="SEC313" HREF="manual_8.html#SEC313">The ISL Mapping to Common Lisp</A>
+<UL>
+<LI><A NAME="SEC314" HREF="manual_8.html#SEC314">Names</A>
+<LI><A NAME="SEC315" HREF="manual_8.html#SEC315">Interface</A>
+<LI><A NAME="SEC316" HREF="manual_8.html#SEC316">Basic Types</A>
+<UL>
+<LI><A NAME="SEC317" HREF="manual_8.html#SEC317">Constant</A>
+</UL>
+<LI><A NAME="SEC318" HREF="manual_8.html#SEC318">Strings</A>
+<LI><A NAME="SEC319" HREF="manual_8.html#SEC319">Pickles and Typecodes</A>
+<LI><A NAME="SEC320" HREF="manual_8.html#SEC320">Constructed Types</A>
+<UL>
+<LI><A NAME="SEC321" HREF="manual_8.html#SEC321">Enumeration</A>
+<LI><A NAME="SEC322" HREF="manual_8.html#SEC322">Array</A>
+<LI><A NAME="SEC323" HREF="manual_8.html#SEC323">Sequence</A>
+<LI><A NAME="SEC324" HREF="manual_8.html#SEC324">Record</A>
+<LI><A NAME="SEC325" HREF="manual_8.html#SEC325">Union</A>
+<LI><A NAME="SEC326" HREF="manual_8.html#SEC326">Optional</A>
+</UL>
+<LI><A NAME="SEC327" HREF="manual_8.html#SEC327">Object Types</A>
+<UL>
+<LI><A NAME="SEC328" HREF="manual_8.html#SEC328">Surrogate and True Object Types</A>
+<LI><A NAME="SEC329" HREF="manual_8.html#SEC329">Methods, Parameters, and Exceptions</A>
+<LI><A NAME="SEC330" HREF="manual_8.html#SEC330">Garbage Collection and COLLECTIBLE</A>
+</UL>
+</UL>
+<LI><A NAME="SEC331" HREF="manual_8.html#SEC331">Access to standard ILU features</A>
+<UL>
+<LI><A NAME="SEC332" HREF="manual_8.html#SEC332">Servers and Ports</A>
+<UL>
+<LI><A NAME="SEC333" HREF="manual_8.html#SEC333">Object Tables</A>
+<LI><A NAME="SEC334" HREF="manual_8.html#SEC334">Server Relocation</A>
+</UL>
+<LI><A NAME="SEC335" HREF="manual_8.html#SEC335">Threading and Event Loops</A>
+<LI><A NAME="SEC336" HREF="manual_8.html#SEC336">Custom Records</A>
+<LI><A NAME="SEC337" HREF="manual_8.html#SEC337">Custom Surrogates</A>
+<LI><A NAME="SEC338" HREF="manual_8.html#SEC338">String Binding Handle Formation</A>
+<LI><A NAME="SEC339" HREF="manual_8.html#SEC339">Simple Binding</A>
+<LI><A NAME="SEC340" HREF="manual_8.html#SEC340">Principal Identities and Passports</A>
+</UL>
+<LI><A NAME="SEC341" HREF="manual_8.html#SEC341">Building Common Lisp/ILU Applications</A>
+<UL>
+<LI><A NAME="SEC342" HREF="manual_8.html#SEC342">Stub Generation</A>
+<LI><A NAME="SEC343" HREF="manual_8.html#SEC343">Implementing an ILU module in Common Lisp</A>
+<UL>
+<LI><A NAME="SEC344" HREF="manual_8.html#SEC344">Implementation Inheritance</A>
+<LI><A NAME="SEC345" HREF="manual_8.html#SEC345">Exporting Objects</A>
+<LI><A NAME="SEC346" HREF="manual_8.html#SEC346">Debugging</A>
+</UL>
+<LI><A NAME="SEC347" HREF="manual_8.html#SEC347">Using an ILU module in Common Lisp</A>
+<LI><A NAME="SEC348" HREF="manual_8.html#SEC348">Dumping an image with ILU</A>
+<LI><A NAME="SEC349" HREF="manual_8.html#SEC349">Notes for Microsoft Windows Users</A>
+<UL>
+<LI><A NAME="SEC350" HREF="manual_8.html#SEC350">Installation on the MS Windows platform</A>
+<LI><A NAME="SEC351" HREF="manual_8.html#SEC351">Allegro 3.0.1 Needs <CODE>ilu:run-main-loop</CODE></A>
+</UL>
+<LI><A NAME="SEC352" HREF="manual_8.html#SEC352">The Portable DEFSYSTEM Module</A>
+<LI><A NAME="SEC353" HREF="manual_8.html#SEC353">ILU Common Lisp Lightweight Processes</A>
+<LI><A NAME="SEC354" HREF="manual_8.html#SEC354">Porting ILU to a New Common Lisp Implementation</A>
+</UL>
+<LI><A NAME="SEC355" HREF="manual_8.html#SEC355">Common Lisp/ILU API Reference</A>
+</UL>
+<LI><A NAME="SEC356" HREF="manual_9.html#SEC356">Using ILU with Scheme (Guile)</A>
+<UL>
+<LI><A NAME="SEC357" HREF="manual_9.html#SEC357">Introduction</A>
+<LI><A NAME="SEC358" HREF="manual_9.html#SEC358">The ISL Mapping to Scheme</A>
+<UL>
+<LI><A NAME="SEC359" HREF="manual_9.html#SEC359">Names</A>
+<LI><A NAME="SEC360" HREF="manual_9.html#SEC360">Basic Types</A>
+<UL>
+<LI><A NAME="SEC361" HREF="manual_9.html#SEC361">Constant</A>
+</UL>
+<LI><A NAME="SEC362" HREF="manual_9.html#SEC362">Strings</A>
+<LI><A NAME="SEC363" HREF="manual_9.html#SEC363">Pickles and Typecodes</A>
+<LI><A NAME="SEC364" HREF="manual_9.html#SEC364">Constructed Types</A>
+<UL>
+<LI><A NAME="SEC365" HREF="manual_9.html#SEC365">Enumeration</A>
+<LI><A NAME="SEC366" HREF="manual_9.html#SEC366">Array</A>
+<LI><A NAME="SEC367" HREF="manual_9.html#SEC367">Sequence</A>
+<LI><A NAME="SEC368" HREF="manual_9.html#SEC368">Record</A>
+<LI><A NAME="SEC369" HREF="manual_9.html#SEC369">Union</A>
+<LI><A NAME="SEC370" HREF="manual_9.html#SEC370">Optional</A>
+</UL>
+<LI><A NAME="SEC371" HREF="manual_9.html#SEC371">Object Types</A>
+<UL>
+<LI><A NAME="SEC372" HREF="manual_9.html#SEC372">Surrogate and True Object Types</A>
+<LI><A NAME="SEC373" HREF="manual_9.html#SEC373">Methods, Parameters, and Exceptions</A>
+<LI><A NAME="SEC374" HREF="manual_9.html#SEC374">Garbage Collection and COLLECTIBLE</A>
+</UL>
+</UL>
+<LI><A NAME="SEC375" HREF="manual_9.html#SEC375">Access to standard ILU features</A>
+<UL>
+<LI><A NAME="SEC376" HREF="manual_9.html#SEC376">Servers and Ports</A>
+<UL>
+<LI><A NAME="SEC377" HREF="manual_9.html#SEC377">Object Tables</A>
+</UL>
+<LI><A NAME="SEC378" HREF="manual_9.html#SEC378">Threading and Event Loops</A>
+<LI><A NAME="SEC379" HREF="manual_9.html#SEC379">Custom Records</A>
+<LI><A NAME="SEC380" HREF="manual_9.html#SEC380">String Binding Handle Formation</A>
+<LI><A NAME="SEC381" HREF="manual_9.html#SEC381">Simple Binding</A>
+<LI><A NAME="SEC382" HREF="manual_9.html#SEC382">Principal Identities and Passports</A>
+</UL>
+<LI><A NAME="SEC383" HREF="manual_9.html#SEC383">Building Scheme/ILU Applications</A>
+<UL>
+<LI><A NAME="SEC384" HREF="manual_9.html#SEC384">Initialization order</A>
+<LI><A NAME="SEC385" HREF="manual_9.html#SEC385">ILU-YASOS</A>
+<LI><A NAME="SEC386" HREF="manual_9.html#SEC386">Where to get Guile 1.2 and SLIB</A>
+<LI><A NAME="SEC387" HREF="manual_9.html#SEC387">Stub Generation</A>
+<LI><A NAME="SEC388" HREF="manual_9.html#SEC388">Implementing an ILU module in Scheme</A>
+<UL>
+<LI><A NAME="SEC389" HREF="manual_9.html#SEC389">Implementation Inheritance</A>
+<LI><A NAME="SEC390" HREF="manual_9.html#SEC390">Exporting Objects</A>
+</UL>
+<LI><A NAME="SEC391" HREF="manual_9.html#SEC391">Using an ILU module in Scheme</A>
+</UL>
+<LI><A NAME="SEC392" HREF="manual_9.html#SEC392">Scheme/ILU API Reference</A>
+</UL>
+<LI><A NAME="SEC393" HREF="manual_10.html#SEC393">Using ILU with Perl</A>
+<UL>
+<LI><A NAME="SEC394" HREF="manual_10.html#SEC394">Introduction</A>
+<LI><A NAME="SEC395" HREF="manual_10.html#SEC395">The ISL Mapping to Perl</A>
+<UL>
+<LI><A NAME="SEC396" HREF="manual_10.html#SEC396">Names</A>
+<LI><A NAME="SEC397" HREF="manual_10.html#SEC397">Interface</A>
+<LI><A NAME="SEC398" HREF="manual_10.html#SEC398">Basic Types</A>
+<UL>
+<LI><A NAME="SEC399" HREF="manual_10.html#SEC399">Constant</A>
+</UL>
+<LI><A NAME="SEC400" HREF="manual_10.html#SEC400">Strings</A>
+<LI><A NAME="SEC401" HREF="manual_10.html#SEC401">Pickles and Typecodes (Current COPE-ish interface, may change)</A>
+<LI><A NAME="SEC402" HREF="manual_10.html#SEC402">Pickles and Typecodes (Possible ILU-ish interface)</A>
+<LI><A NAME="SEC403" HREF="manual_10.html#SEC403">Constructed Types</A>
+<UL>
+<LI><A NAME="SEC404" HREF="manual_10.html#SEC404">Enumeration</A>
+<LI><A NAME="SEC405" HREF="manual_10.html#SEC405">Array</A>
+<LI><A NAME="SEC406" HREF="manual_10.html#SEC406">Sequence</A>
+<LI><A NAME="SEC407" HREF="manual_10.html#SEC407">Record</A>
+<LI><A NAME="SEC408" HREF="manual_10.html#SEC408">Union</A>
+<LI><A NAME="SEC409" HREF="manual_10.html#SEC409">Optional</A>
+</UL>
+<LI><A NAME="SEC410" HREF="manual_10.html#SEC410">Object Types</A>
+<UL>
+<LI><A NAME="SEC411" HREF="manual_10.html#SEC411">Surrogate and True Object Types</A>
+<LI><A NAME="SEC412" HREF="manual_10.html#SEC412">Methods, Parameters, and Exceptions</A>
+<LI><A NAME="SEC413" HREF="manual_10.html#SEC413">Garbage Collection and COLLECTIBLE</A>
+</UL>
+</UL>
+<LI><A NAME="SEC414" HREF="manual_10.html#SEC414">Access to standard ILU features</A>
+<UL>
+<LI><A NAME="SEC415" HREF="manual_10.html#SEC415">Servers and Ports</A>
+<UL>
+<LI><A NAME="SEC416" HREF="manual_10.html#SEC416">Object Tables</A>
+</UL>
+<LI><A NAME="SEC417" HREF="manual_10.html#SEC417">Threading and Event Loops</A>
+<UL>
+<LI><A NAME="SEC418" HREF="manual_10.html#SEC418">Animating Servers</A>
+<LI><A NAME="SEC419" HREF="manual_10.html#SEC419">Using Alarms</A>
+</UL>
+<LI><A NAME="SEC420" HREF="manual_10.html#SEC420">Custom Records (NOT YET IMPLEMENTED)</A>
+<LI><A NAME="SEC421" HREF="manual_10.html#SEC421">String Binding Handle Formation</A>
+<LI><A NAME="SEC422" HREF="manual_10.html#SEC422">Simple Binding</A>
+<LI><A NAME="SEC423" HREF="manual_10.html#SEC423">Principal Identities and Passports</A>
+</UL>
+<LI><A NAME="SEC424" HREF="manual_10.html#SEC424">Building Perl/ILU Applications</A>
+<UL>
+<LI><A NAME="SEC425" HREF="manual_10.html#SEC425">Stub Generation</A>
+<LI><A NAME="SEC426" HREF="manual_10.html#SEC426">Implementing an ILU module in Perl</A>
+<UL>
+<LI><A NAME="SEC427" HREF="manual_10.html#SEC427">Exporting Objects</A>
+</UL>
+<LI><A NAME="SEC428" HREF="manual_10.html#SEC428">Using an ILU module in Perl</A>
+<LI><A NAME="SEC429" HREF="manual_10.html#SEC429">CORBA Support in Perl</A>
+</UL>
+<LI><A NAME="SEC430" HREF="manual_10.html#SEC430">Perl/ILU API Reference</A>
+<UL>
+<LI><A NAME="SEC431" HREF="manual_10.html#SEC431">Identifiers in Module <CODE>ILU</CODE></A>
+<LI><A NAME="SEC432" HREF="manual_10.html#SEC432">Identifiers from the <CODE>CORBA</CODE> Module</A>
+<LI><A NAME="SEC433" HREF="manual_10.html#SEC433">Methods and Attributes of ILU Objects</A>
+</UL>
+</UL>
+<LI><A NAME="SEC434" HREF="manual_11.html#SEC434">Using ILU with Microsoft Windows</A>
+<UL>
+<LI><A NAME="SEC435" HREF="manual_11.html#SEC435">Prerequisites for using ILU with Microsoft Windows</A>
+<UL>
+<LI><A NAME="SEC436" HREF="manual_11.html#SEC436">Using ILU applications on Windows NT and Windows 95</A>
+<LI><A NAME="SEC437" HREF="manual_11.html#SEC437">Prerequisite software to use AND develop ILU applications on Windows NT and 95.</A>
+</UL>
+<LI><A NAME="SEC438" HREF="manual_11.html#SEC438">Installation</A>
+<LI><A NAME="SEC439" HREF="manual_11.html#SEC439">Building ILU</A>
+<UL>
+<LI><A NAME="SEC440" HREF="manual_11.html#SEC440">Lisp</A>
+<LI><A NAME="SEC441" HREF="manual_11.html#SEC441">Java</A>
+<LI><A NAME="SEC442" HREF="manual_11.html#SEC442">Python</A>
+</UL>
+<LI><A NAME="SEC443" HREF="manual_11.html#SEC443">Building the examples</A>
+<LI><A NAME="SEC444" HREF="manual_11.html#SEC444">Running the examples</A>
+<LI><A NAME="SEC445" HREF="manual_11.html#SEC445">Developing Windows Applications with ILU</A>
+<UL>
+<LI><A NAME="SEC446" HREF="manual_11.html#SEC446">All Applications</A>
+<LI><A NAME="SEC447" HREF="manual_11.html#SEC447">Windows (non-console) Applications</A>
+<LI><A NAME="SEC448" HREF="manual_11.html#SEC448">Message Loop</A>
+</UL>
+<LI><A NAME="SEC449" HREF="manual_11.html#SEC449">Windows and the ILU_DEBUG settings</A>
+<UL>
+<LI><A NAME="SEC450" HREF="manual_11.html#SEC450">WINIO</A>
+</UL>
+<LI><A NAME="SEC451" HREF="manual_11.html#SEC451">Misc.</A>
+<UL>
+<LI><A NAME="SEC452" HREF="manual_11.html#SEC452">Python 1.4 support - details</A>
+<LI><A NAME="SEC453" HREF="manual_11.html#SEC453">Alternative Binding Service</A>
+<LI><A NAME="SEC454" HREF="manual_11.html#SEC454">Borland C</A>
+</UL>
+<LI><A NAME="SEC455" HREF="manual_11.html#SEC455">Files in the distribution</A>
+</UL>
+<LI><A NAME="SEC456" HREF="manual_12.html#SEC456">Binding Names in ILU</A>
+<UL>
+<LI><A NAME="SEC457" HREF="manual_12.html#SEC457">Introduction</A>
+<LI><A NAME="SEC458" HREF="manual_12.html#SEC458">ILU Simple Binding</A>
+<UL>
+<LI><A NAME="SEC459" HREF="manual_12.html#SEC459">Listing the Registered Objects</A>
+<LI><A NAME="SEC460" HREF="manual_12.html#SEC460">Using Shared Files for Simple Binding</A>
+<LI><A NAME="SEC461" HREF="manual_12.html#SEC461">Using an ILU Service for Simple Binding</A>
+</UL>
+<LI><A NAME="SEC462" HREF="manual_12.html#SEC462">CORBA CosNaming</A>
+</UL>
+<LI><A NAME="SEC463" HREF="manual_13.html#SEC463">Threads and Event Loops</A>
+<UL>
+<LI><A NAME="SEC464" HREF="manual_13.html#SEC464">Multi-Threaded Programs</A>
+<UL>
+<LI><A NAME="SEC465" HREF="manual_13.html#SEC465">Multi-Threaded Programming in C</A>
+<LI><A NAME="SEC466" HREF="manual_13.html#SEC466">Multi-Threaded Programming in Python</A>
+<LI><A NAME="SEC467" HREF="manual_13.html#SEC467">Multi-Threaded Programming in C++</A>
+<LI><A NAME="SEC468" HREF="manual_13.html#SEC468">Thread Synchronization</A>
+</UL>
+<LI><A NAME="SEC469" HREF="manual_13.html#SEC469">Single-Threaded Programs</A>
+<UL>
+<LI><A NAME="SEC470" HREF="manual_13.html#SEC470">ILU Main Loop Functional Spec</A>
+<LI><A NAME="SEC471" HREF="manual_13.html#SEC471">Using ILU's Default Main Loop</A>
+<LI><A NAME="SEC472" HREF="manual_13.html#SEC472">Using an External Main Loop</A>
+<LI><A NAME="SEC473" HREF="manual_13.html#SEC473">A Hybrid Aproach</A>
+</UL>
+<LI><A NAME="SEC474" HREF="manual_13.html#SEC474">Threadedness in Distributed Systems</A>
+</UL>
+<LI><A NAME="SEC475" HREF="manual_14.html#SEC475">Protocols and Transports</A>
+<UL>
+<LI><A NAME="SEC476" HREF="manual_14.html#SEC476">Protocols</A>
+<UL>
+<LI><A NAME="SEC477" HREF="manual_14.html#SEC477">The Abstract ILU Message Protocol</A>
+<UL>
+<LI><A NAME="SEC478" HREF="manual_14.html#SEC478">Messages</A>
+<LI><A NAME="SEC479" HREF="manual_14.html#SEC479">Parameter Types</A>
+</UL>
+<LI><A NAME="SEC480" HREF="manual_14.html#SEC480">The ONC RPC Protocol</A>
+<UL>
+<LI><A NAME="SEC481" HREF="manual_14.html#SEC481">Message Mappings</A>
+<LI><A NAME="SEC482" HREF="manual_14.html#SEC482">Mapping of Standard Types</A>
+</UL>
+<LI><A NAME="SEC483" HREF="manual_14.html#SEC483">The Xerox Courier Protocol</A>
+<UL>
+<LI><A NAME="SEC484" HREF="manual_14.html#SEC484">Message Mappings -- Courier Layer 3</A>
+<LI><A NAME="SEC485" HREF="manual_14.html#SEC485">Mapping of Standard Types -- Courier Layer 2</A>
+</UL>
+<LI><A NAME="SEC486" HREF="manual_14.html#SEC486">The OMG Internet Inter-Orb Protocol (IIOP)</A>
+<UL>
+<LI><A NAME="SEC487" HREF="manual_14.html#SEC487">Message Mappings -- GIOP</A>
+<LI><A NAME="SEC488" HREF="manual_14.html#SEC488">Mapping of Standard Types -- GIOP</A>
+</UL>
+<LI><A NAME="SEC489" HREF="manual_14.html#SEC489">The Hyper Text Transfer Protocol (<CODE>HTTP</CODE>)</A>
+<LI><A NAME="SEC490" HREF="manual_14.html#SEC490">The World Wide Web HTTP-NG Protocol (w3ng)</A>
+<LI><A NAME="SEC491" HREF="manual_14.html#SEC491">The Default Protocol and Transport</A>
+</UL>
+<LI><A NAME="SEC492" HREF="manual_14.html#SEC492">Transports</A>
+<UL>
+<LI><A NAME="SEC493" HREF="manual_14.html#SEC493">TCP</A>
+<LI><A NAME="SEC494" HREF="manual_14.html#SEC494">UDP</A>
+<LI><A NAME="SEC495" HREF="manual_14.html#SEC495">SunRPC Record Marking</A>
+<LI><A NAME="SEC496" HREF="manual_14.html#SEC496">World Wide Web Consortium MUX Transport</A>
+<LI><A NAME="SEC497" HREF="manual_14.html#SEC497">Generic Security Service (GSS)</A>
+</UL>
+</UL>
+<LI><A NAME="SEC498" HREF="manual_15.html#SEC498">Security</A>
+<UL>
+<LI><A NAME="SEC499" HREF="manual_15.html#SEC499">Identities</A>
+<LI><A NAME="SEC500" HREF="manual_15.html#SEC500">Communications Security</A>
+<UL>
+<UL>
+<LI><A NAME="SEC501" HREF="manual_15.html#SEC501">Kernel Servers</A>
+<LI><A NAME="SEC502" HREF="manual_15.html#SEC502">Creating Ports</A>
+<LI><A NAME="SEC503" HREF="manual_15.html#SEC503">Client Connections to Ports</A>
+<LI><A NAME="SEC504" HREF="manual_15.html#SEC504">Calls</A>
+</UL>
+</UL>
+<LI><A NAME="SEC505" HREF="manual_15.html#SEC505">Using the GSS Transport Filter</A>
+<UL>
+<LI><A NAME="SEC506" HREF="manual_15.html#SEC506">GSS Namespace Schemes</A>
+<LI><A NAME="SEC507" HREF="manual_15.html#SEC507">GSS Security Schemes</A>
+</UL>
+</UL>
+<LI><A NAME="SEC508" HREF="manual_16.html#SEC508">ILU Customization</A>
+<UL>
+<LI><A NAME="SEC509" HREF="manual_16.html#SEC509">Introduction</A>
+<LI><A NAME="SEC510" HREF="manual_16.html#SEC510">Event Loops and Threads</A>
+<LI><A NAME="SEC511" HREF="manual_16.html#SEC511">RPC Protocols and Data Transport Mechanisms</A>
+<UL>
+<LI><A NAME="SEC512" HREF="manual_16.html#SEC512">RPC Protocols</A>
+<LI><A NAME="SEC513" HREF="manual_16.html#SEC513">Transport Filters</A>
+</UL>
+<LI><A NAME="SEC514" HREF="manual_16.html#SEC514">Object Incarnation Procedures</A>
+<LI><A NAME="SEC515" HREF="manual_16.html#SEC515">Object URLs</A>
+<LI><A NAME="SEC516" HREF="manual_16.html#SEC516">Identity Types</A>
+<LI><A NAME="SEC517" HREF="manual_16.html#SEC517">Malloc Failure Recovery</A>
+<LI><A NAME="SEC518" HREF="manual_16.html#SEC518">Error Reporting</A>
+<LI><A NAME="SEC519" HREF="manual_16.html#SEC519">Debugging Interfaces</A>
+</UL>
+<LI><A NAME="SEC520" HREF="manual_17.html#SEC520">Debugging ILU Programs</A>
+<UL>
+<LI><A NAME="SEC521" HREF="manual_17.html#SEC521">ILU trace debugging</A>
+<LI><A NAME="SEC522" HREF="manual_17.html#SEC522">Debugging ISL</A>
+<UL>
+<LI><A NAME="SEC523" HREF="manual_17.html#SEC523">Use of <CODE>islscan</CODE></A>
+<LI><A NAME="SEC524" HREF="manual_17.html#SEC524">The ISLDEBUG environment variable</A>
+</UL>
+<LI><A NAME="SEC525" HREF="manual_17.html#SEC525">C++ static instance initialization</A>
+<LI><A NAME="SEC526" HREF="manual_17.html#SEC526">Use of <CODE>gdb</CODE></A>
+<LI><A NAME="SEC527" HREF="manual_17.html#SEC527">Error handling</A>
+<UL>
+<LI><A NAME="SEC528" HREF="manual_17.html#SEC528">Decoding reportable consistency check failures</A>
+</UL>
+<LI><A NAME="SEC529" HREF="manual_17.html#SEC529">Common Problems - Questions</A>
+<LI><A NAME="SEC530" HREF="manual_17.html#SEC530">Bug Reporting and Comments</A>
+</UL>
+<LI><A NAME="SEC531" HREF="manual_18.html#SEC531">Installation of ILU</A>
+<UL>
+<LI><A NAME="SEC532" HREF="manual_18.html#SEC532">Installing on a Windows NT or 95 System</A>
+<LI><A NAME="SEC533" HREF="manual_18.html#SEC533">Installing on a UNIX System</A>
+<UL>
+<LI><A NAME="SEC534" HREF="manual_18.html#SEC534">Prerequisites</A>
+<LI><A NAME="SEC535" HREF="manual_18.html#SEC535">Unpacking the Distribution</A>
+<LI><A NAME="SEC536" HREF="manual_18.html#SEC536">For the Impatient</A>
+<LI><A NAME="SEC537" HREF="manual_18.html#SEC537">Real Configuration</A>
+<UL>
+<LI><A NAME="SEC538" HREF="manual_18.html#SEC538">Configuration Options</A>
+<LI><A NAME="SEC539" HREF="manual_18.html#SEC539">Manual Fixups for Threading</A>
+</UL>
+<LI><A NAME="SEC540" HREF="manual_18.html#SEC540">Building</A>
+<LI><A NAME="SEC541" HREF="manual_18.html#SEC541">Environment Variables</A>
+<LI><A NAME="SEC542" HREF="manual_18.html#SEC542">Testing the Build</A>
+<LI><A NAME="SEC543" HREF="manual_18.html#SEC543">Notes on Specific Systems</A>
+<UL>
+<LI><A NAME="SEC544" HREF="manual_18.html#SEC544">AIX 4.2</A>
+<LI><A NAME="SEC545" HREF="manual_18.html#SEC545">HP/UX</A>
+<LI><A NAME="SEC546" HREF="manual_18.html#SEC546">DEC ALPHA with OSF OS</A>
+<LI><A NAME="SEC547" HREF="manual_18.html#SEC547">SunOS 4.1.x</A>
+<LI><A NAME="SEC548" HREF="manual_18.html#SEC548">Linux</A>
+</UL>
+</UL>
+<LI><A NAME="SEC549" HREF="manual_18.html#SEC549">Examples</A>
+<LI><A NAME="SEC550" HREF="manual_18.html#SEC550">Name Servers</A>
+<LI><A NAME="SEC551" HREF="manual_18.html#SEC551">Documentation</A>
+<LI><A NAME="SEC552" HREF="manual_18.html#SEC552">Mailing Lists</A>
+<LI><A NAME="SEC553" HREF="manual_18.html#SEC553">Changes</A>
+<UL>
+<LI><A NAME="SEC554" HREF="manual_18.html#SEC554">Changes from 2.0alpha14 to 2.0beta1</A>
+<LI><A NAME="SEC555" HREF="manual_18.html#SEC555">Changes from 2.0alpha13 to 2.0alpha14</A>
+<LI><A NAME="SEC556" HREF="manual_18.html#SEC556">Changes from 2.0alpha12 to 2.0alpha13</A>
+<LI><A NAME="SEC557" HREF="manual_18.html#SEC557">Changes from 2.0alpha11 to 2.0alpha12</A>
+<LI><A NAME="SEC558" HREF="manual_18.html#SEC558">Changes from 2.0alpha10 to 2.0alpha11</A>
+<LI><A NAME="SEC559" HREF="manual_18.html#SEC559">Changes from 2.0alpha9 to 2.0alpha10</A>
+<LI><A NAME="SEC560" HREF="manual_18.html#SEC560">Changes from 2.0alpha8 to 2.0alpha9</A>
+<LI><A NAME="SEC561" HREF="manual_18.html#SEC561">Changes from 2.0alpha7 to 2.0alpha8</A>
+<LI><A NAME="SEC562" HREF="manual_18.html#SEC562">Changes from 1.8 to 2.0alpha</A>
+<LI><A NAME="SEC563" HREF="manual_18.html#SEC563">Changes from 1.7 to 1.8</A>
+<LI><A NAME="SEC564" HREF="manual_18.html#SEC564">Changes from 1.6.4-p9 to 1.7</A>
+</UL>
+<LI><A NAME="SEC565" HREF="manual_18.html#SEC565">Bug Reporting and Comments</A>
+<UL>
+<LI><A NAME="SEC566" HREF="manual_18.html#SEC566">Known Bugs and Gotchas</A>
+<LI><A NAME="SEC567" HREF="manual_18.html#SEC567">Reporting Bugs</A>
+</UL>
+</UL>
+<LI><A NAME="SEC568" HREF="manual_19.html#SEC568">Multiple Languages In One Address Space</A>
+<UL>
+<LI><A NAME="SEC569" HREF="manual_19.html#SEC569">Dueling Runtimes</A>
+<LI><A NAME="SEC570" HREF="manual_19.html#SEC570">Module Initialization and Binding</A>
+<UL>
+<LI><A NAME="SEC571" HREF="manual_19.html#SEC571">Initialization</A>
+<LI><A NAME="SEC572" HREF="manual_19.html#SEC572">Finding Objects (Binding)</A>
+<LI><A NAME="SEC573" HREF="manual_19.html#SEC573">Suggested Modularization Strategies</A>
+<UL>
+<LI><A NAME="SEC574" HREF="manual_19.html#SEC574">Building a Shared Library Around a C or C++ Module</A>
+<LI><A NAME="SEC575" HREF="manual_19.html#SEC575">Building a Shared Library Around a Python Module</A>
+<LI><A NAME="SEC576" HREF="manual_19.html#SEC576">Initializing a Shared Library from C or C++</A>
+<LI><A NAME="SEC577" HREF="manual_19.html#SEC577">Initializing a Shared Library from Python</A>
+<LI><A NAME="SEC578" HREF="manual_19.html#SEC578">Initializing a Shared Library from Java</A>
+<LI><A NAME="SEC579" HREF="manual_19.html#SEC579">Initializing a Shared Library from Common Lisp</A>
+</UL>
+</UL>
+</UL>
+<LI><A NAME="SEC580" HREF="manual_20.html#SEC580">Using Imake with ILU</A>
+<UL>
+<LI><A NAME="SEC581" HREF="manual_20.html#SEC581">Creating <TT>`Makefile'</TT>s from <TT>`Imakefile'</TT>s</A>
+<LI><A NAME="SEC582" HREF="manual_20.html#SEC582">ANSI C Usage</A>
+<UL>
+<LI><A NAME="SEC583" HREF="manual_20.html#SEC583">ANSI C ILU <CODE>imake</CODE> Macros</A>
+</UL>
+<LI><A NAME="SEC584" HREF="manual_20.html#SEC584">C++ Usage</A>
+<UL>
+<LI><A NAME="SEC585" HREF="manual_20.html#SEC585">C++ ILU <CODE>imake</CODE> Macros</A>
+</UL>
+</UL>
+<LI><A NAME="SEC586" HREF="manual_21.html#SEC586">How to Create ILU Support for a Programming Language</A>
+<UL>
+<LI><A NAME="SEC587" HREF="manual_21.html#SEC587">Defining the Mapping</A>
+<UL>
+<LI><A NAME="SEC588" HREF="manual_21.html#SEC588">Object References</A>
+<LI><A NAME="SEC589" HREF="manual_21.html#SEC589">Storage Management</A>
+<LI><A NAME="SEC590" HREF="manual_21.html#SEC590">Control Flow</A>
+<LI><A NAME="SEC591" HREF="manual_21.html#SEC591">Any and TypeCode</A>
+</UL>
+<LI><A NAME="SEC592" HREF="manual_21.html#SEC592">Designing Runtime Operation</A>
+<LI><A NAME="SEC593" HREF="manual_21.html#SEC593">Writing the Stub Generator</A>
+<LI><A NAME="SEC594" HREF="manual_21.html#SEC594">Writing the LSR</A>
+<UL>
+<LI><A NAME="SEC595" HREF="manual_21.html#SEC595">Control Structure Options</A>
+<LI><A NAME="SEC596" HREF="manual_21.html#SEC596">The Main Sequence - How Calls are Handled on the Client and Server Sides</A>
+<LI><A NAME="SEC597" HREF="manual_21.html#SEC597">Object Management</A>
+<UL>
+<LI><A NAME="SEC598" HREF="manual_21.html#SEC598">Discussion</A>
+<LI><A NAME="SEC599" HREF="manual_21.html#SEC599">Life Cycle</A>
+<LI><A NAME="SEC600" HREF="manual_21.html#SEC600">Automatically Managed Objects</A>
+<LI><A NAME="SEC601" HREF="manual_21.html#SEC601">Explicitly Managed Objects</A>
+<LI><A NAME="SEC602" HREF="manual_21.html#SEC602">Hybrid Schemes</A>
+</UL>
+<LI><A NAME="SEC603" HREF="manual_21.html#SEC603">Server Management</A>
+<LI><A NAME="SEC604" HREF="manual_21.html#SEC604">Call-Specific MetaObjects</A>
+<LI><A NAME="SEC605" HREF="manual_21.html#SEC605">Errors</A>
+<LI><A NAME="SEC606" HREF="manual_21.html#SEC606">Internal Consistency Checks</A>
+<LI><A NAME="SEC607" HREF="manual_21.html#SEC607">Debugging</A>
+<LI><A NAME="SEC608" HREF="manual_21.html#SEC608">Fine Grain Time</A>
+<LI><A NAME="SEC609" HREF="manual_21.html#SEC609">FD Budget</A>
+<LI><A NAME="SEC610" HREF="manual_21.html#SEC610">Supporting Multiple Languages in One Runtime</A>
+<LI><A NAME="SEC611" HREF="manual_21.html#SEC611">Type Information</A>
+<LI><A NAME="SEC612" HREF="manual_21.html#SEC612">Simple Binding Service</A>
+<LI><A NAME="SEC613" HREF="manual_21.html#SEC613">Security Support</A>
+<LI><A NAME="SEC614" HREF="manual_21.html#SEC614">SBH schemes</A>
+<LI><A NAME="SEC615" HREF="manual_21.html#SEC615">Pickle Support</A>
+<UL>
+<LI><A NAME="SEC616" HREF="manual_21.html#SEC616">The Kernel Interface to Pickle</A>
+<LI><A NAME="SEC617" HREF="manual_21.html#SEC617">Pickles and the CORBA IIOP</A>
+</UL>
+</UL>
+</UL>
+<LI><A NAME="SEC618" HREF="manual_22.html#SEC618">The TIM Documentation Language</A>
+<UL>
+<LI><A NAME="SEC619" HREF="manual_22.html#SEC619">Introduction</A>
+<LI><A NAME="SEC620" HREF="manual_22.html#SEC620">Extensions to GNU Texinfo</A>
+<UL>
+<LI><A NAME="SEC621" HREF="manual_22.html#SEC621">TIM Domain-Independent Format</A>
+<LI><A NAME="SEC622" HREF="manual_22.html#SEC622">Defining Domain-Specific Markup Commands With @timmacro</A>
+</UL>
+<LI><A NAME="SEC623" HREF="manual_22.html#SEC623">TIM Tools</A>
+<LI><A NAME="SEC624" HREF="manual_22.html#SEC624">Markup Commands used with ILU</A>
+</UL>
+<LI><A NAME="SEC625" HREF="manual_23.html#SEC625">The ILU Common Lisp Portable DEFSYSTEM Module</A>
+<UL>
+<LI><A NAME="SEC626" HREF="manual_23.html#SEC626">Pathname Support</A>
+</UL>
+<LI><A NAME="SEC627" HREF="manual_24.html#SEC627">The ILU Common Lisp Lightweight Process System</A>
+<UL>
+<LI><A NAME="SEC628" HREF="manual_24.html#SEC628">Introduction</A>
+<LI><A NAME="SEC629" HREF="manual_24.html#SEC629">Overview Of The ILU CL Process Model</A>
+<UL>
+<LI><A NAME="SEC630" HREF="manual_24.html#SEC630">The Scheduler Process</A>
+<LI><A NAME="SEC631" HREF="manual_24.html#SEC631">States Of Processes</A>
+<LI><A NAME="SEC632" HREF="manual_24.html#SEC632">Removing Or Killing Processes</A>
+<LI><A NAME="SEC633" HREF="manual_24.html#SEC633">Properties Of Processes</A>
+<LI><A NAME="SEC634" HREF="manual_24.html#SEC634">Process Locks</A>
+</UL>
+<LI><A NAME="SEC635" HREF="manual_24.html#SEC635">Functional Overview</A>
+<LI><A NAME="SEC636" HREF="manual_24.html#SEC636">Implementation Architecture</A>
+<LI><A NAME="SEC637" HREF="manual_24.html#SEC637">General Limitations</A>
+<LI><A NAME="SEC638" HREF="manual_24.html#SEC638">How To Use The ILU CL Process Interface</A>
+<LI><A NAME="SEC639" HREF="manual_24.html#SEC639">How To Program The ILU CL Process Interface</A>
+<LI><A NAME="SEC640" HREF="manual_24.html#SEC640">The ILU CL Process Interface</A>
+<UL>
+<LI><A NAME="SEC641" HREF="manual_24.html#SEC641">The Process Object</A>
+<LI><A NAME="SEC642" HREF="manual_24.html#SEC642">Querying The Status Of The Scheduler And All Processes</A>
+<LI><A NAME="SEC643" HREF="manual_24.html#SEC643">Starting And Killing Processes</A>
+<LI><A NAME="SEC644" HREF="manual_24.html#SEC644">Waiting A Process</A>
+<LI><A NAME="SEC645" HREF="manual_24.html#SEC645">Activating And Deactivating Processes</A>
+<LI><A NAME="SEC646" HREF="manual_24.html#SEC646">Accessing And Modifying The Properties Of A Process</A>
+<LI><A NAME="SEC647" HREF="manual_24.html#SEC647">Miscellaneous Process/Scheduler Functions And Macros</A>
+<LI><A NAME="SEC648" HREF="manual_24.html#SEC648">Process Locks Interface</A>
+</UL>
+<LI><A NAME="SEC649" HREF="manual_24.html#SEC649">Handling Errors</A>
+<LI><A NAME="SEC650" HREF="manual_24.html#SEC650">Notes</A>
+<LI><A NAME="SEC651" HREF="manual_24.html#SEC651">References</A>
+</UL>
+<LI><A NAME="SEC652" HREF="manual_25.html#SEC652">Porting ILU to Common Lisp Implementations</A>
+<UL>
+<LI><A NAME="SEC653" HREF="manual_25.html#SEC653">Introduction</A>
+<LI><A NAME="SEC654" HREF="manual_25.html#SEC654">Providing the ILU notion of foreign-function calls.</A>
+<LI><A NAME="SEC655" HREF="manual_25.html#SEC655">Network Garbage Collection</A>
+<LI><A NAME="SEC656" HREF="manual_25.html#SEC656">Thread and/or Event Loops</A>
+<LI><A NAME="SEC657" HREF="manual_25.html#SEC657">Converting between character sets.</A>
+<LI><A NAME="SEC658" HREF="manual_25.html#SEC658">Support for Dynamic Object Creation</A>
+</UL>
+<LI><A NAME="SEC659" HREF="manual_26.html#SEC659">Algorithm for Generation of Structural-Hash Type IDs</A>
+<UL>
+<LI><A NAME="SEC660" HREF="manual_26.html#SEC660">Resolving Type Ambiguities</A>
+<LI><A NAME="SEC661" HREF="manual_26.html#SEC661">Constructing the "salient information string"</A>
+<LI><A NAME="SEC662" HREF="manual_26.html#SEC662">References to Types, Interfaces, and Exceptions</A>
+<LI><A NAME="SEC663" HREF="manual_26.html#SEC663">Definitions of Types, Interfaces, and Exceptions</A>
+<UL>
+<LI><A NAME="SEC664" HREF="manual_26.html#SEC664">Types</A>
+<UL>
+<LI><A NAME="SEC665" HREF="manual_26.html#SEC665">Alias Types</A>
+<LI><A NAME="SEC666" HREF="manual_26.html#SEC666">Array Types</A>
+<LI><A NAME="SEC667" HREF="manual_26.html#SEC667">Record Types</A>
+<LI><A NAME="SEC668" HREF="manual_26.html#SEC668">Optional Types</A>
+<LI><A NAME="SEC669" HREF="manual_26.html#SEC669">Fixed-point Types</A>
+<LI><A NAME="SEC670" HREF="manual_26.html#SEC670">Sequence Types</A>
+<LI><A NAME="SEC671" HREF="manual_26.html#SEC671">Union Types</A>
+<LI><A NAME="SEC672" HREF="manual_26.html#SEC672">Enumeration Types</A>
+<LI><A NAME="SEC673" HREF="manual_26.html#SEC673">Object Types</A>
+</UL>
+<LI><A NAME="SEC674" HREF="manual_26.html#SEC674">Interfaces</A>
+<LI><A NAME="SEC675" HREF="manual_26.html#SEC675">Exceptions</A>
+<LI><A NAME="SEC676" HREF="manual_26.html#SEC676">Brands</A>
+<LI><A NAME="SEC677" HREF="manual_26.html#SEC677">String Literals</A>
+<LI><A NAME="SEC678" HREF="manual_26.html#SEC678">Example</A>
+</UL>
+<LI><A NAME="SEC679" HREF="manual_26.html#SEC679">Calculation of the NIST SHS of the "salient information" String.</A>
+<LI><A NAME="SEC680" HREF="manual_26.html#SEC680">Conversion of the SHS to a Base-64 Number.</A>
+</UL>
+<LI><A NAME="SEC681" HREF="manual_27.html#SEC681">Possible ISL Name Mappings for Target Languages</A>
+<UL>
+<LI><A NAME="SEC682" HREF="manual_27.html#SEC682">C mapping</A>
+<LI><A NAME="SEC683" HREF="manual_27.html#SEC683">C++ mapping</A>
+<LI><A NAME="SEC684" HREF="manual_27.html#SEC684">Modula-3 mapping</A>
+<LI><A NAME="SEC685" HREF="manual_27.html#SEC685">Mapping ILU ISL to Modula-3</A>
+<UL>
+<LI><A NAME="SEC686" HREF="manual_27.html#SEC686">Names</A>
+<LI><A NAME="SEC687" HREF="manual_27.html#SEC687">Types</A>
+<LI><A NAME="SEC688" HREF="manual_27.html#SEC688">Exceptions</A>
+<LI><A NAME="SEC689" HREF="manual_27.html#SEC689">Example</A>
+</UL>
+</UL>
+<LI><A NAME="SEC690" HREF="manual_28.html#SEC690">Testing Framework for ILU</A>
+<UL>
+<LI><A NAME="SEC691" HREF="manual_28.html#SEC691">Introduction</A>
+<LI><A NAME="SEC692" HREF="manual_28.html#SEC692">Test Scripts</A>
+<UL>
+<LI><A NAME="SEC693" HREF="manual_28.html#SEC693">Python Classes and Data Structures Provided</A>
+<LI><A NAME="SEC694" HREF="manual_28.html#SEC694">Writing a Test Script</A>
+<LI><A NAME="SEC695" HREF="manual_28.html#SEC695">Imake Considerations</A>
+</UL>
+<LI><A NAME="SEC696" HREF="manual_28.html#SEC696">The Automated Testing Framework</A>
+<UL>
+<LI><A NAME="SEC697" HREF="manual_28.html#SEC697">Configurations Files</A>
+<LI><A NAME="SEC698" HREF="manual_28.html#SEC698">The <CODE>run-ilu-tests</CODE> Script</A>
+</UL>
+</UL>
+<LI><A NAME="SEC699" HREF="manual_29.html#SEC699">ILU Minor Codes for System Exceptions</A>
+<UL>
+<LI><A NAME="SEC700" HREF="manual_29.html#SEC700">Introduction</A>
+<LI><A NAME="SEC701" HREF="manual_29.html#SEC701">Minor Codes for System Exception BAD_PARAM</A>
+<LI><A NAME="SEC702" HREF="manual_29.html#SEC702">Minor Codes for System Exception IMP_LIMIT</A>
+<LI><A NAME="SEC703" HREF="manual_29.html#SEC703">Minor Codes for System Exception COMM_FAILURE</A>
+<LI><A NAME="SEC704" HREF="manual_29.html#SEC704">Minor Codes for System Exception INV_OBJREF</A>
+<LI><A NAME="SEC705" HREF="manual_29.html#SEC705">Minor Codes for System Exception INTERNAL</A>
+<LI><A NAME="SEC706" HREF="manual_29.html#SEC706">Minor Codes for System Exception MARSHAL</A>
+<LI><A NAME="SEC707" HREF="manual_29.html#SEC707">Minor Codes for System Exception BAD_TYPECODE</A>
+<LI><A NAME="SEC708" HREF="manual_29.html#SEC708">Minor Codes for System Exception BAD_OPERATION</A>
+<LI><A NAME="SEC709" HREF="manual_29.html#SEC709">Minor Codes for System Exception NO_RESOURCES</A>
+<LI><A NAME="SEC710" HREF="manual_29.html#SEC710">Minor Codes for System Exception TRANSIENT</A>
+<LI><A NAME="SEC711" HREF="manual_29.html#SEC711">Minor Codes for System Exception NO_MEMORY</A>
+</UL>
+<LI><A NAME="SEC712" HREF="manual_30.html#SEC712">Index of Concepts</A>
+<LI><A NAME="SEC713" HREF="manual_31.html#SEC713">Index of Functions, Variables, Methods, and Types</A>
+</UL>

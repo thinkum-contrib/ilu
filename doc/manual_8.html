@@ -1,0 +1,570 @@
+<!-- This HTML file has been created by timdif2html 1.11
+     from manual.dif on 20 September 1999 -->
+
+<TITLE>ILU Reference Manual - Using ILU with Common Lisp</TITLE>
+<BODY TEXT=#000000 BGCOLOR=#ffffff>
+<P>Go to the <A HREF="manual_7.html">previous</A>, <A HREF="manual_9.html">next</A> section.<P>
+<H1><A NAME="SEC311" HREF="manual_toc.html#SEC311">Using ILU with Common Lisp</A></H1>
+<P>
+<A NAME="IDX624"></A>
+<H2><A NAME="SEC312" HREF="manual_toc.html#SEC312">Introduction</A></H2>
+This document is for the Common Lisp programmer who wishes to use 
+ILU. The following sections will show how ILU is
+mapped into Common Lisp constructs and how both Common Lisp
+clients and servers are generated and built.
+<P>
+<H2><A NAME="SEC313" HREF="manual_toc.html#SEC313">The ISL Mapping to Common Lisp</A></H2>
+<P>
+Runtime code is in the Common Lisp package <CODE>ilu</CODE>.
+<P>
+<H3><A NAME="SEC314" HREF="manual_toc.html#SEC314">Names</A></H3>
+<P>
+Names from interface specifications are transformed into Lisp names
+(case-insensitive) by inserting hyphens at lower-to-upper case
+transitions.  Hyphens that are already present are maintained as
+is.<A NAME="FOOT7" HREF="manual_foot.html#FOOT7">(7)</A>  Method names are mapped to <CODE>INTERFACE:TYPE.METHOD</CODE>.
+<P>
+<H3><A NAME="SEC315" HREF="manual_toc.html#SEC315">Interface</A></H3>
+<P>
+A separate package is defined for each interface with
+<CODE>defpackage</CODE>.  The name of this package
+is taken from the name of the interface.  This package uses the packages 
+<CODE>common-lisp</CODE> and <CODE>ilu</CODE>.  The Common Lisp
+names of all entities defined in the ISL
+are exported from the package, including types, classes, constants,
+accessors, type predicates,
+generic functions, exceptions, etc. Such symbols are also shadowed, to avoid 
+conflicts with used packages. For example, given the following interface:
+<P>
+<PRE>
+INTERFACE MyInterface END;
+EXCEPTION TotalWinner : Person;
+TYPE Person = OBJECT
+  METHODS
+     Enemies (someone : Person) : Cardinal
+       RAISES TotalWinner END
+  END;
+</PRE>
+<P>
+the stubber generates the following <CODE>defpackage</CODE>:
+<P>
+<PRE>
+(defpackage :my-interface
+  (:use :common-lisp :ilu)
+  (:shadow #:total-winner #:person #:person.enemies)
+  (:export #:total-winner #:person #:person.enemies)
+</PRE>
+<P>
+This allows symbols defined in the <CODE>commonlisp</CODE> package
+to be used by the automatically generated code in the generated package,
+but it also means that the user needs to be careful about using any
+generated package.  In general, we recommend that you explicitly specify
+the full name of symbols from ILU interfaces.
+<P>
+<H3><A NAME="SEC316" HREF="manual_toc.html#SEC316">Basic Types</A></H3>
+<P>
+The basic ISL types have the following mapping to Common Lisp
+types:
+<P>
+<UL>
+<LI>ISL <CODE>BOOLEAN</CODE> maps to Common Lisp <CODE>(or nil t)</CODE>
+<LI>ISL <CODE>BYTE</CODE> maps to Common Lisp <CODE>(unsigned-byte 8)</CODE>
+<LI>ISL <CODE>SHORT CARDINAL</CODE> maps to Common Lisp <CODE>(unsigned-byte 16)</CODE>
+<LI>ISL <CODE>CARDINAL</CODE> maps to Common Lisp <CODE>(unsigned-byte 32)</CODE>
+<LI>ISL <CODE>LONG CARDINAL</CODE> maps to Common Lisp <CODE>(unsigned-byte 64)</CODE>
+<LI>ISL <CODE>SHORT INTEGER</CODE> maps to Common Lisp <CODE>(signed-byte 16)</CODE>
+<LI>ISL <CODE>INTEGER</CODE> maps to Common Lisp <CODE>(signed-byte 32)</CODE>
+<LI>ISL <CODE>LONG INTEGER</CODE> maps to Common Lisp <CODE>(signed-byte 64)</CODE>
+<LI>ISL <CODE>CHARACTER</CODE> maps to Common Lisp <CODE>character</CODE>
+<LI>ISL <CODE>SHORT CHARACTER</CODE> maps to Common Lisp <CODE>character</CODE>
+<LI>ISL <CODE>SHORT REAL</CODE> maps to Common Lisp <CODE>single-float</CODE>
+<LI>ISL <CODE>REAL</CODE> maps to Common Lisp <CODE>double-float</CODE>
+<LI>ISL <CODE>LONG REAL</CODE> maps to Common Lisp <CODE>double-float</CODE>
+</UL>
+<P>
+<H4><A NAME="SEC317" HREF="manual_toc.html#SEC317">Constant</A></H4>
+<P>
+Constants are implemented in CL by a value of the 
+appropriate type, defined with <CODE>defconstant</CODE>.
+<P>
+<H3><A NAME="SEC318" HREF="manual_toc.html#SEC318">Strings</A></H3>
+<P>
+Arrays and sequences of CHARACTER (regular or SHORT) are implemented as
+<CODE>simple-string</CODE>s.
+<P>
+<H3><A NAME="SEC319" HREF="manual_toc.html#SEC319">Pickles and Typecodes</A></H3>
+<P>
+Pickles are represented with the CLOS class <CODE>ilu:pickle</CODE>
+<P>
+Instances of a pickle may be created by calling <CODE>cl:make-instance</CODE>
+on <CODE>ILU:PICKLE</CODE>, with the <CODE>:VALUE</CODE> and <CODE>:TYPE</CODE> keywords,
+as in<BR>
+<CODE>(cl:make-instance 'ilu:pickle :type 'ilu:cardinal :value 3456)</CODE>
+<P>
+Pickle has three reader functions defined on it:
+<UL>
+<LI><CODE>ilu:pickle-value</CODE> returns the value stored in the pickle as a Lisp value.
+<LI><CODE>ilu:pickle-type</CODE> returns the type of the value stored in the pickle.
+<LI><CODE>ilu:pickle-bytes</CODE> returns the pickled bytes of the pickle.
+</UL>
+<P>
+<H3><A NAME="SEC320" HREF="manual_toc.html#SEC320">Constructed Types</A></H3>
+<P>
+<H4><A NAME="SEC321" HREF="manual_toc.html#SEC321">Enumeration</A></H4>
+<P>
+Enumerations are implemented with symbols, as in<BR>
+<CODE>(deftype answer () `(member 'yes 'no 'maybe))</CODE>
+<P>
+<H4><A NAME="SEC322" HREF="manual_toc.html#SEC322">Array</A></H4>
+<P>
+Arrays are implemented as <CODE>simple-array</CODE>s.
+<P>
+<H4><A NAME="SEC323" HREF="manual_toc.html#SEC323">Sequence</A></H4>
+<P>
+Sequences are implemented as <CODE>list</CODE>s, except for sequences of
+characters, which are implemented as <CODE>simple-string</CODE>s.
+<P>
+<H4><A NAME="SEC324" HREF="manual_toc.html#SEC324">Record</A></H4>
+<P>
+Record types are implemented with CL <CODE>defstruct</CODE>.
+<P>
+<H4><A NAME="SEC325" HREF="manual_toc.html#SEC325">Union</A></H4>
+<P>
+Unions are implemented as a cons'ed value, with the cdr containing
+the union type discriminant, and the cdr containing the actual value.
+<P>
+<H4><A NAME="SEC326" HREF="manual_toc.html#SEC326">Optional</A></H4>
+<P>
+<H3><A NAME="SEC327" HREF="manual_toc.html#SEC327">Object Types</A></H3>
+<P>
+Classes are implemented with CLOS <CODE>defclass</CODE>.
+<P>
+Private slots are created for methods which are specified as
+<CODE>functional</CODE>, and the runtime caches the value of this method
+in such slots after the first call to the method.
+<P>
+Instances are always subtypes of <CODE>ilu:ilu-object</CODE>.
+<P>
+Methods always take as their first argument the object which they are a method 
+on.  Subsequent arguments are those specified in the <TT>`.isl'</TT> file.
+Methods that have <CODE>OUT</CODE> or <CODE>INOUT</CODE> arguments may return multiple
+values.  In general, the parameters to a method are the <CODE>IN</CODE> and
+<CODE>INOUT</CODE> parameters specified in the ISL interface, but not
+the <CODE>OUT</CODE> parameters.  The return values from a method are the
+specified return value for the ISL method, if any, followed
+by the <CODE>INOUT</CODE> and <CODE>OUT</CODE> parameters for the method, if any, in
+the order in which they appear in the ISL specification
+of the method.
+<P>
+OMG IDL attributes map to a CLOS method of the same name,
+and a setf method with the same name (unless the attribute is readonly). 
+<P>
+<H4><A NAME="SEC328" HREF="manual_toc.html#SEC328">Surrogate and True Object Types</A></H4>
+<P>
+<H4><A NAME="SEC329" HREF="manual_toc.html#SEC329">Methods, Parameters, and Exceptions</A></H4>
+<P>
+Exceptions are represented with CL conditions, defined by <CODE>define-condition</CODE>.
+All ILU conditions 
+are subtypes of <CODE>ilu:rpc-exception</CODE>, which is a 
+<CODE>serious-condition</CODE>. If an associated value is 
+specified for an exception it may be accessed in one of the following
+two ways:
+<OL>
+<LI>
+If the name of the value type begins with
+<CODE>"-ilu-prefix-idlExceptionType-"</CODE>, the value type is a generated type from
+an OMG IDL exception description, and is a record type.  In this case, each of the fields
+of the record type are placed in the condition individually, and an accessor
+with that field name is declared for that field.
+<LI>
+In all other cases, there is a single accessor called <CODE>value</CODE> through
+which the associated value may be read.
+</OL>
+<P>
+<H4><A NAME="SEC330" HREF="manual_toc.html#SEC330">Garbage Collection and COLLECTIBLE</A></H4>
+<P>
+<H2><A NAME="SEC331" HREF="manual_toc.html#SEC331">Access to standard ILU features</A></H2>
+<P>
+<H3><A NAME="SEC332" HREF="manual_toc.html#SEC332">Servers and Ports</A></H3>
+<P>
+<H4><A NAME="SEC333" HREF="manual_toc.html#SEC333">Object Tables</A></H4>
+<P>
+<H4><A NAME="SEC334" HREF="manual_toc.html#SEC334">Server Relocation</A></H4>
+<P>
+<H3><A NAME="SEC335" HREF="manual_toc.html#SEC335">Threading and Event Loops</A></H3>
+<P>
+<H3><A NAME="SEC336" HREF="manual_toc.html#SEC336">Custom Records</A></H3>
+<P>
+<H3><A NAME="SEC337" HREF="manual_toc.html#SEC337">Custom Surrogates</A></H3>
+<P>
+Custom surrogates allow the user to specify custom surrogate object types
+which may have additional functionality in terms of caching or other
+side effects, and have them created instead of the default ILU
+surrogate object type when an instance is received.
+This functionality is provided in the Common Lisp runtime with the function
+<CODE>ilu:register-custom-surrogate</CODE>.
+<P>
+<H3><A NAME="SEC338" HREF="manual_toc.html#SEC338">String Binding Handle Formation</A></H3>
+<P>
+<H3><A NAME="SEC339" HREF="manual_toc.html#SEC339">Simple Binding</A></H3>
+<P>
+<H3><A NAME="SEC340" HREF="manual_toc.html#SEC340">Principal Identities and Passports</A></H3>
+<P>
+It's also possible to find out who is making the call by examining the
+value of <CODE><CODE>ilu:*caller-identity*</CODE></CODE>.
+<P>
+<H2><A NAME="SEC341" HREF="manual_toc.html#SEC341">Building Common Lisp/ILU Applications</A></H2>
+<P>
+<H3><A NAME="SEC342" HREF="manual_toc.html#SEC342">Stub Generation</A></H3>
+<P>
+The program ILU <CODE>lisp-stubber</CODE>
+<A NAME="IDX625"></A>
+takes a interface specification (an <TT>`.isl'</TT> file) and generates lisp 
+code to provide both client-side and server-side support for the interface.
+The files are generated in the current working directory.
+In particular, the following files are generated:
+<P>
+<UL>
+<LI>
+<TT>`<VAR>interface-name</VAR>-sysdcl.lisp'</TT> -- tells <CODE>PDEFSYS</CODE>
+<A NAME="FOOT8" HREF="manual_foot.html#FOOT8">(8)</A> how to compile and load the other files.  It defines a Common Lisp module <CODE>:<VAR>&#60;interface&#62;</VAR></CODE>, which describes the code needed to support both surrogate and true use of the interface.  This file is often called a <I>sysdcl</I> for the module.
+<LI>
+<TT>`<VAR>interface-name</VAR>-basics.lisp'</TT> -- contains lisp code needed by clients of the module; and
+<LI>
+<TT>`<VAR>interface-name</VAR>-server-procs.lisp'</TT> -- contains lisp code needed by module implementations.
+</UL>
+<P>
+<H3><A NAME="SEC343" HREF="manual_toc.html#SEC343">Implementing an ILU module in Common Lisp</A></H3>
+<A NAME="IDX626"></A>
+<A NAME="IDX627"></A>
+<P>
+For each ILU class <CODE><VAR>interface</VAR>.<VAR>otype</VAR></CODE>,
+ILU will define, in the file
+<TT>`<VAR>interface</VAR>-server-procs.lisp'</TT>,
+a CLOS class called <CODE><VAR>interface</VAR>:<VAR>otype</VAR>.IMPL</CODE>.
+To implement a true object for <CODE><VAR>interface</VAR>.<VAR>otype</VAR></CODE>,
+one should further subclass this CLOS class,
+and override all of its methods.  In particular, do not let
+any of the default methods for the class be called from your methods for it.
+<P>
+ILU supports,
+in each address space, multiple instances of something called
+a <I>kernel server</I>, each of which in turn
+supports some set of object instances.
+A kernel server <I>export</I>s its objects by making them available
+to other modules.  It may do so via one or more <I>port</I>s, which are
+abstractly a tuple of (<VAR>rpc protocol</VAR>, <VAR>transport type</VAR>,
+<VAR>transport address</VAR>).  For example, a typical port might
+provide access to a kernel server's objects
+via <CODE>(Sun RPC, TCP/IP, UNIX port 2076)</CODE>.  Another port on the
+same kernel server might provide access to the objects via
+<CODE>(Xerox Courier, XNS SPP, XNS port 1394)</CODE>.
+<P>
+When creating an instance of a true object, a kernel server for it,
+and an instance id (the name by which the kernel server knows it) for
+it must be determined.  These may be specified explicitly by use of the
+keyword arguments to <CODE>commonlisp:make-instance</CODE>
+<CODE>:ilu-kernel-server</CODE> and <CODE>:ilu-instance-handle</CODE>, respectively.  If they are
+not specified explicitly,
+the variable <CODE>ilu:*default-server*</CODE> will be bound,
+and its value will be used; a default instance
+handle, unique relative to the kernel server, will be generated.
+<P>
+A kernel server may be created by instantiating the class
+<CODE>ilu:kernel-server</CODE>.  The keyword argument <CODE>:id</CODE> may
+be specified to select a name for the server.  Note that ILU
+object IDs, which consist of the kernel server ID, plus the instance
+handle of the object on that server, must be unique "across space
+and time", as the saying goes.  If no kernel server id is specified,
+ILU will generate one automatically, using an algorithm
+that provides a high probability of uniqueness.  If you explicitly
+specify a kernel server ID, a good technique is to use a prefix or
+suffix which uniquely identifies some domain in which you can assure
+the uniqueness of the remaining part of the ID.  For example, when
+using ILU at some project called NIFTY at some internet
+site in the IP domain <CODE>department.company.com</CODE>, one might use
+kernel server IDs with names like
+<CODE>something.NIFTY.department.company.com</CODE>.
+<P>
+<PRE>
+=&#62; <STRONG>(make-instance 'ilu:kernel-server :id "FOO-SERVER-1")</STRONG>
+#&#60;ILU:KERNEL-SERVER "FOO-SERVER-1"&#62;
+=&#62; <STRONG>(make-instance 'ilu:kernel-server)</STRONG>
+#&#60;ILU:KERNEL-SERVER "121.2.100.231.1404.2c7577eb.3e5a28f"&#62;
+=&#62;
+</PRE>
+<P>
+<H4><A NAME="SEC344" HREF="manual_toc.html#SEC344">Implementation Inheritance</A></H4>
+<P>
+<H4><A NAME="SEC345" HREF="manual_toc.html#SEC345">Exporting Objects</A></H4>
+<P>
+To export a module for use by other modules,
+simply instantiate one or more instances
+of your subtypes of <CODE><VAR>interface</VAR>:<VAR>otype</VAR>.IMPL</CODE> (which
+will inherit from <CODE>ilu:ilu-true-object</CODE>.
+<P>
+<PRE>
+=&#62; <STRONG>(make-instance 'foo:my-bar.impl :ilu-kernel-server s)</STRONG>
+#&#60;FOO:MY-BAR.IMPL 0x3b32e8 "1"&#62;
+=&#62;
+</PRE>
+<P>
+The simplest Common Lisp "server" code would
+look something like:
+<P>
+<PRE>
+(defun start-server ()
+  (make-instance 'foo:my-bar.impl))
+</PRE>
+<P>
+which will create an instance of <CODE>FOO:MY-BAR.IMPL</CODE> and export it via
+a default server.
+<P>
+To enable users of your module find the exported objects, you may
+register the string binding handle of the object or objects, along
+with their type IDs, in any name service or registry that is convenient
+for you.  In release 1.6 of ILU, we are supporting an experimental
+simple binding method that allows you to "publish" an object,
+which registers it in a domain-wide registry, and
+then to withdraw the object, if necessary.  Potential clients can
+find the string binding handle and type ID of the object by calling
+a lookup function.  <STRONG>Note that this interface and service
+is experimental, and may be supported differently in future releases
+of the ILU system.</STRONG>
+<P>
+If you wanted to create an instance, and publish it, the code for
+starting a service might look something like this:
+<P>
+<PRE>
+(defun start-server ()
+  (let* ((ks (make-instance 'ilu:kernel-server
+                ;; specify the service id
+                :id "service.localdomain.company.com"))
+         (si (make-instance 'foo:my-bar.impl
+                ;; specify the server
+                :ilu-kernel-server ks
+                ;; specify the instance handle
+                :ilu-instance-handle "theServer")))
+    ;; the OID for "si" is now "theServer@service.localdomain.company.com"
+    (ilu:publish si)
+    si))
+</PRE>
+<P>
+Someone who wanted to use this service could then find it with the following:
+<P>
+<PRE>
+(defun find-server ()
+  (ilu:lookup 'foo:bar "theServer@service.localdomain.company.com"))
+</PRE>
+<P>
+<H4><A NAME="SEC346" HREF="manual_toc.html#SEC346">Debugging</A></H4>
+<P>
+To help with finding errors in your methods, the variable <CODE>*debug-uncaught-conditions*</CODE>
+is provided.
+<P>
+<H3><A NAME="SEC347" HREF="manual_toc.html#SEC347">Using an ILU module in Common Lisp</A></H3>
+<P>
+To use a module from Common Lisp, you must first have loaded
+the PDEFSYS "system" that describes the module.  Typically,
+for an ILU interface called <VAR>Foo</VAR>, the system
+can be loaded by invoking <CODE>(pdefsys:load-system :foo)</CODE>.
+Next, you must bind an instance of an object from that interface.
+The most common way of doing this is to receive an instance
+of an object from a method called on another object.  But to get the
+first object exported
+by that module, one can use either <CODE>ilu:sbh-&#62;instance</CODE> or
+<CODE>ilu:lookup</CODE>.
+<P>
+<H3><A NAME="SEC348" HREF="manual_toc.html#SEC348">Dumping an image with ILU</A></H3>
+<P>
+ILU has dynamic runtime state.  In particular, after it is
+initialized, it uses several Common Lisp threads to maintain
+part of its state, and may also keep open connections
+on operating system communication interfaces.
+If you wish to dump an image containing ILU,
+you must dump the image before initializing the <CODE>ILU</CODE> module.
+<P>
+Initialization occurs automatically whenever a instance of <CODE>ilu:ilu-object</CODE>
+or <CODE>ilu:rpc-server</CODE> is created.  Thus you should not create
+any instances of either true or surrogate ILU objects before
+dumping the image.  However, you may load all the interface code for any
+interfaces that you are using, before dumping the image.
+<P>
+Initialization may also be accomplished by an explicit
+call to <CODE>ilu:initialize-ilu</CODE>.  You may check to see whether the system has been initialized by
+examining the variable <CODE>ilu::*ilu-initialized*</CODE>, which is <CODE>t</CODE> iff
+<CODE>ilu:initialize-ilu</CODE> has been invoked.
+<P>
+<H3><A NAME="SEC349" HREF="manual_toc.html#SEC349">Notes for Microsoft Windows Users</A></H3>
+<P>
+<H4><A NAME="SEC350" HREF="manual_toc.html#SEC350">Installation on the MS Windows platform</A></H4>
+<P>
+To install the Lisp binding on the MS Windows platform proceed as follows:  Copy or rename the file
+<TT>`ilu-non-threaded-sysdcl.lisp'</TT> in directory <TT>`<VAR>ILUSRC</VAR>\runtime\lisp'</TT> to <TT>`ilu-sysdcl.lisp'</TT>. Compile the Lisp runtime files; i.e., start Allegro and type: 
+<PRE>
+(load "c:\\ilu\\src\\runtime\\lisp\\compile-files.lisp")
+</PRE>
+Copy the resulting <TT>`*.fsl'</TT> files and the files <TT>`ilu-sysdcl.lisp'</TT> and <TT>`pdefsys.lisp'</TT> to the
+Lisp installation directory (<TT>`<VAR>ILUHOME</VAR>\lisp'</TT>).  Copy the ILU kernel and Lisp DLLs into a directory that is on your <CODE>PATH</CODE>. 
+<P>
+<H4><A NAME="SEC351" HREF="manual_toc.html#SEC351">Allegro 3.0.1 Needs <CODE>ilu:run-main-loop</CODE></A></H4>
+<P>
+Because Allegro 3.0.1 is single-threaded,
+servers on Windows 95/NT must run the ILU mainloop. To run it
+indefinitely, use 
+<PRE>
+(ilu:run-main-loop)
+</PRE>
+Or allocate a handle, which can later, presumably in a method call, be used to exit the event loop: 
+<PRE>
+(setf *handle* (ilu:create-main-loop-handle))
+(ilu:run-main-loop *handle*)
+...
+(ilu:exit-main-loop *handle*)
+</PRE>
+For example, to run the example server in directory <TT>`examples/test1'</TT>, start Allegro 3.0.1 for Windows, and type the following: 
+<PRE>
+(load "c:\\ilu\\examples\\test1\\load-lisp-example.lisp")
+(test1-server:start-server)
+(ilu:run-main-loop)
+</PRE>
+<P>
+<H3><A NAME="SEC352" HREF="manual_toc.html#SEC352">The Portable DEFSYSTEM Module</A></H3>
+<P>
+ILU support uses a portable implementation
+of <CODE>DEFSYSTEM</CODE> to specify modules to Common Lisp.
+See section <A HREF="manual_23.html#SEC625">The ILU Common Lisp Portable DEFSYSTEM Module</A>,
+for details of this system.
+<P>
+<H3><A NAME="SEC353" HREF="manual_toc.html#SEC353">ILU Common Lisp Lightweight Processes</A></H3>
+<P>
+ILU currently assumes the existence of lightweight process,
+or thread, support in your Common Lisp implementation.
+It uses these internally via a generic veneer, described
+fully in section <A HREF="manual_24.html#SEC627">The ILU Common Lisp Lightweight Process System</A>.
+<P>
+<H3><A NAME="SEC354" HREF="manual_toc.html#SEC354">Porting ILU to a New Common Lisp Implementation</A></H3>
+<P>
+The Lisp support provided with ILU includes
+support for the Franz Allegro Common Lisp 4.x implementation.
+To use ILU with other Common Lisp implementations,
+please see section <A HREF="manual_25.html#SEC652">Porting ILU to Common Lisp Implementations</A>.
+<P>
+<H2><A NAME="SEC355" HREF="manual_toc.html#SEC355">Common Lisp/ILU API Reference</A></H2>
+<P>
+<A NAME="IDX628"></A>
+<A NAME="IDX629"></A>
+<U>Method:</U> <B>ilu:ilu-class-info</B> <I>(<VAR>DISC</VAR> <CODE>(or ilu:ilu-object type-name)</CODE>) (<VAR>WHAT</VAR> <CODE>keyword</CODE>) => <CODE>(or string boolean list)</CODE></I><P>
+<P>
+This routine will return the specified piece of information about the ILU class
+specified with <VAR>DISC</VAR>, which may be either a CLOS class name,
+or an instance of the class, and with <VAR>WHAT</VAR>, which identifies which piece of information to
+return.  <VAR>WHAT</VAR> may have the following values:
+<UL>
+<LI>
+<CODE>:authentication</CODE> -- what kind of authentication, if any, is expected by the methods of this class
+<LI>
+<CODE>:brand</CODE> -- the brand of the object type, if any
+<LI>
+<CODE>:collectible-p</CODE> -- whether or not the object type participates in the ILU distributed GC
+<LI>
+<CODE>:doc-string</CODE> -- the doc string specified for the object type
+<LI>
+<CODE>:id</CODE> -- the ILU unique ID for the object type
+<LI>
+<CODE>:ilu-version</CODE> -- which version of ILU the stubber that generated the code for this object type came from
+<LI>
+<CODE>:methods</CODE> -- a list of the methods of the object type
+<LI>
+<CODE>:optional-p</CODE> -- whether values of this class are allowed to be <CODE>cl:nil</CODE> (a CORBA excrescence)
+<LI>
+<CODE>:name</CODE> -- the ILU name of the object type
+</UL>
+<P>
+<A NAME="IDX630"></A>
+<A NAME="IDX631"></A>
+<U>Method:</U> <B>cl:make-instance 'ilu:kernel-server</B> <I>&key {(id <CODE>string</CODE> <CODE>nil</CODE>)} {(unix-port <CODE>fixnum</CODE> <CODE>0</CODE>)} {(object-table <CODE>list of 2 elements</CODE> <CODE>nil</CODE>)} {(protocol <CODE>string</CODE> <CODE>"sunrpc"</CODE>)} {(transport <CODE>list of string</CODE> <CODE>("sunrpcrm" "tcp_0_0")</CODE>)} => <CODE>ilu:kernel-server</CODE></I><P>
+<P>
+Creates and returns an instance of <CODE>ilu:kernel-server</CODE>.  If <VAR>id</VAR> is specified, the server has that value for its server ID.  If <VAR>unix-port</VAR> is specified, the server attempts to `listen' on that UNIX port, if the notion of a UNIX port is applicable.  If <VAR>object-table</VAR> is specified, it must consist of a list of two functions.  The first function must take a string, which is the instance handle of a desired object on this kernel server, and return a value of type <CODE>ilu:ilu-true-object</CODE>.  The second funtion must free up any resources used by this object table.  Specific protocols and transport stacks can be specified with the <CODE>protocol</CODE> and <CODE>transport</CODE> keywords; these default to whatever defaults were selected when your ILU installation was built.
+<P>
+<A NAME="IDX632"></A>
+<A NAME="IDX633"></A>
+<U>Method:</U> <B>cl:make-instance 'ilu:ilu-true-object</B> <I>&key {(ilu-kernel-server <CODE>ilu:kernel-server</CODE> <CODE>nil</CODE>)} {(ilu-instance-handle <CODE>string</CODE> <CODE>nil</CODE>)} => <CODE>ilu:ilu-true-object</CODE></I><P>
+<P>
+Creates and returns an instance of <CODE>ilu:ilu-true-object</CODE>.  If <VAR>ilu-true-server</VAR> is specified, the instance is created on the specified server.  If <VAR>ilu-instance-handle</VAR> is specified, that instance handle is used.
+<P>
+<A NAME="IDX634"></A>
+<A NAME="IDX635"></A>
+<U>Variable:</U> <B>ilu:*caller-identity*</B><P>
+<P>
+The identity of the caller is bound to the special variable
+<CODE>ilu:*caller-identity*</CODE>.  It is a string which begins with the name
+of an identity scheme, followed by an identity in that scheme.  For example,
+an identity in the SunRPC UNIX identity scheme would be something like
+<CODE>"sunrpc-unix:2345,67@13.12.11.10"</CODE>
+(i.e., <CODE>"sunrpc-unix:<VAR>&#60;uid&#62;</VAR>,<VAR>&#60;gid&#62;</VAR>@<VAR>&#60;hostname&#62;</VAR>"</CODE>).  If no
+identity is furnished, a zero-length string is bound.
+<P>
+<A NAME="IDX636"></A>
+<A NAME="IDX637"></A>
+<U>Function:</U> <B>ilu:publish</B> <I>(<VAR>OBJ</VAR> <CODE>ilu:ilu-object</CODE>) => <CODE>boolean</CODE></I><P>
+<P>
+Accepts an <CODE>ilu:ilu-object</CODE> instance and registers it with some
+domain-wide registration service.  The object is known by its
+<I>object ID</I> (OID), which is composed of the ID of its kernel server, plus
+a server-relative instance ID, typically composed as
+<CODE><VAR>instance-ID</VAR>@<VAR>server-ID</VAR></CODE>.  Clients may find
+the object by looking up the OID via the <CODE>ilu:lookup</CODE> function.
+The function returns non-<CODE>cl:nil</CODE> if the publication succeeded.
+<P>
+<A NAME="IDX638"></A>
+<A NAME="IDX639"></A>
+<U>Function:</U> <B>ilu:withdraw</B> <I>(<VAR>OBJ</VAR> <CODE>ilu:ilu-object</CODE>) => <CODE>boolean</CODE></I><P>
+<P>
+If <VAR>OBJ</VAR> is registered, and if it was published by the same
+address space that is calling <CODE>withdraw</CODE>, its registration is
+withdrawn.  The function returns non-<CODE>cl:nil</CODE> if the object
+is no longer published.
+<P>
+<A NAME="IDX640"></A>
+<A NAME="IDX641"></A>
+<U>Variable:</U> <B>ilu:*debug-uncaught-conditions*</B><P>
+<P>
+If <CODE>cl:t</CODE>, causes a server to invoke the debugger when an unhandled error in user code
+is encountered, rather than the default action of signalling an exception back to the
+caller.  The default value is <CODE>cl:nil</CODE>.
+<P>
+<A NAME="IDX642"></A>
+<A NAME="IDX643"></A>
+<U>Function:</U> <B>ilu:register-custom-surrogate</B> <I>(<VAR>CLASS-NAME</VAR> <CODE>symbol</CODE>) (<VAR>CUSTOM-CLASS</VAR> <CODE>clos:standard-class</CODE>)</I><P>
+<P>
+Instructs the runtime to create an instance of <VAR>CUSTOM-CLASS</VAR> whenever it would normally create a new instance of the ILU object type named by <VAR>CLASS-NAME</VAR>, which should be the Common Lisp name for the object type.  <VAR>CUSTOM-CLASS</VAR> must be a subtype of the class named by <VAR>CLASS-NAME</VAR>.
+<P>
+<A NAME="IDX644"></A>
+<A NAME="IDX645"></A>
+<U>Function:</U> <B>ilu:initialize-ilu</B><P>
+<P>
+Initializes the <CODE>ILU</CODE> module.
+<P>
+<A NAME="IDX646"></A>
+<A NAME="IDX647"></A>
+<U>Function:</U> <B>ilu:sbh->instance</B> <I>(<VAR>PUTATIVE-TYPE-NAME</VAR> <CODE>symbol</CODE>) (<VAR>SBH</VAR> <CODE>string</CODE>) &optional (<VAR>MOST-SPECIFIC-TYPE-ID</VAR> <CODE>simple-string</CODE> <CODE>mstid of specified PUTATIVE-TYPE</CODE>) => <CODE>ilu:ilu-object</CODE></I><P>
+Accepts an ILU string binding handle and Common Lisp type name, and attempts to locally bind an instance of that type with the OID specified in the string binding handle.  If no such instance exists locally, a
+surrogate instance is created and returned.  If a true instance exists
+locally, that instance will be returned.
+<P>
+<A NAME="IDX648"></A>
+<A NAME="IDX649"></A>
+<U>Function:</U> <B>ilu:lookup</B> <I>(<VAR>server-id</VAR> <CODE>simple-string</CODE>) (<VAR>instance-handle</VAR> <CODE>simple-string</CODE>) (<VAR>PUTATIVE-TYPE-NAME</VAR> <CODE>symbol</CODE>) => <CODE>(or nil ilu:ilu-object)</CODE></I><P>
+This routine will find and return an object with a server ID of
+<VAR>server-id</VAR> and instance handle of <VAR>instance-handle</VAR>, if
+such an object has been registered in the local domain via the ILU
+simple binding protocol.  See the section on "Exporting Objects" for an example.
+<P>
+<A NAME="IDX650"></A>
+<A NAME="IDX651"></A>
+<U>Method:</U> <B>ilu:ping</B> <I>(<VAR>DISC</VAR> <CODE>ilu:ilu-object</CODE>) => <CODE>(or t nil)</CODE></I><P>
+Returns <CODE>cl:t</CODE> if the true object for <VAR>DISC</VAR> exists, and the process
+serving it can be contacted; <CODE>cl:nil</CODE> otherwise.
+<P>
+<P>Go to the <A HREF="manual_7.html">previous</A>, <A HREF="manual_9.html">next</A> section.<P>

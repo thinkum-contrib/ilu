@@ -1,0 +1,178 @@
+This is an alpha release of the TIM tools for processing TIM documents into various
+other formats.  Almost no testing has been done.
+
+PREREQUISITES:
+
+General:
+
+   Python (1.2 or later).  See http://www.python.org/ for more information.
+
+For Postscript support:
+
+   GNU texindex.  See http://www.gnu.org/ for more info.
+   TeX.  See ?? for more info.
+   dvips.  See ?? for more info.
+
+For Text or GNU Info support:
+
+   GNU makeinfo.  See http://www.gnu.org/ for more info.
+
+For HTML support:
+
+   Perl 4.  Perl 5 doesn't seem to work.  See ?? for more info.
+   Ghostscript.  See ?? for more info.
+
+INSTALLATION:
+
+0)  Install any prerequisite software.
+
+1)  Copy the three scripts into the directory where you want them.
+
+2)  Edit "tim", replacing each of the following strings with a string value for appropriate for your site:
+
+    PYTHON_EXECUTABLE -- path of your Python interpreter
+    MAKEINFO_EXECUTABLE -- path to your installed makeinfo program
+    TEX_EXECUTABLE -- path to your installed TeX program.
+    TEXINDEX_EXECUTABLE -- path to your installed GNU texindex program
+    DVIPS_EXECUTABLE -- path to your installed dvips program
+
+3)  If HTML capability is desired, edit "timdif2html", replacing the following with appropriate values for your site:
+
+    PERL -- path to your Perl 4 interpreter
+    TIMHOME -- where you've put the TIM scripts
+
+Then edit "eps2gif", replacing the following:
+
+    PERL -- path to your Perl 4 interpreter
+    GHOSTSCRIPT -- path to your Ghostscript program (which must include support for GIF output)
+
+4)  You're done.
+
+OPERATION:
+
+   TIM is essentially a superset of the GNU texinfo language, version 2.
+It adds several features such as support for pictures and URLs, but its
+most important extension is to provide domain-specific markup commands
+to allow adding arbitrary meta-information to Texinfo documents.  You
+should be familiar with the basic Texinfo system first.  Documentation
+on Texinfo is supplied with the ILU distribution; you should be able to
+find it in the files `ILUSRC/doc/texinfo2.ps'.
+
+Introduction
+============
+
+   Both TIM and Texinfo input files contain text `marked up' with
+document markup commands.  These commands are similar to LaTeX
+commands, except that they start with an at-sign character rather than
+a backslash.  They contain  meta-information about the area of the text
+to which they apply.  For example:
+       A kernel server @dfn{export}s its objects by making them available
+       to other modules.  It may do so via one or more @dfn{port}s, which are
+       abstractly a tuple of (@metavar{rpc protocol}, @metavar{transport type},
+       @metavar{transport address}).  For example, a typical port might
+       provide access to a kernel server's objects via @code{(@protocol{Sun RPC},
+       @transport{TCP/IP}, UNIX port 2076)}.  Another port on the
+       same kernel server might provide access to the objects via
+       @code{(@protocol{Xerox Courier}, @transport{XNS SPP}, XNS port 1394)}.
+
+When formatted, this paragraph would look like
+     A kernel server exports its objects by making them available to
+     other modules.  It may do so via one or more ports, which are
+     abstractly a tuple of (RPC PROTOCOL, TRANSPORT TYPE, TRANSPORT
+     ADDRESS).  For example, a typical port might provide access to a
+     kernel server's objects via `(`Sun RPC', `TCP/IP', UNIX port
+     2076)'.  Another port on the same kernel server might provide
+     access to the objects via `(`Xerox Courier', `XNS SPP', XNS port
+     1394)'.
+
+   There are two kinds of markup commands:  without arguments or with
+arguments.  The commands without arguments always span some portion of
+the document, so we call them span commands.  They may be nested, but
+may not overlap.  There are two forms of span commands, style commands
+and format commands.  The style commands mark some section of the text,
+typically a short sequence of text, with a single attribute, which may
+be either a semantic tag like `important', or a formatting style like
+`italic'.  The format commands apply a similar tag to a block of the
+input; they begin with a single line containing `@ATTRIBUTE', and end
+with a single line containing `@end ATTRIBUTE'.  Style commands may be
+nested in a block command, but block commands should not be nested in
+style commands.
+
+   Markup commands with arguments always take a single line.  The line
+begins with `@ATTRIBUTE', followed by whitespace, followed by the
+arguments, separated by whitespace.  If there is whitespace in an
+argument, the argument is surrounded with braces, as in
+`@deffun {struct foo} Bar ( arg )'
+
+Extensions to GNU Texinfo
+=========================
+
+   TIM removes the need to begin every file with `\input texinfo', and
+to end every file with `@bye'.  These lines are added automatically by
+TIM as needed.  This allows a file to define both a stand-alone
+document, and to be included as a section in some larger document.
+
+TIM Domain-Independent Format
+-----------------------------
+
+   TIM domain-independent format (DIF) is basically Texinfo with four
+new built-in commands.  They are:
+
+   * `@url', a style command, is used to mark World Wide Web URL forms
+     that appear in the text.
+
+   * `@picture', a command with arguments, is used to include an
+     Encapsulated Postscript picture into the document.  It takes two
+     arguments, the name of the file, and a caption for the picture.
+     The caption may be omitted.
+
+   * `@ttitalic', a style command, is used to indicate that this span
+     should be rendered in an italic typewriter font, if available.
+
+   * `@timmacro', a command with arguments, allows the user to define
+     domain-specific markup commands.  The two arguments are the macro
+     name, and the macro's replacement in vanilla DIF.  For example,
+     to define a style command used to mark Python literals appearing
+     in your document, you'd use a command like
+
+          @timmacro Python code
+
+     which defines a new style command `Python', which will be
+     treated like the standard Texinfo command `code' for purposes
+     of output formatting.
+
+TIM Tools
+=========
+
+   ILU provides a program called `tim' to turn TIM files into either
+PostScript, text, or GNU Info files.  It is invoked as
+
+   `tim OUTPUT-FORMAT [ -m MACROS ] [ -o OUTPUT-FILE ] [INPUT-FILE.tim ]'
+
+where OUTPUT-FORMAT must be either -p for Postscript output, -i for GNU
+Info output, -d for TIM DIF output, -t for plain text output, and -x
+for vanilla GNU Texinfo output.
+
+   In addition, the switch -v can be specified to cause the `tim'
+script to output information about progress, the switch -m
+MACRO-FILE-NAME may be specified to have `tim' pre-load a file of
+`@timmacro' macros, and the switch -o OUTPUT-FILE-NAME may used to
+specify the output file.  If no input file is specified, `tim' reads
+from the standard input.  If no output file is specified, `tim' writes
+to the standard output.
+
+   `tim' is a script written in the Python script language, so you will
+need to have `Python' installed to use it.  See the ILU installation
+instructions for a location from which `Python' can be FTP'ed.  The
+script uses the GNU programs `texindex' and `makeinfo', along with
+`TeX' and `dvips', so it is necessary to have all four of those
+programs installed to use `tim'.
+
+   Another program called `timdif2html' can be used to turn TIM DIF
+files into World Wide Web HTML.  See the end of the `timdif2html'
+script for instructions on how to use it.  It in turn uses the script
+`eps2gif', which requires having `ghostscript' built with a GIF driver.
+Both `timdif2html' and `eps2gif' are Perl scripts, so the Perl
+interpreter `perl' must be installed to use them.
+
+

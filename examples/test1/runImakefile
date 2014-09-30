@@ -1,0 +1,314 @@
+/** $Id: runImakefile,v 1.40 1999/08/03 01:52:27 janssen Exp $
+ BeginILUCopyright
+
+ Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+ Unlimited use, reproduction, modification, and distribution of this
+ software and modified versions thereof is permitted.  Permission is
+ granted to make derivative works from this software or a modified
+ version thereof.  Any copy of this software, a modified version
+ thereof, or a derivative work must include both the above copyright
+ notice of Xerox Corporation and this paragraph.  Any distribution of
+ this software, a modified version thereof, or a derivative work must
+ comply with all applicable United States export control laws.  This
+ software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+ WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+ LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+ EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+ NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+ OF THE POSSIBILITY OF SUCH DAMAGES.
+
+ EndILUCopyright
+*/
+/* Last edited by Mike Spreitzer October 9, 1998 11:35 am PDT */
+/* Chris Jacobi, October 12, 1998 5:55 pm PDT */
+
+/* Note:  These following 2 variables may need to be set differently in
+your environment.  They are used to tailor the directories in which
+things are found so that developers can test private versions.
+
+ILUCINCLUDES = -I/jilu/src/runtime/c -I/jilu/src/runtime/kernel
+ILUCLIBS = /jilu/src/runtime/c/libilu-c.a /jilu/src/runtime/kernel/libilu.a
+
+/* You shouldn't need to change anything below this (or above this,
+if you're not a developer. */
+
+NormalObjectRule()
+
+InterfaceTarget(Test1.isl)
+InterfaceTarget(Test2.isl)
+InterfaceTarget(Test3.isl)
+
+#####################################################
+#
+# C
+#
+
+ILUCTarget(Test1.h Test1-true.c Test1-surrogate.c Test1-common.c, Test1.isl)
+ObjectTarget(Test1-common.o)
+ObjectTarget(Test1-surrogate.o)
+ObjectTarget(Test1-true.o)
+
+ILUCTarget(Test2.h Test2-true.c Test2-surrogate.c Test2-common.c, Test2.isl)
+ObjectTarget(Test2-common.o)
+ObjectTarget(Test2-surrogate.o)
+ObjectTarget(Test2-true.o)
+
+ILUCTarget(Test3.h Test3-true.c Test3-surrogate.c Test3-common.c, Test3.isl)
+ObjectTarget(Test3-common.o)
+ObjectTarget(Test3-surrogate.o)
+ObjectTarget(Test3-true.o)
+
+ObjectTarget(clnt.o)
+ObjectTarget(clntu.o)
+ObjectTarget(srvr.o)
+ObjectTarget(srvru.o)
+
+clnt.o : Test1.h Test2.h Test3.h clnt.c
+srvr.o : Test1.h Test2.h Test3.h srvr.c
+
+ILUCProgramTarget(server, srvru.o srvr.o Test1-common.o Test1-true.o Test2-common.o Test3-common.o Test3-true.o,,)
+
+ILUCProgramTarget(client, clntu.o clnt.o Test1-surrogate.o Test1-common.o Test2-surrogate.o Test2-common.o Test3-surrogate.o Test3-common.o,,)
+
+CFILES = server client
+
+#####################################################
+#
+# C++
+#
+
+#ifdef ADD_ILU_CPLUSPLUS_LANGUAGE
+
+ILUCPlusPlusTarget(Test1.hh Test1.cc Test1-server-stubs.cc, Test1.isl)
+ObjectTarget(Test1.o)
+ObjectTarget(Test1-server-stubs.o)
+
+ILUCPlusPlusTarget(Test2.hh Test2.cc Test2-server-stubs.cc, Test2.isl)
+ObjectTarget(Test2.o)
+ObjectTarget(Test2-server-stubs.o)
+
+ILUCPlusPlusTarget(Test3.hh Test3.cc Test3-server-stubs.cc, Test3.isl)
+ObjectTarget(Test3.o)
+ObjectTarget(Test3-server-stubs.o)
+
+ObjectTarget(cppclnt.o)
+ObjectTarget(cppsrvr.o)
+
+cppclnt.o : Test1.hh Test2.hh Test3.hh cppclnt.cc
+cppsrvr.o : Test1.hh Test2.hh Test3.hh cppsrvr.cc
+
+ILUCPlusPlusProgramTarget(cppclient, cppclnt.o Test1.o Test2.o Test3.o,,)
+
+ILUCPlusPlusProgramTarget(cppserver, cppsrvr.o Test1.o Test2.o Test3.o Test1-server-stubs.o Test2-server-stubs.o Test3-server-stubs.o,,)
+
+CPPFILES = cppclient cppserver
+
+#endif
+
+
+#ifdef ADD_CORBA_CPLUSPLUS_LANGUAGE
+
+ILUCPlusPlusTarget(Test1-cpp.hpp Test1-cpp.cpp Test1-cppsurrogate.cpp Test1-cpptrue.cpp, Test1.isl)
+ObjectTarget(Test1-cpp.o)
+ObjectTarget(Test1-cppsurrogate.o)
+ObjectTarget(Test1-cpptrue.o)
+
+ILUCPlusPlusTarget(Test2-cpp.hpp Test2-cpp.cpp Test2-cppsurrogate.cpp Test2-cpptrue.cpp, Test2.isl)
+ObjectTarget(Test2-cpp.o)
+ObjectTarget(Test2-cppsurrogate.o)
+ObjectTarget(Test2-cpptrue.o)
+
+ILUCPlusPlusTarget(Test3-cpp.hpp Test3-cpp.cpp Test3-cppsurrogate.cpp Test3-cpptrue.cpp, Test3.isl)
+ObjectTarget(Test3-cpp.o)
+ObjectTarget(Test3-cppsurrogate.o)
+ObjectTarget(Test3-cpptrue.o)
+
+ObjectTarget(cpp2clnt.o)
+ObjectTarget(cpp2srvr.o)
+
+cpp2clnt.o : Test1-cpp.hpp Test2-cpp.hpp Test3-cpp.hpp cpp2clnt.cpp
+cpp2srvr.o : Test1-cpp.hpp Test2-cpp.hpp Test3-cpp.hpp cpp2srvr.cpp
+
+ILUCPlusPlusProgramTarget(cpp2client, cpp2clnt.o Test1-cpp.o Test2-cpp.o Test3-cpp.o Test1-cppsurrogate.o Test2-cppsurrogate.o Test3-cppsurrogate.o,,)
+
+ILUCPlusPlusProgramTarget(cpp2server, cpp2srvr.o Test1-cpp.o Test2-cpp.o Test3-cpp.o Test1-cpptrue.o Test2-cpptrue.o Test3-cpptrue.o,,)
+
+CPPFILES = cpp2client cpp2server
+
+#endif
+
+
+#####################################################
+#
+# M3
+#
+
+#ifdef ADD_MODULA3_LANGUAGE
+
+LOCALM3FLAGS = -D$(ILUHOME)/include -L$(ILUHOME)/lib
+
+ILUM3Target(IluM3Files(Test1), Test1.isl)
+ILUM3Target(IluM3Files(Test2), Test2.isl)
+ILUM3Target(IluM3Files(Test3), Test3.isl)
+M3LibraryTarget(libtest.a, IluM3Files(Test1) IluM3Files(Test2) IluM3Files(Test3), -lilu-m3)
+M3ProgramTarget(TestM3Server, TestServer.m3 libtest.a, -lilu-m3 -lilu)
+M3ProgramTarget(TestM3Client, TestClient.m3 libtest.a, -lilu-m3 -lilu)
+
+#endif
+
+
+#####################################################
+#
+# Python
+#
+
+#ifdef ADD_PYTHON_LANGUAGE
+
+ILUPythonTarget(Test1.py Test1__skel.py, Test1.isl)
+ILUPythonTarget(Test2.py Test2__skel.py, Test2.isl)
+ILUPythonTarget(Test3.py Test3__skel.py, Test3.isl)
+
+PYFILES = Test1.py Test1__skel.py Test2.py Test2__skel.py Test3.py Test3__skel.py
+
+all:: $(PYFILES)
+
+#endif
+
+#####################################################
+#
+# Java
+#
+
+#ifdef ADD_JAVA_LANGUAGE
+
+
+JAVA_CLASS_DIR = ./classes
+JAVA_STUB_DIR = ./javastubs
+
+BuildDir($(JAVA_CLASS_DIR))
+BuildDir($(JAVA_STUB_DIR))
+
+ALL_JAVA_FILES = *java
+STUB_SOURCES = \
+	$(JAVA_STUB_DIR)/Test1/$(ALL_JAVA_FILES) \
+	$(JAVA_STUB_DIR)/Test2/$(ALL_JAVA_FILES) \
+	$(JAVA_STUB_DIR)/Test3/$(ALL_JAVA_FILES)
+
+APP_SOURCES = \
+	TestClient.java  \
+	TestServer.java
+
+ILUJavaStubTarget(make.java_has_been_stubbed, Test1.isl Test2.isl Test3.isl,)
+
+ILUJavaCompile2Target(make.java_stubs_compiled, $(STUB_SOURCES), $(JAVA_STUB_DIR)/Test1/TheO1.java, make.java_has_been_stubbed,)
+
+ILUJavaCompile2Target(make.java_sources_compiled, $(APP_SOURCES), $(APP_SOURCES), make.java_stubs_compiled,)
+
+JAVAFILES = $(JAVA_STUB_DIR) $(JAVA_CLASS_DIR) make.java_has_been_stubbed make.java_stubs_compiled make.java_sources_compiled
+
+#endif
+
+
+#####################################################
+#
+# Common Lisp
+#
+
+#ifdef ADD_COMMONLISP_LANGUAGE
+
+LISPFILES = test1-basics.$(LISP_BIN_EXT) \
+            test1-server-procs.$(LISP_BIN_EXT) \
+            test2-basics.$(LISP_BIN_EXT) \
+            test2-server-procs.$(LISP_BIN_EXT) \
+            test3-basics.$(LISP_BIN_EXT) \
+            test3-server-procs.$(LISP_BIN_EXT)
+
+all:: $(LISPFILES)
+
+ILULispTarget(test1-basics.lisp test1-server-procs.lisp test1-sysdcl.lisp, Test1.isl)
+ILULispTarget(test2-basics.lisp test2-server-procs.lisp test2-sysdcl.lisp, Test2.isl)
+ILULispTarget(test3-basics.lisp test3-server-procs.lisp test3-sysdcl.lisp, Test3.isl)
+
+$(LISPFILES) : server.lisp client.lisp test1-basics.lisp test2-basics.lisp test3-basics.lisp
+	${LISP_BATCH_COMMAND} -e '(push :ilu-batch-compile cl:*features*)' <load-lisp-example.lisp
+
+CleanTarget($(LISPFILES))
+
+#endif
+
+#####################################################
+#
+# Scheme
+#
+
+#ifdef ADD_GUILE_LANGUAGE
+
+GUILEFILES = Test1.scm Test1-server-stubs.scm Test2.scm Test2-server-stubs.scm Test3.scm Test3-server-stubs.scm
+
+ILUSchemeTarget(Test1.scm Test1-server-stubs.scm, Test1.isl)
+ILUSchemeTarget(Test2.scm Test2-server-stubs.scm, Test2.isl)
+ILUSchemeTarget(Test3.scm Test3-server-stubs.scm, Test3.isl)
+
+all:: $(GUILEFILES)
+
+#endif
+
+
+#####################################################
+#
+# Test 
+#
+
+DEPFILES = $(CFILES) $(CPPFILES) $(PYFILES) $(JAVAFILES) $(LISPFILES) $(GUILEFILES)
+
+PythonTestScript(Test.py, $(DEPFILES))
+
+#ifdef ILU_TESTING_SCRIPTS
+
+#ifdef ADD_ILU_CPLUSPLUS_LANGUAGE
+#define REGT1 CPP
+#endif
+#ifndef ADD_ILU_CPLUSPLUS_LANGUAGE
+#define REGT1 0
+#endif
+
+#ifdef ADD_CORBA_CPLUSPLUS_LANGUAGE
+#define REGT2 CPP2
+#endif
+#ifndef ADD_CORBA_CPLUSPLUS_LANGUAGE
+#define REGT2 0
+#endif
+
+#ifdef ADD_PYTHON_LANGUAGE
+#define REGT3 PYTHON
+#endif
+#ifndef ADD_PYTHON_LANGUAGE
+#define REGT3 0 
+#endif
+
+#ifdef ADD_JAVA_LANGUAGE
+#define REGT4 JAVA
+#endif
+#ifndef ADD_JAVA_LANGUAGE
+#define REGT4 0
+#endif
+
+#ifdef ADD_COMMONLISP_LANGUAGE
+#define REGT5 LISP
+#endif
+#ifndef ADD_COMMONLISP_LANGUAGE
+#define REGT5 0
+#endif
+
+#add for guile
+#define REGT6 0
+
+#define REGTESTARG C REGT1 REGT2 REGT3 REGT4 REGT5 REGT6
+
+test::
+	tclsh ./testreg.tcl REGTESTARG
+
+#endif /* def ILU_TESTING_SCRIPTS */

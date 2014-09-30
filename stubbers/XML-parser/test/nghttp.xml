@@ -1,0 +1,184 @@
+<?xml  version = '1.0'> 
+
+<!-- BeginILUCopyright
+
+ Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+ Unlimited use, reproduction, modification, and distribution of this
+ software and modified versions thereof is permitted.  Permission is
+ granted to make derivative works from this software or a modified
+ version thereof.  Any copy of this software, a modified version
+ thereof, or a derivative work must include both the above copyright
+ notice of Xerox Corporation and this paragraph.  Any distribution of
+ this software, a modified version thereof, or a derivative work must
+ comply with all applicable United States export control laws.  This
+ software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+ WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+ LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+ EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+ NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+ OF THE POSSIBILITY OF SUCH DAMAGES.
+  
+ EndILUCopyright
+-->
+<!-- The following is an experimental adaptation of the isl-form
+      definition by Dan Larner of the http get/head/post protocol 
+     (see ilu/examples/ngtest/iluhttp.isl).
+      The adaptation
+     (a) uses the HTTP-NG type system as defined in 
+         WD-HTTP-NG-architecture-19980801.
+     (b) is expressed in XML, based on a DTD (httpng.dtd)  
+         using a slightly extended form of a standard XML
+         DTD.  The DTD extensions allow stronger typing of attributes
+         and are being implemented (with appropriate warnings) in 
+         the PARC XML implementation.
+
+      The adaptation to the NG type system requires re-expression 
+      of the ilu built-in BYTE, OPTIONAL, and ENUMERATION types. 
+      I'm not at all sure that the approaches used below (and
+      annotated by comments) are appropriate, so please comment. -->
+
+<!DOCTYPE interface SYSTEM "ng.dtd" > 
+
+<interface id = 'iluhttp'>
+
+
+<!-- ================== Header related Types ========================= -->
+
+
+<!--  In the original, a request/response header is defined as a record
+      consisting of a field-name and an OPTIONAL field-value.   
+      HTTP-NG type definitions allow 'optional' only for reference types,
+      so the 'header' definition is modified to use a union type 
+      for the field value, consisting of either an ordinary string, 
+      or a zero-length string.  (Alternatively, it may be
+      more practical to define these fields as reference types, i.e.
+      as references to strings rather than strings, as Dan Larner 
+      has tentatively suggested, in which case "optional" is again
+       available.)  -->
+
+<type id = 'null-string' > <string max-len ='0'/> </type>
+
+<type id = 'field-name'> <string/> </type>  
+
+ <!-- "field-name' illustrates a problem.  To make sure all types used  
+      are declared, the "id" fields of types are declared of
+      xml attribute kind "ID", meaning there can be only
+      one such reference in the document.  References to these
+      types are declared as attribute kind "IDREF", and automatically
+      checked to ensure that there is some matching ID.  But built-in 
+      types are not part of the document, so they have to be
+      given a counterpart. -->
+
+<type id = 'field-value'> <string/> </type>
+
+<type id = 'optional-field-value'>
+          <union>
+             <alt name = 'field-value'      type = 'field-value'/> 
+             <alt name = 'null-field-value' type = 'null-string'/>
+          </union> </type>
+
+
+<type id = 'header'>
+        <record> 
+             <field name = 'header-name'  type = 'field-name'/>
+             <field name = 'header-value' type = 'optional-field-value'/>
+        </record> </type>
+             
+<type id = 'HTTPHeader'> <eqtype type = 'header'/> </type>
+
+<type id = 'HTTPHeaders'> <sequence type = 'HTTPHeader'/> </type>  
+
+
+
+<!-- ================== Entity Body related Types ======================= -->
+
+<!-- In the original, the body of a request is given type
+     OptionalEntityBody, an optional variant of EntityBody, with the
+     latter defined as a sequence of the built-in type BYTE.
+     Here we define 'byte', and then the OptionalEntityBody as
+     a union of a real sequence of bytes, and a sequence with max 
+     length zero (the NULL case for byte sequences). -->
+
+<type id = 'byte'> <fixed min-num = '0' max-num = '255' denom = '1'/> </type>
+
+<type id = 'byte-seq'> <sequence type = 'byte'/> </type>
+
+<type id = 'null-byte-seq'> <sequence type = 'byte' max-count = '0'/> </type>
+
+<type id = 'OptionalEntityBody'> 
+           <union>
+                <alt name = 'Body'     type = 'byte-seq'/>
+                <alt name = 'NullBody' type = 'null-byte-seq'/> 
+           </union> </type> 
+
+<!-- ================== Request URI related Types ======================= -->
+
+<type id = 'RequestURI'> <string/> </type>
+
+
+<!-- ================== Full Request Types  ============================= -->
+
+<type id = 'Request'> 
+       <record>
+            <field name = 'URI'      type = 'RequestURI'/>
+            <field name = 'headers'  type = 'HTTPHeaders'/>
+            <field name = 'body'     type =  'OptionalEntityBody' />
+       </record> </type> 
+
+
+<!-- ================== Response related Types  ======================== -->
+
+<!-- In the original, the returned status code is given as an
+     ENUMERATION type with specific values for each code.  In the
+     HTTP-NG type system specific values cannot be assigned.  So
+     an alternative is a union type, e.g.
+      <union>
+	 <alt name = 'OK'                 type = 'shortint'> comment
+         ....
+     with the codes left to the application, and included only as 
+     documentation -->
+
+<type id = 'StatusCode'> 
+      <enumeration values =
+           "OK  Created Accepted NoContent MovedPermanently
+            NotModified BadRequest Unauthorized Forbidden NotFound 
+	    InternalError NotImplemented BadGateway ServiceUnavailable"/>
+      </type>
+
+
+<type id = 'Response'> 
+       <record>
+           <field name = 'status'  type = 'StatusCode' /> 
+           <field name = 'headers' type = 'HTTPHeaders'/>
+           <field name = 'body'    type = 'OptionalEntityBody'/>
+       </record> </type>     
+
+
+<!-- ================== Resource Object  ================================ -->
+
+<type id = 'Resource' full-id = "ilu:Ilu_Http_1_0_resource_object">
+  <object>
+     <methods>
+         <method name = 'GET'> 
+             <inputs>  <parm name = 'request' type = 'Request'/> </inputs>
+             <results> <parm name = 'response' type = 'Response'/> </results>
+         </method> 
+         <method name = 'HEAD'> 
+             <inputs>  <parm name = 'request' type = 'Request'/> </inputs>
+             <results> <parm name = 'response' type = 'Response'/> </results>
+         </method> 
+         <method name = 'POST'> 
+             <inputs>  <parm name = 'request' type = 'Request'/> </inputs>
+             <results> <parm name = 'response' type = 'Response'/> </results>
+         </method> 
+     </methods> </object> </type>
+
+</interface>
+
+
+<!-- ================================================================== -->
+<!-- =================== end of file ================================== -->
+<!-- ================================================================== -->

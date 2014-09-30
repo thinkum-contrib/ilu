@@ -1,0 +1,715 @@
+@setfilename ilu-fort.info
+@settitle Using ILU with Fortran
+@ifset ilucopyright
+BeginILUCopyright
+
+Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+Unlimited use, reproduction, modification, and distribution of this
+software and modified versions thereof is permitted.  Permission is
+granted to make derivative works from this software or a modified
+version thereof.  Any copy of this software, a modified version
+thereof, or a derivative work must include both the above copyright
+notice of Xerox Corporation and this paragraph.  Any distribution of
+this software, a modified version thereof, or a derivative work must
+comply with all applicable United States export control laws.  This
+software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+OF THE POSSIBILITY OF SUCH DAMAGES.
+  
+EndILUCopyright
+@end ifset
+@ifclear largerdoc
+@titlepage
+@title Using ILU with Fortran
+@author Farrell Wymore @code{<wymore@@parc.xerox.com>}
+@sp
+@today{}
+@sp
+Copyright @copyright{} 1993 Xerox Corporation@*
+All Rights Reserved.
+@end titlepage
+@end ifclear
+
+@section Introduction
+This document is for the @language{Fortran} programmer who wishes to use 
+@system{ILU}. The following sections will show how @language{ILU} is
+mapped into @language{Fortran} constructs and how both @language{Fortran}
+clients and servers are generated and built. Other sections include
+how the name server NMS is used to facilitate connections between
+clients and servers.
+
+@section The ISL Mapping to Fortran
+
+@subsection Names
+@cindex Mapping ISL names to Fortran names
+
+In general, @system{ILU} constructs @language{Fortran} names from 
+@language{ISL} names
+by replacing hyphens with underscores.  Type names and class
+names are prepended with their interface name. For example, if
+the interface name is ``P'' and the type name is ``T'', then the
+generated name for the @language{Fortran} would be ``P_T''.
+
+Enumeration value names are formed by prepending the generated enumeration type 
+name and ``_'' to the @language{ISL} enumeration value name.
+Enumeration names and values are then cast into @language{Fortran}
+@code{Parameter} statements.
+
+Constant names are prepended with their interface name.  They are
+implemented with the @code{Parameter} statement.
+
+Method names are composed of the generated class name prepended to
+the method name. For example, if the interface name is X and the
+class name is Y and the @language{ISL} method name is Z then the
+@language{Fortran} client callable method name will be ``X_Y_Z''.
+@language{Fortran} servers must implement a method called
+``server_X_Y_Z''.
+
+Field names within records are not transformed.
+
+@subsection Language Usage
+@cindex Use of the Fortran Language
+
+@language{ILU} will require several extensions to strict @language{Fortran77}.
+Most of these extensions are available in most @language{Fortran77}
+implementations. Many of the required extensions are part of the
+@language{Fortran90} language definition.
+ 
+The @language{Fortran77} language extensions required for @system{ILU} are: 
+@itemize @bullet
+@item
+some kind of include facility, 
+@item
+structure and union definitions to define 
+hetrogeneous aggregate types separate from an instantiation of that type, 
+@item
+the ability to instantiate a structure or union type; the record statement,
+@item
+the ability to store a pointer in a primitive @language{Fortran}
+data type; @code{integer*4} will be used and,
+@item
+the ability to declare integers of differing sizes; integer*1, integer*2, 
+integer*4. 
+@end itemize
+
+All of these extensions are available on the @system{VAX} @language{Fortran77}
+and @system{VAX} compatible @language{Fortran77} implementations which
+includes the @system{Sun/Sparc} implementation.
+
+@subsection Mapping Type Constructs Into Fortran
+Records turn directly into @language{Fortran} structures.
+Unions consist of a record with two fields:  the type discriminator, 
+a field called ``d'',
+and a union of the possible values. Since @language{ILU} does not
+name the fields of a union, the union field names are derived from the
+@language{ILU} data types which compose the union. For example, if the
+@language{ILU} type is:
+@codeexample
+INTERFACE u;
+TYPE u1 = 
+    UNION 
+        INTEGER,
+        SHORT REAL
+    END;
+ 
+@end codeexample
+the generated @language{Fortran} would be
+@codeexample
+        integer u_u1_intgr
+        parameter ( u_u1_intgr=0 )
+        integer u_u1_shortreal
+        parameter ( u_u1_shortreal=1 )
+ 
+        structure /u_u1/
+            integer d
+            union
+            map
+                integer intgr
+            end map
+            map
+                real*4 shortreal
+            end map
+            end union
+        end structure
+@end codeexample
+ 
+Note the discriminator ``d'' may take on the values of ``u_u1_intgr''
+or ``u_u1_shortreal'' indicating how to interpret the data in the union.
+Also note that the integer field has been called ``intgr'' so as not to
+conflict with the reserved key word ``integer''.
+
+
+Other kinds of type definitions such as renaming primitive
+types, and array definitions  will not be generated in the 
+@language{Fortran} include file
+but will be expanded if a definition is used in a record, method interface,
+or a class definition.
+
+Multi-dimensional @language{Fortran} arrays may be problematic because of 
+@language{Fortran}s
+unique column major element ordering. For many applications
+this will not be a concern. These applications are those  whose client and
+server are both @language{Fortran} or an application in which the array
+is reshaped in some way. It is currently an unresolved issue
+whether the @language{ILU/Fortran} runtime will recast multi-dimensional
+arrays into row major order. At the very least, the @language{ILU}
+programmer should be aware that @language{ILU} currently does nothing
+to recast arrays.
+
+The @language{ISL} @code{Cardinal} primitive type does not map directly
+into any @language{Fortran} data type. Therefore, appropriately sized
+integers will be used.
+
+The @language{ISL} @code{short real} primitive type maps to the
+@language{Fortran} @code{real*4} data type while @code{real}
+maps to @code{real*8}. The @language{ISL} @code{long real} 
+primitive type produces an error.
+ 
+Sequence types are represented to the @language{Fortran} programmer
+as a simple @code{integer}. 
+Type specific @language{Fortran} callable accessor functions are generated to
+create a sequence, push data, pop data, append data, and reference elements in 
+the sequence. These methods will be outlined in detail in a later section.
+ 
+
+@subsection Method Generation
+As indicated earlier, method names are generated by prepending the
+interface name and the
+class name to the method name. The first argument to a method is
+the class handle. The class handle is a special value returned from
+a class specific constructor function. The second argument is
+the status structure. The rest of the arguments are listed in the
+method  in the order given in the @language{ILU} interface specification. 
+Finally, any return values are appended
+to the argument list. For methods returning primitive data types,
+the return value is also returned as the value of the method. This
+is done so the method may be used in a function context. 
+
+The class specific constructor function is a procedure which
+returns a handle to some class specific data. This constructor
+function must always be called before any other methods in the
+class are called. The handle returned must be passed to all of
+the methods invoked in that class. This procedure
+always has a single character string argument and returns 
+an integer handle value.  The character string argument is
+the string used for opening connections to servers and is often
+referred to as the ``String Binding Handle'' or SBH.
+
+In the following example, the @language{ILU} definition is:
+@codeexample
+INTERFACE f1;
+ 
+TYPE c = CLASS
+    METHODS
+        f( r : SHORT REAL ) : INTEGER
+    END;
+@end codeexample
+
+This definition defines an interface ``f1'', a class ``c'', and a
+method ``f''. The method ``f'' takes a @code{short real} as an
+argument and returns an @code{integer} result. The generated
+@language{Fortran} include file would be as follows:
+@codeexample
+        integer f1Reply_Success
+        parameter ( f1Reply_Success = 0 )
+ 
+        structure /f1Status/  
+            integer returnCode
+            union
+            map
+                integer anyvalue
+            end map
+            end union
+        end structure
+ 
+        structure /f1Exceptions/
+            integer dummyException
+        end structure
+ 
+        record /f1Exceptions/ f1Exceptions
+        common /f1Exceptions/ f1Exceptions
+ 
+        integer create_f1_c
+        external create_f1_c
+        integer create_f1_c_from_sbh
+        external create_f1_c_from_sbh
+@end codeexample
+
+The functions ``create_f1_c'' and ``create_f1_c_from_sbh''
+are used to create an instance 
+of the class ``f1_c''. @code{create_f1_c} is used for servers
+while ``create_f1_c_from_sbh'' is used for clients. The integer
+returned in each case is the class instance handle and must be
+passed with each method invocation.
+
+The status structure @code{f1Status} must be instanciated
+in a client and passed as the second argument to a method while 
+server procedures must expect
+this structure as an argument.
+ 
+Finally, the @language{Fortran} client calling the method for ``f'' 
+might be as follows:
+@codeexample
+        program  p
+        include 'f1.fh'
+        integer handle, f1_c_f, ret, y
+        real x
+        character*( 100 ) c
+        record /f1Status/ stat
+        external f1_c_f
+ 
+        call f1_initialize( )
+        read *, c, x
+        handle = create_f1_c_from_sbh( c )
+        y = f1_c_f( handle, stat, x, ret )
+        print *, 'flt result is ', ret, y
+        end
+@end codeexample
+
+Note that the interface ``f1'' is first initialized by calling
+the interface specific procedure @code{f1_initialize}. The
+string binding handle is obtained from standard input along
+with some real value. How the string binding handle is generated
+and where it comes from will be covered in a later section.
+
+The class specific function @code{create_f1_c_from_sbh} is called to
+obtain the handle for the class instance. This handle is passed
+to the method ``f1_c_f''.  The instance handle, the status ``stat'',
+the single actual @code{short real} argument ``x'', and the return
+result ``ret'' are passed to the method which returns an @code{integer}
+value which is placed in ``y''. Upon return, the values for ``ret'' and ``y''
+should be the same.
+
+The server implementation of the method @code{f} might be as follows:
+@codeexample
+        subroutine server_f1_c_f( h, s, u, ret )
+        integer h 
+        real u
+	integer ret
+        include 'f1.fh'
+        record /f1Status/ s
+        ret =  u + 1
+        return
+        end
+@end codeexample
+
+In this simple example, the corresponding server method computes
+some value to be returned. In this case it adds one (1)
+to its @code{short real} argument ``u'', converts the value to an integer,
+and returns that value in ``ret''. In this example, the status arguments
+are ignored.
+
+@subsection Inheritance
+Inheritance is a means by which a class can obtain or ``inherit'', data, type, and
+method definitions from another class. The class doing the inheriting is often
+called the ``subclass'' while the inherited class is called the ``superclass''.
+``Multiple inheritance'' is a way in which a class can inherit from more that one
+class at once.
+
+@language{ILU} provides a limited form of inheritance. While no 
+data values or type information are user accessable from
+an instance of an inherited class, method definitions are inherited.
+Currently, multiple inheritance is not allowed in @language{ILU}.
+
+Consider the following example:
+@codeexample
+INTERFACE mi;
+ 
+TYPE c2 = CLASS METHODS
+        p2( a : INTEGER, Out b : INTEGER )
+    END;
+ 
+TYPE c3 = CLASS
+    SUPERCLASS c2
+    METHODS
+        p3( a : INTEGER )
+    END;
+@end codeexample
+
+The class ``c3'' inherits from the class ``c2''. Thus, three methods
+are generated for the interface ``mi'': ``mi_c2_p2'', ``mi_c3_p2'', 
+and ``mi_c3_p3''. Servers must implement all three methods as well. 
+
+
+@subsection Exceptions
+@language{Fortran} has no defined
+exception mechanism. As already indicated, exceptions are passed by adding 
+an additional status
+argument to the beginning of each method
+which contains an exception code, and a union of
+all the possible exception value types defined in the interface.  
+Method implementations set the exception code, and fill in the 
+appropriate value of the union, to signal an exception.  
+
+In the following example, the ``div'' method can raise an exception
+``DivideByZero'':
+@codeexample
+INTERFACE calc;
+ 
+TYPE numerator = INTEGER;
+ 
+EXCEPTION DivideByZero : numerator;
+ 
+TYPE self = CLASS
+  METHODS
+    div( v1 : INTEGER, v2 : INTEGER ) : INTEGER RAISES DivideByZero END
+  END;
+@end codeexample
+
+The generated include file, calc.fh contains the exception definitions:
+
+@codeexample
+        integer calcReply_Success
+        parameter ( calcReply_Success = 0 )
+ 
+        structure /calcStatus/  
+            integer returnCode
+            union
+            map
+                integer anyvalue
+            end map
+            map
+                integer calc_dividebyzero_Value
+            end map
+            end union
+        end structure
+ 
+        structure /calcExceptions/
+            integer dividebyzero
+        end structure
+ 
+        record /calcExceptions/ calcExceptions
+        common /calcExceptions/ calcExceptions
+ 
+        integer create_calc_self
+        external create_calc_self
+        integer create_calc_self_from_sbh
+        external create_calc_self_from_sbh
+
+@end codeexample
+
+The method implementation for ``div'' in the server must detect the
+divide-by-zero condition and call the procedure to raise the exception:
+
+@codeexample
+        integer  function server_calc_self_div( h, s, v1, v2, r )
+        integer h, v1, v2, r
+        include 'calc.fh'
+        record /calcStatus/ s
+
+        if ( v2 .eq. 0 ) then
+            server_calc_self_div = v1
+            call calc_RaiseException( s, calcExceptions.dividebyzero, 1 )
+            return
+        end if
+        r = v1 / v2
+        server_calc_self_div = r
+        return
+        end
+@end codeexample
+
+The interface specific @code{calc_RaiseException} procedure assigns
+the server specific value, one (1) in this case, to the divide-by-zero
+entry in the status structure. The exception is sent back to the
+client which can be detected:
+
+@codeexample
+        program  p
+        include 'calc.fh'
+        integer handle, r, j, i, val
+        character*( 100 ) c
+        record /calcStatus/ s
+        integer calc_self_div
+        external calc_self_div
+ 
+        call calc_initialize( )
+        read *, c, i, j
+        handle = create_calc_self_from_sbh( c )
+        val = calc_self_div( handle, s, i, j, r )
+        if ( s.returnCode .eq. calcExceptions.dividebyzero ) then
+            print *, 'exception signaled'
+	    print *, 'divide by zero', s.calc_dividebyzero_Value
+        else
+            print *, 'result is ', r, ' value is ', val
+        end if
+        end
+@end codeexample
+
+@subsection Server Construction
+This section will outline the construction of a server
+main program. Various initializations and object registrations
+must take place before a client can connect and use the services
+provided.
+
+Perhaps the best server example is that of the inheritance
+example already presented above. The main program for the
+server is as follows:
+@codeexample
+        program  p
+        include 'mi.fh'
+        integer uc
+ 
+        call mi_initialize( )
+        uc = create_mi_c2( 0 )
+        uc = create_mi_c3( 0 )
+        call ilu_run( )
+        end
+@end codeexample
+
+First the interface specific initialization, @code{mi_initialize}, is called.
+Then, for each class the server is to
+respond to, a class specific create procedure is called.
+Finally,
+after the class objects have been created and registered, the
+@code{ilu_run} procedure is called. This procedure listens for connections
+and dispatches server methods.
+
+@subsection Client Construction
+As already presented in the previous examples, client applications
+must call an interface specific initialization followed by a class
+specific @code{create_..._from_sbh} call which returns a class instance handle. 
+This handle is passed to all of the subsequent method invocations.
+
+The string binding handle (sbh), which must be passed to the create call,
+is typically 90 to 100 characters in length. This string is printed
+on stdout each time a server instanciates a class. The following is
+a transcript from the client and server generated from the
+``f1''  interface definition previously listed. First the server is
+executed:
+@transcript
+
+% ./server
+exported instance <49da8@@13.1.102.95.2c2f46c3.30e3.c2f2@@sunrpc_2_0x310001c0_1|tcp_13.1.102.95_1686>
+@end transcript
+
+Then, the client is run: 
+
+@transcript
+% ./client
+'49da8@@13.1.102.95.2c2f46c3.30e3.c2f2@@sunrpc_2_0x310001c0_1|tcp_13.1.102.95_1686'
+3.5
+ flt result is   4  4
+@end transcript
+
+The sbh is printed out by the server and is used by the client 
+to create a class instance handle.
+
+@subsection Using The Name Server
+@cindex name server
+@cindex NMS
+@cindex Using NMS
+ 
+The name server, NMS, helps client applications find servers exporting necessary
+interfaces and classes. The strategy is simple. When a server initializes
+itself, it registers an instance of its class object with the NMS. When a client
+wants to connect with a server, the NMS is queried with the client's
+Class instance. If
+there is a server registered that matches the class used by the client,
+the string binding handle (sbh) is retuned to the client. The
+following main procedure from a server application illustrates how to
+register an object with the NMS in its simplest form.
+@codeexample
+        program  p
+        include 'f2.fh'
+        integer uc
+ 
+        call f2_initialize( )
+        uc = create_f2_c( 0 )
+        call ilunms_registerwithattributes( uc, 0 )
+        call ilu_run( )
+        end
+@end codeexample
+and the client main program which needs to connect with the server:
+@codeexample
+        program  p
+        include 'f2.fh'
+        real*8 ppp, qqq, f, ret, f2_c_f, xx
+        integer handle, i
+        character*( 100 ) sbh
+        record /f2Status/ s
+        external f2_c_f
+ 
+        call f2_initialize( )
+        call classrecordfor_f2_c( i )
+        call ilunms_findsbh( i, 0, sbh )
+        read *, f
+        handle = create_f2_c_from_sbh( sbh )
+        print *, 'handle is ', handle
+        ret = f2_c_f( handle, s, f, xx )
+        print *, 'flt result is ', ret, xx
+        end
+@end codeexample
+ 
+The convenienence illustrated here is that there is no intervention required
+by the user to establish the connection between the client and server.
+Of course, prior to launching either the client or the server the name server
+must be running. The name server is typically launched with the shell script
+NMS. This only needs to be done once per reboot of your system.
+ 
+The NMS is a sophisticated name server and supports many services.
+For additional information, the reader is refered to other NMS documentation.
+
+@subsection Sequences
+For each sequence type declared in the interface description, a set of
+type specific create and accessor functions are generated. For example if the
+interface description is:
+@codeexample
+INTERFACE seq;
+ 
+TYPE is = SEQUENCE OF INTEGER;
+TYPE O = CLASS
+  METHODS
+    proc( s : is )
+  END;
+@end codeexample
+
+The @language{Fortran} callable accessor functions are:
+
+@codeexample
+	integer function seq_create_is( )
+
+	subroutine seq_is_sequence_every( sq, func )
+	    integer sq
+
+	subroutine seq_is_sequence_append( sq, item )
+	    integer sq
+	    integer item
+
+	subroutine seq_is_sequence_push( sq, item )
+	    integer sq
+	    integer item
+
+	subroutine seq_is_sequence_pop( sq, item )
+	    integer sq
+	    integer item
+@end codeexample
+The names are created from the interface name and the sequence type
+name. The first function is the sequence create function @code{seq_create_is}.
+This function returns an integer handle to the newly created sequence.
+This handle is passed to all subsequent calls concerning the sequence.
+
+The @code{seq_is_sequence_append} procedure places ``item'' at the
+end of the sequence while @code{seq_is_sequence_push}  inserts the
+new item at the beginning of the sequence.  The procedure @code{seq_is_sequence_pop}
+removes the item at the beginning of the sequence and copies the removed value
+in the ``item'' argument. These functions allow the sequence to
+be used as a stack or a queue. Finally, the procedure @code{seq_is_sequence_every}
+is used to scan all of the items in the sequence. The argument ``func'' is
+the address of a procedure. The procedure is called once for each item in
+the sequence with the item as its only argument.
+
+@subsection Stub Generation
+@cindex Fortran stub generation
+@cindex Stub generation
+
+To generate @language{Fortran} stubs from an @language{ISL} file, use the
+program @language{fort-stubber}.
+@pindex fort-stubber
+Three files are generated from the
+@file{.isl} file:
+@itemize @bullet
+@item
+@file{@metavar{interface-name}.fh} is a @language{Fortran} include
+file and contains the definitions for the structures, exceptions,
+status, etc.
+@item
+@file{@metavar{interface-name}.h} contains the definitions for the types
+and procedures defined by the interface and used by the generated stubs.
+@item
+@file{@metavar{interface-name}-common.c} contains the general code used
+by both client and server; and
+@item
+@file{@metavar{interface-name}.c} contains the client-side and general code
+for the interface; and
+@item
+@file{@metavar{interface-name}-server-stubs.c} contains the server-side
+stubs and code for the interface.
+@end itemize
+Typically, clients of a module never have a need for the 
+@file{@metavar{interface-name}-server-stubs.c} file.
+
+@transcript
+% @userinput{fort-stubber foo.isl}
+header file interface foo to ./foo.fh...
+header file interface foo to ./foo.h...
+code for interface foo to ./foo-common.c...
+code for interface foo to ./foo.c...
+code for server stubs of interface foo to ./foo-server-stubs.c...
+%
+@end transcript
+
+The option @code{-renames @metavar{renames-filename}} may be used with @program{fort-stubber}
+to specify particular @language{Fortran} names for @language{ISL} types. 
+
+@subsection Tailoring Fortran Names
+@cindex Tailoring Fortran names
+
+It is sometimes necessary to have the @language{Fortran} names of an 
+@system{ILU} interface
+match some other naming scheme.  A mechanism is provided to allow the programmer to
+specify the names of @language{Fortran} language artifacts directly, and thus 
+override the automatic @language{ISL} to @language{Fortran} name mappings.
+
+To do this, you place a set of synonyms for @language{ISL} names in a
+@dfn{renames-file}, and invoke the @program{fort-stubber} 
+program with the switch @code{-renames},
+specifying the name of the renames-file.  The lines in the file are of the form
+@display
+@metavar{construct} @metavar{@language{ISL}-name} @metavar{@language{Fortran}-name}
+@end display
+@noindent
+where @metavar{construct} is one of @kwd{method}, @kwd{exception}, 
+@kwd{type}, @kwd{interface},
+or @kwd{constant}; @metavar{@language{ISL}-name} is the name of the 
+construct, expressed either
+as the simple name, for interface names, the concatenation
+@code{@metavar{interface-name}.@metavar{construct-name}} for exceptions, 
+types, and constants,
+or @code{@metavar{interface-name}.@metavar{type-name}.@metavar{method-name}} 
+for methods;
+and @metavar{@language{Fortran}-name} is the name the construct should have 
+in the generated
+@language{Fortran} code.  For example:
+
+@example
+# change "foo_r1" to plain "R1"
+type foo_r1 r1
+# change name of method "m1" to "method1"
+method foo_o1_m1 method1
+@end example
+
+@noindent
+Lines beginning with the `hash' character @samp{#} are treated as comment lines,
+and ignored, in the renames-file.
+
+This feature of the @program{fort-stubber} should be used as little and as carefully
+as possible, as it can cause confusion for readers of the @language{ISL} interface,
+in trying to follow the @language{Fortran} code.  It can also create name conflicts
+between different modules, unless names are carefully chosen.
+
+@section Libraries and Linking
+For clients of an @system{ILU} module, it is only necessary to link
+with the @file{@metavar{interface-name}.o} file compiled from the
+@file{@metavar{interface-name}.c} file generated for the interface or interfaces
+being used, and with the two libraries
+@file{@metavar{ILUHOME}/lib/libilu-fortran.a} and @file{@metavar{ILUHOME}/lib/libilu.a} (in this
+order, as @file{libilu-fortran.a} uses functions in @file{libilu.a}).
+
+For implementors of servers, the code for the server-side
+stubs, in the file @file{@metavar{interface-name}-server-stubs.o}, compiled
+from @file{@metavar{interface-name}-server-stubs.c} and
+in the file @file{@metavar{interface-name}-common.o}, compiled
+from @file{@metavar{interface-name}-common.c}, should be included along
+with the other files and libraries.
+
+@ifclear largerdoc
+@page
+@section Index
+@printindex cp
+@end ifclear

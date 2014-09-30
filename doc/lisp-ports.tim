@@ -1,0 +1,380 @@
+@ifset ilucopyright
+BeginILUCopyright
+
+Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+Unlimited use, reproduction, modification, and distribution of this
+software and modified versions thereof is permitted.  Permission is
+granted to make derivative works from this software or a modified
+version thereof.  Any copy of this software, a modified version
+thereof, or a derivative work must include both the above copyright
+notice of Xerox Corporation and this paragraph.  Any distribution of
+this software, a modified version thereof, or a derivative work must
+comply with all applicable United States export control laws.  This
+software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+OF THE POSSIBILITY OF SUCH DAMAGES.
+  
+EndILUCopyright
+@end ifset
+@ifclear largerdoc
+@include ilu-macros.tim
+
+@chapter Porting ILU to Common Lisp
+@sp 1
+@i{Bill Janssen}
+@sp 1
+@today{}
+@end ifclear
+
+@section Introduction
+
+The @system{ILU} runtime for @language{Common Lisp} is largely written
+in vanilla @language{Common Lisp}.  The lisp-implementation-specific
+details are confined to a small number of macros and functions which
+need to be defined.  (This assumes that you have a
+working port of ILU and its C support already on your operating system
+platform.  If not, you will have to begin by doing that.)  
+Aside from these macros and functions, you do
+not require anything not specified in the Common Lisp standard.  You
+do not need Lisp code for TCP/IP or socket support.
+The major work is to write ilu-xxx.lisp, where "xxx" is the specifier for the
+particular implementation of @language{Common Lisp} in use, and any
+necessary xxx-to-C shims in ilu-xxx-skin.c.  There are a number of
+things that have to be done in ilu-xxx.lisp.  They can be regarded in
+three major sections: providing the @system{ILU} notion of
+foreign-function calls, connecting the Lisp's garbage collector to the
+@system{ILU} network GC, and providing either a threaded or event-loop
+model of operation.  In addition, there is a small hook that has to be
+provided to convert between character sets.
+
+@section Providing the @system{ILU} notion of foreign-function calls.
+
+
+Perhaps the trickiest is to provide an implementation of the macro
+"define-c-function".  This maps the @system{ILU} notion of a call into @language{C} into
+the native lisp notion.  "define-c-function" has the signature
+
+@defmac ilu::define-c-function (LISP-NAME @type{symbol}) (DOC-STRING @type{string}) (C-NAME @type{string}) (ARGS @type{list}) (RETURN-TYPE @type{keyword}) &key (INLINE @type{boolean} @constant{cl:nil})
+
+The @metavar{LISP-NAME} is a symbol which will be the name of the function in
+@language{Common Lisp}.  The @metavar{C-NAME} is a string which will be the ``regular'' @language{C} name of
+the @language{C} function to be called; that is, the name as it would be named in
+a @language{C} program, rather than the name of the symbol for the entry point of
+the function.  @metavar{ARGS} is a list of arg which describe the signature of
+the @language{C} function, where each arg is either a keyword or a 2-tuple.  If a
+keyword, the keyword indicates the type of the argument.  Allowable
+argument types are
+@itemize @bullet
+@item
+@constant{:short-cardinal} (unsigned-byte 16)
+@item
+@constant{:cardinal} (unsigned-byte 32)
+@item
+@constant{:short-integer} (signed-byte 16)
+@item
+@constant{:integer} (signed-byte 32)
+@item
+@constant{:short-real} (single-float)
+@item
+@constant{:real} (double-float)
+@item
+@constant{:byte} (0 <= fixnum < 256)
+@item
+@constant{:boolean} (t or nil)
+@item
+@constant{:fixnum} (-2^27 <fixnum < 2^27 (about))
+@item
+@constant{:string} (string)
+@item
+@constant{:constant-string} (string)
+@item
+@constant{:bytes (vector of (unsigned-byte 8))}
+@item
+@constant{:unicode} (Unicode if your Lisp supports it, vector of (unsigned-byte 16) otherwise)
+@item
+@constant{:ilu-call} (unsigned-byte 32)
+@item
+@constant{:ilu-object} (unsigned-byte 32)
+@item
+@constant{:ilu-class} (unsigned-byte 32)
+@item
+@constant{:ilu-server} (unsigned-byte 32)
+@item
+@constant{:char*} (unsigned-byte 32)
+@item
+@constant{:pointer} (unsigned-byte 32)
+@end itemize
+If the arg is a 2-tuple, the cadr is
+the type, and the car is the ``direction'', which may be either :in,
+@constant{:out}, or @constant{:inout}.  Args with no ``direction'' are by default of
+direction @constant{:in}.  The @metavar{RETURN-TYPE} argument is a keyword for the return
+type of the function, which is drawn from the same set of keywords as
+the argument types.  Return-types may also use the keyword :void,
+which specifies that no value is returned.  The @metavar{INLINE} keyword is a
+boolean value which, if @constant{cl:t}, indicates that the necessary type-checking
+has been assured by the application code, and that the @language{C} function may
+be called directly without type-checking the parameters.
+
+@macro{define-c-function} defines a @language{Common Lisp} function with a possibly
+different signature from the @language{C} function.  This function has arguments
+which consist of all the @cl{:in} and @cl{:inout} arguments of the @language{C} function,
+in the order in which they occur in the signature of the @language{C} function.
+It returns possibly multiple values, which consist of the specified
+return type, if not @cl{:void}, followed by any @cl{:out} and @cl{:inout} arguments
+to the @language{C} function, in the order in which they occur in the signature
+of the @language{C} function.
+
+@macro{define-c-function} assumes that the @language{C} function will call back into
+@language{Common Lisp}, and that gc may occur during the invocation of the @language{C} function.
+Therefore, any objects passed to @language{C} which are not values must be
+registered in some way to prevent them from moving during the call.
+Often this means that the actual call must be surrounded by code which
+makes static copies of, for example, strings, calls the @language{C} function,
+then frees the static copy after the call.  In addition, when
+``catching'' @cl{:out} arguments and @cl{:inout} arguments, it is usually
+necessary to pass a pointer to the appropriate argument, rather than
+the argument directly.  Typically 1-element arrays have to be
+allocated to do this.  The @system{Franz ACL} implementation uses a resource of
+arrays to minimize consing for this.
+
+We should probably add another keyword, @metavar{NO-CALLBACKS}, to indicate that
+the @language{C} function will not call back into @language{Common Lisp} (and therefore some of the
+GC protection can be skipped when calling this function).  Providing
+for @metavar{NO-CALLBACKS} in your implementation would probably be a good idea.
+@end defmac
+
+@section  Network Garbage Collection
+
+The @language{Common Lisp}-specific runtime must provide three calls which allow the
+kernel to map the kernel's @language{C} @system{ILU} object to a CLOS object.  These are
+register-lisp-object, lookup-registered-lisp-object, and
+unregister-lisp-object.  The idea behind these is to provide the C
+runtime with a handle on a CLOS object that is a small integer that
+will not be moved by @language{Common Lisp} GC, and to provide a layer which weak
+references can hide behind.
+
+@defun ilu::register-lisp-object (OBJ @type{ilu:ilu-object}) &key (REFTYPE @type{keyword} :strong) => @type{fixnum}
+
+The OBJ is an @system{ILU} CLOS object (the @system{Franz ACL} implementation accepts
+any @language{Common Lisp} value except NIL, but this is only because it uses it
+internally in @file{ilu-franz.lisp}).  The @metavar{REFTYPE} keyword may be either the
+keyword @cl{:weak} or the keyword @cl{:strong}, which determines whether the
+reference to the object is a weak reference or a strong reference.  A
+weak reference is one that is not ``followed'' by the @language{Common Lisp} collector.
+The returned value is a fixnum that can be used with
+@fn{lookup-registered-lisp-object} and @fn{unregister-lisp-object} to find the
+object or remove the reference to the object, respectively.
+@end defun
+
+@defun ilu::lookup-registered-lisp-object (INDEX @type{fixnum}) => @type{ilu:ilu-object}
+
+
+This function follows the reference indicated by @metavar{INDEX} and returns the
+object, or @cl{cl:nil} if the @metavar{INDEX} is invalid.
+@end defun
+
+@defun ilu::unregister-lisp-object (INDEX @type{fixnum})
+
+Causes any reference indicated by @metavar{INDEX} to be removed.
+@end defun
+
+
+@defmac ilu::optional-finalization-hook (OBJ @type{ilu:ilu-object})
+
+This is a macro which should be defined in such a way as to indicate a
+finalization action for @metavar{OBJ} when the @language{Common Lisp} collector collects it.  This
+finalization action will interact with the @system{ILU} kernel to ensure that
+remote peers of this @language{Common Lisp} will know that it no longer has an interest
+in the object.  In addition, the finalization action will be able to
+prevent @metavar{OBJ} from being actually collected, should any peer have an
+active reference to it.
+@end defmac
+
+The @system{Franz ACL} implementation only allows the
+collector to run the finalization when it knows that no peer has a
+reference, by keeping the @language{Common Lisp} reference to the object as a strong
+reference until the @language{C} @system{ILU} kernel informs the @language{Common Lisp} @system{ILU} runtime that no
+peer has a reference, in which case the @language{Common Lisp} reference is changed to a
+weak reference.  In time this allows the collector to GC the object,
+and the finalization action is called.  The action that needs to be
+taken is ``null out'' both the pointer from the @language{CLOS} object to the @language{C}
+object, via @cl{(setf (ilu-cached-kernel-obj lisp-obj) nil)}, and ``null
+out'' the reference from the @language{C} object to the @language{CLOS} object, via
+@code{(register-language-specific-object (kernel-obj lisp-obj) 0)}.  See
+@file{ilu-franz.lisp}, @cl{ilu::franz-shutdown-ilu-object}, for an example.  The @system{Franz ACL}
+example also does these shutdowns in a separate thread, instead of
+doing them directly in the GC finalization process.  This is because
+the shutdown actions may cause arbitrary callbacks into @language{Common Lisp}, some of
+which may not occur on the stack of the ACL scheduler, which may
+invoke the collector.
+
+If you feel that it just isn't possible to hook your @language{Common Lisp} collector
+into the network GC, you can simply define @fn{register-lisp-object} to
+ignore the @metavar{REFTYPE} parameter, and define @macro{optional-finalization-hook}
+to expand to nothing.  The result will be that no @system{ILU} object in your
+address space will ever be GC'ed, and that no true instance of a
+collectible @system{ILU} object type referenced by your process will ever be
+GC'ed anywhere in its true address space until your @language{Common Lisp} image
+disappears.  This might also be a good starting point, just to get the
+other parts working.
+
+
+@section Thread and/or Event Loops
+
+Every address space into which @system{ILU} is loaded is implicitly a server.
+This is partially because @system{ILU} uses method calls internally, such as
+pinging garbage collection callbacks, and partially because it
+provides for recursive protocols, in which a ``server'' might call
+back to a ``client'' during the execution of a method call.  This
+means that any implementation of @system{ILU} has to provide a way to execute
+incoming calls; which means that it has to provide a stack and thread
+of control in which to execute the ``true'' code of the method call.
+There are two mechanisms supported by @system{ILU} to associate a thread of
+control with an incoming request, threads and event loops.  In the
+thread model, each request is executed in a thread associated with
+either the specific request (thread-per-request) or the connection on
+which the thread arrives (thread-per-client).  In the event loop
+model, one thread of control is multiplexed between all uses by means
+of calls into particular ``event handler'' routines when some
+``event'' is delivered to the process.  Typical events are timer
+expirations, I/O available on file descriptors, @system{UNIX} signals.  Other
+more application-specific events are possible, such as @system{X Window System}
+events or @system{XView toolkit} events.
+
+For a threaded @language{Common Lisp}, the thread model is preferred.  To support this,
+the implementor of the @language{Common Lisp} runtime must call the @language{C} procedure
+@C{ilu_SetWaitTech()} with two C-callable routines that provide ways to
+block the current thread until input or output is available on a
+particular file descriptor.  He must call @C{ilu_SetMainLoop()} with a
+main loop struct that provides NULL procedures for the @C{ml_run},
+@C{ml_exit}, @C{ml_register_input}, and @C{ml_register_output} fields, simple
+procedures that return @C{ilu_FALSE} for the @C{ml_unregister_input} and
+@C{ml_unregister_output} fields, and three C-callable procedures that
+implement creation, setting, and unsetting of alarms for the
+@C{ml_create_alarm}, @C{ml_set_alarm}, and @C{ml_unset_alarm} fields.  Finally, he
+must provide C-callable procedures to describe his thread system's
+mutex and condition variable system to the @system{ILU} @language{C} kernel, and register
+them by calling @C{ilu_SetLockTech()}.  See the @system{Franz ACL} implementation
+for an example of this.  Note that the file @file{ilu-process.lisp} provides
+an implementation-independent veneer over various process systems.  It
+would be useful to extend that, then use it in providing the specific
+thread mechanisms, rather than using your @language{Common Lisp}'s threads directly.
+
+For an non-threaded @language{Common Lisp}, the event loop model is available.  In this,
+you divide up all computation in your application into event handlers,
+separate functions that are run when some event occurs, and initialize
+the system by calling some event handler dispatcher routine, often
+called the ``main loop'' of the system.  @system{ILU} provides a default main
+loop in the kernel, which provides support for two kinds of events:
+timer expiration (@system{ILU} calls timers ``alarms''), and input or output
+available on a @system{UNIX} file descriptor.  This means that handler
+functions can be registered to be called when an event of one of these
+types occurs.  The @system{ILU} event loop is also ``recursive''; this means
+that event handlers can call back into the main loop to wait for
+something to occur.  To use the @system{ILU} main loop, you must provide mainly
+a way to invoke the main loop, probably something like
+@cl{ilu:xxx-main-loop}, where "xxx" is the name of your flavor of @language{Common Lisp}.
+
+If the @system{ILU} main loop is for some reason not satisfactory, a
+@language{Common Lisp}-runtime-specific main loop can be substituted via a call to the
+@system{ILU} @language{C} kernel routine @C{ilu_SetMainLoop()}.  This is often necessary to
+interoperate with UI toolkits like @system{XView} or @system{Tk} which believe that they
+own the main loop.  Note that this main loop must provide all the
+functionality provided by the @system{ILU} main loop.  A less-powerful main
+loop can be used @emph{in addition to} the @system{ILU} main loop, by calling the
+@system{ILU} @language{C} kernel routine @C{ilu_AddRegisterersToDefault()}.  See the comments
+in @file{@metavar{ILUSRC}/runtime/kernel/iluxport.h} for documentation of all of this.
+
+In addition to making the appropriate calls into the @system{ILU} kernel to set
+up either threaded mode or event-loop mode, the @language{Common Lisp} runtime
+implementor must provide a few required function calls:
+
+@defun ilu::initialize-locking
+
+This misnamed function is called by the generic @system{ILU} @language{Common Lisp} runtime to
+set up the interaction mode, start the scheduler if necessary, and in
+general do anything necessary to initialize the @language{Common Lisp}-flavor-specific
+@language{Common Lisp} runtime.
+@end defun
+
+@defun ilu::setup-new-connection-handler (FN @type{function}) (SERVER @type{C-pointer}) (PORT @type{C-pointer})
+
+This is called when a client connects to a kernel server, @metavar{SERVER},
+implemented in this address space.  It should arrange to apply @metavar{FN} to
+@cl{(list @metavar{SERVER} @metavar{PORT})} if a new incoming connection is received on @metavar{PORT}.
+@metavar{FN} should return @cl{cl:nil} if no handler could be established, non-@cl{cl:nil}
+otherwise.  @metavar{SERVER} is the @language{C} address of an @system{ILU} kernel @C{ilu_Server}, @metavar{PORT}
+is the @language{C} address of an @system{ILU} kernel @C{ilu_Port}.  The @system{ILU} @language{C} kernel routine
+@C{ilu_FileDescriptorOfMooringOfPort()} will return the @system{UNIX} file
+descriptor of the @C{ilu_Mooring} of an @C{ilu_Port}.  In threaded @language{Common Lisp}s, this
+will typically cause a thread to be forked, which will watch for
+connections to this port.  In event-loop @language{Common Lisp}s, this will typically
+register @metavar{FN} as an event handler for "input available on the file
+descriptor of the mooring of @metavar{PORT}".
+@end defun
+
+@defun ilu::setup-connection-watcher (FN @type{function}) (CONN @type{C-pointer}) (SERVER @type{C-pointer})
+
+This is called when a new connection is setup.  It should arrange
+things so that @metavar{FN} is applied to @cl{(list @metavar{CONN} @metavar{SERVER})} whenever input is
+available on @metavar{CONN}.  @metavar{FN} should return non-@cl{cl:nil} if the input was
+successfully handled, @cl{cl:nil} otherwise.  If @metavar{FN} ever returns @cl{cl:nil}, the
+connection-watcher should be demolished.  @metavar{CONN} is the @language{C} address of an
+@system{ILU} kernel @C{ilu_Connection}, and @metavar{SERVER} is the @language{C} address of an @system{ILU}
+kernel @C{ilu_Server}.  The @system{ILU} @language{C} kernel routine
+@C{ilu_FileDescriptorOfConnection()} will return the @system{UNIX} file descriptor
+for an @C{ilu_Connection}.  In threaded @language{Common Lisp}s, this will typically fork a
+thread which will handle requests coming in on this connection.  In
+event-loop @language{Common Lisp}s, this will typically register @metavar{FN} as an event handler
+for "input available on the file descriptor of the connection".
+@end defun
+
+@section Converting between character sets.
+
+@emph{This section is not currently correct, but we are changing the Lisp runtime to make it correct.}
+
+@system{ILU} uses the @system{ISO Latin-1} and @system{Unicode} (@system{ISO 10646}) character sets.
+@language{Common Lisp} uses a somewhat different version of `character'.  To
+provide for a mapping back and forth between @system{ILU} and @language{Common Lisp}, the
+runtime implementor must provide four macros:
+
+@defmac ilu::construct-lisp-character-from-unicode (UNICODE @type{(unsigned-byte 16)})) => @type{character}
+@end defmac
+
+@defmac ilu::determine-unicode-of-character (LISP-CHAR @type{character}) => @type{Unicode-code}
+@end defmac
+
+@defmac ilu::construct-lisp-character-from-latin-1 (LATIN-1-CODE @type{(unsigned-byte 8)}) => @type{character}
+@end defmac
+
+@defmac ilu::determine-latin-1-of-character (LISP-CHAR @type{character}) => @type{ISO-Latin-1-code}
+@end defmac
+
+which I trust are self-explanatory.
+
+@section Support for Dynamic Object Creation
+
+@system{ILU} allows the dynamic creation of objects.  This means that
+a true module can create the true CLOS object for an ILU object in a lazy
+manner, when it is referenced.  The mechanism for doing this is
+called @dfn{object tables}.  An object table consists of 2 @language{C}-callable
+functions, one to create an object, given its instance handle, and one to
+free any storage associated with the object table.  To support this
+mechanism, the @language{Common Lisp} port of @system{ILU} has to
+provide the following function:
+
+@defun ilu::create-object-table (@metavar{OBJECT-OF-IH-FN} @type{function}) (@metavar{FREE-SELF-FN} @type{function}) => @type{@language{C}-pointer}
+
+The function accepts two @language{Lisp} functions, and returns a pointer
+to a @language{C} struct of type @C{ilu_ObjectTable}, or the value @cl{0},
+if no object table pointer can be produced.  The function will have to
+call into @language{C} space to actually produce the object table.  Look
+at the @system{Franz ACL} implementation for an example of how to do this.
+
+@end defun

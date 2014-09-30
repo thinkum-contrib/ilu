@@ -1,0 +1,784 @@
+@c $Id: concepts.tim,v 1.38 1999/08/03 01:56:51 janssen Exp $
+@settitle ILU Concepts
+@ifset ilucopyright
+BeginILUCopyright
+
+Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+Unlimited use, reproduction, modification, and distribution of this
+software and modified versions thereof is permitted.  Permission is
+granted to make derivative works from this software or a modified
+version thereof.  Any copy of this software, a modified version
+thereof, or a derivative work must include both the above copyright
+notice of Xerox Corporation and this paragraph.  Any distribution of
+this software, a modified version thereof, or a derivative work must
+comply with all applicable United States export control laws.  This
+software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+OF THE POSSIBILITY OF SUCH DAMAGES.
+  
+EndILUCopyright
+@end ifset
+@ifclear largerdoc
+@setfilename ilu-concepts.info
+@titlepage
+@title ILU Concepts
+@author Bill Janssen @code{<janssen@@parc.xerox.com>}
+@author Mike Spreitzer @code{<spreitzer.parc@@xerox.com>}
+@sp
+(Typeset @today{})
+@sp
+Copyright @copyright{} 1993, 1996 Xerox Corporation@*
+All Rights Reserved.
+@end titlepage
+@ifinfo
+@node Top, ILU Concepts, (dir), (dir)
+@top ILU Concepts
+@menu
+* ILU Concepts:: chapter contents
+@end menu
+@end ifinfo
+@node ILU Concepts, , , Top
+@chapter ILU Concepts
+@end ifclear
+
+@menu
+* What ILU Does::
+* How ILU Works::
+* Core ILU Concepts::
+* ILU and OMG CORBA::
+@end menu
+
+@node What ILU Does, How ILU Works, , ILU Concepts
+@section What ILU Does
+@cindex Interface
+@cindex Module
+@cindex Program Instance
+@cindex Class Library
+
+@system{ILU} is primarily about interfaces between units of program
+structure; we call these units @dfn{modules}.
+The notion is that each module enscapsulates some logical part
+of a program, that has high `cohesiveness' internally, and low `coupling' to
+other parts of the program.  @system{ILU} provides
+you with a way of writing down an object-oriented @dfn{interface} to the module;
+that is, a set of object types and other types, constants, and exceptions that another
+module would use to communicate with it.  This interface can then be processed
+by various @system{ILU} tools to implement that communication.
+
+@system{ILU} allows many different binding relationships between modules.
+The modules can be parts of one program instance, all written in the same language;
+they can be parts written in different languages, sharing runtime
+support in one memory image; they can be parts running in different
+program instances on different machines (on different sides of the planet).
+A module could even be a distributed system implemented by many program instances
+on many machines.  A particular module might be part of several
+different program instances at the same time.  @system{ILU} does all the translating
+and communicating necessary to use all these kinds of modules in a single program.
+It optimizes calls across module
+interfaces to involve only as much mechanism as necessary for the
+calling and called modules to interact.  In particular, when the two
+modules are in the same memory image and use the same data
+representations, the calls are direct local procedure calls --- no stubs
+or other RPC mechanisms are involved.  The notion of a `module' should
+not be confused with the independent concept of a @dfn{program instance};
+by which we mean the combination of code and data running in one memory
+image.  A UNIX process is (modulo the possibilities introduced by the
+ability, in some UNIX sytems, to share memory between processes) an
+example of a program instance.
+
+Because @system{ILU} standardizes many of the issues involved in
+providing proper inter-module independence, such as memory management
+and error detection and recovery strategies, it can be used to
+build language-independent @dfn{class libraries}, collections of
+re-usable object definitions and implementations.
+Because one of the design goals of @system{ILU} was to use existing
+standards for various pieces, rather than inventing anything new,
+@system{ILU} can be used to implement @system{ONC RPC} or @system{Xerox Courier}
+services, or clients for existing @system{ONC RPC} or @system{Xerox Courier}
+services.  @system{ILU} also includes an implementation of the
+Object Management Group's @system{CORBA} Internet Inter-Orb Protocol (@dfn{IIOP}),
+and can be used to write @system{CORBA} services or clients, as well.
+
+@node How ILU Works, Core ILU Concepts, What ILU Does, ILU Concepts
+@section How ILU Works
+
+The approach used by @system{ILU} is one common to standard RPC systems such
+as Sun's ONC RPC, Xerox's Courier, and most implementations of OMG's CORBA.
+An interface is described once in some `language-neutral' interface specification language.
+Types and exceptions are described; exported functionality is specified by defining @dfn{methods} on object types.
+Tools are then run against the interface description to produce @dfn{stubs}
+for particular programming languages; these stubs can bind to, call, and be called from stubs
+generated from the same interface description for a different
+programming language.
+The stub code is then linked with the application code, some language-specific
+code containing any necessary @system{ILU} support for that programming language,
+and the @dfn{ILU kernel library}, which is code written in @language{ANSI C}.
+The following diagram illustrates the process:
+
+@picture two-ilu-modules.idraw
+
+Several modules may be linked together, for a standalone use.
+@system{ILU} stubs are generated in such a way that
+applications which link a caller and callee written in the same
+language directly together suffer
+no calling overhead.  This makes @system{ILU} useful for defining
+interfaces between modules even in programs that do not use RPC.
+
+Different modules of the program may be written in different programming languages.
+These can either be linked together in the same address space, if the runtimes
+of the different languages allow that, or they
+can be used to make separate network servers and clients.  In the case of
+a network service, the memory layout for the program would be something like
+
+@picture ilu-addr-space.idraw
+
+@node Core ILU Concepts, ILU and OMG CORBA, How ILU Works, ILU Concepts
+@section Core ILU Concepts
+
+@menu
+* Objects::
+* Garbage Collection::
+* Connections::
+* Pipelining::
+* Call Order Preservation::
+* Batching::
+* Simple Binding::
+* Error Signalling::
+@end menu
+
+@node Objects, Garbage Collection, , Core ILU Concepts
+@subsection Objects
+@cindex Object
+
+@menu
+* Servers::
+* Kernel Servers::
+* Subtyping (interface inheritance)::
+* Subtype Relationships::
+* Singleton Object Types::
+* Instantiation::
+* String Binding Handle::
+* Siblings::
+@end menu
+
+@system{ILU} is @dfn{object-oriented}.  By this, we mean that
+objects serve as the primary encapsulation mechanism in @system{ILU}.
+All functionality is exported from a module as methods that can be
+invoked on instances of object types, rather than as simple
+procedures.  The object instance provides
+the context within which methods are executed.  The object type system provides
+subtyping (`inheritance' of interfaces --- @system{ILU} does not address object implementation), to aid in structuring of interfaces.
+
+With respect to a particular @system{ILU} object instance,
+a module is called the @dfn{server}
+@cindex Server
+if it implements the methods of that object, or a @dfn{client}
+@cindex Client
+if it calls, but does not implement, the methods of that object.  One
+module can thus be a client of one object, and the server of another.
+An @system{ILU} object can be passed as a parameter to or result of a
+method call, and can be (in) the parameter to an exception.  An object
+may be passed from its server to a client, from a client to its server,
+or between two clients, in any of the above three kinds of position.
+Unlike some RPC systems, there can be multiple @system{ILU} objects of
+the same type, even on one machine, even within one program instance.
+
+For a given @system{ILU} object, there will, in general, be multiple @dfn{language-specific objects};
+each is an ``object'' in one of the
+programming languages used in the system.  One language-specific object,
+designated the @dfn{true object},
+@cindex True object
+actually provides the implementation of the @system{ILU} object; it is
+thus part of the server module.  The true object's methods are written
+by the programmer, not generated by @system{ILU}.  The other
+language-specific objects are @dfn{surrogate objects};
+@cindex Surrogate object
+their methods are actually RPC stubs (generated by @system{ILU}) that
+call on the true object.  A surrogate object is used by a client module
+when the server module is in a different program instance or uses
+different data representations.
+
+@node Servers, Kernel Servers, , Objects
+@subsubsection Servers
+@cindex Server
+
+Each object instance has exactly one module that implements it; that
+modules is called the object's server, as introduced above.  Each
+server has a @dfn{server ID}, a universally unique string ID.  The
+server ID makes up part of the object ID of the instances implemented by
+the server.
+
+@node Kernel Servers, Subtyping (interface inheritance), Servers, Objects
+@subsubsection Kernel Servers
+
+@cindex kernel server
+@cindex surrogate server
+@cindex true server
+
+Each language-specific object in an @system{ILU} address space is
+associated with a @dfn{kernel server}, a data structure that
+represents the server that implements the object.  Both true and
+surrogate language-specific objects have kernel servers, called
+@dfn{true servers} and @dfn{surrogate servers}, respectively.
+
+@cindex port
+@cindex connection
+
+Kernel servers serve as the locus of communication between two address
+spaces.  A true kernel server may have a number of @dfn{ports}
+associated with it; a port is a mechanism by which other address
+spaces can interact with objects implemented by the server.  Another
+address space uses the port by creating a surrogate server which
+mirrors the true server, and opening a @dfn{connection} from the
+surrogate server to the true server.  Calls from surrogate objects
+to true objects are carried along this connection.  A true server
+may have multiple ports, each of which may provide connectability via
+different RPC protocols or transport mechanisms.
+
+@node Subtyping (interface inheritance), Subtype Relationships, Kernel Servers, Objects
+@subsubsection Subtyping (interface inheritance)
+
+The object model specified here provides for multiple interface inheritance.  It is
+intended that the subtype provide all the methods described by its
+supertypes, plus possibly other methods described directly in the subtype
+description.  It is expected that in languages which support
+multiple-inheritance object models,
+that an @system{ILU} inheritance tree
+will be reflected in the language-specific inheritance tree.  In a single-inheritance language, or a non-object-oriented one, an @system{ILU}-specific multiple-(interface-)inheritance object system must be embedded.
+
+@node Subtype Relationships, Singleton Object Types, Subtyping (interface inheritance), Objects
+@subsubsection Subtype Relationships
+
+In the @system{ILU} type system, the only subtyping questions that arise
+are between two object types.  This is because @system{ILU} employs only
+those OOP features common to all languages supported.
+
+Subtyping in @system{ILU} is based on structure and name;
+we include the names in the structure, and thus need only talk about
+structure.  An object type declaration of
+the form defined later constructs a structure of the form
+
+@display
+(OBJTYPE
+     SINGLETON: @metavar{singleton-protocol-info}
+     OPTIONAL: @type{Boolean}
+     COLLECTIBLE: @type{Boolean}
+     AUTHENTICATION: @metavar{authentication-type}
+     SUPERTYPES: @metavar{supertype-structure, ...}
+     METHODS: @metavar{method-structure, ...}
+     LEVEL-BRANDS: (@metavar{interface-name}, @metavar{interface-brand},
+                @metavar{type-name}, @metavar{type-brand}))
+@end display
+
+Structure A is a subtype of structure B iff either (1) A and B are equal
+structures, or (2) one member of A's @metavar{supertype-structure}s
+is a subtype of B.
+
+Note that the level-brands include the interface name and (optional)
+brand, as well as the name and (optional) brand of the type being
+declared.  Thus, two declarations of subtypes of the same type
+normally create distinct subtypes, because they would declare types of
+different names, or in interfaces with different names.  When the
+interface name and the type name are the same, this does not cause a
+distinction, although other structural differences might.  If the
+programmer wants to indicate that there's a semantic distinction, even
+though it doesn't otherwise show up in the structure, s/he can use
+different interface brands and/or different type brands.
+These distinctions can be made between
+declarations in different files, or between successive versions of a
+declaration in a file that's been edited.
+
+@node Singleton Object Types, Instantiation, Subtype Relationships, Objects
+@subsubsection Singleton Object Types
+@cindex Singleton Object Type
+
+Many existing RPC protocols and servers do not have the notion of
+multiple instances of a type co-existing at the same server, so cannot
+use the instance discrimination information passed in @system{ILU}
+procedure calls.  To support the use of these protocols and servers, we
+introduce the notion of a @dfn{singleton}
+object type, of which there is only one instance (of each singleton
+type) at a kernel server.  Note that because a single address space may
+support multiple kernel servers, this means that in a single address
+space, there may be multiple instances of the same singleton type.  When
+a method is being called on an instance of a singleton type, no instance
+discrimination information is passed.  Singleton types may not be
+subclassed.
+
+@node Instantiation, String Binding Handle, Singleton Object Types, Objects
+@subsubsection Instantiation
+
+To use (e.g., call the methods of) an @system{ILU} object, a client must
+first obtain a language-specific object for that @system{ILU} object.
+This can be done in one of two ways: (1) the client can call on a
+language-specific object of a different @system{ILU} object to return
+the object in question (or receive the object in a call made on the
+client, or in the parameter of an exception caught and handled by the
+client); or (2) certain standard facilities can be used to acquire a
+language-specific object given either addressing or naming information
+about the @system{ILU} object.  The addressing information is called a @dfn{string binding handle}
+@cindex string binding handle (SBH)
+(SBH), and the @system{ILU} runtime library includes a procedure to
+acquire a language-specific object given a string binding handle for an
+@system{ILU} object (in strongly-typed languages, this procedure is
+typed to return an object of the base type common to all @system{ILU}
+objects in that language).
+
+Every creation of a surrogate instance
+implies communication with the server module,
+and binding of the surrogate instance to the true instance.
+@system{ILU} may attempt to perform this communication when it is actually
+necessary, rather than immediately on surrogate instance creation.
+
+The process of creating an instance may bootstrapped via a @dfn{name
+service}, such as @system{ILU}'s Simple Binding (@pxref{Simple Binding}) or
+the PARC Name-and-Maintenance-Server
+(@program{NMS}), which allows servers to register instances on a
+net-wide basis.  A server registers a mapping from naming information to
+a string binding handle.  The client-side stubs for an interface include
+a procedure that takes naming information, looks up the corresponding
+string binding handle in the name service, and calls the above-mentioned
+library routine to map the SBH to a language-specific object.
+Alternatively, a client can do those steps itself, using an @system{ILU}
+runtime library procedure to acquire a language-specific object for the
+name service.
+
+@node String Binding Handle, Siblings, Instantiation, Objects
+@subsubsection String Binding Handle
+
+In @system{ILU}, there is a string-based representation for a reference to an object.
+That representation consists of a single string, called a @dfn{string binding handle}.  @system{ILU} uses string binding handles when marshalling object references for RPC.
+@system{ILU} also allows applications to interconvert between objects and string binding handles.
+This is necessary when dealing with name services, and useful in other circumstances.
+
+A string binding handle contains several different
+pieces of information:
+
+@itemize @bullet
+
+@item The @dfn{server ID}, a string which identifies the particular
+@dfn{server} that implements the object; as the alignment between
+modules (such as servers) and program instances is entirely
+unconstrained by @system{ILU}, any program can separate its objects
+into one or more groups, each group associated with a different
+server.  Two objects from the same server are called
+@dfn{sibling} objects.
+
+@item The @dfn{instance handle}, a (server-relative) string that
+uniquely identifies a particular object among those implemented by its
+server.
+
+@item The @dfn{most specific type ID} (also called the @dfn{MSTID}), a
+type fingerprint for the most specific type of the object.
+
+@cindex contact info
+@item The @dfn{contact info}, specifies one or more of the ways by
+which a client of the object can communicate with it.
+
+@end itemize
+
+@noindent
+The server ID, instance handle, and MSTID may each contain any ASCII character other than NUL.
+They are composed into the string binding handle according the the IETF rules for URLs, but the precise
+form of the URL is not specified here.  (In versions of @system{ILU} before 2.0, string binding handles had a completely different syntax.)
+
+The pair @code{(@metavar{server ID}, @metavar{instance handle})} are also
+known as the @dfn{object ID} (or @dfn{OID}) of the object, because together they form
+a universally unique ID for the object.
+
+The @metavar{contact info} part contains one or more contact info sequences,
+each describing one particular way of communicating with the object's kernel server.
+Each contact info sequence consists of a series of fields.
+The first field is known as the @dfn{protocol info}, and names a particular RPC protocol, and any
+parameters that might influence the way in which this protocol would be used.
+Each of the succeeding fields specifies @dfn{transport info}, which defines
+a way of transforming or communicating data, and any parameters which might influence
+that transport method.  There may be many sequences of contact info in any one string
+binding handle (but @system{ILU} currently ignores all but the first).
+
+@node Siblings, Object Tables, String Binding Handle, Objects
+@subsubsection Siblings
+
+Some @system{ILU} object instances may have implementation
+dependencies on private communication with other instances.  For
+example, imagine an object type @code{time-share-system}, which
+provides the method @method{ListUsers()}, which returns a list of
+``user'' instances.  Imagine that @code{time-share-system} also
+provides the method @method{SetUserPriority(u : user, priority : integer)}.
+We would like to be able to provide some assurance that
+the user instance used as a parameter to @method{SetUserPriority} is an
+instance returned from a call to @method{ListUsers} on the same instance
+of a @type{time-share-system}, because the way in which
+@method{SetUserPriority} is implemented relies on the user being a user
+of that particular @type{time-share-system}.
+
+The @system{ILU} model provides the notion of a @dfn{sibling object}.
+@cindex sibling
+Two instances are siblings if their methods are handled by the same kernel server.
+Instances that are non-discriminator parameters to methods may be specified
+in @language{ISL} as having to be siblings of the discriminator.
+
+@node Object Tables, Server Relocation, Siblings, Objects
+@subsubsection Object Tables (or, Just-in-Time Objects)
+@cindex object table
+@cindex Just-in-time objects
+
+True objects may either be created explicitly, or upon arrival of calls
+on them.  The second option is exercised via a feature currently called
+@dfn{object tables} (from "hash tables", since they map a string, the
+instance handle, to an object -- "object factories" might be a less
+surprising term).  After the object table creates an object, the server
+module then continues to manage the object's existence --- in the same
+way(s) it manages other objects it creates.  This means a server need
+not hold in memory all of its objects at once, which may be quite
+important.
+
+A true kernel server may optionally include an object table, whose job
+is to map an instance handle (@pxref{String Binding Handle}) to the
+object it identifies.  @system{ILU}'s runtime will consult the object
+table when a call is received for an object not currently reified.  The
+object table can either explicitly create the named object, or refuse
+(thus declaring the instance handle invalid).
+
+This mapping operation is invoked with certain of the @system{ILU}
+runtime's mutexes (@pxref{Thread Synchronization}) held, because it is
+an extension of a delicate part of that runtime.  The server's mutex is
+held in all cases, and the global mutex "gcmu" is also held if the
+resulting object is expected to be of a @isl{COLLECTIBLE} type.  The
+fact that these mutexes are held restricts what an application can do
+inside this mapping procedure.
+
+@node Server Relocation, , Object Tables, Objects
+@subsubsection Server Relocation
+@cindex server relocation
+@cindex relocating protocol
+@cindex redirect
+@cindex contact info
+
+A server (i.e., object-implementing module) may be distributed among
+multiple program instances, as has already been stated for modules in
+general.  While a server may be distributed, @system{ILU} does not
+require that each object implementation of a server be as fully
+distributed as the server as a whole.  Thus, a request may be received
+by a true kernel server (the part of a server specific to a particular
+program instance) that does not actually have direct access to the
+implementation of the receiving object.  In this case, the kernel
+server can request that the client redirect the call to a different
+kernel server for the same server --- hopefully one that has, or is at
+least closer to, the relevant object's implementation.  The
+redirection is done via a mechanism called @dfn{server relocation}.
+This mechanism allows a function to be associated with a true kernel
+server, which is called when a request arrives at that kernel server
+over a connection that uses a @dfn{relocating protocol}.  A
+relocating protocol is an RPC protocol in which a reply can indicate a
+relocation instead of results; examples are the @system{CORBA}
+@protocol{IIOP}, @protocol{HTTP/1}, and the @system{HTTP-NG}
+@protocol{w3ng} protocol.  The relocation function returns new contact
+info for the kernel server, which is sent back to the caller.  The
+caller then retries the call using the specified contact info
+(@pxref{String Binding Handle}).
+
+Among relocating protocols there appear three different scopes for the
+use of the new contact info: (1) for the call that was redirected
+(e.g., @protocol{HTTP/1.1}'s 307 response code), (2) in place of the
+connection over which the redirection was sent (e.g., in
+@protocol{IIOP}), and (3) for all uses (e.g., @protocol{HTTP}'s 301
+response code).  In the first two cases, @system{ILU}'s client-side
+runtime retries the call automatically, using the new contact info in
+the appropriate scope.  In the third case, @system{ILU}'s client-side
+runtime raises a system exception, to notify the client of the
+permanant move (so that, e.g., the "link editing" specified for
+@protocol{HTTP/1.1}'s 301 response can be done).
+
+@cindex external contact info
+
+Each piece of contact info in an SBH points at a particular port,
+which is specific to a particular kernel server.  Thus, the contact
+info for a given server may point to multiple kernel servers.  It is
+up to the application programmer to ensure that each kernel server of
+a given server knows an appropriate set of contact info to put in SBHs
+for that server's objects.  Contact info for ports associated with a
+given kernel server is (naturally) automatically available to that
+kernel server.  Contact info that points to a port of kernel server
+@metavar{X} can be added to kernel server @metavar{Y} (when
+@metavar{X} is not equal to @metavar{Y} but both are part of the same
+server) with a certain runtime support call, documented in the chapter
+for each language.
+
+@cindex public port
+@cindex private port
+
+Each port of a kernel server is considered either @dfn{public} or
+@dfn{private}.  A public port contributes its contact info to its
+objects' SBHs; a private port's contact info does not appear in SBHs.
+Contact info for both public and private ports can be obtained by
+application programs using certain runtime support calls.  There are
+also certain runtime support calls to obtain public and private
+contact info for a given kernel server.
+
+As an extreme example of how to use these features, it is sometimes
+useful to have a `dummy' true kernel server, that will redirect any
+requests to it to a `real' true kernel server somewhere else.  This
+can be used for load balancing, automatic start-up of services,
+implementation of a redirecting name service, code migration, and
+other various purposes.  The dummy true kernel server would have one
+public port, whose contact info is the only contact info that appears
+in SBHs for objects of the relevant server.  The real true kernel
+server would have one private port, whose contact info is extracted by
+the application and passed to the dummy side.  Conversely, the contact
+info for the public port of the dummy true kernel server is also
+extracted by the application and passed to the real side, where it is
+attached to the real true kernel server so it can appear in SBHs
+generated there.  The dummy true kernel server would use server
+relocation to redirect calls to the real true kernel server.
+
+@node Garbage Collection, Connections, Objects, Core ILU Concepts
+@subsection Garbage Collection
+@cindex Garbage collection
+
+A simple form of @dfn{garbage collection}
+is defined for @system{ILU} objects.  If an object type is tagged as
+being collectible, a server that implements objects of that type expects
+clients holding surrogate instances to register with it, passing an
+instance of a callback object.  When a client finishes with the
+surrogate, the client unregisters itself.  Thus the server may maintain
+a list of clients that hold surrogate instances.  If no client is
+registered for an object, and the object has been dormant (had no
+methods called on it) for a period of time @metavar{T1}, the server may
+feel free to garbage collect the instance.  @metavar{T1} is determined
+by human concerns, not network performance: @metavar{T1} is set long
+enough to allow useful debugging of a client.
+
+To deal with possible failure of a client process, we introduce another
+time-out parameter.  If an instance with registered clients has been dormant
+for a period of time @metavar{T2}, the server uses the callback instance
+associated with each client to see if the client still exists.
+If the client cannot be
+contacted for the callback, the server may remove it from the list of
+registered clients for that instance.
+
+If a client calls a method on a surrogate instance of a true instance which
+has been garbage-collected (typically because of partitioning), it will
+receive the @exception{ilu.ProtocolError} exception, with detail code
+@code{ilu.NoSuchInstanceAtServer}.
+
+@node Connections, Pipelining, Garbage Collection, Core ILU Concepts
+@subsection Connections
+@cindex Connection
+
+@system{ILU} does not (directly) expose to the application programmer any notion of ``connections''.  That is, the called module has no pointer
+back to the caller, and no notion of how to do anything with the caller aside from returning
+a result message.  Credentials passed in the request message can identify the caller, but
+not necessarily the location the call is made from.  Protocols that need such information should
+pass it explicitly as an argument (an instance of an object type with methods
+defined on it) to the method.
+
+@node Pipelining, Call Order Preservation, Connections, Core ILU Concepts
+@subsection Pipelining
+@cindex Pipelining
+
+@system{ILU}'s mechanisms avoid introducing blocking into a distributed program.  This is because @system{ILU} does not try to track the identity of a thread of execution as it crosses program boundaries.  So if @system{ILU} were to make one call wait for the completion of another, this would be a potential cause of deadlock.
+
+It is possible for the programmer to explicitly inform @system{ILU} that one call's execution is not necessary for the completion of another.  This is done indirectly, via a concept called a @dfn{pipeline}.  A client can create a pipeline (any number, actually), and associate any collection of its calls with a pipeline (at most one pipeline per call).  Making such associations asserts to @system{ILU} that none of the calls is needed for any other of them to complete.  This allows @system{ILU} to block some of them until others complete.
+
+Which will be blocked, and why would a client want to do this to itself?  The answer has to do with connections.  You remember, those things the previous section says are not exposed to applications.  It's true that they're not directly exposed.  But we'll admit here that they exist, and consume resources.  Sometimes it's important to minimize those resources.  When using a non-concurrent RPC protocol, @system{ILU} avoids introducing blocking by opening as many parallel connections as the client has concurrent calls to the same server.  Some clients would prefer that their concurrent calls block instead of consume multiple connections.  Such clients can use pipelines to enable this behavior.
+
+@node Call Order Preservation, Batching, Pipelining, Core ILU Concepts
+@subsection Call Order Preservation
+@cindex Call Order Preservation
+@cindex Serializer
+@cindex Serialization Guarantee
+@cindex Barrier Call
+
+@system{ILU} does not normally guarantee that the server application will receive calls in the same order that the client makes them (of course, @system{ILU} doesn't promise to violate causality --- it just doesn't do any work to give you anything more).  This is a particularly interesting issue when making a series of asynchronous calls (because there are no replies to carry causality).  You might think that when using a transport, such as TCP, that guarantees ordering, call order preservation will follow as a consequence.  But it's not that simple (i.e., @system{ILU} may use multiple connections in parallel and series, and TCP provides no ordering guarantees between connections).
+
+However, it's possible for a client application to explicitly request a guarantee of call order preservation for a given collection of its calls.  This is done indirectly through an object called a @dfn{serializer}.  A serializer represents an instance of the serialization guarantee.  This guarantee is with respect to a particular server and collection of calls.  It guarantees that those calls will be received by the server application in the same order as they were made by the client application --- except that client calls that return after a @dfn{barrier call} may be received before client calls that return before that same barrier call.  A barrier call is one that raises the BARRIER exception, which is an @system{ILU}-specific system exception.  Remember that ASYNCHRONOUS calls @emph{do} return, they just do so particularly quickly.
+
+Special considerations apply when these calls are issued concurrently.  Two calls are considered to have been issued concurrently if each call is initiated before the other returns.  In a multi-threaded runtime, they client may issue concurrent calls under the same instance of the serialization guarantee, and the ILU runtime will put them in some serial order.  Note that for two concurrently issued calls, either: (a) the one put first is ASYNCHRONOUS, (b) they both are in the same pipeline, or (c) the one put second is delayed until the one put first returns.  In a single-threaded runtime, the client may issue two calls "concurrently" (taking advantage of a nested main loop), but both will execute successfully only if the client is lucky; otherwise, the second one will raise the system exception BAD_PARAM with minor code ilu_bpm_serialConcurrent.  Furthermore, when single-threaded, issuing concurrent calls under the same instance of the serialization guarantee but different pipelines will also cause some to raise BAD_PARAM/serialConcurrent.
+
+A client can create any number of serializers, and associate each one of its calls with at most one serializer.  This guarantee is only available for servers exported over non-concurrent RPC protocols and reliable transports.  Due to current implementation limitations, the default port of the server must satisfy the protocol and transport restriction.  If that port does not meet the protocol restriction, serialized calls will fail with the system exception INV_OBJREF with a minor code of ilu_iom_conc_serial (where no other error is noticed first)
+
+@node Batching, Simple Binding, Call Order Preservation, Core ILU Concepts
+@subsection Batching
+@cindex Batching
+@findex CreateBatcher (intro)
+@findex PushBatcher (intro)
+
+In @system{ILU}, a call between address spaces involves sending an @emph{call message} from the caller to the callee.  The call message is usually sent immediately upon initiation of the call.  However, there is a way for these call messages to be delayed and gathered into @emph{batches} under application control.  An application specifies this by use of a meta-object called a @emph{batcher}.  A given call may optionally be associated with a batcher, and a batcher may use either or both of two ways to specify when delivery of its buffered call messages should be initiated.  The first method is by explicit application call to @emph{push} the batcher.  The second is by timeout: a call message's delivery is initiated at most some time constant past the time when composition of the call message completed.  Which of these two ways are applicable is specified when the batcher is created, as is the timeout value (if any).  Note that we speak here only of @emph{initiation} of delivery, not receipt by any particular layer of the receiver.  This feature involves only client-side mechanism, and so may be used with non-@system{ILU} servers.
+
+@node Simple Binding, Error Signalling, Connections, Core ILU Concepts
+@subsection Simple Binding
+@cindex Name Service
+@cindex Simple Binding (intro)
+@findex Publish (intro)
+@findex Withdraw (intro)
+@findex Lookup (intro)
+
+@system{ILU} includes a simple binding/naming facility.  It allows a
+module to @dfn{publish} an object, so that another module can import
+that object knowing only its object ID (as defined in @ref{ILU
+Concepts}).  It is essentially just a way of binding a URN (the object's
+ID) to a URL (the object's string binding handle).  The interface to
+this facility is deliberately quite simple; one reason is to allow
+various implementations.
+
+The interface consists of three operations: @dfn{Publish},
+@dfn{Withdraw}, and @dfn{Lookup}.  @fn{Publish} takes one argument, an
+@system{ILU} object.  @fn{Publish} returns a string that is needed to
+successfully invoke @fn{Withdraw}.  @fn{Withdraw} undoes the effects of
+@fn{Publish}, and takes two arguments: (1) the object in question, and
+(2) the string returned from @fn{Publish}.  In some langauge mappings,
+the string is not explicitly passed, but conveyed in the language
+mapping's representation of @system{ILU} objects.  @fn{Lookup} takes two
+arguments: an object ID and a type the identified object should have.
+If the object with that ID is currently being published, and has the
+given type (among others), @fn{Lookup} returns that object.
+
+The implementation of simple binding shipped with @system{ILU} can use
+either an @system{ILU} service, or a shared filesystem directory, to
+store information on the currently published objects.  This choice must
+be specified at system configuration time.  If the shared filesystem
+approach is used, this directory must be available by the same name, on
+all machines which wish to interoperate.  The way in which clients
+interact with binding is the same, regardless of which approach is
+selected.  See @ref{Binding Names in ILU} for more information on these
+implementations.
+
+@node Error Signalling, , Simple Binding, Core ILU Concepts
+@subsection Error Signalling
+@cindex Exception
+@cindex Error
+
+@system{ILU} uses the notion of an @dfn{exception} to signal errors
+between modules.  An exception
+is a way of passing control outside the normal flow of control.
+It is typically used for handling of errors.  The routine which detects the
+error signals an exception, which is caught by some error-handling mechanism.
+The exception type supported in @system{ILU} is a termination-model
+exception, in
+which the calling stack is unrolled back to the frame which defined the
+exception handler.  Exceptions are signalled and caught using the native
+exception mechanisms for the servers and clients.  A raised exception may
+carry a single parameter value, which is typed.
+
+@node ILU and OMG CORBA, , Core ILU Concepts, ILU Concepts
+@section ILU and OMG CORBA
+@cindex CORBA
+@cindex Dynamic Invocation Interface
+@cindex Dynamic Server Interface
+@cindex Interface Repository
+@cindex Implementation Repository
+
+The type and exception model used by @system{ILU} is quite similar
+to that used by the Object Management Group's Common Object Request
+Broker Architecture (@system{CORBA}).  We have in fact changed @system{ILU}
+in some ways to more closely match @system{CORBA}.  Our tools will
+optionally parse the OMG's Interface Definition Language (@language{OMG IDL})
+as well as @system{ILU}'s @language{ISL}.
+
+@system{ILU} also attempts to address issues that are already upon us,
+but are not addressed in @system{CORBA 2.0},
+particularly a uniform way of indicating optional values, and
+distributed garbage collection.
+
+@system{ILU} provides two different interface definition languages,
+@language{OMG IDL} and @language{ILU ISL} to enhance portability of
+@system{ILU} modules.  The @language{OMG IDL} subset understood by
+@system{ILU} is a strict subset of @language{OMG IDL}; this means that
+any @system{ILU} modules developed using @language{OMG IDL} interfaces
+should be interoperable with any other @system{CORBA} system.  Any
+non-@system{CORBA} extensions may only be expressed in @language{ILU
+ISL}, so that any modules which use these extensions must use
+@language{ILU ISL} to express their interfaces, thereby underlining the
+fact that these modules are not @system{CORBA}-compliant.  We feel that
+this dual-interface-language approach will tend to enhance both
+portability and @system{CORBA}-compliance of @system{ILU} modules.
+
+@system{ILU} does not yet provide some of the features required
+by a full @system{CORBA} implementation.  Notably it does not
+provide a Dynamic Invocation Interface or Dynamic Server Interface,
+or implementations of
+either Interface Repository or Implementation Repository.  It does
+not provide the Basic Object Adapter interface, either, but does provide
+an object adapter with most of the BOA's capabilities, except for
+those connected with the Interface Repository and/or Implementation
+Repository.
+
+A number of concepts in @system{CORBA} that seem to require further
+thought are not yet directly supported in @system{ILU}: the use of
+@code{#include} (@system{ILU} uses a more limited notion of ``import'');
+the notion of using an @language{IDL} ``interface'' as both an object
+type and a name space (this seems to be a ``tramp idea'' from the
+language @language{C++}; in @system{ILU} the ``interface'' defines a
+name space, and the object type defines a type); the notion that all BOA
+objects are persistent (in @system{ILU}, the question of whether an
+object is persistent is left up to that object's implementation); the
+notion that type definitions can exist outside the scope of any module
+or namespace (in @system{ILU}, all definitions occur in some interface).
+Currently, there is no support in @system{ILU} for @system{CORBA}
+@code{context}s.
+
+@system{ILU} offers a little more information about system exceptions
+than is required by @system{CORBA}.  Given a system exception,
+@system{ILU} can produce an English string describing the significance
+of the system exception's minor code --- if it's
+@system{ILU}-specific.  Also, for system exceptions raised in the
+local @system{ILU} runtime, the source location (file name and line
+number) of the raise can be obtained; this won't be useful to users or
+developers, but is useful in bug reports.
+
+
+@node Pickle versus Any, , , ILU and OMG CORBA
+@section Pickle versus Any
+@cindex Pickle as CORBA Any
+
+Rather than supporting CORBA's @omgidl{any}, ILU supports something
+called a @omgidl{pickle}.  The major difference is that while an
+@omgidl{any} is an `open' tuple containing a @omgidl{Typecode} and
+a value, a @isl{pickle} is an @dfn{encapsulation} of a type indicator
+and a value.  This means that a @isl{pickle} contains a marshalled form of
+the value and type indicator, rather than containing a language-specific
+representation of both, as the CORBA @omgidl{any} does.  The value in the
+@isl{pickle} is not directly accessible without unmarshalling it.  However,
+the marshalled form of the pickled value is available as a sequence of bytes.
+This sequence can be used to provide external representations of any value
+expressible in ISL, for use in persistent state applications, etc.
+The byte sequence can be put back ``into'' an empty pickle, and the
+original value then retrieved from the pickle.
+
+Another difference is that when a @isl{pickle} is sent over a network
+connection, it is by default sent as a simple sequence of octets, instead of being
+marshalled as a @omgidl{Typecode} and value, as CORBA @omgidl{any} values are.
+The receiving side will not ``look inside'' the pickle, thus unmarshalling the value, unless the
+application explicitly asks for the value.  This means that pickles are a
+very efficient way of implementing generic data-passing services similar to
+the CORBA event service, since the server need not incur the overhead of
+marshalling and unmarshalling complex typecodes and values.
+
+Despite these differences, CORBA's @omgidl{any} and ILU's @isl{pickle}
+provide similar mechanisms for using dynamically-typed data.  Because of this,
+the ILU mapping for @isl{pickle} attempts to use the CORBA mapping for
+@omgidl{any} whereever possible.  In addition, when a pickle is sent over
+an IIOP connection to another address space, the pickle is unmarshalled
+on the sender's side, and re-marshalled according to the IIOP rules for CORBA @omgidl{any}.
+When a CORBA @omgidl{any} is received by
+an ILU process via IIOP, the @omgidl{any} is converted into an ILU @isl{pickle}
+before being given to the application.  Generally
+speaking, CORBA IIOP typecode marshalling provides enough information
+to transfer the pickle successfully.  In the case of pickled object references,
+however, the IIOP form of the CORBA typecode does not provide enough information
+for the receiving end to re-create the original object type for the pickle.
+A number of heuristics are used to overcome this problem.  Where both the receiving
+end and the true address space of the object reference are ILU-based, enough
+proprietary ILU mechanisms exist for these heuristics to succeed in re-creating
+the type information for the object type, so long as the pickled object reference
+is not a Nil object.  In the case of a Nil object, the type information in the pickle
+may be somewhat degraded -- it may indicate an object type that is a supertype of the
+actual object type in the original pickle.
+

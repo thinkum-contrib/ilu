@@ -1,0 +1,33 @@
+
+
+module nest
+{
+
+   exception e1{long e1arg;}; 
+   typedef  long arrlong[6];
+
+   module nest1 {
+
+      interface content1
+      {
+	    attribute long	l1;
+	    readonly attribute long l2;
+            struct s { short field; };
+             
+            exception e2{s e2arg1; arrlong e2arg2;}; 
+
+            long        m1(in long a) raises (e1);
+            long        m2(in s mystruct) raises (e2);
+
+      };
+   };
+
+   exception e3{long e3arg;}; 
+
+   interface content2 : nest1::content1
+        {
+            attribute long	l3;
+
+	    long	m3(in long a, out long b) raises(e3);
+          };
+};

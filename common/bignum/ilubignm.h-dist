@@ -1,0 +1,109 @@
+/*
+BeginILUCopyright
+
+Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+Unlimited use, reproduction, modification, and distribution of this
+software and modified versions thereof is permitted.  Permission is
+granted to make derivative works from this software or a modified
+version thereof.  Any copy of this software, a modified version
+thereof, or a derivative work must include both the above copyright
+notice of Xerox Corporation and this paragraph.  Any distribution of
+this software, a modified version thereof, or a derivative work must
+comply with all applicable United States export control laws.  This
+software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+OF THE POSSIBILITY OF SUCH DAMAGES.
+  
+EndILUCopyright
+
+$Id: ilubignm.h-dist,v 1.10 1999/08/03 01:59:59 janssen Exp $
+*/
+#ifndef _ILU_BIGNUM_H_
+#define _ILU_BIGNUM_H_
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include <sys/types.h>
+
+typedef signed char		ilubignum_int8;
+typedef INT16_TYPE		ilubignum_int16;
+typedef INT32_TYPE		ilubignum_int32;
+
+typedef unsigned char		ilubignum_card8;
+typedef unsigned INT16_TYPE	ilubignum_card16;
+typedef unsigned INT32_TYPE	ilubignum_card32;
+
+#if POSSIBLE_LONG_LONG_DEF
+typedef LONG_INTEGER_TYPE		ilubignum_int64;
+typedef unsigned LONG_INTEGER_TYPE	ilubignum_card64;
+typedef LONG_INTEGER_TYPE		ilubignum_MaxIntType;
+typedef unsigned LONG_INTEGER_TYPE	ilubignum_MaxCardType;
+#else
+typedef INT32_TYPE			ilubignum_MaxIntType;
+typedef unsigned INT32_TYPE		ilubignum_MaxCardType;
+#endif
+
+#define ilubignum_TRUE		1
+#define ilubignum_FALSE		0
+
+typedef struct _ilubignum_Value_s *ilubignum_Value;
+
+void
+  ilubignum_FreeValue (ilubignum_Value v);
+/* free storage associated with BIGNUM.  Always succeeds. */
+
+ilubignum_card8 *
+  ilubignum_AsBytes (ilubignum_Value,	/* INPUT, bignum to convert */
+		     ilubignum_card32 *,	/* OUTPUT, number of bytes in byte-seq */
+		     ilubignum_card32 *,	/* OUTPUT, TRUE if bytes are PASSED */
+		     ilubignum_card32 *	/* OUTPUT, TRUE if negative */
+		     );
+/* Return a version of the bignum as a sequence of bytes, in big-endian
+   order.  Returns NULL to signal error. */
+   
+ilubignum_Value
+  ilubignum_FromBytes (ilubignum_card32,	/* INPUT, number of bytes in byte-seq */
+		       ilubignum_card8 *,	/* INPUT, bytes of value */
+		       ilubignum_card32	/* INPUT, TRUE if negative */
+		       );
+/* Takes the bytes (in big-endian order) and other parameters,
+   and returns a bignum value.  Returns NULL on error. */
+
+ilubignum_Value
+  ilubignum_Copy (ilubignum_Value	/* value to copy */
+		  );
+/* return a fresh bignum value equal to the parameter.
+   Returns NULL on error. */
+
+int
+  ilubignum_Compare (ilubignum_Value first, ilubignum_Value second);
+/* returns -1 if "first" is less than "second", 0 if they are equal,
+   1 if first is greater than second. */
+
+typedef SIZE_T	ilubignum_size_t;
+
+typedef void * (*ilubignum_MallocFn) (SIZE_T);
+typedef void   (*ilubignum_FreeFn) (void * ptr);
+typedef void * (*ilubignum_ReallocFn) (void *, SIZE_T);
+
+void *ilubignum_Realloc (void *, SIZE_T);
+void  ilubignum_Free (void *);
+void *ilubignum_Malloc (SIZE_T);
+
+void
+  ilubignum_SetMallocFreeAndRealloc (ilubignum_MallocFn,
+				     ilubignum_FreeFn,
+				     ilubignum_ReallocFn);
+/* sets malloc and free used by system to the indicated functions. */
+
+#ifdef __cplusplus
+}
+#endif
+#endif /* def _ILU_BIGNUM_H_ */

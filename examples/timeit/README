@@ -1,0 +1,86 @@
+README for the "timeit" interface example.
+[ $Id: README,v 1.7 1999/08/03 01:57:06 janssen Exp $
+ BeginILUCopyright
+
+ Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+ Unlimited use, reproduction, modification, and distribution of this
+ software and modified versions thereof is permitted.  Permission is
+ granted to make derivative works from this software or a modified
+ version thereof.  Any copy of this software, a modified version
+ thereof, or a derivative work must include both the above copyright
+ notice of Xerox Corporation and this paragraph.  Any distribution of
+ this software, a modified version thereof, or a derivative work must
+ comply with all applicable United States export control laws.  This
+ software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+ WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+ LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+ EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+ NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+ OF THE POSSIBILITY OF SUCH DAMAGES.
+
+ EndILUCopyright ]
+
+"timeit" performs timing tests between a server and a client, both
+implemented in ANSI C.  The client performs 6 tests, a cardinal ping
+("cardinal"), a real ping ("real"), a 10-char string ping ("string")
+(where ping means sending a value and receiving that value back
+again), a simulated document fetch ("doctest"), a oneway push of 8000
+double-precision floating point values ("imgtest"), and a oneway push
+of a sequence of a record type ("rectest").  The "-hostname HOSTNAME"
+switch can be used on the client to direct it to a server running on
+a different machine; the "-p PROTOCOL" and "-t TRANSPORT STACK"
+switches can be used on the server to direct it to use a particular
+transport and protocol.
+
+To build and run, use the following commands:
+
+% ilumkmf
+% make timeit-server timeit-client
+
+% ./timeit-server -p sunrpc
+exported ilu:TimingTest.augustus.parc.xerox.com/0;ilu%3Ac0FGHuC8UdTAO+ETWz1Nl5RjWa3;sunrpc_2_0x61a78_1139713249@sunrpcrm=tcp_13.2.116.14_2283
+
+% ./timeit-client -test cardinal -outercount 10 -innercount 100
+test "cardinal (C unsigned long)", outerCount 10, innerCount 100:
+   category:    min /    avg +-  stdev /    max milliseconds/call
+ total time:    3.1 /    3.4 +-    0.5 /    4.5
+  user time:    0.8 /    1.1 +-    0.2 /    1.3
+system time:    0.2 /    0.6 +-    0.3 /    1.0
+
+% ./timeit-client -test real -outercount 10 -innercount 100
+test "real (C double)", outerCount 10, innerCount 100:
+   category:    min /    avg +-  stdev /    max milliseconds/call
+ total time:    3.1 /    3.2 +-    0.1 /    3.5
+  user time:    0.8 /    1.1 +-    0.2 /    1.5
+system time:    0.3 /    0.6 +-    0.2 /    0.8
+
+% ./timeit-client -test string -outercount 10 -innercount 100
+test "string (ilu.CString)", outerCount 10, innerCount 10:
+   category:    min /    avg +-  stdev /    max milliseconds/call
+ total time:    1.6 /    1.6 +-    0.1 /    1.7
+  user time:    0.0 /    1.0 +-    0.9 /    1.7
+system time:    0.0 /    0.3 +-    0.7 /    1.7
+
+% ./timeit-client -test doctest -outercount 10 -innercount 10 -pagesize 5000 -pagecount 10
+test "doctest", outerCount 10, innerCount 10, pagesize 5000, pagecount 10:
+   category:    min /    avg +-  stdev /    max milliseconds/call
+ total time:   46.0 /   71.0 +-   39.3 /  147.0
+  user time:    0.0 /    0.0 +-    0.0 /    0.0
+system time:    0.0 /    0.0 +-    0.0 /    0.0
+
+% ./timeit-client -test imgtest -innercount 10 -outercount 10
+test "imgtest", outerCount 10, innerCount 10:
+   category:    min /    avg +-  stdev /    max milliseconds/call
+ total time:    3.7 /    3.7 +-    0.1 /    3.9
+  user time:    0.0 /    1.2 +-    1.4 /    3.3
+system time:    0.0 /    2.0 +-    1.7 /    5.0
+
+% ./timeit-client -test rectest -innercount 10 -outercount 10 -recseqlen 500
+test "rectest", outerCount 10, innerCount 10, recseqlen 500:
+   category:    min /    avg +-  stdev /    max milliseconds/call
+ total time:    1.7 /    1.7 +-    0.0 /    1.8
+  user time:    0.0 /    0.7 +-    1.2 /    3.3
+system time:    0.0 /    0.7 +-    0.9 /    1.7

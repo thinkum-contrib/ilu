@@ -1,0 +1,86 @@
+# BeginILUCopyright
+# 
+# Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+# 
+# Unlimited use, reproduction, modification, and distribution of this
+# software and modified versions thereof is permitted.  Permission is
+# granted to make derivative works from this software or a modified
+# version thereof.  Any copy of this software, a modified version
+# thereof, or a derivative work must include both the above copyright
+# notice of Xerox Corporation and this paragraph.  Any distribution of
+# this software, a modified version thereof, or a derivative work must
+# comply with all applicable United States export control laws.  This
+# software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+# WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+# PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+# LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+# EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+# NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+# OF THE POSSIBILITY OF SUCH DAMAGES.
+# 
+# EndILUCopyright
+#
+# $Id: iluimport.py.dist,v 1.6 1999/08/17 18:57:11 larner Exp $
+#
+
+import sys, ihooks, os, tempfile, string
+
+class IluModuleLoader (ihooks.ModuleLoader):
+	def __init__(self, path=(), hooks=None, verbose=0):
+		ihooks.ModuleLoader.__init__(self, hooks, verbose)
+		self.ilupath = path
+		self.stubber_pathname = self.hooks.path_join(self.hooks.path_join('ILUHOME', 'bin'), 'python-stubber')
+		self.verbose = verbose
+
+	def find_ilu_module_in_dir(self, name, dir, suffix, mode='r'):
+		try:
+			fullname = self.hooks.path_join (dir, name + suffix)
+			if (self.verbose): print 'checking %s...' % fullname
+			if self.hooks.path_exists(fullname):
+				tempdir = self.hooks.path_join(tempfile.tempdir, tempfile.mktemp()) 
+				os.mkdir(tempdir)
+				if (self.verbose): print 'stubbing %s into %s...' % (fullname, tempdir)
+				val = os.system(self.stubber_pathname + ' -quiet -dir ' + tempdir + ' ' + fullname)
+				if (self.verbose): print 'return code from stubber is %s' % val
+				if (val != 0):
+					raise ImportError, "problem generating ILU stubs from %s" % fullname
+				stubpath = self.hooks.path_join(tempdir, name + '.py')
+				fp = self.hooks.openfile (stubpath)
+				if (self.verbose):
+					print 'stubbing resulted in %s' % fp
+				if (fp):
+					info = (suffix, mode, ihooks.PY_SOURCE)
+					stuff = (fp, fullname, info)
+					if (self.verbose): print 'returning (%s, %s, %s)' % stuff
+					return stuff
+		except ImportError, str:
+			raise ImportError, str
+		except:
+			pass
+		return None
+
+	def find_module (self, name, path=None):
+		stuff = ihooks.ModuleLoader.find_module(self, name, path)
+		if stuff:
+			return stuff
+		if (not self.ilupath) and (os.environ.has_key("ILUPATH")):
+			import string
+			ilupath = string.splitfields(os.environ["ILUPATH"], ":")
+		else:
+			ilupath = self.ilupath
+		for dir in ilupath:
+			stuff = self.find_ilu_module_in_dir(name, dir, '.isl')
+			if (stuff):
+				return stuff
+			if (hasattr(sys, "winver") or OMGIDL_INSTALLED):
+				stuff = self.find_ilu_module_in_dir(name, dir, '.idl')
+				if (stuff):
+					return stuff
+		if (self.verbose): print 'no ILU module found by import'
+		return None
+
+def install(path=(), verbose=0):
+	verbose = verbose or os.environ.has_key("ILU_PYTHON_IMPORT_VERBOSE")
+	importer = ihooks.ModuleImporter(IluModuleLoader((), None, verbose))
+	ihooks.install(importer)

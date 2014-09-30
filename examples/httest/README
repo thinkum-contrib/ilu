@@ -1,0 +1,214 @@
+README for the "httest" example.
+[ $Id: README,v 1.13 1999/08/03 01:58:24 janssen Exp $
+ BeginILUCopyright
+
+ Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+ Unlimited use, reproduction, modification, and distribution of this
+ software and modified versions thereof is permitted.  Permission is
+ granted to make derivative works from this software or a modified
+ version thereof.  Any copy of this software, a modified version
+ thereof, or a derivative work must include both the above copyright
+ notice of Xerox Corporation and this paragraph.  Any distribution of
+ this software, a modified version thereof, or a derivative work must
+ comply with all applicable United States export control laws.  This
+ software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+ WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+ LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+ EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+ NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+ OF THE POSSIBILITY OF SUCH DAMAGES.
+
+ EndILUCopyright ]
+
+
+The 3 programs in "httest" are used to test and demonstrate the use of 
+the HTTP protocol within ILU.  They show ILU communicating with an
+existing Web server, an existing Browser communicating with ILU, and 
+ILU communicating with ILU over HTTP.
+
+
+htserver overview
+-----------------
+
+	This server program creates 2 objects;
+
+	An instance of the http_Resource Object type, (as defined in http.isl) 
+		with object id /http_obj0 .  This object has implementations of the
+		GET HEAD and POST methods, that simply return an entity body describing
+		the name of the method that was called.
+
+	An instance of the httest_DerivedResource Object type, (as defined in httest.isl)
+		with object id /httpderived_obj0 . This object has implementations of the
+		GET HEAD and POST methods, that simply return an entity body describing
+		the name of the method that was called.  It also has a 'flipcase' method
+		that accepts a string as an argument, flips the case of each character
+		in the string, and returns that 'flipped' string back as its return 
+		value. However, if the string is 'raiseerror' the flipcase method takes
+		this as an indication that the caller wants an condition to be raised
+		(hey, it's a test program OK !-), and responds by raising an exception.
+
+	Each object is serviced by it's own ilu server (though that's just how
+	it was written) and each object is also Published.
+
+	Usage:  htserver [port_number [pinfo [ HOSTNAME [verbose] ] ] ]
+
+        port_number - tcp port the base_server should use - default 80
+		Note that on Unix systems you'll need to be root in order to
+		put something at a port as low as 80.  
+
+	pinfo - one of http_1_0 (default), or http_1_0p (persistent connections)
+
+        HOSTNAME - used as part of the id for the server
+        of the httest_DerivedResource - defaults to this host.
+
+        verbose - if anthing there as 3nd arg, the program
+        outputs information about what's going on.
+
+
+htclient overview
+-----------------
+
+	The client program accepts a URL as it's first argument.  This is
+	treated as an identifier for a http_Resource object (which may reside
+	in side an existing Web server).  GET HEAD and POST calls are made
+	on this object and the results displayed.  (If the URL is literally
+	NIL, then this test is skipped.)
+
+	If the second argument is provided, then htclient assumes that is should
+	call the GET HEAD and POST methods on the httpderived_obj0 implemented
+	by htserver, as well as call its flipcase method using the argument as
+	the argument to the method. Results of these calls are displayed.
+
+	Usage:  htclient HttpURL [[string_to_flipcase] [ HOSTNAME ]]
+
+        HttpURL - URL of object to try Get Head and Post on.
+        If it's 'NIL', then the http_Resource test is skipped.
+	If it's the word lookup, then an ILU Lookup is used to find
+	the object instead of parsing the URL
+
+        string_to_flipcase - a string to have the httest_DerivedResource
+        flip the case of.  If it's "raiseerror" then a user
+        exception containing the length of string_to_flipcase
+         (i.e. 10 is the length of "raiseerror" will
+        be generated and returned.
+
+        HOSTNAME - used as part of the id for the server
+        of the httest_DerivedResource - defaults to this host.
+
+
+
+webserver overview
+------------------
+
+	The webserver program implements a simple web server.
+
+	Usage:  webserver [port_number [file_base [pinfo [verbose] ] ] ]
+
+	port_number - tcp port the webserver should use - default 80
+
+	file_base - Root location of where server files are stored - default \htmldocs
+	Note: currently doesn't deal well with Windows drive identifiers
+
+	pinfo - one of http_1_0 (default), or http_1_0p (persistent connections)
+
+	verbose - if anthing there as 3nd arg, the program outputs information about 
+	what's going on.
+
+
+	iluhttpresponse files
+	---------------------
+
+	The webserver program treats any file that ends with the extension 'iluhttpresponse'
+	(e.g. redirect.iluhttpresponse) as a file containing precisely what the http 
+	response should contain for GET and HEAD or POST requests. This capability is useful for 
+	experimenting with various http situations.  The line format of an .iluhttpresponse file is:
+
+		HTTP_Status_Number
+		Number_of_headers
+		headername: optional_headervalue
+		...
+		headername: optional_headervalue
+		body_bytes
+
+
+
+	For example, a file redirect.iluhttpresponse might contain
+
+		302
+		2
+		Location: http://pundit.parc.xerox.com/foo.html
+		Content-Length: 62
+		<a href=http://pundit.parc.xerox.com/foo.html>New Location</a>
+
+
+
+Use of Proxy Servers
+--------------------
+If your site requires use of proxy servers for access outside your
+site, and you wish to try running operations across this 'firewall',
+then set the environment variable ILU_HTTP_PROXY_INFO to be the 
+hostname of your proxy server, followed by a colon, followed by
+the port number of the proxy.  e.g. on Windows
+	set ILU_HTTP_PROXY_INFO=wwwproxy.my.site.com:8000	 
+or on Unix
+	setenv ILU_HTTP_PROXY_INFO wwwproxy.my.site.com:8000
+
+
+
+Building
+--------
+
+To build on Unix use the following commands:
+
+% ilumkmf
+% make 
+
+To build on Windows:
+(substituting for \iluwin\interfaces appropriately wherever your ilu interfaces are)
+
+	nmake -f iluwin32.mak CFG="Win32Debug"
+
+or to build a release version
+
+	nmake -f iluwin32.mak CFG="Win32release"
+
+[Note that executables are created in the WinDebug or WinRel subdirectory.]
+
+
+Examples of Running 
+-------------------
+
+1. To illustrate ILU operating with / obtaining an existing Web server's default document
+
+	htclient http://www.myfavoritesite.com
+
+
+2. To illustrate ILU operating with / obtaining an existing Web server's specific document
+
+	htclient http://www.myfavoritesite.com/pubs/readme.html
+
+
+3. To illustrate an existing Web Browser accessing the htserver supplied
+object (using port 2718 here so I dont' need special privs, and assuming our
+machine name is mymachine.mydomain.com, and using http with persistence)
+
+	htserver 2718 http_1_0p mymachine t
+
+	Now in a Web browser, try getting the URL  http://mymachine.mydomain.com:2718/http_obj0
+
+You should see the response "server_http_Resource_GET" in your browser.
+
+
+4. To illustrate ILU interacting with ILU
+
+	htserver 2718  http_1_0 mymachine t
+
+	htclient http://mymachine.mydomain.com:2718/http_obj0 FlipMyCase
+
+or to show raising an exception
+
+	htclient http://mymachine.mydomain.com:2718/http_obj0 raiseerror
+

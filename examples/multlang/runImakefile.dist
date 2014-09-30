@@ -1,0 +1,127 @@
+/** $Id: runImakefile.dist,v 1.18 1999/08/12 17:17:55 janssen Exp $
+ BeginILUCopyright
+
+ Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+ Unlimited use, reproduction, modification, and distribution of this
+ software and modified versions thereof is permitted.  Permission is
+ granted to make derivative works from this software or a modified
+ version thereof.  Any copy of this software, a modified version
+ thereof, or a derivative work must include both the above copyright
+ notice of Xerox Corporation and this paragraph.  Any distribution of
+ this software, a modified version thereof, or a derivative work must
+ comply with all applicable United States export control laws.  This
+ software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+ WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+ LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+ EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+ NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+ OF THE POSSIBILITY OF SUCH DAMAGES.
+
+ EndILUCopyright
+*/
+/* Last edited by Mike Spreitzer October 9, 1998 10:08 am PDT */
+
+NormalObjectRule()
+
+InterfaceTarget(multlang.isl)
+
+#if (defined(ADD_C_LANGUAGE) && defined(ADD_PYTHON_LANGUAGE))
+
+#####################################################
+#
+# C
+#
+
+#if ((PYTHON_MAJOR_VERSION >= 1) && (PYTHON_MINOR_VERSION >= 5))
+
+PYTHONLIBS = $(ILUHOME)/lib/libilupython.a $(PYTHON_EXEC_PREFIX)/lib/$(PYTHON_EXEC_SUFFIX)/lib$(PYTHON_SUFFIX).a $(ILUHOME)/lib/libilupythonaux.a
+
+PYTHONNAME = -DILU_PYTHON_HAS_SETPYTHONNAME
+
+#else
+
+/* note:  Python libs must be in this order (as of Python 1.2) */
+PYTHONLIBS = $(ILUHOME)/lib/libilupython.a $(PYTHON_EXEC_PREFIX)/lib/$(PYTHON_EXEC_SUFFIX)/libModules.a $(PYTHON_EXEC_PREFIX)/lib/$(PYTHON_EXEC_SUFFIX)/libPython.a $(PYTHON_EXEC_PREFIX)/lib/$(PYTHON_EXEC_SUFFIX)/libObjects.a $(PYTHON_EXEC_PREFIX)/lib/$(PYTHON_EXEC_SUFFIX)/libParser.a $(ILUHOME)/lib/libilupythonaux.a
+
+#endif
+
+#ifdef ILU_PYTHON_HAS_THREADS
+LOCALINCLUDES=-DILU_PYTHON_HAS_THREADS $(PYTHONNAME)
+#endif
+
+ILUCTarget(multlang.h multlang-true.c multlang-surrogate.c multlang-common.c, multlang.isl)
+ObjectTarget(multlang-common.o)
+ObjectTarget(multlang-surrogate.o)
+ObjectTarget(multlang-true.o)
+
+multlang.o : multlang.h multlang.c
+
+libconfig.o : $(ILUHOME)/lib/libilupython.a
+	ar x $(ILUHOME)/lib/libilupython.a libconfig.o
+
+ILUCProgramTarget(multlang, multlang.o libconfig.o multlang-surrogate.o multlang-common.o multlang-true.o,$(PYTHONLIBS),PYTHON_SYSTEM_LIBS)
+
+CleanTarget(libconfig.o)
+
+#####################################################
+#
+# Python
+#
+
+ILUPythonTarget(multlang.py multlang__skel.py, multlang.isl)
+all:: multlang.py multlang__skel.py
+
+#####################################################
+#
+# Test script
+#
+
+PythonTestScript(Test.py, multlang multlang.py multlang__skel.py)
+
+#endif /* (defined(ADD_C_LANGUAGE) && defined(ADD_PYTHON_LANGUAGE)) */
+
+#if (defined(ADD_ILU_CPLUSPLUS_LANGUAGE) && defined(ADD_COMMONLISP_LANGUAGE))
+
+/***********************************************************************/
+/***********************************************************************/
+/***  There seems to be (1) no standard way to build a C++ shared    ***/
+/***  library, or (2) way to load C++ code into a Lisp address       ***/
+/***  space, so the following is only suggestive...                  ***/
+/***********************************************************************/
+/***********************************************************************/
+
+#if 0
+
+#####################################################
+#
+# C++
+#
+
+ILUCPlusPlusTarget(multlang.hh multlang.cc multlang-server-stubs.cc, multlang.isl)
+ObjectTarget(multlang.o)
+ObjectTarget(multlang-server-stubs.o)
+
+squarer.o : multlang.hh squarer.cpp
+
+SharedLibraryTarget(multlang-c++-side, squarer.o multlang.o multlang-server-stubs.o, $(ILUHOME)/lib/libilu-c++.a $(ILUHOME)/lib/libilu.a,)
+
+#####################################################
+#
+# Lisp
+#
+
+all:: lisp-multlang
+
+ILULispTarget(multlang-basics.lisp multlang-server-procs.lisp multlang-sysdcl.lisp, multlang.isl)
+
+lisp-multlang : multlang-impl.lisp multlang-basics.lisp multlang-server-procs.lisp multlang-impl-sysdcl.lisp multlang-c++-side.so
+	${LISP_BATCH_COMMAND} -e '(push :ilu-batch-compile cl:*features*)' <multlang-impl-compiler.lisp
+
+CleanTarget(multlang-basics.$(LISP_BIN_EXT) multlang-server-procs.$(LISP_BIN_EXT))
+
+#endif
+
+#endif /* (defined(ADD_CPLUSPLUS_LANGUAGE) && defined(ADD_COMMONLISP_LANGUAGE)) */

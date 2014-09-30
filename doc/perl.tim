@@ -1,0 +1,1053 @@
+@setfilename ilu-perl.info
+@settitle Using ILU with Perl
+@ifclear largerdoc
+@include ilu-macros.tim
+
+@defcodeindex ft
+@defcodeindex vt
+@defcodeindex et
+@defcodeindex mt
+@defcodeindex tt
+@defcodeindex dt
+
+@syncodeindex dt ft
+@syncodeindex vt ft
+@syncodeindex et ft
+@syncodeindex mt ft
+@syncodeindex tt ft
+
+@syncodeindex pg cp
+@syncodeindex tp ft
+
+@c Experiment with smaller amounts of whitespace between chapters
+@c and sections.
+@tex
+\global\chapheadingskip = 15pt plus 4pt minus 2pt 
+\global\secheadingskip = 12pt plus 3pt minus 2pt
+\global\subsecheadingskip = 9pt plus 2pt minus 2pt
+\global\parskip 6pt plus 1pt
+@end tex
+
+@titlepage
+@title Using ILU with Perl
+@author Owen Taylor @code{<owt1@@cornell.edu>}
+
+@author Based on Using ILU with Python, by Denis Severson @code{<severson@@parc.xerox.com>}
+@author and Bill Janssen @code{<janssen@@parc.xerox.com>}
+@sp
+@today{}
+@sp
+Copyright @copyright{} 1994 Xerox Corporation@*
+All Rights Reserved.
+@end titlepage
+@ifinfo
+@node Top, ,(dir),(dir)
+@top Using ILU with Perl
+@end ifinfo
+@end ifclear
+
+@section Introduction
+@cindex ILU and Perl
+This document is for the @language{Perl} programmer who wishes to use 
+@system{ILU}. The following sections will show how @language{ILU} is
+mapped into @language{Perl} constructs and how both @language{Perl}
+clients and servers are generated and built.
+
+@section The ISL Mapping to Perl
+
+@subsection Names
+@cindex Mapping ISL names to Perl symbols
+In general, @system{ILU} constructs @language{Perl} symbols from
+@language{ISL} names by replacing hyphens with underscores.
+For example, an @language{ISL} object type @isl{T-1} would correspond to
+the @language{Perl} class @C{T_1}.
+Any place an @language{ISL} name appears as part or all of a @language{Perl}
+identifier, this translation occurs.
+
+@subsection Interface
+Each @language{ISL} @kwd{interface} @isl{@metavar{I}}
+generates a @language{Perl} module named @Perl{@metavar{I}} which,
+when loaded with @Perl{use I} stores information about that interface and
+adds hooks for client side stubs.
+For example,
+@isl{INTERFACE map-test;} generates the @language{Perl} module
+@Perl{map_test} contained in the file @file{map_test.pm}.
+
+@subsection Basic Types
+The basic @language{ISL} types have the following mapping to @language{Perl}
+types:
+
+@enumerate
+@item
+BYTE,
+BOOLEAN,
+SHORT CHARACTER,
+CHARACTER,
+SHORT INTEGER,
+INTEGER,
+SHORT CARDINAL,
+SHORT REAL,
+CARDINAL,
+and REAL
+all map to @language{Perl} scalars.
+@item
+LONG INTEGER,
+LONG CARDINAL,
+and LONG REAL
+are not yet supported.
+@end enumerate
+
+@subsubsection Constant
+@language{ISL} constants translate to
+@language{Perl} subs which return the specified value.
+For example,
+@codeexample
+CONSTANT pi : real = 3.14159265358979323846;
+@end codeexample
+maps to
+@codeexample
+sub pi @{ 3.14159265358979323846e0; @}
+@end codeexample
+
+@subsection Strings
+An @language{ISL} @isl{SEQUENCE OF SHORT CHARACTER} maps into a @language{Perl}
+string.  @isl{SEQUENCE OF BYTE} is also mapped into a @language{Perl} string.
+
+@subsection Pickles and Typecodes (Current COPE-ish interface, may change)
+A value corresponding to the @language{ISL} type @isl{PICKLE} is an hash
+reference with two keys, @Perl{_type} and @Perl{_value}, where
+@Perl{$typecode->@{_type@}} is an object of the @language{Perl} class
+@Perl{ILU::Typecode} and @Perl{$typecode->@{_value@}} is the
+@language{Perl} form of the value.
+
+Typecodes are represented by the @language{Perl} class
+@Perl{ILU::Typecode}.  Typecodes are constructed with a single string
+argument, of the form @Perl{'@metavar{interface}.@metavar{type}'}, where
+@metavar{interface} is the @language{ISL} name for the interface, and
+@metavar{type} is the @language{ISL} name for the type.  Instances of
+the @Perl{Typecode} class support the method
+
+@itemize @bullet
+@item @Perl{id()} - return the ILU type ID (CORBA repository ID) for the typecode's type.
+@item @Perl{name()} - return the @language{ISL} name of the typecode's type.
+@end itemize
+
+@subsection Pickles and Typecodes (Possible ILU-ish interface)
+A value corresponding to the @language{ISL} type @isl{PICKLE} is an
+instance of the @language{Perl} class @Perl{ILU::Pickle}.  Instances of
+this class have the following methods:
+
+@itemize @bullet
+@item @Perl{typecode()} - returns the typecode of the pickle's value as a string.
+@item @Perl{value()} - returns the @language{Perl} form of the value in the pickle.
+@item @Perl{bytes()} - the pickled bytes of the pickled value as a string.
+@end itemize
+
+@noindent
+The constructor for this class takes two arguments, @metavar{typecode} and @metavar{value},
+and returns
+a new pickle containing the value specified by @metavar{value} of the @language{ISL} type
+specified by @metavar{typecode}.  Pickles may also be created by calling the constructor
+with a single argument string, which must be the result of an earlier call on the @Perl{bytes()}
+method of another pickle instance.
+
+Typecodes are represented by the @language{Perl} class @Perl{ILU::Typecode}.  Typecodes are constructed
+with a single string argument, 
+of the form @Perl{'@metavar{interface}.@metavar{type}'}, where
+@metavar{interface} is the @language{ISL} name for the interface, and @metavar{type} is the
+@language{ISL} name for the type.  Instances of the @Perl{Typecode} class support the method
+
+@itemize @bullet
+@item @Perl{id()} - return the ILU type ID (CORBA repository ID) for the typecode's type.
+@item @Perl{name()} - return the @language{ISL} name of the typecode's type.
+@end itemize
+
+@subsection Constructed Types
+
+@subsubsection Enumeration
+Enumarations are mapped into @language{Perl} strings that are automatically
+mapped into the appropriate values when marshalled and unmarshalled.
+(This may change).
+
+For example, the elements
+@codeexample
+TYPE color = ENUMERATION red, dark-blue END;
+@end codeexample
+are represented in @language{Perl} by @Perl{'red'} and @Perl{'dark-blue'}.
+
+@subsubsection Array
+An @language{ISL} array maps into a @language{Perl} list with the
+specified number of elements. Multi-dimensional arrays map into
+arrays of arrays.
+Arrays of BYTE or SHORT CHARACTER are represented by @language{Perl} strings.
+
+@subsubsection Sequence
+An @language{ISL} sequence of short character maps into a @language{Perl}
+string.
+
+All other @language{ISL} sequence types map into @language{Perl} lists.
+Sequences of BYTE or SHORT CHARACTER are represented as @language{Perl} strings.
+
+@subsubsection Record
+@language{ISL} records map into references @language{Perl} hashes with
+the same name, with the record's field names as keys.  
+
+For example, a record value of the @language{ISL} type:
+@codeexample
+TYPE segment = RECORD left-limit : integer, right-limit : integer END;
+@end codeexample
+with a left-limit of -3 and a right-limit of 7 would map to
+@codeexample
+@{ left-limit => -3, right-limit => 7 @}
+@end codeexample
+
+@subsubsection Union
+An @language{ISL} union maps into a @language{Perl} list reference with two
+components,:
+a discriminator, and the discriminated value.
+There are three possibilities:
+@enumerate
+@item
+If the discriminator matches one of the union case values of an arm,
+the second component is of the type specified by that arm.
+@item
+If the discriminator matches no union case values and there is a default arm,
+the second component is of the type specified by the default arm.
+@item
+If the discriminator matches no union case values and there is no default arm
+but the union has the @isl{OTHERS} attribute,
+the second component is @Perl{undef}.
+@end enumerate
+If the union has a default arm, then it may also be passed from
+@language{Perl} as a scalar of the default type.
+
+@subsubsection Optional
+A value corresponding to the @language{ISL} type @isl{OPTIONAL @metavar{T}}
+may be @Perl{undef} (indicating the null case) in addition to the values of the
+type @metavar{T}.
+
+@subsection Object Types
+Each @language{ISL} object type is mapped into a @language{Perl} class.
+These classes have the methods specified in the ISL, as well as
+some built-ins.
+
+@subsubsection Surrogate and True Object Types
+
+Both surrogate and real types inherit from @Perl{ILU::Object}.  The
+method @Perl{ilu_true_p()} will return a true value on true instances,
+and a false value on surrogate instances.  The string binding handle of
+an object instance can be retrieved with the method @Perl{ilu_sbh()}.
+The object-id of an instance can be retrieved with
+@Perl{ilu_object_id()}; it returns two values, the string server ID and
+a string instance-handle.  If support for the @system{CORBA}
+@protocol{IIOP} is configured into your @system{ILU} build (in fact,
+this will always must be the case for Perl, at least for now), the
+string IOR of an instance can be retrieved by calling the method
+@Perl{ilu_ior()}. The type name of the most specific type of an instance
+can be retrieved with the method @Perl{ilu_type_name()}; the unique ID
+of that type can be retrieved with the method @Perl{ilu_type_id()}.
+
+Object types which inherit from the @language{ISL} type
+@isl{ilu.CORBA-Object} (which include all object types defined with
+@language{OMG IDL}), will inherit from the @language{Perl} class
+@class{@Perl{ILU::CORBA_Object}}.
+
+@subsubsection Methods, Parameters, and Exceptions
+
+@language{ISL} methods of an object type map to @language{Perl} methods
+of the corresponding class. @isl{IN} and @isl{INOUT} parameters appear
+in the @language{Perl} method signature in the same order as they do in
+@language{ISL}. @isl{INOUT} arguments are passed as references to the
+type of variable they would normally be mapped into, even when that type
+is already a reference. This is meant to avoid complicated rules about
+when an extra reference will be added, but it may possibly be changed in
+the future, so that array references (@system{ISL} array and sequence
+types) and hash references (@system{ISL} records) do not get the extra
+reference.
+
+Let us define a @emph{result} value to be either a return value
+(corresponding to a method's return type) or an @isl{OUT} parameter.
+All result values are returned by the @language{Perl} method, with the
+return value (if present) appearing before any parameters.
+
+Exceptions are implemented using the package @Perl{Error} An
+@language{ISL} exception translates to a @language{Perl} package whose
+name is that of the exception (translated as in the section Names
+above). These packages inherit from @Perl{ILU::Exception}, which in turn
+inherits from @Perl{Error}. To raise an exception, use @Perl{throw}. To
+catch one, use @Perl{try @{@} catch @{@} }.
+
+For example, the declaration
+@codeexample
+EXCEPTION division-by-zero : REAL;
+@end codeexample
+in the interface @isl{map-test} maps to the following statement in
+@file{map_test.pm}:
+@codeexample
+Package map_test::division_by_zero;
+@@map_test::division_by_zero::ISA = qw(ILU::Exception);
+@end codeexample
+
+To raise this exception, use:
+@codeexample
+throw map_test::division_by_zero ($numerator);
+@end codeexample
+
+To catch it, use:
+@codeexample
+try @{
+    $result = $calculator->divide(3/0);
+@}
+catch map_test::division_by_zero with @{
+    print $_[0]->value," was divided by 0\n";
+@};
+@end codeexample
+
+@isl{ASYNCHRONOUS} methods have no return values and raise no
+user-specified exceptions.  They may return before the completion of the
+true method.  @isl{FUNCTIONAL} methods that have no parameters can be
+cached so that a surrogate address space makes only one call to the true
+address space to retrieve the return value.
+
+@subsubsection Garbage Collection and COLLECTIBLE
+
+All instances of @system{ILU} object types are covered by the normal
+@language{Perl} garbage collection; i.e., the application program must
+maintain a reference to the instance, or it will be garbage collected.
+With true instances of COLLECTIBLE object types, the @system{ILU} kernel
+will maintain an additional reference to the instance as long as it has
+registered clients using that instance.
+
+@section Access to standard ILU features
+
+@subsection Servers and Ports
+
+Each object exported by an implementation must belong to a true server,
+an instance of the @language{Perl} type @Perl{ILU::Server} which is
+implemented by the @system{ILU} runtime.
+An @Perl{Server} can be created by calling @* 
+@Perl{new ILU::Server [@metavar{serverID} [, @metavar{transport} [, @metavar{protocol} [, @metavar{objectTable}]]]]}.@*
+If @metavar{serverID} is a string, it specifies the server ID;
+if it is @Perl{undef}, one will be invented automatically.
+The @metavar{transport} argument is either a sequence of strings, chosen to
+be compatible with the @metavar{protocol}, or @Perl{undef} to let it default.
+The @metavar{protocol} argument is either a string specifying a particular
+RPC protocol, or @Perl{undef} to choose the default.  Additional ports
+can be added to a server with the @method{@Perl{add_port()}} method,
+if an application needs to make it available with via multiple protocols
+or addresses.
+
+The first time a true server is created, it becomes the default server.
+The default server is used for an exported object if a server is not
+otherwise specified.
+If an object is exported before any servers have been created,
+one will be created automatically using default parameters and a message
+to that effect will be written to stderr.
+
+An object of type @Perl{ILU::Server} has the following methods:
+@itemize @bullet
+@item @Perl{id()} - returns the @system{ILU} server ID of the server.
+@item @Perl{add_port(@metavar{TINFO}, @metavar{PINFO})} - adds another port to the server with the specified
+@metavar{TINFO} and @metavar{PINFO}.
+@item @Perl{create_serializer()} - creates and returns a serialization context.
+@end itemize
+
+@subsubsection Object Tables
+
+The @metavar{objectTable} argument allows specification of a callback
+function (code reference) for creating true instances on demand.  The
+callback function should take one argument, a string, which is the
+instance handle of the instance to be created, and return a true instance.
+
+@subsection Threading and Event Loops
+
+To use threads, you must have configured both @system{ILU} and
+@system{Perl} with thread support when building them, and the thread
+support must be compatible. (That is, if @language{Perl} is compiled for
+POSIX threads, @system{ILU} must be as well. @language{Perl} FAKETHREADS
+will not work.)  If you have done this, your @system{ILU/Perl} runtime
+support will be thread-capable.  To have @system{ILU} begin using
+threads, place a call to the function @fn{ILU->ThreadedOperation()} in
+your @language{Perl} program before any other @system{ILU} calls are
+made, and before calling @Perl{use} for any interfaces generated by the
+stubber. Since @Perl{use} is done at compile-time, that means 
+the call to @fn{ILU->ThreadedOperation()} needs to occur in a
+@Perl{BEGIN@{@}} block.
+
+@subsubsection Animating Servers
+To bring the true servers to life, run the @system{ILU} main loop by
+creating a new @Perl{ILU::MainLoop} and calling
+@Perl{$mainloop->run()}.  This function does not return until
+@Perl{$mainloop->exit()} is called.  (It is also possible to use
+the @Perl{ILU::Gtk} module to use the @system{GTK} main loop 
+instead of the native @system{ILU} mainloop.)
+
+@subsubsection Using Alarms
+In order to schedule a @language{Perl} function to be called at a
+certain time in the future when executing the @system{ILU} main loop, an
+@Perl{ILU::Alarm} may be used.  Objects of this type are created by
+calling @Perl{new ILU::Alarm()}.  An @Perl{ILU::Alarm} must be set to
+have any effect.
+
+The alarm's method @Perl{set(@metavar{time}, @metavar{proc}, @metavar{args})} is used to set the
+alarm.  The numeric or @Perl{ILU::FineTime} @metavar{time} argument is
+the time at which the alarm will fire; the @metavar{proc} argument is the
+@language{Perl} function that will be called when the alarm fires; and
+@metavar{args} is a list of arguments will be passed to @metavar{proc}.  
+
+The function @Perl{ILU::FineTime->now()} may be called to obtain
+@system{ILU}'s idea of the current time.  A value @Perl{$sec} of type in
+units of (possible fractional) seconds may be converted to type
+@Perl{ILU::FineTime} by calling @Perl{new ILU::FineTime($sec)}.
+Values of type @Perl{ILU::FineTime} may be compared, added, and
+subtracted using the appropriate overloaded arithmetic operators.  
+These operations may be used to construct values
+representing any relative time (subject to precision and range
+limitations), which is what is needed by an alarm's @Perl{set} method.
+
+The alarm may be set multiple times with different arguments, in which
+case the parameters of the most recent call to @Perl{set} are in effect.
+Thus, once an alarm fires, it may be reused by calling @Perl{set} again.
+
+An alarm may be unset by calling its method @Perl{unset()}.
+
+@subsection Custom Records (NOT YET IMPLEMENTED)
+
+@system{ILU} generally supports a facility named
+@dfn{custom records}.  This means that an application can declare that
+the language-specific mapping of a particular record type
+@metavar{ISL(A)} to @metavar{lang(A)} is to be overridden, and that
+instead a specific type @metavar{X} will be used in this language to
+represent values of @metavar{ISL(A)}.  In @language{Perl}, this
+is done by simply replacing the generated class definition with a different
+class definition.
+
+For example, suppose we had the ISL record type
+@codeexample
+INTERFACE Ifc;
+  ...
+TYPE Foo = RECORD color : RGB-tuple, position : XY-pair END;
+@end codeexample
+@noindent
+The normal mapping of @isl{Ifc.Foo} to Perl would be to a hash reference
+with two keys (@Perl{color}, and @Perl{position}.
+@noindent
+To override this, simply define a new class @Perl{MyFoo} in your
+application that is implemented as a blessed reference to an array
+including these keys which has a method @Perl{ilu_record_init}.  Then
+call @Perl{ILU->RegisterCustomRecord( 'Ifc.Foo' => 'MyFoo')}.
+Subsequently, whenever an @isl{Ifc.Foo} is unmarshalled, it will be
+blessed into @Perl{MyFoo} and @Perl{$rcd->ilu_record_init()} will be
+called. (It might be nice to additionally allow such custom records to
+have getters and setters for their attributes.)
+
+@subsection String Binding Handle Formation
+
+To use object tables properly, it is usually necessary for a client
+program to create a surrogate instance for which the true instance does
+not yet exist.  In @language{Perl}, this is done by creating a string
+binding handle for the object, then calling
+@Perl{@fn{ILU->ObjectOfSBH()}} on that SBH.  String binding handles
+may be formed by calling the function @Perl{@fn{ILU->FormSBH()}}.
+
+@subsection Simple Binding
+A true instance may be published with the simple binding service by calling its
+method @Perl{ilu_publish()}.
+A true instance may be unpublished by calling its method @Perl{ilu_withdraw()}.
+
+A published @system{ILU} object may be obtained by calling
+@Perl{ILU->LookupObject(sid, ih, cl)},
+where @Perl{sid} is object's server's server ID, @Perl{ih}
+is the object's instance handle, and @Perl{cl} is its class.
+
+@subsection Principal Identities and Passports
+
+An @system{ILU} passport (see @ref{Security}) is represented in
+@language{Perl} by an instance of the @class{@Perl{ILU::Passport}}
+object type.  Instances of this type can be obtained by calling
+@fn{@Perl{new ILU::Passport()}}.  Please see the documentation of that
+function for more information on the abilities of this object type.
+
+The passport of the caller may be obtained in the true method by calling
+the @system{ILU} runtime routine @Perl{ILU->CallerIdentity()}.  The
+`native' passport may be obtained by calling
+@fn{@Perl{ILU->GetPassport()}}.  In the case of a local call, these two
+passports may be the same object.  Passports are thread-local; that is,
+an application may use a different passport in each thread.
+
+@section Building Perl/ILU Applications
+
+@subsection Stub Generation
+To generate the @language{Perl} stubs from an @language{ISL} file,
+use the program @program{perl-stubber}.
+The file @file{@metavar{name}.pm} is generated from each @language{ISL}
+@isl{INTERFACE @metavar{name}}.
+
+In the future, it may be possible to have the information in
+@file{@metavar{name}.pm} generated dynamically when needed, without
+running the stubber separately.
+
+@subsection Implementing an ILU module in Perl
+A @language{Perl} package that implements @system{ILU} objects of type
+@metavar{T} defined in @isl{INTERFACE @metavar{I}} inherits from
+@Perl{@metavar{I}::@metavar{T}}. If there is inheritance in the
+@language{ISL}, and an implementation of a subtype wants to inherit from
+an implementation of a supertype, the base class must be appear in
+@Perl{@@ISA} before @Perl{@metavar{I}::@metavar{T}}.
+
+The constructor for the true object must call
+@Perl{$self->ilu_init([@metavar{server}[,@metavar{handle}[,@metavar{implements}]]])}.
+If @metavar{server} is present, it specifies the server to which this
+object belongs, otherwise, a default value is used. If @metavar{handle}
+is present, it is used as the instance handle, otherwise one is
+invented. @metavar{implements} is only needed when, due to
+implementation inheritance, the implementation class is derived not only
+from the class it implements, but also from a base class of that class.
+
+For example, objects for the @language{ISL}
+@codeexample
+INTERFACE j;
+
+TYPE c1 = OBJECT METHODS one() END;
+TYPE c2 = OBJECT METHODS two() END;
+TYPE c3 = OBJECT SUPERTYPES c1, c2 END METHODS three() END;
+@end codeexample
+could be implemented in @language{Perl} by
+@codeexample
+use ILU;
+use J;
+
+package C1;
+@@C1::ISA = qw(J::c1);
+
+sub new @{
+   my ($class, $server, $ih) = @@_;
+   my $self = bless @{@};
+
+   ... initialization ...
+ 
+   $self->ilu_init($server, $ih);
+@}
+
+sub one @{
+   ...
+@}
+
+package C2;
+@@C2::ISA = qw(J::c1);
+
+sub new @{
+  ...
+@}
+
+sub two @{
+  ...
+@}
+
+package C3;
+@@C3::ISA = qw(C1 C2 J::c3);
+
+sub new @{
+   my ($class, $server, $ih) = @@_;
+   my $self = bless @{@};
+
+   $self->ilu_init($server, $ih, 'J::c3');
+@}
+@end codeexample
+In this case @Perl{C3}'s method @Perl{one} is implemented by
+@Perl{C1::one} and @Perl{C3}'s method @Perl{two} is implemented by
+@Perl{C2::two}.
+
+@subsubsection Exporting Objects
+An object can be exported in one of three ways:
+@enumerate
+@item
+The object's string binding handle may be obtained by calling its
+method @Perl{ilu_sbh()} and communicating this somehow to a client,
+who then turns the handle back into an object by calling
+@Perl{ILU->ObjectOfSBH(cl, sbh)}.
+@item
+The object may be published using the simple binding service
+by calling its method @Perl{ilu_publish()}.
+In order for this to be effective, the object must have a well-known
+object ID, or the object ID must be communicated to clients, so clients can
+know what to pass to @Perl{ILU->LookupObject}.
+The object ID is the combination of the object's instance handle and
+its server's server ID.
+@item
+The object may be returned by a method or passed back in a method's
+@isl{INOUT} or @isl{OUT} parameter.
+@end enumerate
+
+@subsection Using an ILU module in Perl
+The @system{ILU} runtime interface is in the @language{Perl} module
+@Perl{ILU}.
+@language{Perl} definitions for @language{ISL}
+@isl{INTERFACE @metavar{I}} are in the @language{Perl} module
+@Perl{@metavar{I}}.
+As with any other modules in @language{Perl}, the functionality in this
+module is added to your program using the @Perl{use} statement.
+
+A client program may create an @system{ILU} object in one of three ways:
+@enumerate
+@item
+Knowing the string binding handle @Perl{sbh} and class @Perl{cl} of an
+object,
+call @Perl{ILU->ObjectOfSBH(cl, sbh)} which returns an instance of that class.
+For example, to obtain an instance of @language{ISL} type @isl{Square} from
+@isl{INTERFACE Shapes}
+whose string binding handle is @Perl{$sbh},
+one would call @Perl{ILU->ObjectOfSBH('Shapes::Square', $sbh)}.
+@item
+Knowing the object ID @Perl{(sid, ih)} and class @Perl{cl} of an object that
+has been published using the simple binding service,
+call @Perl{ILU->LookupObject(sid, ih, cl)} which returns an instance of that class
+(or @Perl{undef} if the lookup fails).
+@item
+Receive an instance as a result value from a method call that returns an
+object type or has an object type as an @isl{INOUT} or @isl{OUT} parameter.
+@end enumerate
+
+@subsection CORBA Support in Perl
+
+@language{Perl} @module{CORBA} module contains support for the classes
+@class{@omgidl{CORBA::ORB}} and @class{@omgidl{CORBA::Object}}, and the
+@fn{@omgidl{CORBA::ORB_init()}} function, which provide some
+compatability with the standard @system{CORBA} interfaces. See the
+Perl/ILU API Reference for more information on these classes.
+
+@section Perl/ILU API Reference
+
+@subsection Identifiers in Module @Perl{ILU}
+
+The following functions are meant to be called as
+@Perl{ILU->TheFunction(args)}. That is, they take an extra first
+argument which is ignored, allowing the use of the method invocation
+syntax. (This may be changed in the future.)
+
+@deffn Function CallerIdentity ()
+@ftindex CallerIdentity (Perl LSR fn)
+
+Returns the passport containing identities of the caller.  This routine is only valid inside the code of a true method.
+@end deffn
+
+@deffn Function DoSoon (@metavar{FUNCTION}, @metavar{ARGS-TUPLE}, @metavar{STRING-DESCRIPTION})
+@ftindex DoSoon (Perl LSR fn)
+
+Causes the function @metavar{FUNCTION} to be run with args @metavar{ARGS-TUPLE}
+to be run at some point in the future, when the system finds it to be convenient.
+In the threaded world, a new thread is forked to run the function; in the non-threaded
+world, the function is executed at some point by the event loop as a background
+task.
+@end deffn
+
+@defvr Constant FALSE
+@vtindex FALSE (Perl LSR const)
+
+A value which evaluates to @language{Perl} boolean False.
+@end defvr
+
+@deffn Function FormSBH (sid, ih, type, pinfo, ...)
+@ftindex FormSBH (Perl LSR fn)
+
+Forms a valid @system{ILU} string binding handle from the arguments and
+returns it.  The @metavar{sid} and @metavar{ih} arguments are strings
+containing the server ID and instance handle for the desired instance.
+The @metavar{type} argument should be the @language{Perl} class for the
+most specific object type of the desired object.  The @metavar{pinfo} is
+a string containing the protocol information describing the object
+implementation's preferred communication protocol.  The remaining
+arguments are strings specifying the transport stack needed to connect
+to the implementation. The elements of the protocol and transport info
+strings are separated by underscores.
+
+For instance, to create a string binding handle for an instance of type
+@isl{Foo.Bar}, with server id @Perl{"some-server-id"} and instance
+handle @Perl{"some-instance-handle"}, exported via @protocol{Sun RPC},
+version 2, with program number 1000007, version 3, via @protocol{TCP/IP}
+from host @code{"foobar.somewhere.com"}, port 3456, we'd say@* @code{sbh
+= ILU->FormSBH('some-server-id', 'some-instance-handle','Foo::Bar',@*
+'sunrpc_2_1000007_3, 'sunrpcrm', 'tcp_foobar_somewhere_com_3456')}@*
+Note that use of this procedure requires some specialized knowledge,
+such as knowing that use of @protocol{Sun RPC} also requires use of the
+@protocol{Sun RPC} record-marking transport layer when used over
+@protocol{TCP/IP}.
+
+@end deffn
+
+@defvr Constant FineTimeRate
+@vtindex FineTimeRate (Perl LSR const)
+
+The precision of type @Perl{ilu_FineTime} in seconds is the reciprocal of
+this constant.
+@end defvr
+
+@deffn Function GetPassport ()
+@ftindex GetPassport (Perl LSR fn)
+
+Returns the current passport for this thread.  See also @fn{@Perl{SetPassport()}}.
+@end deffn
+
+@deffn Function GetPipeline ()
+@ftindex GetPipeline (Perl LSR fn)
+
+Returns the current pipeline context for this thread.  See also @fn{@Perl{CreatePipeline()}} and @fn{@Perl{SetPipeline()}}.
+@end deffn
+
+@deffn Function GetSerializer ()
+@ftindex GetSerializer (Perl LSR fn)
+
+Returns the current serialization context for this thread.  See also the @method{@Perl{createSerializer()}} method on the @class{@Perl{ilu_Server}} class, and the @fn{@Perl{SetSerializer()}} function.
+@end deffn
+
+@deffn Function LookupObject (sid, ih, cl)
+@ftindex LookupObject (Perl LSR fn)
+
+Returns the object with object server ID @metavar{sid}, object instance handle @metavar{ih},
+and @language{Perl} package name @Perl{cl},
+assuming it was previously published using the simple binding service.
+If the lookup fails, @Perl{None} is returned.
+@end deffn
+
+@deffn Function ObjectOfSBH (cl, sbh)
+@ftindex ObjectOfSBH (Perl LSR fn)
+
+Returns the object corresponding to the @language{Perl} package name @metavar{cl}
+and string binding handle @metavar{sbh}.
+@end deffn
+
+@deffn Function ParseSBH (sbh)
+@ftindex ParseSBH (Perl LSR fn)
+
+Returns the the object id and contact info corresponding to the string
+binding handle @metavar{sbh} as a list 
+@Perl{(@metavar{ih}, @metavar{sid}, @metavar{mstid}, @metavar{cinfo})}.
+@metavar{ih} is instance handle, @metavar{sid} the server ID, 
+@metavar{mstid} the most specific type id and  @metavar{cinfo} the
+contact info encoded as a string.
+
+@end deffn
+
+@deffn Function RegisterCustomSurrogate (class)
+@ftindex RegisterCustomSurrogate (Perl LSR fn)
+
+NOT YET IMPLEMENTED
+
+Registers @metavar{class} as the object type to create when receiving a surrogate of the
+type indicated by the @Perl{_IluClass} field of @metavar{class}.  @metavar{class} must
+be a subtype of the default surrogate type for this @system{ILU} type.  This allows custom
+surrogates, with implications for caching and other object-type-specific functions.
+@end deffn
+
+@deffn Function RegisterInputHandler (fileno, handler_fn, ...)
+@ftindex RegisterInputHandler (Perl LSR fn)
+
+Sets up @metavar{handler_fn} to be called every time input is availabe
+on the file corresponding to fileno. (You can get the file number of a
+file handle with @Perl{fileno(HANDLE)}. handler_fn is a reference to a
+subroutine or anonymous subroutine. This is useful for implementing a
+server that also responds to commands typed to its standard input, for
+example.  Passing a value of @Perl{undef} for the
+@metavar{handler_fn} removes the handler.  Any additional arguments will
+be passed to the handler function
+@end deffn
+
+@deffn Function SetCalloutExceptionHandler (handler-fn)
+@ftindex SetCalloutExceptionHandler (Perl LSR fn)
+
+NOT YET IMPLEMENTED
+
+This function can be used to define a function @metavar{handler-fn} which is called when an internal @system{Perl}
+exception is signalled in code called from the @system{ILU} @language{C} code.  The handler function receives
+four arguments:  a string indicating where in the @system{ILU} runtime the exception was encountered, the exception
+type, the exception value, and a traceback object.  This function is typically used to note the exception
+to a file or stderr; see the example usage in @file{@metavar{ILUSRC}/runtime/python/iluRt.py}.  If a parameter
+of @Perl{None} is passed to @fn{SetCalloutExceptionHandler}, it cancels any handler function in use,
+and a default built-in one is used.
+@end deffn
+
+@deffn Function SetDebugLevel (flags)
+@ftindex SetDebugLevel (Perl LSR fn)
+
+Sets the @system{ILU} kernel debugging flags according to its
+argumentSee the Debugging section of the ILU Manual for more information
+on the argument.
+@end deffn
+
+@deffn Function SetDebugLevelViaString (switches)
+@ftindex SetDebugLevel (Perl LSR fn)
+
+Sets the @system{ILU} kernel debugging flags according to its argument,
+which is a colon-separated list of debug switches.See the Debugging
+section of the ILU Manual for more information on these switches.
+@end deffn
+
+@deffn Function SetPassport (passport)
+@ftindex SetPassport (Perl LSR fn)
+
+Sets the current passport identity for this thread, and returns the passport active before this call.
+Either of these can be @Perl{None}.  Also see the function @fn{@Perl{CreatePassport}},
+and the function @fn{@Perl{GetPassport}}.
+@end deffn
+
+@deffn Function SetPipeline (pipeline)
+@ftindex SetPipeline (Perl LSR fn)
+
+Sets the current pipelining context for this thread, and returns the context active before this call.
+Either of these can be @Perl{None}.  Also see the function @fn{@Perl{CreatePipeline}},
+and the function @fn{@Perl{GetPipeline}}.
+@end deffn
+
+@deffn Function SetSerializer (serializer)
+@ftindex SetSerializer (Perl LSR fn)
+
+Sets the current serialization context for this thread, and returns the context active before this call.
+Either of these can be @Perl{None}.  Also see the @method{@Perl{createSerializer}} method on
+the class @class{@Perl{ilu_Server}}, and the function @fn{@Perl{GetSerializer}}.
+@end deffn
+
+@deffn Function ThreadedOperation ()
+@ftindex ThreadedOperation (Perl LSR fn)
+
+Enables thread use in both the @system{ILU} kernel and the
+@system{ILU/Perl} runtime.  This routine should be called in a begin
+block before calling @Perl{use} for any stubber-created modules,
+and before any other @system{ILU} calls are made.
+@end deffn
+
+@defvr Constant Version
+@vtindex Version (Perl LSR const)
+
+The ILU version string.
+
+@end defvr
+
+@deftp {Class} {Object} (ILU::MainLoop)
+@ttindex ILU::MainLoop (Perl LSR class)
+A type representing an ILU server. It supports the following methods:
+
+@itemize @bullet
+
+@item @Perl{new ()} - creates a new object of type @Perl{ILU::MainLoop}
+@item @Perl{run ()} - Runs the loop
+@item @Perl{exit ()} - Causes the specified loop to exit.
+
+@end itemize
+@end deftp
+
+@deftp {Class} {Object} (ILU::Server)
+@ttindex ILU::Server (Perl LSR class)
+A type representing an ILU server. It supports the following methods:
+
+@itemize @bullet
+
+@item @Perl{default ILU::Server ()} - returns the default server.
+@item @Perl{new ILU::Server( [serverID [transport [protocol [objtable]]]] )} 
+
+Create an @Perl{ILU::Server} object with the specified serverID,
+transport, and protocol.  If @metavar{serverID} is unspecified or
+@Perl{undef}, an identifier will be invented automatically.  If
+transport or protocol are unspecified or @Perl{undef}, they will default
+to @Perl{['sunrpcrm', 'tcp_0_0']} and @Perl{'sunrpc'}, respectively.
+(Other combinations that would work are transport of @Perl{['tcp_0_0']}
+and protocol of @Perl{'iiop_1_0_1'}, transport of @Perl{['sunrpcrm',
+'tcp_0_0']} and protocol of @Perl{'courier'}, and transport of
+@Perl{['tcp_0_0']} and protocol of @Perl{'http'}, depending on the
+configuration of your @system{ILU} system.)  The first time a server is
+created, the server so created becomes the default server.  If there is
+no default server when one is required, one will be created using
+default parameters and a message will be issued on stderr.  The
+@metavar{objtable} argument allows specification of a callback function
+for creating true instances on demand.  The callback function should
+take one argument, a string, which is the object ID of the instance to
+be created, and return a true instance.
+@item @method{@Perl{add_port (@metavar{TRANSPORT}, @metavar{PROTOCOL})}} - adds
+a port with the specified @metavar{TRANSPORT} and @metavar{PROTOCOL}
+(described above) to the server instance.
+@item @method{@Perl{id ()}} - returns the string identifier of the server.
+@end itemize
+@end deftp
+
+@deftp {Class} {Object} (ILU::Passport)
+@ttindex ILU::Passport (Perl LSR class)
+
+The @class{@Perl{ILU::Passport}} object is used to provide a sense of identity
+in the @system{ILU} system.  It can hold any number of different identities,
+each of which is represented with an appropriate data structure that varies
+from identity type to identity type.
+
+The @class{@Perl{ILU::Passport}} object type has the following methods:
+
+@itemize @bullet
+
+@item @method{@Perl{new}} - creates and returns an empty passport.
+
+@item @method{@Perl{lookupIdentity (@metavar{IDENTITY-TYPE-NAME})}} - returns
+the data structure for the specified identity, if the passport contains one;
+Returns @Perl{None} otherwise.  Raises @Perl{ilu.IluGeneralError} if the
+named identity type does not exist.  The identity type @constant{@Perl{'ConnectionIdentity'}}
+is always supported; the identity type @constant{@Perl{'SunRPCAuthUnixIdentity'}}
+will be supported if support for the @protocol{sunrpc} protocol has been configured
+into @system{ILU}.
+@item @method{@Perl{addSunRPCAuthUnix (@metavar{HOSTNAME}, @metavar{UID}, @metavar{GID}, @metavar{GROUPS})}} -
+adds an identity of type @constant{@Perl{'SunRPCAuthUnixIdentity'}} to the passport
+with the specified @metavar{HOSTNAME}, @metavar{UID}, @metavar{GID}, and
+@metavar{GROUPS} (the remaining parameters).
+See Appendix A of RFC 1831 at @url{http://info.internet.isi.edu:80/in-notes/rfc/files/rfc1831.txt} for details on the meaning of these parameters.  This method will only be available if support for
+the @protocol{sunrpc} protocol has been configured into @system{ILU}.
+@end itemize
+@end deftp
+
+@deftp {Class} {Object} (ILU::Pipeline)
+@ttindex ILU::Pipeline (Perl LSR class)
+
+The @class{@Perl{ilu_Pipeline}} object is used to allow
+multiple requests to be outstanding on non-concurrent protocol streams.
+
+The @class{@Perl{ILU::Pipeline}} object type has the following method:
+
+@itemize @bullet
+
+@item @method{@Perl{new}} - creates and returns a pipeline object.
+@end itemize
+@end deftp
+
+@deftp {Class} {Object} (ILU::Serializer)
+@ttindex ILU::Serializer (Perl LSR class)
+
+The @class{@Perl{ilu_Serializer}} object is used to ensure that
+multiple requests are received by the server in the same order
+that the client makes them.
+
+The @class{@Perl{ILU::Serializer}} object type has the following method:
+
+@itemize @bullet
+
+@item @method{@Perl{new}} - creates and returns a serializer object.
+@end itemize
+@end deftp
+
+@subsection Identifiers from the @Perl{CORBA} Module
+
+@defvr {Variable} %CORBA::InitialReferences
+@vtindex @Perl{%CORBA::InitialReferences} (Perl LSR variable)
+A hash with string keys, and values of type
+@class{@Perl{CORBA::Object}}.  It is used to resolve strings passed as
+parameters to
+@method{@Perl{CORBA::ORB::resolve_initial_references()}}.  The
+following names are supported automatically by @language{Perl}
+runtime:
+@itemize @bullet
+@item @b{NameService}@*
+If the environment variable @var{ILU_COS_NAMING_IOR} is bound to a string IOR
+for a @language{OMG IDL} @omgidl{CosNaming::NamingContext} object instance,
+the Perl runtime will attempt to create a surrogate for that
+instance locally, ping it, and if successful will bind it to the string @code{"NameService"}.
+@end itemize
+@end defvr
+
+@deftp {Class} {Object} (CORBA::Object)
+@ttindex CORBA::Object (Perl LSR class)
+A type which all object types defined in @language{OMG IDL}, or inheriting
+from @isl{ilu.CORBA-Object} in @language{ISL}, participate in.  It supports
+the following methods:
+@itemize @bullet
+@item @Perl{_is_a(@metavar{type_uid})} - returns @Perl{True} if the object is
+of the specified type, @Perl{False} otherwise; raises
+@Perl{ILU::IluUnknownTypeIDError} if the @metavar{type_uid} is unknown in
+this address space;
+@mtindex @Perl{Corba::Object::_is_a} (Perl LSR method)
+@mtindex @Perl{_is_a()} (Perl LSR method on @Perl{CORBA::Object})
+@item @Perl{_is_nil()} - returns @Perl{False}; raises @Perl{TypeError} if called
+via @fn{@Perl{Corba::Object::_is_nil()}} on a non-Perl-object type;
+@mtindex @Perl{Corba::Object::_is_nil} (Perl LSR method)
+@mtindex @Perl{_is_nil()} (Perl LSR method on @Perl{CORBA::Object})
+@item @Perl{_non_existent()} - returns the logical inverse of the result of calling
+@Perl{ilu.PingObject()} on the object;
+@mtindex @Perl{Corba::Object::_non_existent} (Perl LSR method)
+@mtindex @Perl{_non_existent()} (Perl LSR method on @Perl{CORBA::Object})
+@item @Perl{_is_equivalent(@metavar{other})} - returns the result of comparing
+@metavar{self} and @metavar{other} with the @language{Perl} @Perl{==} operator;
+@mtindex @Perl{Corba::Object::_is_equivalent} (Perl LSR method)
+@mtindex @Perl{_is_equivalent()} (Perl LSR method on @Perl{CORBA::Object})
+@item @Perl{_duplicate()} - does nothing, returns @metavar{self};
+@mtindex @Perl{Corba::Object::_duplicate} (Perl LSR method)
+@mtindex @Perl{_duplicate()} (Perl LSR method on @Perl{CORBA::Object})
+@item @Perl{_release()} - does nothing, returns nothing;
+@mtindex @Perl{Corba::Object::_release} (Perl LSR method)
+@mtindex @Perl{_release()} (Perl LSR method on @Perl{CORBA::Object})
+@item @Perl{_hash(@metavar{max_value})} - returns @Perl{(hash(@metavar{self}) % (@metavar{max_value} + 1))};
+@mtindex @Perl{Corba::Object::_hash} (Perl LSR method)
+@mtindex @Perl{_hash()} (Perl LSR method on @Perl{CORBA::Object})
+@item @Perl{_get_implementation()} - raises @exception{@Perl{IluUnimplementedMethodError}};
+@mtindex @Perl{Corba::Object::_get_implementation} (Perl LSR method)
+@mtindex @Perl{_get_implementation()} (Perl LSR method on @Perl{CORBA::Object})
+@item @Perl{_get_interface()} - raises @exception{@Perl{IluUnimplementedMethodError}};
+@mtindex @Perl{Corba::Object::_get_interface} (Perl LSR method)
+@mtindex @Perl{_get_interface()} (Perl LSR method on @Perl{CORBA::Object})
+@end itemize
+@noindent
+The @class{@Perl{CORBA::Object}} class is actually implemented in @class{@Perl{ILU::CORBA_Object}},
+so all classes which inherit from @class{@Perl{ILU::CORBA_Object}} will have access to these
+methods.
+@end deftp
+
+@deftp {Class} {ORB}
+@ttindex CORBA::ORB (Perl LSR class)
+The general class for manipulating the object request broker.  There is typically
+only one instance of this class per address space.  It is retrieved with the
+function @fn{@Perl{CORBA::ORB_init()}}; it supports the following methods:
+@itemize @bullet
+@item @Perl{object_to_string(@metavar{instance})} - returns
+a string which can be used in a subsequent @method{@Perl{string_to_object()}} call;
+@mtindex @Perl{CORBA::ORB::object_to_string} (Perl LSR method)
+@item @Perl{string_to_object(@metavar{string})} - if the specified @metavar{string}
+is well formed and specifies an object, the object is created locally and a reference is returned; the
+reference may be to a true instance if the string names a true instance; if the string
+is poorly formed, the @language{Perl} exception @exception{@Perl{ilu.IluGeneralError}}
+is raised.  This method does not test for the existence of the instance.
+@mtindex @Perl{CORBA::ORB::string_to_object} (Perl LSR method)
+@item @Perl{resolve_initial_references(@metavar{string})} - If the
+@metavar{string} argument is bound in the dictionary @var{@Perl{%CORBA::InitialReferences}},
+the value is returned.  Otherwise, the exception @exception{@Perl{CORBA::InvalidName}} is raised.
+See the documentation of @var{@Perl{%CORBA::InitialReferences}} for a listing of the
+names that are bound automatically, if any.
+@mtindex @Perl{CORBA::ORB::resolve_initial_references} (Perl LSR method)
+@end itemize
+@end deftp
+
+@deffn Function ORB_init (@metavar{argv}=(), @metavar{orb_id}='ilu')
+@ftindex CORBA::ORB_init (Perl LSR function)
+Returns an instance of @class{@Perl{CORBA::ORB}} with the specified @metavar{orb_id} (currently
+only the ORB ID @Perl{'ilu'} is supported).  The arguments which may be passed
+in via @metavar{argv} are ignored.
+@end deffn
+
+@subsection Methods and Attributes of @system{ILU} Objects
+
+@itemize @bullet
+@item
+@Perl{ilu_object_id()} returns the object ID of the object.
+@mtindex ilu_object_id (Perl inst meth)
+@item
+@Perl{ilu_publish()} publishes the object using the simple binding service.
+@mtindex ilu_publish (Perl inst meth)
+@item
+@Perl{ilu_sbh()} returns the object's string binding handle.
+@mtindex ilu_sbh (Perl inst meth)
+@item
+@Perl{ilu_type_id()} returns the unique type identifier of the
+object's @system{ILU} type.
+@mtindex ilu_type_id (Perl inst meth)
+@item
+@Perl{ilu_type_name()} returns the type name of the object's @system{ILU} type.
+@mtindex ilu_type_name (Perl instance meth)
+@item
+@Perl{ilu_withdraw()} undoes the effect of ilu_publish().
+@mtindex ilu_withdraw (Perl inst meth)
+@end itemize
+
+@ifclear largerdoc
+@section Index of Functions
+@printindex ft
+@end ifclear

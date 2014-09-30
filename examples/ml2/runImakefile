@@ -1,0 +1,175 @@
+/** $Id: runImakefile,v 1.14 1999/08/07 00:52:32 janssen Exp $
+ BeginILUCopyright
+
+ Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+ Unlimited use, reproduction, modification, and distribution of this
+ software and modified versions thereof is permitted.  Permission is
+ granted to make derivative works from this software or a modified
+ version thereof.  Any copy of this software, a modified version
+ thereof, or a derivative work must include both the above copyright
+ notice of Xerox Corporation and this paragraph.  Any distribution of
+ this software, a modified version thereof, or a derivative work must
+ comply with all applicable United States export control laws.  This
+ software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+ WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+ LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+ EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+ NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+ OF THE POSSIBILITY OF SUCH DAMAGES.
+
+ EndILUCopyright
+*/
+
+NormalObjectRule()
+
+InterfaceTarget(test.isl)
+
+#ifdef ADD_PYTHON_LANGUAGE
+PYTHONINCLUDES = -I$(PYTHON_PREFIX)/include/$(PYTHON_INCLUDE_SUFFIX) -I$(PYTHON_EXEC_PREFIX)/include/$(PYTHON_SUFFIX)
+#endif
+
+#ifdef ADD_JAVA_LANGUAGE
+#ifdef ILUJAVA_M_JNI
+JAVADEFINES = -DILUJAVA_JNI
+#endif
+JAVAINCLUDES = -I$(ILUSRC)/runtime/java -I$(ILUJAVA_M_OLD_INCLUDES) -I$(ILUJAVA_M_OLD_MACH_DEP_INCLUDES) $(JAVADEFINES)
+#endif
+
+LOCALINCLUDES = $(PYTHONINCLUDES) $(JAVAINCLUDES)
+
+#####################################################
+#
+# C++
+#
+
+#ifdef ADD_ILU_CPLUSPLUS_LANGUAGE
+
+ILUCPlusPlusTarget(test.hh test.cc test-server-stubs.cc, test.isl)
+ObjectTarget(test.o)
+ObjectTarget(test-server-stubs.o)
+
+ObjectTarget(impl.o)
+
+impl.o : test.hh impl.cc
+all:: impl.o
+
+CPPOBJS = impl.o test.o test-server-stubs.o
+
+#endif
+
+#ifdef ADD_CORBA_CPLUSPLUS_LANGUAGE
+
+ILUCPlusPlusTarget(test-cpp.hpp test-cpp.cpp test-cpptrue.hpp test-cpptrue.cpp test-cppsurrogate.hpp test-cppsurrogate.cpp, test.isl)
+ObjectTarget(test-cpp.o)
+ObjectTarget(test-cpptrue.o)
+ObjectTarget(test-cppsurrogate.o)
+
+ObjectTarget(impl2.o)
+
+impl2.o : test-cpp.hpp test-cpptrue.hpp test-cppsurrogate.hpp impl2.cc
+all:: impl2.o
+
+CPPOBJS = impl2.o test-cpp.o test-cpptrue.o test-cppsurrogate.o
+
+#endif
+
+#####################################################
+#
+# Python
+#
+
+#ifdef ADD_PYTHON_LANGUAGE
+
+ILUPythonTarget(test.py test__skel.py, test.isl)
+
+pyGlue.o : pyGlue.c
+
+PythonExtension(strlenGlue, pyGlue.o $(CPPOBJS), $(ILU_CPLUSPLUS_LIB), -L$(ILUHOME)/lib -lilu $(CPLUSPLUS_LIBRARIES))
+
+PYTHONFILES = test.py test__skel.py strlenGlue.$(SHAREDEXT)
+
+all:: test.py
+
+#endif
+
+#####################################################
+#
+# Java
+#
+
+#if (defined(ADD_JAVA_LANGUAGE) && defined(ADD_KERNEL_SHARED_LIBRARY))
+
+/* We need to use the kernel shared library here because Java doesn't make
+   imported modules generally available to other imported modules, unless they
+   both import the same imported module...  That means that the ILU shared
+   library and the one we build here must both access the ILU kernel library
+   as a shared library. */
+
+JAVA_CLASS_DIR = $(ILUJAVA_M_CLASSESDIR)
+JAVA_STUB_DIR = .
+CLASSPATH=$(JAVA_STUB_DIR):$(JAVA_CLASS_DIR):$(ILUJAVA_M_ILUCLASSES):$(ILUJAVA_M_CORECLASSES)
+#ifdef ILUJAVA_M_JNI
+JAVAH_OPTS = -jni
+#else
+JAVAH_OPTS = -old
+#endif
+
+$(JAVA_CLASS_DIR):
+	$(MKDIR) $(JAVA_CLASS_DIR)
+
+$(JAVA_STUB_DIR):
+	$(MKDIR) $(JAVA_STUB_DIR)
+
+STUB_SOURCES = $(JAVA_STUB_DIR)/test/Strlen.java
+
+STUB_CLASSES = $(JAVA_CLASS_DIR)/test/Strlen.class
+
+$(STUB_SOURCES): test.isl $(JAVA_STUB_DIR)
+	$(JAVA_STUBBER) -dir $(JAVA_STUB_DIR) test.isl
+
+$(STUB_CLASSES) : $(STUB_SOURCES) $(JAVA_CLASS_DIR)
+	$(JAVAC) -classpath $(CLASSPATH) -d $(JAVA_CLASS_DIR) `cat jstubber.files`
+
+$(JAVA_CLASS_DIR)/strlen.class: strlen.java $(STUB_CLASSES) $(JAVA_CLASS_DIR)
+	$(JAVAC) -classpath $(CLASSPATH) -d $(JAVA_CLASS_DIR) strlen.java
+
+strlen.h : $(JAVA_CLASS_DIR)/strlen.class
+	$(JAVAH) -classpath $(CLASSPATH) $(JAVAH_OPTS) strlen
+
+#ifndef ILUJAVA_M_JNI
+strlen.c : $(JAVA_CLASS_DIR)/strlen.class
+	$(JAVAH) -classpath $(CLASSPATH) $(JAVAH_OPTS) -stubs strlen
+
+STUBOBJ = strlen.o
+#endif
+
+javaGlue.o : javaGlue.c strlen.h
+
+#ifdef ILUJAVA_M_JDK12
+LIB_POSTFIX = _12
+#else
+LIB_POSTFIX = 
+#endif
+
+SharedLibrary(libstrlen, $(STUBOBJ) javaGlue.o $(CPPOBJS), $(ILU_CPLUSPLUS_LIB), -L$(ILUHOME)/lib -lIluJava$(LIB_POSTFIX) -lilu $(CPLUSPLUS_LIBRARIES))
+
+APP_SOURCES = testprog.java
+APP_CLASSES = $(JAVA_CLASS_DIR)/testprog.class
+
+$(APP_CLASSES) : $(APP_SOURCES) $(STUB_CLASSES) $(JAVA_CLASS_DIR)
+	$(JAVAC) -classpath $(CLASSPATH) -d $(JAVA_CLASS_DIR) $(APP_SOURCES)
+
+all::  $(APP_CLASSES) $(STUB_CLASSES)
+
+clean::
+	rm -rf test/ $(JAVA_CLASS_DIR)
+	rm -f *.class strlen.h strlen.c
+
+JAVAFILES = $(JAVA_CLASS_DIR)/strlen.class libstrlen.$(SHAREDEXT) $(APP_CLASSES)
+
+#endif /* defined(ADD_JAVA_LANGUAGE) and defined(ADD_KERNEL_SHARED_LIBRARY) */
+
+PythonTestScript(Test.py, $(PYTHONFILES) $(JAVAFILES))

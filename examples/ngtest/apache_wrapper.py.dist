@@ -1,0 +1,30 @@
+#!PYTHON_EXECUTABLE
+
+import os, sys, signal, time, string
+
+pid_fname = None
+
+def kill_apache(signum, sigframe):
+	if pid_fname:
+		f = open(pid_fname, 'r')
+		pid_string = f.readline()
+		f.close()
+		pid = string.atoi(pid_string)
+		sys.stdout.write("killing process " + str(pid) + "\n")
+		sys.stdout.flush()
+		os.kill(pid, signal.SIGTERM)
+
+def main(argv):
+
+	global pid_fname
+	pid_fname = argv[1]
+	signal.signal(signal.SIGTERM, kill_apache)
+	os.system(string.join(argv[2:]))
+	try:
+		while 1:
+			time.sleep(100000)
+	except:
+		pass
+
+if __name__ == "__main__":
+	main(sys.argv)

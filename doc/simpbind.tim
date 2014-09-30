@@ -1,0 +1,52 @@
+@setfilename simpbind.info
+@settitle ILU Simple Binding
+@ifset ilucopyright
+BeginILUCopyright
+
+Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+Unlimited use, reproduction, modification, and distribution of this
+software and modified versions thereof is permitted.  Permission is
+granted to make derivative works from this software or a modified
+version thereof.  Any copy of this software, a modified version
+thereof, or a derivative work must include both the above copyright
+notice of Xerox Corporation and this paragraph.  Any distribution of
+this software, a modified version thereof, or a derivative work must
+comply with all applicable United States export control laws.  This
+software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+OF THE POSSIBILITY OF SUCH DAMAGES.
+  
+EndILUCopyright
+@end ifset
+@ifclear largerdoc
+@titlepage
+@title ILU Simple Binding
+@author Bill Janssen @code{<janssen@@parc.xerox.com>}
+@author Mike Spreitzer @code{<spreitzer.parc@@xerox.com>}
+@sp
+@today{}
+@sp
+Copyright @copyright{} 1994 Xerox Corporation@*
+All Rights Reserved.
+@end titlepage
+@ifinfo
+@node Top, ,(dir),(dir)
+@top ILU Simple Binding
+@end ifinfo
+@end ifclear
+
+@cindex Simple Binding
+@cindex Simple Naming
+@cindex Name Service
+
+This release of @system{ILU} includes an experimental simple binding/naming facility.  It allows a module to @dfn{publish} an object, so that another module can import that object knowing only its object ID (as defined in @ref{ILU Concepts}).  The interface to this facility is deliberately quite simple; one reason is to allow various implementations.  This release includes one (extremely preliminary) implementation.
+
+The interface consists of three operations: @dfn{Publish}, @dfn{Withdraw}, and @dfn{Lookup}.  @fn{Publish} takes one argument, an @system{ILU} object.  @fn{Publish} returns a string that is needed to successfully invoke @fn{Withdraw}.  @fn{Withdraw} undoes the effects of @fn{Publish}, and takes two arguments: (1) the object in question, and (2) the string returned from @fn{Publish}.  In some langauge mappings, the string is not explicitly passed, but conveyed in the language mapping's representation of @system{ILU} objects.  @fn{Lookup} takes two arguments: an object ID and a type the identified object should have.  If the object with that ID is currently being published, and has the given type (among others), @fn{Lookup} returns that object.
+
+The implementation shipped with this release of @system{ILU} uses a filesystem directory (specified in the file @file{@metavar{ILUSRC}/imake/local.defs}) to store information on the currently published objects.  To be useful in a distributed system, this directory must be available, by the same name, on all machines in the system.

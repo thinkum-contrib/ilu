@@ -1,0 +1,49 @@
+/** $Id: Imakefile,v 1.12 1999/08/03 01:57:10 janssen Exp $
+ BeginILUCopyright
+
+ Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+ Unlimited use, reproduction, modification, and distribution of this
+ software and modified versions thereof is permitted.  Permission is
+ granted to make derivative works from this software or a modified
+ version thereof.  Any copy of this software, a modified version
+ thereof, or a derivative work must include both the above copyright
+ notice of Xerox Corporation and this paragraph.  Any distribution of
+ this software, a modified version thereof, or a derivative work must
+ comply with all applicable United States export control laws.  This
+ software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+ WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+ LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+ EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+ NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+ OF THE POSSIBILITY OF SUCH DAMAGES.
+
+ EndILUCopyright
+*/
+/* Chris Jacobi, January 23, 1997 12:12 pm PST */
+/* Last edited by Mike Spreitzer October 9, 1998 1:44 pm PDT */
+
+MkdirTarget($(DESTDIR)/examples)
+MkdirTarget($(DESTDIR)/examples/tutorial)
+
+InstallRO(Tutorial.idl Tutorial.isl Tutorial2.idl Tutorial2.isl, $(DESTDIR)/examples/tutorial)
+
+#ifdef ADD_C_LANGUAGE
+InstallRO(Calculator-impl.c faulty-impl.c simple2.c Factory-impl.c server.c simple3.c Factory2-impl.c server2.c simple4.c TapeCalculator-impl.c simple1.c, $(DESTDIR)/examples/tutorial)
+#endif /* ADD_C_LANGUAGE */
+
+#ifdef ADD_PYTHON_LANGUAGE
+InstallRO(CalculatorImpl.py server.py simple2.py FactoryImpl.py server2.py simple3.py FactoryImpl2.py server3.py simple4.py TapeCalculatorImpl.py simple1.py, $(DESTDIR)/examples/tutorial)
+#endif /* ADD_PYTHON_LANGUAGE */
+
+#ifdef ADD_JAVA_LANGUAGE
+InstallRO(CalculatorImpl.java simple1.java simple2.java TutorialServer.java simple3.java TapeCalculatorImpl.java Tutorial2Server.java simple4.java, $(DESTDIR)/examples/tutorial)
+#endif /* ADD_JAVA_LANGUAGE */
+
+InstallRO(README, $(DESTDIR)/examples/tutorial)
+
+InstallFileToFile(runImakefile, $(INSTINCFLAGS), $(DESTDIR)/examples/tutorial/Imakefile)
+
+

@@ -1,0 +1,370 @@
+@c $Id: manual.tim,v 1.63 1999/09/09 23:27:37 janssen Exp $
+@setfilename ILU.info
+@settitle ILU Reference Manual
+@ifset ilucopyright
+BeginILUCopyright
+
+Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+Unlimited use, reproduction, modification, and distribution of this
+software and modified versions thereof is permitted.  Permission is
+granted to make derivative works from this software or a modified
+version thereof.  Any copy of this software, a modified version
+thereof, or a derivative work must include both the above copyright
+notice of Xerox Corporation and this paragraph.  Any distribution of
+this software, a modified version thereof, or a derivative work must
+comply with all applicable United States export control laws.  This
+software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+OF THE POSSIBILITY OF SUCH DAMAGES.
+  
+EndILUCopyright
+@end ifset
+
+@c Experiment with smaller amounts of whitespace between chapters
+@c and sections.
+@tex
+\global\chapheadingskip = 15pt plus 4pt minus 2pt 
+\global\secheadingskip = 12pt plus 3pt minus 2pt
+\global\subsecheadingskip = 9pt plus 2pt minus 2pt
+@end tex
+
+@c Experiment with smaller amounts of whitespace between paragraphs in
+@c the 8.5 by 11 inch format.
+@ifclear smallbook
+@tex
+\global\parskip 6pt plus 1pt
+@end tex
+@end ifclear
+
+@finalout
+@titlepage
+@title ILU RELEASE_NUMBER Reference Manual
+@author Bill Janssen @code{<janssen@@parc.xerox.com>}
+@author Mike Spreitzer @code{<spreitzer.parc@@xerox.com>}
+@author Dan Larner @code{<larner.parc@@xerox.com>}
+@author Chris Jacobi @code{<jacobi.parc@@xerox.com>}
+@sp
+(with contributions from Doug Cutting, Frank Halasz, and Denis Seversen)
+@sp
+(typeset @today{})
+@sp
+Copyright @copyright{} 1991--1999 Xerox Corporation@*
+All Rights Reserved.
+@end titlepage
+
+@defcodeindex ft
+@defcodeindex vt
+@defcodeindex et
+@defcodeindex mt
+@defcodeindex tt
+@defcodeindex dt
+
+@syncodeindex dt ft
+@syncodeindex vt ft
+@syncodeindex et ft
+@syncodeindex mt ft
+@syncodeindex tt ft
+
+@syncodeindex vr ft
+@syncodeindex fn ft
+@syncodeindex ky ft
+@syncodeindex pg cp
+@syncodeindex tp ft
+
+@ifinfo
+@node Top,      ILU Concepts,   (dir),  (dir)
+@top ILU Reference Manual
+@end ifinfo
+
+This document describes version RELEASE_NUMBER of the
+Inter-Language Unification (@system{ILU}) system.
+
+Lots of people contributed significant amounts of code to the ILU system, including (alphabetically):
+Joachim Achtzehnter,
+Judy Anderson,
+Antony Courtney,
+Doug Cutting,
+Mark Davidson,
+Ken Fishkin,
+Frank Halasz,
+Scott Hassan,
+Rob Head,
+Chris Jacobi,
+Bill Janssen,
+Swen Johnson,
+Dan Larner,
+Martin von Loewis,
+Bill Nell,
+Paula Newman,
+Ansgar Rademacher,
+Dennis Seversen,
+Bridget Spitznagel,
+Mike Spreitzer,
+Owen Taylor,
+Farrell Wymore, and
+Rick Yardumian.
+
+Many others have contributed in other ways, including our reviewers, alpha and beta testers, and regular users.  The list includes (but is not limited to):
+Shridhar Acharya,
+Joachim Achtzehnter,
+Judy Anderson,
+Maria Perez Ayo,
+Mike Beasley,
+Erik Bennett,
+Dan Brotsky,
+David Brownell,
+Bruce Cameron,
+George Carrette,
+Philip Chou,
+Daniel W. Connolly,
+Antony Courtney,
+Doug Cutting,
+Mark Davidson,
+Jim Davis,
+Larry Edelstein,
+Paul Everitt,
+Bill Fenner,
+Josef Fink,
+Jeanette Figueroa,
+James Flagg,
+Steve Freeman,
+Mark Friedman,
+Jim Gettys,
+Gabriel Sanchez Gutierrez,
+Jun Hamano,
+Bruno Haible,
+Scott W. Hassan,
+Carl Hauser,
+Rob Head,
+Michi Henning,
+Andrew Herbert,
+Angie Hinrichs,
+Ben Hurwitz,
+Roberto Invernici,
+Christian Jacobi,
+Swen Johnson,
+Gabor Karsai,
+Nobu Katayama,
+Dan `Bud' Keith,
+Sangkyun Kim,
+Ted Kim,
+Don Kimber,
+Steve Kirsch,
+Dan Larner,
+Carsten Malischewski,
+Larry Masinter,
+Fernando D. Mato Mira,
+Fazal Majid,
+Steven D. Majewski,
+Fernando D. Mato Mira,
+Michael McIlrath,
+Scott Minneman,
+Masashige Mizuyama,
+Curtis McKelvey,
+Chet Murthy,
+Farshad Nayeri,
+Bill Nell,
+Les Niles,
+T. Owen O'Malley,
+Annrai O'Toole,
+Andreas Paepcke,
+Jan Pedersen,
+Karin Petersen,
+Steve Putz,
+George Robertson,
+Joerg Schreck,
+Ian Smith,
+Bridget Spitznagel,
+Peter Swain,
+Marvin Theimer,
+Lindsay Todd,
+P. B. Tune,
+Bill Tutt,
+Kevin Tyson,
+Bill van Melle,
+Guido van Rossum,
+Brent Welch,
+Jody Winston,
+Rick Yardumian.
+
+@menu
+Chapters
+
+* ILU Concepts::
+* The ISL Interface Language::
+* Using ILU with Standard C::
+* Using ILU with Python::
+* Using ILU with Corba 2.0 C++::
+* Using ILU with C++::
+* Using ILU with Java::
+* Using ILU with Common Lisp::
+* Using ILU with Scheme (Guile)::
+* Using ILU with Perl::
+* Using ILU with Microsoft Windows::
+* Binding Names in ILU::
+* Threads and Event Loops::
+* Protocols and Transports::
+* Security::
+* ILU Customization::
+* Debugging ILU Programs::
+* Installation of ILU::
+* Multiple Languages In One Address Space::
+* Using Imake with ILU::
+
+Appendices
+
+* How to Create ILU Support for a Programming Language::
+* The TIM Documentation Language::
+* The ILU Common Lisp Portable DEFSYSTEM Module::
+* The ILU Common Lisp Lightweight Process System::
+* Porting ILU to Common Lisp Implementations::
+* Possible ISL Name Mappings for Target Languages::
+* Testing Framework for ILU::
+* ILU Minor Codes for System Exceptions::
+
+Indices
+
+* Index of Concepts::
+* Index of Functions Variables and Types::
+
+@end menu
+
+@set largerdoc  @c This will allow appropriate inclusion of chapters.
+
+@node ILU Concepts, The ISL Interface Language, ,   Top
+@chapter ILU Concepts
+@include concepts.tim
+
+@node The ISL Interface Language, Using ILU with Standard C, ILU Concepts, Top
+@chapter Defining Interfaces
+@include isl.tim
+
+@node Using ILU with Standard C, Using ILU with Python, The ISL Interface Language, Top
+@chapter Using ILU with Standard C
+@include c.tim
+
+@node Using ILU with Python, Using ILU with CORBA 2.0 C++, Using ILU with Standard C, Top
+@chapter Using ILU with Python
+@include python.tim
+
+@node Using ILU with CORBA 2.0 C++,       Using ILU with C++, Using ILU with Python,     Top
+@chapter Using ILU with CORBA 2.0 C++
+@include cpp2.tim
+
+@node Using ILU with C++,       Using ILU with Java, Using ILU with CORBA 2.0 C++,     Top
+@chapter Using ILU with C++
+@include c++.tim
+
+@node Using ILU with Java,       Using ILU with Common Lisp, Using ILU with C++,     Top
+@chapter Using ILU with Java
+@include java.tim
+
+@node Using ILU with Common Lisp,       Using ILU with Scheme (Guile), Using ILU with Java,     Top
+@chapter Using ILU with Common Lisp
+@include commonlisp.tim
+
+@node Using ILU with Scheme (Guile),       Using ILU with Perl, Using ILU with Common Lisp,     Top
+@chapter Using ILU with Scheme (Guile)
+@include scheme.tim
+
+@node Using ILU with Perl,                 Using ILU with Microsoft Windows, Using ILU with Scheme (Guile),     Top
+@chapter Using ILU with Perl
+@include perl.tim
+
+@node Using ILU with Microsoft Windows, Binding Names in ILU, Using ILU with Perl,     Top
+@chapter Using ILU with Microsoft Windows
+@include windows.tim
+
+@node Binding Names in ILU, Threads and Event Loops, Using ILU with Microsoft Windows, Top
+@chapter Binding Names in ILU
+@include binding.tim
+
+@node Threads and Event Loops, Protocols and Transports, Binding Names in ILU, Top
+@chapter Threads and Event Loops
+@include threads.tim
+
+@node Protocols and Transports, Security, Threads and Event Loops, Top
+@chapter Protocols and Transports
+@include protocol.tim
+
+@node Security, ILU Customization, Protocols and Transports, Top
+@chapter Security
+@include security.tim
+
+@node ILU Customization, Debugging ILU Programs, Security, Top
+@chapter ILU Customization
+@include mop.tim
+
+@node Debugging ILU Programs,   Installation of ILU,  ILU Customization,     Top
+@chapter Debugging ILU Programs
+@include debugging.tim
+
+@node Installation of ILU, Multiple Languages In One Address Space, Debugging ILU Programs, Top
+@chapter Installation of ILU
+@include installation.tim
+
+@node Multiple Languages In One Address Space, Using Imake with ILU, Installation of ILU, Top
+@chapter Multiple Languages In One Address Space
+@include multlang.tim
+
+@node Using Imake with ILU, The TIM Documentation Language, Multiple Languages In One Address Space, Top
+@chapter Using Imake with ILU
+@include imake.tim
+
+@node How to Create ILU Support for a Programming Language,   The TIM Documentation Language,  Using Imake with ILU, Top
+@appendix How to Create ILU Support for a Programming Language
+@include langsupp.tim
+
+@node The TIM Documentation Language,   The ILU Common Lisp Lightweight Process System,  How to Create ILU Support for a Programming Language, Top
+@appendix The TIM Documentation Language
+@include tim.tim
+
+@node The ILU Common Lisp Portable DEFSYSTEM Module, The ILU Common Lisp Lightweight Process System, The TIM Documentation Language, Top
+@appendix The ILU Common Lisp Portable DEFSYSTEM Module
+@include pdefsys.tim
+
+@node The ILU Common Lisp Lightweight Process System, Porting ILU to Common Lisp Implementations, The ILU Common Lisp Portable DEFSYSTEM Module, Top
+@appendix The ILU Common Lisp Lightweight Process System
+@include cl-processes.tim
+
+@node Porting ILU to Common Lisp Implementations, Algorithm for Generation of Structural-Hash Type IDs, The ILU Common Lisp Lightweight Process System,  Top
+@appendix Porting ILU to Common Lisp Implementations
+@include lisp-ports.tim
+
+@node Algorithm for Generation of Structural-Hash Type IDs, Possible ISL Name Mappings for Target Languages, Porting ILU to Common Lisp Implementations, Top
+@appendix Algorithm for Generation of Structural-Hash Type IDs
+@include typehash.tim
+
+@node Possible ISL Name Mappings for Target Languages, Testing Framework for ILU, Algorithm for Generation of Structural-Hash Type IDs, Top
+@appendix Possible ISL Name Mappings for Target Languages
+@include mappings.tim
+
+@node Testing Framework for ILU, ILU Minor Codes for System Exceptions, Possible ISL Name Mappings for Target Languages, Top
+@appendix Testing Framework for ILU
+@include testing.tim
+
+@node ILU Minor Codes for System Exceptions, Index of Concepts, Testing Framework for ILU, Top
+@appendix ILU Minor Codes for System Exceptions
+@include ../runtime/kernel/minors.tim
+
+@node   Index of Concepts, Index of Functions Variables Methods and Types, ILU Minor Codes for System Exceptions, Top
+@unnumbered Index of Concepts
+@printindex cp
+
+@node   Index of Functions Variables Methods and Types, , Index of Concepts, Top
+@unnumbered Index of Functions, Variables, Methods, and Types
+@printindex ft
+
+@page
+
+This Page Intentionally Left ``Blank''.
+
+@settitle ILU Reference Manual
+
+@contents

@@ -1,0 +1,314 @@
+@c $Id: threads.tim,v 1.16 1999/08/03 01:56:54 janssen Exp $
+@setfilename threads.info
+@settitle Threads and Event Loops
+@ifset ilucopyright
+BeginILUCopyright
+
+Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+Unlimited use, reproduction, modification, and distribution of this
+software and modified versions thereof is permitted.  Permission is
+granted to make derivative works from this software or a modified
+version thereof.  Any copy of this software, a modified version
+thereof, or a derivative work must include both the above copyright
+notice of Xerox Corporation and this paragraph.  Any distribution of
+this software, a modified version thereof, or a derivative work must
+comply with all applicable United States export control laws.  This
+software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+OF THE POSSIBILITY OF SUCH DAMAGES.
+  
+EndILUCopyright
+@end ifset
+@ifclear largerdoc
+@titlepage
+@title Threads and Event Loops
+@author Mike Spreitzer @code{<spreitze@@parc.xerox.com>}
+@sp
+Typeset @today{}
+@sp
+Copyright @copyright{} 1994, 1996 Xerox Corporation@*
+All Rights Reserved.
+@end titlepage
+@ifinfo
+@node Top, Threads and Event Loops, (dir), (dir)
+@top Threads and Event Loops
+@menu
+* Threads and Event Loops:: chapter contents
+@end menu
+@end ifinfo
+@node Threads and Event Loops, , , Top
+@chapter Threads and Event Loops
+@end ifclear
+
+@system{ILU} can be used in either the single-threaded or the multi-threaded programming style.  This chapter describes the relevant issues.
+
+The issue of @emph{threadedness} appears at two levels: within a program instance, and again for an entire distributed system.  We will first discuss the program level, and then the system level.
+
+Some programming languages are defined to support multiple threads of control.  @language{Java} is an example.  Other language definitions are single-threaded, or are silent on this issue.  Some of these, such as @language{C} and @language{C++}, can be used to write mutli-threaded programs with the use of certain libraries, coding practices, and compilation switches.  @system{ILU} can be used in multi-threaded program instances in both inherently multi-threaded languages and some of those where multi-threading is an option; similarly, @system{ILU} can be used in single-threaded program instances in both inherently single-threaded languages and all of those where multi-threading is optional.
+
+@menu
+* Multi-Threaded Programs::
+* Single-Threaded Programs::
+* Threadedness in Distributed Systems::
+@end menu
+
+
+@node Multi-Threaded Programs, Single-Threaded Programs, , Threads and Event Loops
+@section Multi-Threaded Programs
+
+Use of @system{ILU} in multi-threaded program instances mainly raises three issues: (1) @system{ILU}'s use of thread resources, (2) how to switch @system{ILU} to multi-threaded operation (for languages where multi-threading is optional), and (3) thread synchronization issues.  We'll take them in that order.
+
+When threads are used, @system{ILU} will fork: (a) a few (currently 6, I think) threads at startup; (b) a thread for each port added to a true server, for each connection to that port, and --- if the RPC protocol for that port is concurrent (see @xref{Protocols and Transports}) and the language being used is one of @language{C}, @language{C++}, or @language{Java} --- a thread for each call received on that connection; and (c) a thread per user-level alarm (ref ???) (of which there are none by default).
+
+@system{ILU}'s runtimes for both @language{Franz Common Lisp} and @language{Java} support multi-threading; programmers do not need to do anything special in these languages.
+
+@system{ILU}'s runtimes for @language{C}, @language{Python} and @language{C++} support both single-threaded and multi-threaded programming; they assume single-threading by default, and can be switched to multi-threading during initialization (described below).
+
+
+@menu
+* Multi-Threaded Programming in C::
+* Multi-Threaded Programming in C++::
+* Multi-Threaded Programming in Python::
+* Thread Synchronization::
+@end menu
+
+@node Multi-Threaded Programming in C, Multi-Threaded Programming in Python, , Multi-Threaded Programs
+@subsection Multi-Threaded Programming in C
+
+By default, the @language{ANSI C} language support in @system{ILU} is single-threaded.  However, an application can switch the @system{ILU} runtime kernel and @language{ANSI C} language support to multi-threaded operation; this involves informing the @system{ILU} runtime of which implementations to use for the threading primitives it needs.  An application can directly supply any implementation it wants.  To make this easy in certain common cases, there are predefined implementations available for use on systems that support @system{POSIX}, @system{Solaris 2}, or @system{Win32} threads.
+
+To directly supply the needed primitives, an application directly switches the @system{ILU} runtime kernel to multi-threaded operation (as described in @ref{Control Structure Options}) and furthermore gives @system{ILU}'s @language{C} runtime a procedure that forks a thread (via @C{ILU_C_SetFork}, described in @file{iluchdrs.h}).
+
+Instead of directly supplying the needed primitives, an application running on one
+of the relevant systems can switch to multi-threaded operation by this macro invocation:
+@example
+ILU_C_USE_OS_THREADS;
+@end example
+This can only be done if the option to do so was enabled during the configuration step of the installation of @system{ILU}; the default in that step is to enable this feature on systems that have an appropriate threading API, and not on others.
+
+In either case, switching from single-threaded to multi-threaded operation must be done before any calls to @C{ILU_C_Run}, @C{ILU_C_InitializeServer}, or anything that relies on a default @C{ilu_Server} existing.
+
+In some thread systems, it is important for the ``main'' thread not to exit before the program is finished executing.  To provide for this, your @language{C} program should call @macro{ILU_C_FINISH_MAIN_THREAD(@metavar{val})} instead of simply returning from @C{main()}.  This routine will block if necessary until it is safe for the thread to return, and will return the value @metavar{val}.
+
+@node Multi-Threaded Programming in Python, Multi-Threaded Programming in C++, Multi-Threaded Programming in C, Multi-Threaded Programs
+@subsection Multi-Threaded Programming in Python
+
+If you have selected support for operating-system level threads and for @language{Python} in building @system{ILU}, and if you have installed @language{Python} with support for threading, the @system{ILU} support for @language{Python} will also support threaded operation, using the normal @language{Python} threads mechanisms.
+
+By default, @language{Python} usage will be single-threaded.  To switch the @system{ILU} @language{Python} runtime from its default assumption of single-threadedness to multi-threaded operation, call the @language{Python} function @fn{@Python{ilu.ThreadedOperation()}} before calling any @system{ILU} functions.  This will switch both the @system{ILU} kernel and the @language{Python} runtime to multi-threaded operation.
+
+@node Multi-Threaded Programming in C++, Thread Synchronization, Multi-Threaded Programming in Python, Multi-Threaded Programs
+@subsection Multi-Threaded Programming in C++
+
+To switch the @system{ILU} @language{C++} runtime from its default assumption of single-threadedness to multi-threaded operation, call @C++{iluServer::SetFork} (described in @file{@metavar{ILUHOME}/include/ilu.hh}) before calling @C++{iluServer::Run}, @C++{iluServer::Stoppable_Run}, @C++{iluServer::iluServer}, or anything that relies on a default @C++{iluServer} existing.  @C++{iluServer::SetFork} makes a feeble attempt to detect being called too late, returning a logical value indicating whether an error was detected (when an error is detected, the switch is not made).  This detection is not reliable --- the caller should take responsibility for getting this right.
+
+Pass to @C++{iluServer::SetFork} a procedure for forking a new thread.  This forking procedure is given two arguments: a procedure of one pointer (@C++{void *}) argument and a pointer value; the forked thread should invoke that procedure on that value, terminating when the procedure returns.
+
+Before calling @C++{iluServer::SetFork}, you must switch @system{ILU}'s runtime kernel to multi-threaded operation by calling @C{ilu_SetWaitTech}, @C{ilu_SetMainLoop}, and @C{ilu_SetLockTech} as mentioned later (@pxref{Control Structure Options}).  @system{ILU}'s @language{C++} runtime takes care of forking the thread to call @C{ilu_OtherNewConnection}; you should not call @C{ilu_NewConnectionGetterForked}.
+
+
+@node Thread Synchronization, , Multi-Threaded Programming in C++, Multi-Threaded Programs
+@subsection Thread Synchronization
+@cindex Thread Synchronization
+
+Thread synchronization issues are almost invisible in the interfaces that application programers use.  In multi-threaded operation, @system{ILU} objects may be operated on concurrently: a multi-threaded client can make concurrent calls, and a multi-threaded server may receive concurrent calls.  @system{ILU} itself does no particular synchronization of application-level code --- that's left up to the application.
+
+The one exception, already noted, is @ref{Object Tables}; their operation is inside certain of the @system{ILU} runtime's mutexes.  For the sake of these (and any unexpected place this issue shows up), we now explain thread synchronization in @system{ILU}.
+
+@cindex Mutex
+@cindex Mutex acquire
+@cindex Mutex enter
+@cindex Mutex release
+@cindex Mutex exit
+ILU uses mutex and condition variables to organize its thread synchronization; mutexes are even used for the plan for how single-threaded code works.  A @dfn{mutex} is a data item that stands for a mutual exclusion condition.  A mutex can be @dfn{held} by at most one thread at a time.  We say a thread is either @dfn{inside}
+a mutex (when it holds the mutex) or @dfn{outside} a mutex (when it doesn't hold the mutex).  Thus a region of code in which at most one thread may be executing at a time is surrounded by mutex @dfn{acquire} (aka @dfn{entry}) and @dfn{release} (aka @dfn{exit}) operations.  The operation of entering a mutex blocks the
+calling thread until no thread is inside the mutex, then enters.
+
+@cindex Mutex invariant
+One particularly principled way of thinking about how to use mutexes involves associating a @dfn{mutex invariant} with a mutex; the invariant is expected to hold, except perhaps while the mutex is held.  Just after the mutex is acquired, the invariant is known to hold; it will continue to hold until the code holding the mutex changes variables involved in the invariant; such code must restore the invariant before releasing the mutex.  Note that this can be a useful way to understand the operation of even single-threaded code (particularly code with a recursive main loop); for this reason @system{ILU} code is fully annotated with respect to mutexes, even though that code may operate single-threaded: when a single-threaded program tries to acquire a mutex it already holds, a bug is revealed that would otherwise be much harder to track down.  We do not have a comprehensive description of the full invariant associated with each @system{ILU} mutex, but we do have parts of some written down near the declarations of the variables involved (in particular, the comments at a variable's declaration may be taken as part of the invariant associated with the mutex that is the variable's lock (see below)).
+
+@cindex Object lock
+Another way to think about mutexes is to use them as @dfn{object locks} (this is a technical term you will find in the literature; it has nothing to do with "objects" as in OOP, but uses a broader sense of the word).  A shared (among threads) variable has a controlling lock, which must be held while reading or writing the variable.  @system{ILU} rigorously includes @dfn{locking comments} that take the object lock view: for each variable the corresponding lock (or locks, in some cases) is indicated, and each procedure or method has declared pre- and post-conditions describing which locks must or must not be held.
+
+@cindex Connection mutex
+@cindex Non-connection mutex
+ILU has two classes of mutexes: connection mutexes and non-connection
+mutexes.  While connections don't show up in the @system{ILU} API, they do appear internally, and the connection mutexes figure into the Main Invariant, which applies to most application code.  We will give no details on connection mutexes in this section, because applications don't manipulate them.
+
+Here are the non-connection mutexes:
+@example
+smu:	global mutex for the server table;
+otmu:	global mutex for object type data structures;
+cmu:	global LRU list of connections
+prmu:	global mutex for protocol registry
+trmu:	global mutex for transport registry
+gcmu:	global mutex for GC data structures
+timu:	global mutex for alarm implementation.
+server:	one mutex per server.
+@end example
+
+@cindex Deadlock avoidance
+@cindex Locking order
+Our main technique for avoiding deadlocks is to put a partial order on
+mutexes, and acquire mutexes in an order consistent with the partial
+order.  That is, a thread may enter mutex B while holding mutex A only
+if A < B (we have a few carefully managed exceptions to this rule,
+involving connection mutexes).  For non-connection mutexes,
+the partial order is the transitive closure of
+the following relationships:
+@example
+cmu < server
+smu < server
+server < prmu
+server < trmu
+gcmu < server
+gcmu < timu
+cmu < smu
+gcmu < cmu
+cmu < timu
+prmu < otmu
+@end example
+
+@cindex L1
+@cindex L2
+We use the symbols @dfn{L2} and @dfn{L1} to stand for the sets of connection and
+non-connection mutexes held by a thread, respectively.  We write ">="
+for the set inclusion relation.  We write "L1.sup < X" to mean that
+either (a) L1 is empty, or (b) the maximum elment of L1 (the partial
+order rule says there must be exactly one maximal element whenever L1
+isn't empty) precedes X in the partial order.  We write "L1.sup = X"
+to mean that L1 is not empty and its maximum member is X.  We don't
+speak of "L2.sup" because a thread is allowed to violate the partial
+order rule with respect to L2 mutexes.
+
+@cindex Main Remnant
+There is a locking invariant called the @dfn{Main Remnant}, but
+it is only about connection mutexes.
+
+@cindex Main Invariant
+There is a common locking invariant,
+called the @dfn{Main Invariant}:
+@example
+L1 = @{@} and Main Remnant.
+@end example
+It holds in many places.  The Main Invariant is exactly what's guaranteed
+to hold while an application's service routines are called.  The Main
+Invariant is among the things guaranteed to hold while a stub is
+marshalling or unmarshalling.  The Main Invariant is exactly what's
+guaranteed to hold while waiting for I/O on a File Descriptor to be
+enabled.  The Main Invariant is among the things guaranteed to hold while
+doing I/O on a File Descriptor.  
+
+For variables, the locking comments say what mutexes must be held to
+access the variable.  For procedure values, the locking comments say
+what mutexes must be held to call the procedure, and, if the procedure
+changes the set of held mutexes, how.  Both sorts of comment are
+applicable to procedure-valued variables; we prefer to document the
+locking pre- and post-conditions in a typedef of the procedure type,
+and describe the variable/mutex association in the usual way.
+
+@cindex Locking comment
+We have two sorts of locking comments: those about L1, and those about L2.
+Locking comments come in blocks.  There are two kinds of blocks of
+locking comments: a "sticky" block is followed by a blank line; a
+"one-shot" is not.  A locking comment is also called "sticky" or
+"one-shot", depending on the kind of the comment block in which the
+comment is contained.  A one-shot comment applies only to the
+immediately following item.  A sticky comment of a certain sort
+applies to all items between it and the next sticky comment of the
+same sort, except those items to which a one-shot comment of the same
+sort applies.
+
+The implementation of mutexes can itself be broken; when this is detected,
+an @system{ILU} procedure may raise an exception indicating this condition
+--- and when it does, the locking post-condition can not be expected to hold.
+
+@cindex Condition variable
+@cindex Wait on a condition variable
+@cindex Notify a condition variable
+@system{ILU} also uses @dfn{condition variables} to get high-performance
+multithreaded operation.  A thread can @dfn{wait} on a condition variable.
+Another thread can @dfn{notify} that condition variable.  This causes all
+threads currently waiting on the condition variable to return from the
+wait operation.  To prevent timing splinters, decisions about waiting
+and notifying should be made inside a mutex.  This means the mutex
+must be released while waiting on a condition variable, and there must
+be no possibilty of a thread switch between the release of the mutex
+and the start of the wait; the wait operation thus takes the mutex as an
+argument, because in a pre-emptive threads environment the
+release and the wait must be an atomic thread operation.
+
+
+
+@node Single-Threaded Programs, Threadedness in Distributed Systems, Multi-Threaded Programs, Threads and Event Loops
+@section Single-Threaded Programs
+
+Users of @system{ILU} in single-threaded programs typically need to worry about only one thing: the main loop.  To animate @system{ILU} server modules, a single-threaded program needs to be running the @system{ILU} main loop.  This can be done, e.g., by calling @C{ILU_C_Run()} in @language{C} or @C++{iluServer::Run} in @language{C++}.  @system{ILU} also runs its main loop while waiting for I/O involved in RPC (so that incoming calls may be serviced while waiting for a reply to an outgoing call; for more on this, @pxref{Threadedness in Distributed Systems}).
+
+The problem is, many other subsystems also have or need their own main loop.  Windowing toolkits are a prime example.  When a programmer wants to create a single-threaded program that uses both @system{ILU} and another @emph{main looped} subsystem, one main loop must be made to serve both (or all) subsystems.  From @system{ILU}'s point of view, there are two approaches doing this: (1) use @system{ILU}'s default main loop, or (2) use some @emph{external} (to @system{ILU}) main loop (this might be the main loop of some other subsystem, or a main loop synthesized specifically for the program at hand).  @system{ILU} supports both approaches.  Actually, @system{ILU}'s runtime kernel supports both approaches.  Currently no language veneers mention it.  This is, in part, because it has no interaction with the jobs of the language veneers --- application code can call this part of the kernel directly (from any language that supports calling @language{C} code).
+
+@menu
+* ILU Main Loop Functional Spec::
+* Using ILUs Default Main Loop::
+* Using an External Main Loop::
+* A Hybrid Aproach::
+@end menu
+
+
+@node ILU Main Loop Functional Spec, Using ILUs Default Main Loop, , Single-Threaded Programs
+@subsection ILU Main Loop Functional Spec
+
+@system{ILU} needs a main loop that repeatedly waits for I/O being enabled on file descriptors (a UNIX term) and/or certain times arriving, and invokes given procedures when the awaited events happen.  (Receipt of certain UNIX signals should probably be added to the kinds of things that can be awaited.)  The main loop can be recursively invoked by these given procedures (@pxref{Threadedness in Distributed Systems} for a good reason why), and thus particular instances of the main loop can be caused to terminate as soon as the currently executing given procedure returns.
+
+For a detailed presentation, see the kernel interface version of this functionality, in procedures @C{ilu_RunMainLoop}, ... @C{ilu_UnsetAlarm} in @file{iluxport.h}; these are generic procedures that call the actual procedures of whatever main loop is really being used.  To see the signatures of the procedures really being used, see the definition of type @C{ilu_MainLoop} in @file{iluxport.h}.  [Should have a description here that doesn't reference @file{iluxport.h}.]
+
+
+@node Using ILUs Default Main Loop, Using an External Main Loop, ILU Main Loop Functional Spec, Single-Threaded Programs
+@subsection Using ILU's Default Main Loop
+
+In this approach, @system{ILU}'s default main loop is made to serve the needs of both @system{ILU} and the other main-loop-using parts of the program.  When the other main-loop-using parts of the program need to register I/O handlers or use alarms, you arrange to call the appropriate generic procedures of the @system{ILU} main loop.
+
+
+@node Using an External Main Loop, A Hybrid Aproach, Using ILUs Default Main Loop, Single-Threaded Programs
+@subsection Using an External Main Loop
+
+In this approach, you use an external (to @system{ILU}) main loop to serve the needs of @system{ILU} (as well as other parts of your program).  This involves getting @system{ILU} to reveal to you its needs for waiting on I/O and time passage, and your arranging to satisfy these needs using the services of the external main loop.  You do this by supplying to @system{ILU}, early in the initialization sequence, a metaobject of your creation.  @system{ILU} reveals its needs to you by calls on the methods of this metaobject, and you satisfy them in your implementations of these methods.  The @language{C} type for such a metaobject is @C{ilu_MainLoop}, found in @file{iluxport.h}.
+
+Note that an @C{ilu_MainLoop} is responsible for managing multiple alarms.  Some external main loops may directly support only one alarm.  Later in @file{iluxport.h} you will find a general alarm multiplexing facility, which may come in handy in such situations.
+
+See the files in @file{@metavar{ILUSRC}/runtime/mainloop/} for several examples of this approach (for the X Window System's various toolkits, like Motif, Xaw, XView, and Tk).
+
+
+@node A Hybrid Aproach, , Using an External Main Loop, Single-Threaded Programs
+@subsection A Hybrid Aproach
+
+Both of the above approaches rely on there being a certain amount of harmony between the functional requirements made by some main-looped subsystems and the functional capabilities offered by others.  It also relies on the subsystems whose "normal" main loops are not used being open enough that you can determine their main loop needs.  The conditions cannot be guaranteed in general.  We've tried to minimize the main loop requirements of @system{ILU}, and maximize its openness.
+
+We know of an example where neither of the above approaches is workable, and have a solution that may be of interest.
+See @file{@metavar{ILUSRC}/etc/xview/} for the (untested) code.
+
+The problem is with the @system{Xview} toolkit (for the X Window System).  Its main loop cannot be recursively invoked (a requirement of @system{ILU}), and the @system{Xview} toolkit is not open enough to enable use of any other main loop.
+
+Our solution is to use @system{Xview}'s main loop as the @emph{top level} main loop, letting @system{ILU} use its own main loop when waiting on RPC I/O.  Like the external main loop approach, this requires getting @system{ILU} to reveal its needs for waiting on I/O and time; unlike the external main loop approach, this requires @emph{not} calling @C{ilu_SetMainLoop}.  Instead of calling @C{ilu_SetMainLoop}, you call @C{ilu_AddRegisterersToDefault}, which causes @system{ILU}'s default main loop to reveal @system{ILU}'s needs to you --- in addition to doing everything the default main loop normally does.  (Actually, the multiple alarms of @system{ILU} have been multiplexed into one here for your convenience.)  You register these needs with the @system{Xview} main loop, and run it at the top level.
+
+This solution is not as good as we'd like; it does not provide a truly integrated main loop.  In particular, any I/O handler registered through @system{ILU}'s generic procedures (@C{ilu_RegisterInputSource}, @C{ilu_RegisterOutputSource}) may be called spurriously: due to lack of coordination, both loops may decide a call is in order (when, of course, only one call is in order).  As of release 2.0, @system{ILU}'s own I/O handlers are prepared for spurrious calls.  Application programmers are responsible, when they use @C{ilu_AddRegisterersToDefault}, for making sure their I/O handlers that are registered through @system{ILU}'s generic procedures are prepared for spurrious calls.
+
+
+@node Threadedness in Distributed Systems, , Single-Threaded Programs, Threads and Event Loops
+@section Threadedness in Distributed Systems
+
+In a distributed system of interacting program instances, you can (in principle, even if not (easily) in practice) trace a thread of control across remote procedure calls.  Thus a distributed system, when viewed as a whole, can be seen to be programmed in either a single-threaded or multi-threaded style.  @system{ILU} aims to minimize the consequences of the choice between in-memory and RPC binding, and this requires things not usually offered by other RPC systems.  Some of these things are required by both the single-threaded and multi-threaded styles of programming distributed systems, for related but not quite identical reasons.
+
+Forget RPC for a moment, and consider a single-threaded program instance.  Method @m3{m1} of object @m3{o1} (we'll write this as @m3{o1.m1}) may call @m3{o2.m2}, which may call @m3{o3.m3}, which may in turn call @m3{o1.m1} again, which could then call @m3{o3.m4}, and then everything could return (in LIFO order, of course).  Late in this scenario, the call stack of the one thread includes two activations of the very same method of the same object (@m3{o1.m1}), and another two activations of different methods of a common object (@m3{o3}).  All this is irrespective of module boundaries.
+
+We want to be able to do the same thing in a distributed setting, where, e.g., each true object is in a different program instance.  This means that while the @system{ILU} runtime is waiting for the reply of an RPC, it must be willing to service incoming calls.  This is why @system{ILU} requires a recursive main loop in single-threaded programs.
+
+In fact, one rarely wants single-threaded distributed systems.  Indeed, the opportunities for concurrency are one of the main attractions of distributed systems.  In particular, people often try to build multi-threaded distributed systems out of single-threaded program instances.  While we hope this confused approach will fade as multi-threading support becomes more widespread, we recognize that it is currently an important customer requirement.  Making single-threaded @system{ILU} willing to recursively invoke its main loop also makes single-threaded program instances more useful in a multi-threaded distributed system (but what you really want are multi-threaded program instances).
+
+Threading is also an issue in RPC protocols.  Some allow at most one outstanding call per connection.  When using one of these, @system{ILU} is willing to use multiple parallel RPC connections, because they're needed to make nested calls on the same server.

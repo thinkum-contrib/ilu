@@ -1,0 +1,5013 @@
+# BeginILUCopyright
+#
+# Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+#
+# Unlimited use, reproduction, modification, and distribution of this
+# software and modified versions thereof is permitted.  Permission is
+# granted to make derivative works from this software or a modified
+# version thereof.  Any copy of this software, a modified version
+# thereof, or a derivative work must include both the above copyright
+# notice of Xerox Corporation and this paragraph.  Any distribution of
+# this software, a modified version thereof, or a derivative work must
+# comply with all applicable United States export control laws.  This
+# software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+# WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+# PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+# LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+# EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+# NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+# OF THE POSSIBILITY OF SUCH DAMAGES.
+#
+# EndILUCopyright
+
+
+R_cpp_c (Interface i) (Exception e, Int ei, Object obj) -->
+
+  L_top(i.isl_name, F_vs_string())
+
+  { {
+    E_ [i.exceptions != NULL]
+    L_except_array_begin()
+    L_except_entry: e(ei) in i.exceptions: (F_full_ref(e), ei)
+    L_()  "  };"
+    } | TRUE }
+
+  L_init_fun_list(F_full_prefix(i.module_str, 1) )
+  L_class_record_def: obj in i.classes: (F_full_typeref(obj))
+     [obj.importedfromname == NULL  obj.supertype == NULL]
+
+  R_initialize(i)
+
+  # if use classes, initialize constant values here
+  { R_consts(i) [ i.constants!= NULL F_use_classes() != 0] | TRUE }
+  R_type_ops(i)
+  { R_exception_ops(i) [i.exceptions != NULL] | TRUE}
+  L_force_init(F_full_prefix(i.module_str, 1),
+               F_module_prefix(i.module_str, 1),  
+               F_underscore_prefix(i.module_str))
+.
+
+
+L_top(intf, vs_string) -->  
+
+// This file was automatically generated with ILU (version %vs_string%) tools
+// ILU is Copyright 1991-1999 Xerox Corporation, All Rights Reserved.
+// ILU information:  ftp://ftp.parc.xerox.com/pub/ilu/ilu.html.
+
+#include \"%intf%-cpp.hpp\"
+
+//////////////////////////////////////////////////////////////////////
+// globals & static members
+
+.
+L_except_array_begin() -->
+  // exceptions vector
+  static iluException interface_exceptions[] = {
+.
+
+L_except_entry(ename, Int ei) -->
+          (iluException) %ei%,   //%ename%exception
+.
+
+L_init_fun_list(extpfx) -->
+
+  // list of initialization functions to call for the %extpfx% interface
+  iluInitializationFunctionNode* %extpfx%p_initialization_function_list;
+  int %extpfx%g_i_initialized;
+
+.
+
+L_class_record_def(objname) -->
+  // holds the ilu class record for %objname% objects
+  iluClass %objname%::m_ILUClassRecord;
+.
+  
+L_force_init(extpfx, mpfx, us_pfx) -->  
+
+
+////////////////////////////////////////////////////////////////
+// Force initialization of %extpfx% classes upon load
+
+%extpfx%initializer %extpfx%initializer::sm_the_%us_pfx%_initializer;
+
+%extpfx%initializer:: %mpfx%initializer () {
+  ensure_instantiation();  
+}
+
+/* CHANGED RETURN FROM int to void * for SUNPRO 5 */
+void * %extpfx%initializer:: ensure_instantiation () {
+  iluCppRuntime::iluAddInitializationFunction(%extpfx%iluInitialize);
+  return this;
+}
+.
+
+===========================================================
+R_initialize(Interface i)
+     (Exception e, Exception e1, eu, ex_uid, e_intf,
+      Object o, us_ex_name,extpfx, mname, mpfx, b, brand) -->
+
+  E_ [extpfx = F_full_prefix(i.module_str, 1) 
+       mname = i.module_str.simple_name 
+       mpfx = F_module_prefix(i.module_str, 1)
+       [ [i.brand == NULL brand =
+              "REINTERPRET_CAST(iluCString, ((ILUCPP_NULL_PTR)0))" ] |
+         [ b = F_concat( "CONST_CAST(iluCString, \"", i.brand)
+          brand = F_concat(b, "\")")]
+       ] 
+      ]
+       
+
+  L_init (i.name, extpfx, mpfx)
+
+  { { E_  [i.exceptions != NULL] 
+      L_except_comment(i.name) 
+      L_def_except :e in i.exceptions:
+          (e_intf, F_underscore_name(e1), F_reg_name(e1), ex_uid) 
+         [
+          [[ e.importedfrom != NULL e1 = e.importedexception ] | e1 = e ]
+          [[ e1.type == NULL
+              ex_uid = "REINTERPRET_CAST(iluCString, ((ILUCPP_NULL_PTR) 0))" ]
+            | 
+            [ eu = F_concat( "CONST_CAST(iluCString, \"", e1.type.uid)
+             ex_uid =  F_concat(eu, "\")")]
+           ] 
+            e_intf = e1.interface.isl_name  
+          ]
+         
+      } | TRUE }
+
+  { { E_  [i.classes != NULL] 
+      L_object_comment(i.name) 
+      L_init_object :o in i.classes: (mpfx, F_full_typeref(o))
+         [ o.importedfromname == NULL ] 
+      } | TRUE }
+
+   R_IIOP_reg(mpfx, i, brand, i.types)
+
+   L_end_init(mpfx)
+.
+
+L_init(intf, extpfx, mpfx) -->
+
+//////////////////////////////////////////////////////////////////////
+// %intf% initialization
+
+  void %extpfx%iluInitialize () {
+
+      if ( %mpfx%g_i_initialized == 0) {  // haven't initialized before
+
+      // grab global mutex for object type data structures
+      iluMutexer mutex_on_object_type(iluCppInternal::sm_object_type_mutex);
+
+.
+  
+L_except_comment(intf) -->
+
+       // define the exceptions in the %intf% interface
+.
+
+L_def_except(intf, us_ex_name, ename_in_intf, exc_uid) --> 
+       interface_exceptions[g_%us_ex_name%_index] =
+              iluCppInternal::iluDefineException(
+                 CONST_CAST( iluCString, \"%intf%\"),
+                 CONST_CAST( iluCString, \"%ename_in_intf%\"),
+                 %exc_uid%);
+.
+
+L_object_comment(intf) -->
+
+       // performs object type initialization
+.
+
+L_init_object(mpfx, oname) -->
+        %oname%::iluInitialize();
+.
+
+L_end_init(mpfx )-->
+
+   %mpfx%g_i_initialized = 1;
+ }
+
+ // call all the surrogate and true initialization functions
+ iluCppInternal::iluCallInitializationFunctions(&%mpfx%p_initialization_function_list);
+
+}
+
+.
+
+====================================================================
+
+# More efficient if don't group
+R_IIOP_reg(String mpfx, Interface i, brand, List types) -->
+
+   L_iiop_reg_begin()
+   R_reg_optionals(i, brand, types)
+   R_reg_unions(i, brand,  types)  
+   R_reg_sequences(i, brand, types)  
+   R_reg_arrays(i, brand, types)  
+   R_reg_records(i, brand, types)  
+   R_reg_objects(i, brand, types)
+   R_reg_enumerations(i, brand, types)
+   R_reg_aliases(i, brand, types)
+   L_iiop_reg_end()
+.
+
+L_iiop_reg_begin() -->
+
+#ifdef IIOP_PROTOCOL
+        {
+        ILUCPP_BOOL b_new_registration;
+                  iluType  a_type;
+.
+
+L_iiop_reg_end() -->
+
+       }
+#endif  // IIOP_PROTOCOL 
+.
+       
+
+=======================================================================
+
+R_reg_optionals(Interface i, brand, List types) (Any t) -->
+
+   R_reg_optional :t in types: (i, brand, t)  	 
+      [ F_ur_typename(t) == "Optional"
+       t.supertype == NULL t.importedfromname == NULL]
+.
+
+R_reg_optional(Interface i, brand, Optional opt) (base_uid, regname) -->
+
+   L_reg_optional(i.isl_name,  brand, regname, opt.uid, base_uid) 
+       [ regname =  F_reg_name(opt)
+         base_uid = F_ur_property(opt.oftype, "uid") ]
+.
+
+L_reg_optional(intf, brand,  regname, opt_uid, base_uid) --> 
+
+        iluCppInternal::iluRegisterOptionalType(
+           CONST_CAST( iluCString, \"%regname%\"),
+           CONST_CAST( iluCString, \"%intf%\"),
+           %brand%, 
+           CONST_CAST( iluCString, \"%opt_uid%\"),
+           CONST_CAST( iluCString, \"%base_uid%\"),  //  base type
+             &b_new_registration);
+.
+
+
+=======================================================================
+
+R_reg_unions(Interface i, brand, List types) (Any t) -->
+
+   R_reg_union :t in types: (i, brand, t)  	 
+      [F_ur_typename(t) == "Union"
+       t.supertype == NULL t.importedfromname == NULL]
+.
+
+# assumes default arm in list of arms, as does c stubber
+R_reg_union(Interface i, brand, Union union) 
+  (regname, discrim_uid, Int arm_ct, Int default_ix, discrim_type,
+    Arm arm, Int ai, disc_name, Int dix, o_allowed) -->
+
+   L_reg_union(i.isl_name, brand, regname, union.uid, discrim_uid, arm_ct,  
+               default_ix, o_allowed)
+       [ regname = F_reg_name(union)
+         discrim_type = F_ur_typename(union.discrim_type)
+         discrim_uid = F_ur_property(union.discrim_type, "uid") 
+         arm_ct = F_list_ct(union.arms)
+         [ [union.default_arm == NULL default_ix = 0 ]
+           | [ dix = F_list_match_ix(union.arms, union.default_arm)
+               dix != 0 default_ix = dix]
+           | default_ix = 0 ]
+         [  [ discrim_type == "ShortCardinal"  disc_name = "shortcardinal"] 
+          | [ discrim_type == "Cardinal"       disc_name  = "cardinal"    ] 
+          | [ discrim_type == "ShortInteger"   disc_name  = "shortinteger" ] 
+          | [ discrim_type == "Integer"        disc_name  = "integer"     ] 
+          | [ discrim_type == "Byte"           disc_name  = "byte"        ] 
+          | [ discrim_type == "Boolean"        disc_name  = "boolean"     ]  
+          | [ discrim_type == "Enumeration"    disc_name  = "enumeration" ]  
+         ]
+         [ [union.others_allowed == 0 o_allowed = "ILUCPP_FALSE" ] 
+          | o_allowed = "ILUCPP_TRUE"] 
+
+        ]
+
+   R_reg_arm :arm(ai) in union.arms: (arm, ai, disc_name )
+   L_()  "      }"
+.
+
+
+# use prefixes here? 
+R_reg_arm(Arm arm, Int i, disc_name )
+    (Any v, Int j, value, arm_uid, arm_name, arm_name1,
+        Int sel_val_ct, value) -->
+
+     L_reg_arm(i, arm_name, arm_uid, sel_val_ct)
+       [ arm_uid    = F_ur_property(arm.type, "uid") 
+         sel_val_ct = F_list_ct(arm.values) 
+        [ [arm.name == NULL 
+           arm_name1 = F_build_arm_name(arm.type)
+           arm_name = F_convert_underscores(arm_name1) ] |
+           arm_name = arm.isl_name]
+       ]
+
+      R_reg_armvalue: v(j) in arm.values : (disc_name, j, value) 
+        [ value = F_constant_value(v) ] 
+.
+
+
+R_reg_armvalue(disc_name, Int j, value) -->
+      
+     {   L_reg_enum_val(disc_name, value)  [disc_name == "enumeration"]
+       | L_reg_bool_val(disc_name, value)  [disc_name == "boolean"]
+       | L_reg_other_val(disc_name, value)
+     }
+     
+     L_reg_rest(disc_name, j)
+.
+
+L_reg_other_val(disc_name, value) -->
+
+             constant_value.value.%disc_name%_val = %value%;
+.
+L_reg_bool_val(disc_name, value) -->
+
+             constant_value.value.%disc_name%_val =
+               STATIC_CAST(iluBoolean, %value%);
+.
+L_reg_enum_val(disc_name, value) -->
+
+             constant_value.value.%disc_name%_val =
+                 CONST_CAST( iluCString, \"%value%\");
+.
+L_reg_rest(disc_name, Int j) -->
+             constant_value.kind = ilu_%disc_name%_cvk;
+             iluCppInternal::iluRegisterUnionArmValue ( union_arm,
+                 %j%, // which arm value
+                 &constant_value // actual value
+             );
+.
+
+L_reg_union(intf, brand, regname, un_uid, discrim_uid, 
+            Int arm_ct, Int default_index, o_allowed ) --> 
+
+        a_type = iluCppInternal::iluRegisterUnionType(
+             CONST_CAST( iluCString, \"%regname%\"),
+             CONST_CAST( iluCString, \"%intf%\"), 
+             %brand%,
+             CONST_CAST( iluCString, \"%un_uid%\"),
+             CONST_CAST( iluCString, \"%discrim_uid%\"),  // UID of discriminant type
+              %arm_ct%,         // number of arms
+              %default_index%,  // default arm (0 for none)
+              %o_allowed%,      // invalid discriminant values allowed?
+             &b_new_registration);
+
+        if (b_new_registration) {
+             iluConstantValue_s constant_value;
+             iluUnionArm union_arm;
+.
+
+L_reg_arm (Int arm_index, arm_name, arm_uid, Int sel_val_ct) --> 
+
+             union_arm = iluCppInternal::iluRegisterUnionArm (a_type,
+                  %arm_index%,   // which arm
+                  CONST_CAST( iluCString, \"%arm_name%\"),   // name of arm
+                  CONST_CAST( iluCString,  \"%arm_uid%\"), // arm type
+                  %sel_val_ct%  // number of vals that can select this arm
+              );
+
+.
+
+=======================================================================
+
+R_reg_sequences(Interface i, brand, List types) (Any t) -->
+
+   R_reg_sequence :t in types: (i, brand, t)  	 
+      [F_ur_typename(t) == "Sequence"
+       t.supertype == NULL t.importedfromname == NULL] 
+.
+
+R_reg_sequence(Interface i, brand, Sequence seq) 
+    (base_uid, regname, chartype, Int limit) -->
+
+   L_reg_sequence(i.isl_name, brand, regname, seq.uid, base_uid, seq.limit) 
+       [ regname =  F_reg_name(seq)
+         base_uid = F_ur_property(seq.oftype, "uid") 
+         chartype = F_string_chartype(seq.oftype)
+        [ chartype == NULL | chartype == "iluCharacter" ]
+       ]
+.
+
+L_reg_sequence(intf, brand, regname, seq_uid, base_uid, Int limit) --> 
+
+        iluCppInternal::iluRegisterSequenceType(
+            CONST_CAST( iluCString, \"%regname%\"),
+            CONST_CAST( iluCString,  \"%intf%\"),
+            %brand%,
+            CONST_CAST( iluCString,  \"%seq_uid%\"),
+            CONST_CAST( iluCString,  \"%base_uid%\"),  //  base type
+            %limit%,      // limit (0 for no limit)   
+            &b_new_registration);
+.
+=======================================================================
+
+R_reg_arrays(Interface i, brand, List types) (Any t) -->
+
+   R_reg_array :t in types: (i, brand, t)  	 
+      [F_ur_typename(t) == "Array"
+       t.supertype == NULL t.importedfromname == NULL ]
+.
+
+R_reg_array( Interface i, brand, Array array) 
+    (base_uid, regname, us_name, dims, Int dim_ct) -->
+
+   L_reg_array(i.isl_name, brand, regname, array.uid, base_uid, us_name, dims, dim_ct) 
+       [ regname =  F_reg_name(array)
+         base_uid = F_ur_property(array.oftype, "uid") 
+         us_name = F_underscore_name(array)
+         dims = F_dims(array, "braces", 0) 
+         dim_ct  = F_list_ct(array.dimensions)
+       ]
+.
+
+
+L_reg_array(intf, brand, regname,array_uid,
+        base_uid, us_name, dims, Int dim_ct) --> 
+
+       { // array type \"%us_name%\"
+ 
+        iluCardinal _%us_name%_dims[] = %dims%;
+ 
+        iluCppInternal::iluRegisterArrayType(
+            CONST_CAST( iluCString, \"%regname%\"),
+            CONST_CAST( iluCString, \"%intf%\"), 
+            %brand%, 
+            CONST_CAST( iluCString, \"%array_uid%\"),
+            CONST_CAST( iluCString, \"%base_uid%\"), // base type of array
+            %dim_ct%,           // number of dimensions
+            _%us_name%_dims, // actual dimensions
+            &b_new_registration);
+       }
+.
+
+=========================================================================
+
+R_reg_records(Interface i, brand, List types) (Any t) -->
+
+   R_reg_record :t in types: (i, brand,  t)  	 
+      [ F_ur_typename(t) == "Record"
+        t.supertype == NULL t.importedfromname == NULL ]
+.
+
+R_reg_record(Interface i, brand, Record record) 
+    (regname, Int field_ct, Int fi, Argument f, f_uid) -->
+
+   L_reg_record(i.isl_name, brand, regname, record.uid, field_ct) 
+       [ regname =  F_reg_name(record)
+         field_ct  = F_list_ct(record.fields) ]
+
+   L_reg_field: f(fi) in record.fields : (fi, f.isl_name,  f_uid) 
+       [ f_uid = F_ur_property(f.type, "uid")  ]
+
+  L_() "        }"
+.
+
+L_reg_record(intf, brand, regname, record_uid, Int field_ct) -->  
+
+        a_type = iluCppInternal::iluRegisterRecordType(
+            CONST_CAST( iluCString, \"%regname%\"),
+            CONST_CAST( iluCString, \"%intf%\"), 
+            %brand%, 
+            CONST_CAST( iluCString, \"%record_uid%\"),
+            %field_ct%, // number of fields in the record
+            &b_new_registration);
+
+        if (b_new_registration) {
+.
+
+L_reg_field(Int field_index, field_name, field_uid) --> 
+
+            iluCppInternal::iluRegisterRecordField(a_type,
+                %field_index%,     // which field
+                CONST_CAST( iluCString, \"%field_name%\"),     // field name
+                CONST_CAST( iluCString, \"%field_uid%\") // UID of field type
+            );
+.
+
+
+=========================================================================
+R_reg_objects(Interface i, brand, List types) (Any t) -->
+
+   R_reg_object :t in types: (i, brand, t)  	 
+      [F_ur_typename(t) == "Object"
+       t.supertype == NULL t.importedfromname == NULL]
+.
+
+# check obj name
+R_reg_object(Interface i, brand, Object obj) (regname, ext_objname) -->
+
+   L_reg_object(i.isl_name, brand,  regname, obj.uid, ext_objname) 
+       [ regname =  F_reg_name(obj)
+         ext_objname = F_full_typeref(obj)]
+.
+
+L_reg_object(intf, brand, regname, obj_uid, ext_objname) --> 
+
+        iluCppInternal::iluRegisterObjectType(
+            CONST_CAST( iluCString, \"%regname%\"),
+            CONST_CAST( iluCString, \"%intf%\"), 
+            %brand%,
+            CONST_CAST( iluCString, \"%obj_uid%\"),
+            %ext_objname%::iluGetILUClassRecord(), // object class
+            &b_new_registration);
+.
+
+=========================================================================
+
+R_reg_enumerations(Interface i, brand, List types) (Any t) -->
+
+   R_reg_enumeration :t in types: (i, brand,  t)  	 
+      [F_ur_typename(t) == "Enumeration"
+       t.supertype == NULL t.importedfromname == NULL]
+.
+
+R_reg_enumeration(Interface i, brand, Enumeration enum) 
+    (regname, Int elem_ct, Any ev, Int evi) -->
+
+   L_reg_enumeration(i.isl_name, brand, regname, enum.uid,  elem_ct ) 
+       [ regname =  F_reg_name(enum)
+         elem_ct = F_list_ct(enum.values)]
+
+   L_reg_enumvalue: ev(evi) in enum.values: (evi, ev.isl_name, ev.id)
+
+ 
+   L_() "     }"  
+         
+.
+
+L_reg_enumeration(intf, brand, regname, enum_uid, Int elem_ct) --> 
+
+        a_type = iluCppInternal::iluRegisterEnumerationType(
+            CONST_CAST( iluCString, \"%regname%\"),
+            CONST_CAST( iluCString, \"%intf%\"), 
+            %brand%,
+            CONST_CAST( iluCString, \"%enum_uid%\"),
+            %elem_ct%,  // number of elements in the enum
+            &b_new_registration);
+
+        if (b_new_registration) {
+.
+
+L_reg_enumvalue(Int elem_index, elem_name, Int elem_value) -->
+
+          iluCppInternal::iluRegisterEnumerationElement(a_type,
+              %elem_index%,        // which element
+              CONST_CAST( iluCString, \"%elem_name%\"),  // element name
+              %elem_value%       // integer value for element
+        );
+.
+
+=========================================================================
+R_reg_aliases(Interface i, brand, List types) (Any t) -->
+
+   R_reg_alias:t in types: (i, brand, t)  	 
+      [ t.supertype != NULL t.importedfromname == NULL]
+.
+
+R_reg_alias(Interface i, brand,  Any t) (base_uid, regname) -->
+
+   L_reg_alias(i.isl_name, brand, regname, t.uid, base_uid) 
+       [ regname =  F_reg_name(t)
+         base_uid = F_ur_property(t.supertype, "uid") ]
+.
+
+L_reg_alias(intf, brand,  regname, t_uid, base_uid) --> 
+
+        iluCppInternal::iluRegisterAliasType(
+            CONST_CAST( iluCString, \"%regname%\"),
+            CONST_CAST( iluCString, \"%intf%\"), 
+            %brand%,
+            CONST_CAST( iluCString, \"%t_uid%\"),
+            CONST_CAST( iluCString, \"%base_uid%\"),  //  base type
+            &b_new_registration);
+.
+
+=========================================================================
+R_consts(Interface i) (Any c) -->
+ 
+  L_consts()
+  R_const :c in i.constants:(c)
+.
+
+L_consts() -->
+
+ // Initialize constants
+
+.
+ 
+R_const(Constant c) (Any urtype, typename, cname, valname, const) -->
+ 
+  LP_(typename, cname, const)
+   [urtype = F_ur_instance(c.type)
+    cname = F_full_ref(c)
+    typename = F_full_typeref(urtype) 
+    valname = F_instance_kind(c.value)
+    [ [ valname ==  "ILUCStringConstantValue" const = "const "] | const = ""]
+    ]
+   "   %const%%typename%\t %cname% ="
+ 
+   R_const_value(c, c.value, valname)
+   L_() ""
+.
+
+R_const_value(Constant c, Any constvalue, valname)
+    (LongInt intvalue, sign, boolvalue,
+     realwhole,  fraction, LongInt exp, suffix, stgvalue, f)  -->
+
+  {
+   # integer constant
+    LP_(sign, intvalue)
+     [ valname == "IntConstantValue"
+       intvalue = constvalue.value
+       [ [ constvalue.positive  == 1  sign = ""] | sign = "-"]
+     ]
+     " %sign%%intvalue%;"
+ 
+   # boolean constant
+   | LP_(boolvalue)
+     [ valname == "BoolConstantValue"
+       [ [ constvalue.value  == 0 boolvalue = "ilu_FALSE" ]
+         | boolvalue = "ilu_TRUE" ]
+     ]
+    " %boolvalue%;"
+     
+   # real constant
+   | { E_ [valname == "RealConstantValue"
+           realwhole = constvalue.value
+           [ [ constvalue.positive  == 1  sign = ""] | sign = "-"]
+            fraction = constvalue.fraction
+          [ [ F_ur_typename(c.type) == "ShortReal" f = "F"] | f = "" ]
+          ]
+        { LP_(sign, realwhole, fraction, exp, f)
+               [ constvalue.exponent != 0 exp = constvalue.exponent]
+           " %sign%%realwhole%.%fraction%E%exp%%f%;"
+         | LP_(sign, realwhole, fraction, f)
+           " %sign%%realwhole%.%fraction%%f%;"
+        }
+      }
+ 
+   # string constant
+   | LP_(stgvalue)
+     [ valname == "ILUCStringConstantValue"
+       stgvalue = F_escape_string(constvalue.value) ]
+     "\%quote%%stgvalue%\%quote%;"
+ 
+   | LP_()
+    "ERROR_ERROR_ERROR"
+  }  
+.
+
+
+=========================================================================
+# need multiple t's because of unification
+R_type_ops(Interface i)
+     (Any t, Any t1, Any t2, Any t3, Any t4, Any t5, Any t6, Any t7) -->
+
+   R_object_ops:t in i.classes: (t) 
+      [ t.supertype == NULL t.importedfromname == NULL]
+   R_enum_ops: t1 in i.types: (t1)
+     [F_ur_typename(t1) == "Enumeration" 
+      t1.supertype == NULL t1.importedfromname == NULL]
+   R_record_ops: t2 in i.types: (t2)
+     [F_ur_typename(t2) == "Record" 
+      t2.supertype == NULL t2.importedfromname == NULL]
+   R_array_ops: t3 in i.types: (t3)
+     [F_ur_typename(t3) == "Array" 
+      t3.supertype == NULL t3.importedfromname == NULL]
+   R_sequence_ops: t4 in i.types: (t4)
+     [F_ur_typename(t4)== "Sequence" 
+      t4.supertype == NULL  t4.importedfromname == NULL
+       [F_string_chartype(t4) == NULL | F_string_chartype(t4) == "byte"] 
+     ]
+   R_union_ops : t5 in i.types: (t5)
+     [F_ur_typename(t5)== "Union" 
+      t5.supertype == NULL  t5.importedfromname == NULL ]
+   R_obj_ops: t6 in i.types: (t6)
+     [F_ur_typename(t6)== "Object" 
+      t6.supertype == NULL  t6.importedfromname == NULL ]
+   R_optional_ops: t7 in i.types: (t7)
+     [ F_ur_typename(t7)== "Optional"  
+      t7.supertype == NULL  t7.importedfromname == NULL ]
+.
+  
+=========================================================================
+R_object_ops(Object obj) (ext_obj, ext_obj_var, us_obj_var) --> 
+
+  {
+   L_object_op (ext_obj, ext_obj_var, us_obj_var)   
+       [ ext_obj = F_full_typeref(obj) 
+         ext_obj_var = F_concat(ext_obj, "_var")
+         us_obj_var = F_concat(F_underscore_name(obj), "_var") ]
+  }
+.
+
+
+L_object_op (ext_obj, ext_obj_var, us_obj_var) -->   
+
+
+//////////////////////////////////////////////////////////////////////
+//  %ext_obj_var% sizing, input and output operators
+
+// note following three operators only needed
+// if %ext_obj% is member of a structured type
+
+ iluBaseCall& operator+=(iluBaseCall& r_call, const %ext_obj_var%& r_%us_obj_var%) {
+         r_call += r_%us_obj_var%.iluGetObjectPointer();
+         return r_call;
+  }
+
+ iluBaseCall& operator<<(iluBaseCall& r_call, const %ext_obj_var%& r_%us_obj_var%) {
+
+      if (r_%us_obj_var%.iluGetWrapper() != NULL) { // must be a true side inout
+          r_%us_obj_var%.iluDeleteWrapper();
+      }
+
+      // make a new wrapper for the object
+      r_%us_obj_var%.iluSetWrapper(
+           new iluObjectWrapper(
+               r_%us_obj_var%.iluGetObjectPointer(),
+               ILUCPP_FALSE, 
+               (r_%us_obj_var%.iluGetObjectPointer() ?
+                           ILUCPP_NULL : %ext_obj%::iluGetILUClassRecord())));
+
+      // output the object from the wrapper
+      iluObjectWrapper* p_wrapper = r_%us_obj_var%.iluGetWrapper();
+      r_call << *p_wrapper;
+
+      // ensure _var is in control
+      p_wrapper->m_b_do_refcount_decrement = ILUCPP_FALSE;
+ 
+     return r_call;
+  }
+
+ iluBaseCall& operator>>(iluBaseCall& r_call, %ext_obj_var%& r_%us_obj_var%) {
+	  
+      %ext_obj_var% temp_%us_obj_var%;
+	  
+     if (r_%us_obj_var%.iluGetWrapper() != ILUCPP_NULL) { // must be a surrogate side inout
+         r_%us_obj_var%.iluDeleteWrapper();
+
+         // we assign a temporary var to what the argument var is to handle the
+         // case where the client put a 'true' object with a single refcount
+         // into the inout var, and the server did not modify it.  If we didn't
+         // do this temporary assignment, then we would end up destructing the 
+         // object, and then try reading in a reference to the object that was
+         // was just destroyed.  Note that the destructor for temp_%us_obj_var% will
+         // be invoked when we leave the scope of this function, releasing the
+         // extra count we had to keep the object in existence for this brief period.
+         temp_%us_obj_var% = r_%us_obj_var%;
+
+         // force a release since the var's in control of the refcount
+         r_%us_obj_var% = ILUCPP_NULL;
+     }
+	  
+     // make up a new wrapper
+     r_%us_obj_var%.iluSetWrapper
+          (new iluObjectWrapper(ILUCPP_FALSE, %ext_obj%::iluGetILUClassRecord()));
+	  
+         // read the object into a wrapper
+         iluObjectWrapper* p_wrapper = r_%us_obj_var%.iluGetWrapper();
+         r_call >> *p_wrapper;
+	  
+         // give the _var control of it
+         r_%us_obj_var% = (%ext_obj%_ptr)(p_wrapper->m_pv_iluobject);
+         p_wrapper->m_b_do_refcount_decrement = ILUCPP_FALSE;
+
+         return r_call;
+ }
+
+.
+
+======================================================================
+
+R_enum_ops (Enumeration e) (ext_name, us_name, extpfx, cpfx) -->
+
+   R_typecode_related(e, us_name, ext_name, e.name, cpfx, extpfx)
+      [  ext_name = F_full_typeref(e) 
+         us_name = F_underscore_name(e) 
+         extpfx = F_full_prefix(e, 0)
+         cpfx = F_corba_pfx()
+       ]
+.
+
+======================================================================
+# makes assign and copy identical 
+R_record_ops(Record r) (Argument f,  Argument f1, 
+         ext_record_name, us_record_name, mpfx) -->
+
+   E_ [ext_record_name = F_full_typeref(r)  
+       us_record_name = F_underscore_name(r)
+       mpfx = F_noninterface_prefix(r, 0)
+       ]
+
+   L_record_ops_begin(ext_record_name, r.name, mpfx)
+
+   # very iffy workaround for sunpro + var members?? 
+   R_constructor_vars:f1 in  r.fields:(f1)
+   L_() "  }"
+  
+   L_record_copy_begin(ext_record_name, r.name, mpfx) 
+   R_record_copy_field :f in r.fields: (f, r.name, f.name) 
+   L_() "   }"
+
+   L_record_destructor(ext_record_name, r.name, mpfx)
+
+   ## possibly just sunpro workaround
+   L_struct_self(ext_record_name)
+
+   L_record_assign_begin(ext_record_name, r.name)
+   R_record_copy_field: f1 in r.fields: (f1, r.name, f1.name) 
+   L_record_assign_end()
+
+   L_field_ops_begin(ext_record_name)
+   R_record_field_ops("+=", "size_const",
+          "iluSizeRecord", r, ext_record_name, us_record_name)
+   R_record_field_ops("<<","output_const",
+            "iluOutputRecord", r, ext_record_name, us_record_name)
+   R_record_field_ops(">>","input",
+              "iluInputRecord", r, ext_record_name, us_record_name)
+
+   {R_record_cleanup(r, ext_record_name) [F_contains_object(r) == 1] 
+   | TRUE}
+
+    R_typecode_related(r, us_record_name, ext_record_name,
+            r.name, F_corba_pfx(), F_full_prefix(r, 0))
+.
+
+# if optional and non var, allocate new 
+R_record_copy_field(Argument f, r_name, f_name)
+    (Any fof_type, Any fof_vartype, Any f_urtype, f_typekind ) -->
+
+  E_ [ fof_vartype = F_optional_vartype(f.type)
+       fof_type    = F_optional_ofurtype(f.type) 
+       f_typekind = F_ur_typename(f.type)  
+       f_urtype = F_ur_instance(f.type) ]
+
+ { L_record_copy_field_a(r_name, f_name, F_full_mbr_typeref(f_urtype))
+      [ f_typekind == "Array" ]
+  | L_record_copy_field(r_name, f_name) 
+       [ fof_type == NULL | fof_vartype != NULL ] 
+  | L_record_copy_opt_field(r_name, f_name, F_full_typeref(fof_type)) 
+ }
+.
+
+R_record_cleanup(Record r, ext_record_name)
+      (Argument f, Any ftype, Any ftype1, fieldname) -->
+    L_record_cleanup_begin(ext_record_name)
+    L_ :f in r.fields: (fieldname)
+       [ [ [ ftype1 = F_optional_vartype(f.type)
+              ftype1 != NULL ftype = ftype1 ]
+           | ftype = f.type]
+         F_ur_typename(ftype) == "Object"
+         fieldname = f.name] 
+       "        %fieldname%.iluDeleteWrapper();"
+    L_() "   }"
+.
+
+# causes allocation for contained vars with structure 
+# iffy workaround.  causes some inefficiency
+# actuals not explored sufficiently
+
+R_constructor_vars(Argument f) (Any argtype, mbr_typeref,
+      ext_typeref, fname) -->
+    E_ [ argtype = F_ur_instance(f.type)
+          F_mbr_is_var(argtype) == 1  
+          mbr_typeref = F_full_mbr_typeref(argtype)
+          ext_typeref = F_full_typeref(argtype)
+          fname = f.name ]
+    { L_(fname, ext_typeref) 
+        [ F_ur_typename(argtype) == "Sequence"
+          F_string_chartype(argtype) == NULL]
+          "%fname% = new %ext_typeref%();  // iffy sunpro workaround" 
+    | L_(fname, mbr_typeref) 
+          "%fname% = %mbr_typeref%();  // iffy sunpro workaround"
+    }
+.
+
+L_field_ops_begin(ext_record_name)--> 
+
+  // insertion, extraction, and sizing operators for %ext_record_name%
+.
+
+L_record_ops_begin(ext_record_name, barename, mpfx) -->
+
+
+/////////////////////////////////////////////////////////////////////
+//  %ext_record_name% members
+
+/* Can leave out - and would then allow aggregate inits */
+// default constructor
+   %ext_record_name%::%mpfx%%barename%() {
+.
+
+
+L_record_copy_begin(ext_record_name, barename, mpfx) -->
+
+  // copy constructor
+  %ext_record_name%::%mpfx%%barename%(const %ext_record_name%& r_a_%barename%) {
+.
+
+L_record_copy_field(barename, fieldname) -->
+          %fieldname% = r_a_%barename%.%fieldname%;
+.
+L_record_copy_field_a(barename, fieldname, array_name) -->
+          %array_name%_copy(%fieldname%, r_a_%barename%.%fieldname%);
+.
+
+# doesn't free old
+L_record_copy_opt_field(barename, fieldname, newtypename) -->
+          if(r_a_%barename%.%fieldname% == ILUCPP_NULL) 
+             %fieldname% = r_a_%barename%.%fieldname%;
+          else if(%fieldname% == ILUCPP_NULL) { 
+              %fieldname% = new %newtypename%; 
+             *%fieldname% = *r_a_%barename%.%fieldname%;
+          }
+         else *%fieldname% = *r_a_%barename%.%fieldname%;
+.
+
+L_record_destructor(ext_record_name, barename, mpfx) -->
+
+  // destructor
+  %ext_record_name%::~%mpfx%%barename%() {
+  }
+.
+
+L_record_assign_begin(ext_record_name, barename) -->
+
+  // assignment operator
+  %ext_record_name%& %ext_record_name%::operator=(
+       const %ext_record_name%& r_a_%barename%) {
+          if (this != &r_a_%barename%) {
+.
+
+L_record_assign_end() -->
+          }
+          return *this;
+  }
+/* end of omissible*/
+.
+
+L_record_cleanup_begin(ext_record_name) -->
+
+  // for ilustub use only - should call before surrogate side stub returns
+  void %ext_record_name%::iluSurrogateSideCleanup() const {
+.
+
+=================================================================
+
+# Continuation of workararound for possibly sunpro-specific problem 
+# relating to use of _vars as arguments to +=, <<, etc. ops 
+L_struct_self(ext_type_name) -->
+
+  //possibly sunpro-specific workaround 
+  %ext_type_name%& %ext_type_name%::self(){
+        return *this;
+  }
+.
+
+
+===================================================================
+R_record_field_ops(String op, String opname, String callrcdtype, 
+           Record r, ext_record_name,  us_record_name)
+          (Argument f, Argument f1, op1, const_in) -->
+
+  L_field_op_begin(op, ext_record_name, us_record_name, const_in) 
+   [ [ op != ">>"  const_in = "const" ] | const_in = "" ] 
+
+   
+  L_(op, callrcdtype) "         r_call %op% %callrcdtype%;"
+
+  R_field_ops: f in r.fields: (op, opname, f, us_record_name) 
+
+  L_field_op_end(op1)
+      [ [ op != ">>" op1 = "<<" ] | op1 = ">>" ]
+.
+
+L_field_op_begin(op,  ext_record_name, us_record_name, const_in)  -->
+
+    iluBaseCall& operator%op%(iluBaseCall& r_call,
+         %const_in% %ext_record_name%& r_%us_record_name%)  {
+
+.
+L_field_op_end(op1) -->
+
+         r_call %op1% iluEndRecord;
+         return r_call;
+ }
+.
+
+R_field_ops(op, opname, Argument f, us_record_name)
+  ( Any e_type, Any f_type, Any fof_type, Int fof_var, ad,
+   fof_typename, chtype, cast) --> 
+
+  E_ [ f_type = f.type
+       fof_type = F_optional_ofurtype(f_type)   
+       [ [ fof_type != NULL 
+            e_type = fof_type fof_var = F_mbr_is_var(f_type) ]
+         | [ e_type = f_type fof_var = 0 ] ]
+     ]
+
+  # bracket optional ops with retrieve/send of presence, and test
+  # if present, follow with retrieve/send of actual value
+  {
+   {E_ [ fof_type != NULL 
+         fof_typename = F_full_mbr_typeref(fof_type) 
+         ad = "*"
+         ] 
+    {    
+     { E_ [ op == ">>"]
+       L_optional_get(us_record_name, f.name, op)
+       {L_optional_get_non_var(us_record_name, f.name, fof_typename)  
+         [ fof_var == 0]
+        | TRUE }
+     }
+     | L_optional_size_insert(us_record_name, f.name, op)
+         [ fof_var == 0]
+     | L_optional_size_insert_var(us_record_name, f.name, op)
+    }
+   }
+   | E_ [ e_type = f_type ad = ""]
+  }
+    
+  R_field_wrap (f, e_type, us_record_name, op, ad) 
+  R_field_op(op, opname, f, f_type, e_type, us_record_name)
+
+ # if optional, complete
+ {
+  { E_ [fof_type != NULL]
+    {
+      L_optional_get_end(us_record_name, f.name)
+         [ op == ">>" fof_var == 0]
+      | L_optional_get_end_var(us_record_name, f.name, cast)
+         [ op == ">>"  chtype = F_string_chartype(fof_type) 
+           [ [chtype == "shortcharacter" cast = "(const iluShortCharacter *)"] 
+             |[chtype == "character" cast = "(const iluCharacter *)"] 
+             | cast = "" ]
+         ]
+      | {  L_()"        }"
+           L_()"        }"
+        }
+     }
+  } |  TRUE }
+.      
+  
+# pickles?
+# etype is f_type if non optional, fof_type otherwise
+R_field_wrap( Argument f, Any e_type, us_record_name, op, ad)(e_typekind) -->  
+
+  E_ [ e_typekind = F_ur_typename(e_type) ]
+
+  { 
+    { L_enum_wrap(us_record_name, f.name, ad)
+       [ e_typekind == "Enumeration"]
+     |
+     L_boolean_wrap(us_record_name, f.name, ad)
+       [e_typekind == "Boolean"] 
+     |
+     L_character_wrap(us_record_name, f.name, ad)
+       [ e_typekind == "Character"] 
+    }
+    |
+    { E_ [ F_string_chartype(e_type) != NULL] 
+      {
+       { E_ [ op != ">>" ]
+         { L_cstring_wrap(us_record_name, f.name)
+            [F_string_chartype(e_type) ==  "shortcharacter"]
+           | L_wstring_wrap(us_record_name, f.name)
+           [F_string_chartype(e_type) ==  "character"]
+           | L_bytes_wrap(us_record_name, f.name)
+           [F_string_chartype(e_type) ==  "byte"]
+         } 
+        }
+       |
+       { L_cstring_out_wrap(us_record_name, f.name)
+            [F_string_chartype(e_type) ==  "shortcharacter"]
+          | L_wstring_out_wrap(us_record_name, f.name)
+           [F_string_chartype(e_type) ==  "character"]
+          | L_bytes_out_wrap(us_record_name, f.name)
+           [F_string_chartype(e_type) ==  "byte"]
+       } 
+      }
+     }
+    | TRUE
+  }
+.
+
+# contains workarounds for var members, "self" and .in .out for array output
+# ftype is the base type, etype is the effective type, and may be 
+#   an optional type  
+R_field_op(String op, String opname, Argument f, Any ftype, Any etype,
+       String us_record_name)
+        (ftypekind, ftname, etypekind, fieldname, fun_name,
+         chftype, longtype, h, ast, meth) -->
+  E_ [ fieldname = f.name  
+       ftypekind = F_ur_typename(ftype)
+       etypekind = F_ur_typename(etype)
+       chftype = F_string_chartype(etype)  
+       # some compiler problem, at least with sunpro, 
+       # sometimes requires disambiguation for long types
+       longtype = F_ilu_long_name(etype, 0) ]
+
+  {  L_(op, us_record_name, fieldname)
+        [ etypekind == "Enumeration" | etypekind == "Boolean"
+         | etypekind == "Character" | chftype != NULL ]
+        "         r_call %op% _r_%fieldname%_wrap;"
+
+    | { 
+       E_ [ etypekind == "Array"
+           fun_name = F_ur_pfxd_name(opname, etype) ]
+      {
+       L_(opname, fun_name, us_record_name, fieldname, meth)  
+           [ftypekind == "Optional" 
+             [ [op != ">>" meth = "in"] | meth = "out"]] 
+         "        %fun_name%(r_call, r_%us_record_name%.%fieldname%.%meth%());"
+      | L_(opname, fun_name, us_record_name, fieldname)  
+          "        %fun_name%(r_call, r_%us_record_name%.%fieldname%);"
+      }
+    }
+    |
+    { E_ [ [   etypekind == "Record" | etypekind == "Union"
+              | etypekind == "Sequence" | etypekind == "Pickle"
+              | etypekind == "Object" ]
+            [ [ftypekind == "Optional"   
+               etypekind != "Object"  h = "->self()" ]
+              | h = "" ]
+          ]
+     L_struct(op, us_record_name, fieldname, h)
+     }
+   | 
+  {
+   E_[longtype != ""  
+      [ [ ftypekind == "Optional"  ast = "*"]| ast = ""]
+     ]
+      { L_basic_long_out(op, us_record_name, fieldname, longtype, ast)
+           [ op == ">>"] 
+        | L_basic_long(op,us_record_name, fieldname, longtype, ast)
+       }
+   }
+  |
+   L_basic(op, us_record_name, fieldname, "")
+       [ ftypekind != "Optional" ]
+   | L_basic(op,us_record_name, fieldname, "*")
+       [ ftypekind == "Optional" ]
+  }
+.
+
+L_basic_long_out(op, us_record_name, fieldname, longtype, ast) -->
+       {
+         %longtype% _longtemp_%fieldname%;
+         r_call %op% _longtemp_%fieldname%;
+         %ast%r_%us_record_name%.%fieldname% = _longtemp_%fieldname%;
+        }
+.
+
+L_basic_long(op, us_record_name, fieldname, longtype, ast) -->
+        {
+         %longtype% _longtemp_%fieldname% =%ast%r_%us_record_name%.%fieldname%;
+         r_call %op% _longtemp_%fieldname%;
+        }
+.
+
+L_basic (op, us_record_name, fieldname, ast) -->
+          r_call %op%  %ast%r_%us_record_name%.%fieldname%;
+.
+
+L_struct(op, us_record_name, fieldname, self) -->
+          r_call %op% r_%us_record_name%.%fieldname%%self%;
+.
+
+L_enum_wrap(us_record_name, fieldname, ad) -->
+         iluEnumWrapper _r_%fieldname%_wrap(
+              (iluDummyEnum &) %ad%r_%us_record_name%.%fieldname%);
+.
+
+L_boolean_wrap(us_record_name, fieldname, ad) -->
+         iluBoolWrapper _r_%fieldname%_wrap(
+             (ILUCPP_BOOL &) %ad%r_%us_record_name%.%fieldname%);
+.
+
+L_character_wrap(us_record_name, fieldname, ad) -->
+         iluCharacterWrapper _r_%fieldname%_wrap(
+             (iluShortCardinal &) %ad%r_%us_record_name%.%fieldname%);
+.
+
+
+# optional stuff brackets material for referenced values 
+L_optional_size_insert_var(us_record_name, fieldname, op) -->
+        {
+         iluOptionalWrapper _opt_%fieldname%_wrap;
+         _opt_%fieldname%_wrap.m_present =
+                 !(r_%us_record_name%.%fieldname%.iluIsNull());
+         r_call %op% _opt_%fieldname%_wrap;
+         if(_opt_%fieldname%_wrap.m_present) {
+.
+
+L_optional_size_insert(us_record_name, fieldname, op) -->
+        {
+         iluOptionalWrapper _opt_%fieldname%_wrap(
+              (void *) r_%us_record_name%.%fieldname%);
+         if(_opt_%fieldname%_wrap.m_present) {
+.
+
+L_optional_get(us_record_name, fieldname, op) -->
+        {
+         iluOptionalWrapper _opt_%fieldname%_wrap;
+         r_call %op% _opt_%fieldname%_wrap;
+         if(_opt_%fieldname%_wrap.m_present) {
+.
+
+L_optional_get_non_var(us_record_name, fieldname, opttypename) -->
+           if(r_%us_record_name%.%fieldname% == ILUCPP_NULL)
+             r_%us_record_name%.%fieldname% = new %opttypename%; 
+.
+
+L_optional_get_end(us_record_name, fieldname) -->
+         }
+         else {
+           r_%us_record_name%.%fieldname% = ILUCPP_NULL;
+         }
+        }
+.
+L_optional_get_end_var(us_record_name, fieldname, cast) -->
+         }
+         else {
+           r_%us_record_name%.%fieldname% =
+               %cast%  ILUCPP_NULL;
+         }
+        }
+.
+
+L_cstring_wrap(us_record_name, fieldname) -->
+         iluCardinal r_%fieldname%_length =
+             strlen(r_%us_record_name%.%fieldname%.iluStringVarReference());
+          iluCStringWrapper _r_%fieldname%_wrap(
+                 (r_%us_record_name%.%fieldname%).iluStringVarReference(),
+                  r_%fieldname%_length);
+.
+
+L_wstring_wrap(us_record_name, fieldname) -->
+         iluCardinal r_%fieldname%_length =
+             iluCppRuntime::iluCharacterStringLength(
+                      r_%us_record_name%.%fieldname%.iluStringVarReference());
+         iluWStringWrapper _r_%fieldname%_wrap(
+                 (r_%us_record_name%.%fieldname%).iluStringVarReference(),
+                  r_%fieldname%_length);
+.
+
+L_bytes_wrap(us_record_name, fieldname) -->
+         iluCardinal r_%fieldname%_length =
+             strlen(r_%us_record_name%.%fieldname%.iluStringVarReference());
+         iluBytesWrapper _r_%fieldname%_wrap(
+                 (r_%us_record_name%.%fieldname%).iluStringVarReference(),
+                  r_%fieldname%_length);
+.
+
+L_cstring_out_wrap(us_record_name, fieldname) -->
+         iluCardinal r_%fieldname%_length;
+         iluCStringWrapper _r_%fieldname%_wrap(
+                 (r_%us_record_name%.%fieldname%).iluStringVarReference(),
+                  r_%fieldname%_length);
+.
+
+L_wstring_out_wrap(us_record_name, fieldname) -->
+         iluCardinal r_%fieldname%_length;
+         iluWStringWrapper _r_%fieldname%_wrap(
+                 (r_%us_record_name%.%fieldname%).iluStringVarReference(),
+                  r_%fieldname%_length);
+.
+
+L_bytes_out_wrap(us_record_name, fieldname) -->
+         iluCardinal r_%fieldname%_length;
+         iluBytesWrapper _r_%fieldname%_wrap(
+                 (r_%us_record_name%.%fieldname%).iluStringVarReference(),
+                  r_%fieldname%_length);
+.
+========================================================================
+# Defines member functions in typecode class
+# Defines typecode instance 
+# Defines Any insertion and extraction operators
+R_typecode_related(Any t, us_name, ext_name, s_name, cpfx, extpfx)
+      ( Any ur_t, tname,  basename) -->
+
+  E_ [tname = F_ur_typename(t) 
+      ur_t = F_ur_instance(t) ]
+
+  { L_enum_member_fns(us_name, ext_name) 
+     [tname == "Enumeration"]
+    |
+    L_array_member_fns(extpfx, ext_name, us_name, s_name)
+     [tname == "Array"]
+    | 
+    L_simple_optional_member_fns(us_name, ext_name, basename )
+       [ tname == "Optional" 
+         basename = F_full_typeref(t.basetype)  
+         F_ur_builtin(ur_t) == 1 ]
+    |
+    L_standard_member_fns(us_name, ext_name)
+  }
+
+  L_typecode_instance(cpfx, extpfx, s_name, us_name)    
+ 
+  {
+     L_any_array_ops(extpfx, ext_name, s_name) 
+     [ tname == "Array"]
+   | L_any_enum_ops(extpfx, ext_name, s_name)
+     [ tname == "Enumeration"]
+   |  L_any_standard_ops(extpfx, ext_name, s_name) 
+   }
+.
+
+
+L_enum_member_fns(us_name, ext_name) -->
+
+  // define the member functions in typecode class for %ext_name%
+  ILUCPP_DEFINE_ILU_TYPE_CODE_ENUM_MEMBERFUNCTIONS(
+            %us_name%, %ext_name%)
+.
+
+L_array_member_fns(extpfx, ext_name, us_name, s_name) --> 
+
+ // define the four member functions in typecode class for %us_name%
+  ILUCPP_DEFINE_ILU_TYPE_CODE_ARRAY_MEMBERFUNCTIONS(%us_name%, 
+       %ext_name%_slice, %ext_name%_alloc, %ext_name%_dup,
+       %extpfx%size_%s_name%, %extpfx%output_%s_name%, %extpfx%input_%s_name%)
+.
+
+L_simple_optional_member_fns (us_name, ext_name, base_name) -->
+
+  // define the member fns in typecode class for %ext_name%
+  ILUCPP_DEFINE_ILU_TYPE_CODE_SIMPLE_OPTIONAL_MEMBERFUNCTIONS(%us_name%,
+         %ext_name%, %base_name%)
+.
+
+L_standard_member_fns(us_name, ext_name) -->
+
+  // define the member fns in typecode class for %ext_name%
+  ILUCPP_DEFINE_ILU_TYPE_CODE_MEMBERFUNCTIONS(
+             %us_name%, %ext_name%)
+.
+
+L_typecode_instance(cpfx, extpfx, s_name, us_name) -->   
+
+  // typecode instance for %us_name%
+  const %cpfx%TypeCode_ptr %extpfx%tc_%s_name% =
+            new ILUCPP_TYPE_CODE_CLASS_NAME(%us_name%);
+.
+
+
+L_any_standard_ops(extpfx, ext_name, s_name) -->
+
+  // define the Any insert and extract operators for %ext_name% 
+  ILUCPP_DEFINE_COPYING_INSERTION_OPERATOR(
+          %ext_name%, %extpfx%tc_%s_name%)
+  ILUCPP_DEFINE_NONCOPYING_INSERTION_OPERATOR(
+          %ext_name%, %extpfx%tc_%s_name%)
+  ILUCPP_DEFINE_EXTRACTION_OPERATOR(
+          %ext_name%, %extpfx%tc_%s_name%)
+.
+
+L_any_array_ops(extpfx, ext_name, s_name)  -->
+
+ // define the Any insertion and extraction operators for %ext_name%_forany
+  ILUCPP_DEFINE_ARRAY_INSERTION_OPERATOR(%ext_name%_slice, %ext_name%_forany,
+        %extpfx%tc_%s_name%, %ext_name%_dup)
+  ILUCPP_DEFINE_ARRAY_EXTRACTION_OPERATOR(%ext_name%_forany,
+         %extpfx%tc_%s_name%,  %ext_name%_slice)
+.
+
+L_any_enum_ops(extpfx, ext_name, s_name) -->
+
+  // define the Any insertion and extraction operators for %ext_name%
+  ILUCPP_DEFINE_COPYING_INSERTION_OPERATOR(
+           %ext_name%, %extpfx%tc_%s_name%)
+  ILUCPP_DEFINE_REF_EXTRACTION_OPERATOR(
+           %ext_name%, %extpfx%tc_%s_name%)
+.
+=====================================================================
+
+R_array_ops(Array a) (Any element,  ext_array_name, us_array_name,
+                       ext_element_name, mult_dims, mdims, sq_dims, last_dims,
+                       cpfx, extpfx, etypename , wh, card ) -->
+
+   E_ [ext_array_name = F_full_typeref(a)  
+       element = a.oftype
+       etypename = F_ur_typename(element)
+       ext_element_name = F_full_mbr_typeref(element)  
+       us_array_name = F_underscore_name(a) 
+       mult_dims = F_dims(a, "mult", 0)
+       sq_dims = F_dims(a, "square", 0)
+       last_dims = F_dims(a, "last", 0)
+       cpfx = F_corba_pfx()
+       extpfx = F_full_prefix(a, 0)
+      ]
+
+   R_array_member_fns(element, ext_array_name, us_array_name, ext_element_name, 
+                      mult_dims, sq_dims,  cpfx) 
+                      
+   {
+    {
+      E_ [ F_ur_typename(element) == "Object" ||
+          [ F_ur_typename(element) == "Optional" 
+            F_optional_vartype(element) != NULL 
+            F_ur_typename(F_optional_vartype(element)) == "Object" ]]
+      L_surrogate_cleanup(ext_array_name, ext_element_name, us_array_name, a.name,
+            mult_dims, extpfx, cpfx, "","") 
+      L_surrogate_cleanup(ext_array_name, ext_element_name, us_array_name, a.name,
+            mult_dims, extpfx, cpfx, "const_","const") 
+    }
+    | TRUE
+   }
+
+  #       | etypename == "Character" 
+  #     | etypename == "ShortCharacter" ]
+  { # Q: where use CStringVec and WStringVec 
+    L_array_ins_vector(extpfx, a.name, ext_element_name,   
+                   us_array_name, last_dims, wh, mdims)
+        [ [ etypename == "Byte"   wh = "Opaque"
+            mdims = mult_dims] |
+        [ etypename == "Character"  wh = "WStringVec"
+            mdims = mult_dims  ] |
+         [ etypename == "ShortCharacter"  wh = "CStringVec"
+            mdims = mult_dims]  ]
+  |
+    R_array_ins(a, ext_array_name, ext_element_name, us_array_name, extpfx,
+       mult_dims, last_dims)
+  }
+
+   R_typecode_related(a, us_array_name, ext_array_name,
+          a.name, cpfx, extpfx)
+.
+
+R_array_member_fns(Any element, ext_array_name, us_array_name,
+            ext_element_name, mult_dims, sq_dims,  cpfx) -->
+
+   L_array_member_fns_begin(ext_array_name, us_array_name, 
+                    ext_element_name, mult_dims, sq_dims,  cpfx) 
+   
+   L_array_dup_begin(ext_array_name, us_array_name)
+   { L_array_dup(ext_array_name, us_array_name, ext_element_name, 
+                mult_dims, cpfx) [F_ur_typename(element) != "Array"]
+     | L_array_dup_a(ext_array_name, us_array_name, ext_element_name,
+                mult_dims, cpfx)
+   }
+
+   L_array_copy_begin(ext_array_name, us_array_name)
+   { L_array_copy(ext_array_name, us_array_name, ext_element_name, 
+                mult_dims, cpfx) [F_ur_typename(element) != "Array"]
+     | L_array_copy_a(ext_array_name, us_array_name, ext_element_name,
+                mult_dims, cpfx)
+   }
+.
+
+L_array_ins_vector(extpfx, s_array_name, ext_element_name,   
+                   us_array_name, last_dims, wh, card) -->
+
+  iluBaseCall& %extpfx%size_const_%s_array_name%( iluBaseCall& r_call,
+         const %ext_element_name% a_%us_array_name%%last_dims%) {
+             %ext_element_name%* _temp = 
+                   (%ext_element_name%*) a_%us_array_name%;
+             ilu%wh%Wrapper _array_wrapper(_temp, %card%);
+             r_call += _array_wrapper;
+             return r_call;
+   }
+  iluBaseCall& %extpfx%size_%s_array_name%( iluBaseCall& r_call,
+         %ext_element_name% a_%us_array_name%%last_dims%) {
+             %ext_element_name%* _temp = 
+                   (%ext_element_name%*) a_%us_array_name%;
+             ilu%wh%Wrapper _array_wrapper(_temp, %card%);
+             r_call += _array_wrapper;
+             return r_call;
+   }
+  iluBaseCall& %extpfx%output_%s_array_name%( iluBaseCall& r_call,
+         %ext_element_name% a_%us_array_name%%last_dims%) {
+             %ext_element_name%* _temp = 
+                   (%ext_element_name%*) a_%us_array_name%;
+             ilu%wh%Wrapper _array_wrapper(_temp, %card%);
+             r_call << _array_wrapper;
+             return r_call;
+   }
+  iluBaseCall& %extpfx%output_const_%s_array_name%( iluBaseCall& r_call,
+         const %ext_element_name% a_%us_array_name%%last_dims%) {
+             %ext_element_name%* _temp = 
+                   (%ext_element_name%*) a_%us_array_name%;
+             ilu%wh%Wrapper _array_wrapper(_temp, %card%);
+             r_call << _array_wrapper;
+             return r_call;
+   }
+  iluBaseCall& %extpfx%input_%s_array_name%( iluBaseCall& r_call,
+          %ext_element_name% a_%us_array_name%%last_dims%) {
+             %ext_element_name%* _temp = 
+                   (%ext_element_name%*) a_%us_array_name%;
+             ilu%wh%Wrapper _array_wrapper(_temp, %card%);
+             r_call >> _array_wrapper;
+             return r_call;
+   }
+
+.
+
+       
+R_array_ins(Array a, ext_array_name, ext_element_name, us_array_name, extpfx,
+       mult_dims, last_dims) -->
+
+  L_()" " 
+  L_(ext_array_name) 
+  "  // insertion, extraction, and sizing functions for %ext_array_name%"
+
+
+  R_array_ins_begin(a, ext_element_name, us_array_name, extpfx,
+      mult_dims, last_dims, "+=", "size_const", "Size",  "const")
+
+  R_array_ins_begin(a, ext_element_name, us_array_name, extpfx,
+      mult_dims, last_dims, "+=", "size", "Size",  "")
+
+  R_array_ins_begin(a, ext_element_name, us_array_name, extpfx,
+      mult_dims, last_dims, "<<", "output_const", "Output", "const")
+
+  R_array_ins_begin(a, ext_element_name, us_array_name, extpfx,
+       mult_dims, last_dims, "<<", "output", "Output", "")
+
+  R_array_ins_begin(a, ext_element_name, us_array_name, extpfx,
+       mult_dims, last_dims, ">>", "input", "Input", "")
+
+.
+
+# do something about R_nest.. iteration
+R_array_ins_begin(Array a, ext_element_name, us_array_name, extpfx,
+       mult_dims, last_dims, litop, opname, ucase_op, const)
+       (DimInteger d, Int di) --> 
+
+  L_array_ins_begin(extpfx, opname, const, us_array_name,
+              a.name, ext_element_name, last_dims) 
+
+  { L_array_ins_multdims(ucase_op, mult_dims)
+       [litop != ">>"]
+   | L_array_ins_inputarray() } 
+
+  R_nest:d(di) in a.dimensions: (a, d, di, us_array_name, litop, opname)
+        [di == 0]
+
+  L_array_ins_end()
+.
+
+           
+L_array_member_fns_begin(ext_array_name, us_array_name,
+                ext_element_name, mult_dims, sq_dims, cpfx) -->
+  
+ //////////////////////////////////////////////////////////////////////
+ // %ext_array_name%_var array member funs and allocation utility functions
+
+  %ext_array_name%_slice* %ext_array_name%_alloc (){
+
+/* xxx temp debugging only 
+       %ext_array_name%_slice* p_slice =
+              (%ext_array_name%_slice*)(new %ext_element_name%%sq_dims%);
+       %ext_element_name%* p_element = (%ext_element_name%*) p_slice;	
+       for (%cpfx%Long) count = 0; count < %mult_dims%; count++)
+               *p_element++ = ~count;
+       return (p_slice);
+end xxx temp debugging only */
+
+       return ((%ext_array_name%_slice*) (new %ext_element_name%%sq_dims%));
+   }
+
+
+  void %ext_array_name%_free(
+       %ext_array_name%_slice* p_%us_array_name%_slice) {
+       delete [] p_%us_array_name%_slice;
+  }
+.
+
+
+L_array_dup_begin(ext_array_name, us_array_name) -->
+  
+  // duplicate a %ext_array_name%
+  %ext_array_name%_slice* %ext_array_name%_dup(
+      const %ext_array_name%_slice* p_%us_array_name%_slice) {
+
+       if (!p_%us_array_name%_slice)
+          return ILUCPP_NULL;
+.
+
+L_array_dup(ext_array_name, us_array_name, ext_element_name,
+            mult_dims, cpfx) -->
+       else {
+           %ext_array_name%_slice* p_slice = %ext_array_name%_alloc();
+           %ext_element_name%* p_this_element = (%ext_element_name%*) p_slice;
+           %ext_element_name%* p_that_element =
+                           (%ext_element_name%*) p_%us_array_name%_slice;
+           for (%cpfx%Long count = 0; count < %mult_dims%; count++)
+              *p_this_element++ = *p_that_element++;
+           return p_slice;
+       }
+  }
+.
+
+L_array_dup_a(ext_array_name, us_array_name, ext_element_name,
+              mult_dims, cpfx) -->
+       else {
+           %ext_array_name%_slice* p_slice = %ext_array_name%_alloc();
+           %ext_element_name%_slice* p_this_element =
+                   (%ext_element_name%_slice*) p_slice;
+           %ext_element_name%_slice* p_that_element =
+                    (%ext_element_name%_slice*) p_%us_array_name%_slice;
+           for (%cpfx%Long count = 0; count < %mult_dims%; count++)
+               {
+                %ext_element_name%_copy(p_this_element, p_that_element);
+                p_this_element++; p_that_element++;
+                }
+           return p_slice;
+       }
+  }
+.
+L_array_copy_begin(ext_array_name, us_array_name) -->
+  
+  // copy a %ext_array_name%
+  void %ext_array_name%_copy(
+       %ext_array_name%_slice*       p_to_%us_array_name%_slice,
+       const %ext_array_name%_slice* p_from_%us_array_name%_slice) {
+       if (   (!p_from_%us_array_name%_slice)
+           || (!p_to_%us_array_name%_slice)) return;
+.
+L_array_copy(ext_array_name, us_array_name, ext_element_name,
+             mult_dims, cpfx) -->
+       else {
+           %ext_element_name%* p_this_element =
+                     (%ext_element_name%*) p_to_%us_array_name%_slice;
+           %ext_element_name%* p_that_element =
+                     (%ext_element_name%*) p_from_%us_array_name%_slice;
+           for (%cpfx%Long count = 0; count < %mult_dims%; count++)
+              *p_this_element++ = *p_that_element++;
+       }
+  }
+.
+L_array_copy_a(ext_array_name, us_array_name, ext_element_name,
+               mult_dims, cpfx) -->
+       else {
+           %ext_element_name%_slice* p_this_element =
+                  (%ext_element_name%_slice*) p_to_%us_array_name%_slice;
+           %ext_element_name%_slice* p_that_element =
+                  (%ext_element_name%_slice*) p_from_%us_array_name%_slice;
+           for (%cpfx%Long count = 0; count < %mult_dims%; count++)
+               {
+                %ext_element_name%_copy(p_this_element, p_that_element);
+                p_this_element++; p_that_element++;
+                }
+       }
+  }
+.
+
+L_surrogate_cleanup(ext_array_name, ext_element_name, us_array_name, s_array_name,
+            mult_dims, extpfx, cpfx, us_const, const) -->
+
+  void %extpfx%%us_const%%s_array_name%_iluSurrogateSideCleanup (
+        %const% %ext_array_name%_slice* p_%us_array_name%_slice) {
+        if (p_%us_array_name%_slice) {
+            %ext_element_name%* p_element =
+                  (%ext_element_name%*) p_%us_array_name%_slice;
+            for (%cpfx%Long count = 0; count < %mult_dims%; count++){
+                    p_element->iluDeleteWrapper();
+                    p_element++;
+             }
+       }
+ }
+
+.
+
+
+L_array_ins_begin(extpfx, opname, const, us_array_name, s_array_name,
+        ext_element_name, last_dims ) -->
+
+  iluBaseCall& %extpfx%%opname%_%s_array_name%(
+         iluBaseCall& r_call,
+          %const% %ext_element_name% a_%us_array_name%%last_dims%) {
+.
+
+# spacing deteriorated after some code simplification 
+R_nest(Array a, DimInteger d, Int di, us_array_name, op, opname) 
+   (DimInteger d1, Int dim, Int dj, sp, Any oftype, d_type, dimlist) --> 
+
+   L_(dim, di, sp)
+     [dim = d.intvalue sp = F_mult_blanks(di, 5) ]
+     "%sp%         for (iluCardinal index%di% = 0; index%di% < %dim%; index%di%++) {" 
+
+  { { E_[ di == F_last_index(a.dimensions)
+        oftype = F_ur_instance(a.oftype) 
+        dimlist = F_named_dims(a, "index")
+       ]
+      R_nest_end(a, us_array_name, op, opname, sp, oftype, dimlist, "")  
+    }
+
+  | R_nest:d1(dj) in a.dimensions:(a, d1, dj, us_array_name, op, opname)
+       [dj == F_add(di, 1)]
+  }
+
+  L_(sp) "%sp%         }"  
+.
+
+
+R_nest_end(Array a,  us_array_name, op, opname, sp, Any oftype, dimlist, self)
+  (Any optvartype, fkind, chtype, wh, fun_name, longtype, meth, chtype, cast)
+ -->
+
+   # some compiler problem, at least with sunpro and gcc,
+   # sometimes requires disambiguation for long types.
+   # here just setting longtype null for optionals
+   # because optional builtin elements set elsewhere
+  E_ [ fkind = F_ur_typename(oftype)
+      [ [ F_ur_typename(a.oftype) != "Optional"
+          longtype = F_ilu_long_name(a.oftype, 0) ] | longtype = ""]
+      ]
+
+  {
+    { E_ [ F_optional_ofurtype(oftype) != NULL]
+       R_array_optional_begin(a, op, us_array_name, dimlist) 
+       E_ [ optvartype = F_optional_vartype(a.oftype)]
+       { # if elements stored as vars, just repeat for element type  
+         # but add self, because some ambiguity if some obj_vars around 
+         R_nest_end(a, us_array_name, op, opname, sp, optvartype,
+                   dimlist, "->self()") 
+           [ optvartype != NULL]
+        | R_array_optional_nonvar(a, fkind, us_array_name, op, sp,dimlist) }
+       # end the if m_present (
+       L_() "               }" 
+       { L_array_optional_get_end(us_array_name, dimlist)
+          [ op == ">>" optvartype == NULL]
+         |  L_array_optional_get_end_var(us_array_name, dimlist, cast)
+          [ op == ">>"  chtype = F_string_chartype(optvartype) 
+           [ [chtype == "shortcharacter" cast = "(const iluShortCharacter *)"] 
+             |[chtype == "character" cast = "(const iluCharacter *)"] 
+             | cast = "" ]
+           ]
+         | TRUE}
+     }
+     |
+     # simple wrappers
+     {
+      {  L_wrap_enum_elem(us_array_name, dimlist)
+          [fkind == "Enumeration"]
+       | L_wrap_bool_elem(us_array_name, dimlist)
+          [fkind == "Boolean"]
+       | L_wrap_char_elem(us_array_name, dimlist)
+          [fkind == "Character"]
+       }
+      L_(sp,op) "     %sp%         r_call %op% a_element;" 
+     }
+     |
+     {
+       E_ [chtype = F_string_chartype(oftype)
+           chtype != NULL
+           [ [ chtype == "shortcharacter" wh = "CString"]
+            |[chtype == "byte" wh = "Bytes" ] 
+            | wh = "WString" ]
+          ]
+       { L_decl_element_len(us_array_name, dimlist)
+              [ op != ">>" wh != "WString" ] 
+        | L_decl_welement_len(us_array_name, dimlist)
+              [ op != ">>"] 
+        |L_decl_element_len_get() }
+       L_wrap_string_elem(us_array_name, wh, dimlist)
+       L_(sp, op) "     %sp%         r_call %op% a_element;" 
+       L_() " "
+      }
+     |
+     { 
+      E_ [ fkind == "Array" ]
+      { L_(opname, fun_name, us_array_name, dimlist) 
+          [ self == ""  fun_name = F_ur_pfxd_name(opname, oftype) ]
+          "        %fun_name%(r_call, a_%us_array_name%%dimlist%);"
+      | { L_() "        // disambiguation needed for gnuc, win32" 
+          L_() "        // const versions used internal to defs" 
+          L_(opname, fun_name, us_array_name, dimlist, meth)  
+           [
+            [ [op != ">>" meth = "in"] | meth = "out"]
+            [  [ op == "<<" fun_name = F_ur_pfxd_name("output_const", oftype) ] 
+             | [ op == "+=" fun_name = F_ur_pfxd_name("size_const", oftype) ] 
+             | fun_name = F_ur_pfxd_name("input", oftype) ]
+            ]
+          "        %fun_name%(r_call, a_%us_array_name%%dimlist%.%meth%());"
+         }
+      }
+    }
+   |
+    L_array_basic_long_out(op, sp, us_array_name, dimlist, longtype)
+       [ longtype != "" op == ">>"]
+   | 
+    L_array_basic_long(op, sp, us_array_name, dimlist, longtype)
+       [ longtype != "" op != ">>"]
+   |
+    L_array_basic(op, sp, us_array_name, dimlist, self)
+  
+ }
+.
+
+L_array_basic_long_out(op, sp, us_array_name, dimlist, longtype) -->
+      %sp%        {
+      %sp%         %longtype% _longtemp_%us_array_name%;
+      %sp%         r_call %op% _longtemp_%us_array_name%;
+      %sp%         a_%us_array_name% %dimlist% = _longtemp_%us_array_name%;
+      %sp%        }
+.
+
+L_array_basic_long(op, sp, us_array_name, dimlist, longtype) -->
+      %sp%        {
+      %sp%         %longtype% _longtemp_%us_array_name%
+                          = a_%us_array_name% %dimlist%;
+      %sp%         r_call %op% _longtemp_%us_array_name%;
+      %sp%        }
+.
+L_array_basic(op, sp, us_array_name, dimlist, self) -->
+     %sp%         r_call %op%  a_%us_array_name% %dimlist%%self%;
+.
+
+R_array_optional_begin(Array a, op, us_array_name, dimlist)
+   (Any optvartype) --> 
+
+ # distinguish opt elements stored as vars from others 
+ E_ [ optvartype = F_optional_vartype(a.oftype)]
+
+ { {
+     L_wrap_opt_element(us_array_name, dimlist, op) 
+        [ op != ">>" optvartype == NULL] 
+     | L_wrap_opt_element_var(us_array_name, dimlist, op) 
+        [ op != ">>"]
+     | L_wrap_opt_element_get(us_array_name, dimlist, op) 
+    }
+  }
+.
+
+R_array_optional_nonvar(Array a, fkind, us_array_name, op, sp, dimlist)  
+  (Any btype, basetype, bkind, longtype) -->
+
+   E_ [ btype = F_optional_ofurtype(a.oftype)
+       bkind = F_ur_typename(btype)
+       basetype = F_full_mbr_typeref(btype)
+       longtype = F_ilu_long_name(a.oftype, 0) 
+       ]
+       
+   # may not work.. assigns before wrapper def
+   {L_opt_simple_alloc(us_array_name, dimlist, basetype)
+        [ op  == ">>" ] 
+    | TRUE }
+
+   {
+    {
+     E_ [bkind == "Enumeration" | bkind == "Boolean" | bkind == "Character"]
+     {  L_wrap_opt_enum_elem(us_array_name, dimlist)
+          [bkind == "Enumeration"]
+        | L_wrap_opt_bool_elem(us_array_name, dimlist)
+           [bkind == "Boolean"]
+        | L_wrap_opt_char_elem(us_array_name, dimlist)
+          [bkind == "Character"]
+      }
+      L_(sp,op) "     %sp%         r_call %op% a_element;" 
+    }
+    | 
+      L_array_opt_nonvar_basic_long_out(op,sp, us_array_name, dimlist,longtype)
+               [ longtype != "" op == ">>" ]
+    |
+      L_array_opt_nonvar_basic_long(op,sp, us_array_name, dimlist,longtype)
+               [ longtype != "" ]
+    |
+      L_array_opt_nonvar_basic(op, sp, us_array_name, dimlist)
+   }
+.
+
+L_array_opt_nonvar_basic_long_out(op, sp, us_array_name, dimlist,longtype) -->
+     %sp%        {
+     %sp%         %longtype% _longtemp_%us_array_name%; 
+     %sp%         r_call %op% _longtemp_%us_array_name%;
+     %sp%        *a_%us_array_name% %dimlist% = _longtemp_%us_array_name%;
+     %sp%        }
+.
+L_array_opt_nonvar_basic_long(op, sp, us_array_name, dimlist,longtype) -->
+     %sp%        {
+     %sp%         %longtype% _longtemp_%us_array_name% = 
+                             *a_%us_array_name% %dimlist%;
+     %sp%         r_call %op% _longtemp_%us_array_name%;
+     %sp%        }
+.
+L_array_opt_nonvar_basic(op, sp, us_array_name, dimlist) -->
+     %sp%         r_call %op%  *a_%us_array_name% %dimlist%; 
+.
+
+
+L_array_optional_get_end(us_array_name, dimlist) -->
+         else {
+           a_%us_array_name% %dimlist% = NULL; 
+         }
+.
+L_array_optional_get_end_var(us_array_name, dimlist, cast) -->
+         else {
+           a_%us_array_name% %dimlist% = %cast% ILUCPP_NULL; 
+         }
+.
+
+    
+L_wrap_enum_elem(us_aname, dlist) -->
+         iluEnumWrapper a_element((iluDummyEnum &) a_%us_aname% %dlist%; 
+.
+L_wrap_bool_elem(us_aname, dlist) -->   
+         iluBoolWrapper a_element((ILUCPP_BOOL &) a_%us_aname% %dlist%);
+.
+L_wrap_char_elem(us_aname, dlist) -->
+         iluCharacterWrapper a_element((iluShortCardinal &) a_%us_aname% %dlist%);
+.
+
+L_wrap_opt_enum_elem(us_aname, dlist) -->
+            iluEnumWrapper a_element((iluDummyEnum &) *a_%us_aname% %dlist%; 
+.
+L_wrap_opt_bool_elem(us_aname, dlist) -->   
+           iluBoolWrapper a_element((ILUCPP_BOOL &) *a_%us_aname%%dlist%);
+.
+L_wrap_opt_char_elem(us_aname, dlist) -->
+           iluCharacterWrapper a_element((iluShortCardinal &) *a_%us_aname%%dlist%);
+.
+
+L_opt_simple_alloc(us_aname, dlist, basetype) -->
+           if(a_%us_aname%%dlist% == NULL)
+              a_%us_aname%%dlist% = new %basetype%;
+.
+
+
+L_wrap_opt_element(us_aname, dlist, op) --> 
+         iluOptionalWrapper a_opt_element( (void *) a_%us_aname% %dlist%);
+         r_call %op% a_opt_element; 
+         if(a_opt_element.m_present) {
+.
+L_wrap_opt_element_var(us_aname, dlist, op) -->
+         iluOptionalWrapper a_opt_element;
+         a_opt_element.m_present = !a_%us_aname%%dlist%.iluIsNull();
+         r_call %op% a_opt_element; 
+         if(a_opt_element.m_present) {
+.
+L_wrap_opt_element_get(us_aname, dlist, op) -->
+         iluOptionalWrapper a_opt_element;
+         r_call %op% a_opt_element; 
+         if(a_opt_element.m_present) {
+.
+         
+         
+L_decl_element_len(us_aname, dlist) -->
+         iluCardinal a_element_length =
+            strlen(a_%us_aname%%dlist%.iluStringVarReference());
+.
+L_decl_welement_len(us_aname, dlist) -->
+         iluCardinal a_element_length =
+               iluCppRuntime::iluCharacterStringLength(
+                  a_%us_aname%%dlist%.iluStringVarReference());
+.
+L_decl_element_len_get() -->
+         iluCardinal a_element_length;
+.
+L_wrap_string_elem(us_aname, wh, dlist) -->
+         ilu%wh%Wrapper a_element(a_%us_aname% %dlist%
+             .iluStringVarReference(), a_element_length);
+.
+    
+
+L_array_member_fns(ext_array_name, us_array_name,
+                ext_element_name, mult_dims, sq_dims, cpfx) -->  
+
+ //////////////////////////////////////////////////////////////////////
+ // %ext_array_name%_var array member funs and allocation utility functions
+
+  %ext_array_name%_slice* %ext_array_name%_alloc (){
+
+/* xxx temp debugging only 
+       %ext_array_name%_slice* p_slice =
+              (%ext_array_name%_slice*)(new %ext_element_name%%sq_dims%);
+       %ext_element_name%* p_element = (%ext_element_name%*) p_slice;	
+       for (%cpfx%Long) count = 0; count < %mult_dims%; count++)
+               *p_element++ = ~count;
+       return (p_slice);
+end xxx temp debugging only */
+
+       return ((%ext_array_name%_slice*) (new %ext_element_name%%sq_dims%));
+   }
+
+
+  // duplicate a %ext_array_name%
+  %ext_array_name%_slice* %ext_array_name%_dup(
+      const %ext_array_name%_slice* p_%us_array_name%_slice) {
+
+       if (!p_%us_array_name%_slice)
+          return ILUCPP_NULL;
+       else {
+           %ext_array_name%_slice* p_slice = %ext_array_name%_alloc();
+           %ext_element_name%* p_this_element = (%ext_element_name%*) p_slice;
+           %ext_element_name%* p_that_element =
+                           (%ext_element_name%*) p_%us_array_name%_slice;
+           for (%cpfx%Long count = 0; count < %mult_dims%; count++)
+           *p_this_element++ = *p_that_element++;
+            return p_slice;
+       }
+  }
+  
+
+  void %ext_array_name%_free(
+       %ext_array_name%_slice* p_%us_array_name%_slice) {
+       delete [] p_%us_array_name%_slice;
+  }
+.
+
+L_surrogate_cleanup(ext_array_name, ext_element_name, us_array_name, s_array_name,
+            mult_dims, extpfx, cpfx, us_const, const) -->
+
+  void %extpfx%%us_const%%s_array_name%_iluSurrogateSideCleanup (
+        %const% %ext_array_name%_slice* p_%us_array_name%_slice) {
+        if (p_%us_array_name%_slice) {
+            %ext_element_name%* p_element =
+                  (%ext_element_name%*) p_%us_array_name%_slice;
+            for (%cpfx%Long count = 0; count < %mult_dims%; count++){
+                    p_element->iluDeleteWrapper();
+                    p_element++;
+             }
+       }
+ }
+
+.
+
+
+L_array_ins_begin(extpfx, us_const, const, us_array_name, s_array_name,
+        ext_element_name, last_dims, lcase_op ) -->
+
+  iluBaseCall& %extpfx%%lcase_op%%us_const%_%s_array_name%(
+         iluBaseCall& r_call,
+          %const% %ext_element_name% a_%us_array_name%%last_dims%) {
+.
+
+L_array_ins_inputarray() -->
+
+
+         r_call >> iluInputArray;
+.
+ 
+L_array_ins_multdims(ucase_op, mult_dims) -->
+
+
+          r_call.ilu%ucase_op%Array(%mult_dims%);
+.
+
+L_array_ins_end() -->
+         r_call << iluEndArray;
+         return r_call;
+  }
+
+.
+
+======================================================================-
+
+# still uncertain with respect to array handling
+#       [ [ oftkind == "Array"
+#        mbr_type_unq = F_concat(F_full_ur_typeref(oftype), "_slice*") ] |
+R_sequence_ops(Sequence seq)
+     (ext_seq_name, Any oftype, Any oftype1, mbr_type,  mbr_type_unq,
+      rtncell, us_seq_name, mpfx, cpfx, extpfx, maxlen,
+      Int mbr_obj, Int mbr_two, Int mbr_string, data_ptr, ad, oftkind,
+      chtype, Any optvartype, Any of_vartype, bare_mbr_type) --> 
+
+   E_ [ext_seq_name = F_full_typeref(seq)
+       oftype = F_ur_instance(seq.oftype)
+       [ optvartype = F_optional_vartype(oftype)
+        [ [   optvartype != NULL of_vartype= optvartype]
+            | of_vartype = oftype]
+       ]
+       oftkind  = F_ur_typename(of_vartype)
+       mbr_type = F_full_mbr_typeref(oftype)
+       mbr_type_unq = F_full_mbr_seqbuf(oftype) 
+       bare_mbr_type = F_full_typeref(oftype)
+       chtype = F_string_chartype(of_vartype) 
+       [ [mbr_type != mbr_type_unq  F_ur_typename(oftype) != "Array"
+           mbr_two = 1 ] | mbr_two = 0]
+       [ [ oftkind =="Object"  mbr_obj = 1] | mbr_obj = 0]
+       [ [ chtype != NULL  chtype != "byte" mbr_string = 1 ]
+         | mbr_string = 0]
+      ]
+
+
+   E_ [
+      [ [ [mbr_string == 1 | optvartype != NULL |
+          oftkind == "Array" | oftkind == "Object" ] ad = ""] 
+           |  ad = "&" ]
+       us_seq_name = F_underscore_name(seq)
+       cpfx = F_corba_pfx()
+       extpfx = F_full_prefix(seq, 0)
+       mpfx = F_noninterface_prefix(seq, 0)
+       [ [seq.limit != 0  maxlen = F_longint_to_str(seq.limit) ] |
+         maxlen = "m_length" ]
+      [ [ mbr_two == 0 rtncell= "m_buffer"] |
+         rtncell = "m_varbuffer"] 
+     ]
+
+   L_seq_comment(ext_seq_name)
+
+   { { E_ [ mbr_two == 0]
+      { L_unb_onembr_const(ext_seq_name, us_seq_name, seq.name,mpfx,cpfx,
+            mbr_type_unq) [ seq.limit == 0 ]
+         | L_bd_onembr_const(ext_seq_name,us_seq_name,seq.name, mpfx,cpfx, 
+            maxlen, mbr_type_unq) }
+       L_seq_onembr_del(ext_seq_name, seq.name,us_seq_name,mpfx,cpfx)
+       L_seq_onembr_copy_begin(ext_seq_name, seq.name,us_seq_name,mpfx,cpfx)
+       {L_seq_onembr_copy(us_seq_name) [ oftkind != "Array" ] 
+        |L_seq_onembr_copy_a(us_seq_name, mbr_type)}
+       L_seq_assign_bgn (ext_seq_name, us_seq_name, seq.name, mpfx, cpfx) 
+       {L_seq_onembr_assign(us_seq_name, seq.name, mpfx,cpfx) 
+             [ oftkind != "Array" ] 
+        |L_seq_onembr_assign_a(us_seq_name, seq.name, mpfx,cpfx, mbr_type)} 
+       { L_bd_onembr_len_mem (ext_seq_name, mbr_type_unq, cpfx) 
+           [ seq.limit != 0]
+         | { L_unb_onembr_len_mem_begin(ext_seq_name, mbr_type_unq, cpfx)
+             { L_unb_onembr_len_mem() [ oftkind != "Array" ]
+               | L_unb_onembr_len_mem_a(mbr_type)}
+           }
+        } 
+     }
+
+   | { E_  [ [ [ mbr_string == 1 data_ptr = "*"  ] | 
+               [  data_ptr = "*"  ] 
+              ]  
+          ]
+       { L_bd_twombr_const(ext_seq_name, data_ptr, seq.name, mpfx,
+            cpfx, mbr_type_unq, maxlen, mbr_type, ad) [ seq.limit != 0]
+         | L_unb_twombr_const(ext_seq_name,data_ptr, seq.name, mpfx, cpfx,
+              mbr_type_unq, mbr_type,ad) }
+       L_twombr_copy1(ext_seq_name, us_seq_name, seq.name,
+              mpfx, maxlen,  mbr_type) 
+       { L_twombr_copy_nonobject (us_seq_name, cpfx) [ mbr_obj == 0]
+        |L_twombr_copy_object(us_seq_name, cpfx,mbr_type_unq, mbr_type,
+             bare_mbr_type)}
+       L_seq_twombr_delete(ext_seq_name, seq.name, mpfx)
+       L_seq_twombr_assign_bgn (ext_seq_name, us_seq_name, seq.name, mpfx, cpfx) 
+      { L_twombr_assign_obj(us_seq_name, mbr_type_unq, maxlen, cpfx,
+               mbr_type, bare_mbr_type)
+           [ mbr_obj == 1]
+       | L_twombr_assign_nonobj(us_seq_name, mbr_type_unq, cpfx, mbr_type)}
+       L_twombr_memory(ext_seq_name, mbr_type_unq, cpfx, data_ptr)
+      { L_unb_twombr_set_len (ext_seq_name,  mbr_type_unq, mbr_type, cpfx,
+             data_ptr)[ seq.limit == 0]
+          | L_bd_twombr_set_len (ext_seq_name, mbr_type_unq, mbr_type,
+           cpfx) } 
+     }
+   }
+
+     L_seq_access_size(ext_seq_name, us_seq_name, seq.name, mpfx, cpfx) 
+     L_seq_bracket_ops(ext_seq_name, mbr_type, cpfx, rtncell)  
+
+     #workaround
+     L_struct_self(ext_seq_name)
+
+     R_seq_insert(seq, ext_seq_name, us_seq_name, cpfx) 
+     # following modified for object immediately contained
+     # probably inadequate
+     { L_seq_surrogate_cleanup(ext_seq_name, cpfx)
+          [ F_ur_typename(of_vartype) == "Object" ] 
+             | TRUE}
+
+     R_typecode_related(seq, us_seq_name, ext_seq_name, seq.name,
+            cpfx, extpfx)
+.
+   
+    
+L_seq_comment(ext_seq_name) --> 
+  
+
+ //////////////////////////////////////////////////////////////////////
+ // %ext_seq_name% members   
+.
+
+L_unb_onembr_const(ext_seq_name, us_seq_name, s_seq_name,  mpfx, cpfx,
+       mbr_type) -->  
+
+ // constructors & destructor
+  %ext_seq_name%::%mpfx%%s_seq_name% () :
+          m_maximum(0), 
+	  m_length(0),
+          m_release (ILUCPP_TRUE), 
+          m_buffer(NULL)  
+         {}
+
+  %ext_seq_name%::%mpfx%%s_seq_name% (%cpfx%ULong max) :
+          m_maximum(max),
+          m_length(0),    /* zero if unbounded */
+          m_release (ILUCPP_TRUE),
+          m_buffer(allocbuf (max))
+         {}
+  
+  %ext_seq_name%::%mpfx%%s_seq_name% (%cpfx%ULong max , %cpfx%ULong length, 
+          %mbr_type%* data, %cpfx%Boolean release)  : m_maximum(max),
+          m_length(length),
+          m_release (release),
+          m_buffer(data) {}
+.
+  
+
+L_bd_onembr_const(ext_seq_name, us_seq_name, s_seq_name, mpfx, cpfx, maxlen,
+       mbr_type) -->
+
+ // constructors & destructor
+  %ext_seq_name%::%mpfx%%s_seq_name% () :
+        m_maximum(%maxlen%),
+        m_length(0),
+        m_release (ILUCPP_TRUE) {
+        m_buffer = allocbuf (m_maximum);
+  }
+
+  %ext_seq_name%::%mpfx%%s_seq_name% (%cpfx%ULong length,
+        %mbr_type%* data, %cpfx%Boolean release)  : m_maximum(%maxlen%),
+        m_length(length),
+        m_release (release), 
+        m_buffer(data) {
+
+        if (m_length > %maxlen%) {
+        // really undefined by CORBA as to what to do,
+        // but better safe than sorry!
+             %cpfx%UNKNOWN an_exception(0, %cpfx%COMPLETED_NO);
+             throw (an_exception);
+        }
+
+  }
+.
+
+L_bd_twombr_const(ext_seq_name, ptr, s_seq_name, mpfx, cpfx, 
+                        mbr_type_unq, maxlen, mbr_type, ad) -->
+  
+  // constructors & destructor
+  %ext_seq_name%::%mpfx%%s_seq_name% () : m_maximum(%maxlen%),
+        m_length(0),
+        m_release (ILUCPP_TRUE) {
+            m_buffer = allocbuf (m_maximum);
+            m_varbuffer = new %mbr_type% [%maxlen%];
+  }
+  %ext_seq_name%::%mpfx%%s_seq_name% (%cpfx%ULong length, 
+        %mbr_type_unq%%ptr% data, %cpfx%Boolean release) : m_maximum(%maxlen%),
+        m_length(length),
+        m_release (release),
+        m_buffer(data) {
+
+        if (m_length > %maxlen%) {
+        // really undefined by CORBA as to what to do,
+        // but better safe than sorry!
+             %cpfx%UNKNOWN an_exception(0, %cpfx%COMPLETED_NO);
+             throw (an_exception);
+        }
+        m_varbuffer = new %mbr_type%[%maxlen%];
+        for (%cpfx%ULong index = 0; index < %maxlen%; index++) {
+            (m_varbuffer[index]).iluSetRelease(m_release);
+             m_varbuffer[index] = %ad%(data[index]);
+        }	  
+  }
+.
+
+L_unb_twombr_const(ext_seq_name, ptr, s_seq_name, mpfx, cpfx,
+      mbr_type_unq, mbr_type, ad) --> 
+
+ // constructors & destructor
+  %ext_seq_name%::%mpfx%%s_seq_name% () :
+          m_maximum(0), 
+	  m_length(0),
+          m_release (ILUCPP_TRUE), 
+          m_buffer(NULL)  
+         {}
+
+  %ext_seq_name%::%mpfx%%s_seq_name% (%cpfx%ULong max) :
+          m_maximum(max),
+          m_length(0),    /* zero if unbounded */
+          m_release (ILUCPP_TRUE) {
+             m_buffer = allocbuf (m_maximum);
+             m_varbuffer = new %mbr_type%[m_maximum];
+  }
+
+  %ext_seq_name%::%mpfx%%s_seq_name% (%cpfx%ULong max , %cpfx%ULong length, 
+        %mbr_type_unq%%ptr% data, %cpfx%Boolean release)  : m_maximum(max),
+        m_length(length),
+        m_release (release), 
+        m_buffer(data) {
+
+        m_varbuffer = new %mbr_type%[max];
+        for (%cpfx%ULong index = 0; index < max; index++) {
+            (m_varbuffer[index]).iluSetRelease(m_release);
+             m_varbuffer[index] = %ad%(data[index]);
+        }	  
+  }
+.
+  
+
+L_seq_onembr_del(ext_seq_name, s_seq_name, us_seq_name, mpfx, cpfx) -->
+
+  %ext_seq_name%::~%mpfx%%s_seq_name%() {
+            if (m_buffer && m_release)
+               freebuf (m_buffer);
+  }
+.
+
+L_seq_onembr_copy_begin (ext_seq_name, s_seq_name, us_seq_name, mpfx, cpfx) -->
+
+  %ext_seq_name%::%mpfx%%s_seq_name% (const %ext_seq_name%& r_%us_seq_name%)
+  :
+         m_maximum(r_%us_seq_name%.m_maximum),
+         m_length(r_%us_seq_name%.m_length),
+         m_release(ILUCPP_TRUE)
+         {
+            m_buffer = allocbuf (m_maximum);
+            for (%cpfx%ULong index = 0; index < m_length; index++) {
+.
+
+L_seq_onembr_copy(us_seq_name) -->
+               m_buffer[index] = r_%us_seq_name%.m_buffer[index];
+            }
+   }
+.
+L_seq_onembr_copy_a(us_seq_name, mbr_array_name) -->
+              %mbr_array_name%_copy(
+                  m_buffer[index], r_%us_seq_name%.m_buffer[index]);
+            }
+   }
+.
+
+L_twombr_copy1(ext_seq_name, us_seq_name, s_seq_name,  mpfx, maxlen,
+         mbr_type) --> 
+
+  %ext_seq_name%::%mpfx%%s_seq_name% (const %ext_seq_name%& r_%us_seq_name%)   :
+         m_maximum(r_%us_seq_name%.m_maximum), 
+         m_length(r_%us_seq_name%.m_length), 
+         m_release(ILUCPP_TRUE) 
+         {
+            m_buffer = allocbuf (m_maximum);
+            m_varbuffer = new %mbr_type%[%maxlen%];
+.
+
+L_twombr_copy_object(us_seq_name, cpfx, mbr_type_unq, mbr_type,
+    bare_mbr_type) -->
+
+#if( defined(OLDGNUC_WORKAROUND) || defined (_MSC_VER))
+                        // workaround to GNU 2.7.2 internal compiler error
+                        // note, this GNU workaround approach should work every where else, so
+                        // we may just want to do this for the general case.
+                        %mbr_type_unq% p_buffer_ptr;
+                        %mbr_type%* p_buffer_var;
+                        for (%cpfx%ULong index = 0; index < m_length; index++) {
+                                p_buffer_ptr = r_%us_seq_name%.m_buffer[index];
+                                m_buffer[index] = p_buffer_ptr;
+                                p_buffer_var =  &(m_varbuffer[index]);
+                                (*(p_buffer_var)) = %bare_mbr_type%::_duplicate((%mbr_type_unq%)r_%us_seq_name%.m_varbuffer[index]);
+                        }
+
+#else
+            for (%cpfx%ULong index = 0; index < m_length; index++) {
+               m_buffer[index] = r_%us_seq_name%.m_buffer[index];
+               m_varbuffer[index] = r_%us_seq_name%.m_varbuffer[index];
+            } 
+#endif
+   }
+.
+
+L_twombr_copy_nonobject(us_seq_name, cpfx) -->
+            for (%cpfx%ULong index = 0; index < m_length; index++) {
+               m_buffer[index] = r_%us_seq_name%.m_buffer[index];
+               m_varbuffer[index] = r_%us_seq_name%.m_varbuffer[index];
+            } 
+   }
+.
+
+  
+L_seq_twombr_delete(ext_seq_name, s_seq_name, mpfx) -->
+		
+  %ext_seq_name%::~%mpfx%%s_seq_name%() {
+        if (m_buffer && m_release)
+           freebuf (m_buffer);
+        if(m_length > 0)
+           delete [] m_varbuffer;
+  }
+.
+		
+L_seq_assign_bgn (ext_seq_name, us_seq_name, s_seq_name, mpfx, cpfx) -->
+
+ // assignment
+   %ext_seq_name%& %ext_seq_name%::operator= (const %ext_seq_name%& r_%us_seq_name%) {
+         if (this == &r_%us_seq_name%) 
+             return *this;
+         if (m_buffer && m_release)
+              freebuf (m_buffer);
+         m_maximum = r_%us_seq_name%.m_maximum;
+         m_buffer = allocbuf (m_maximum);
+         m_release = ILUCPP_TRUE;
+         m_length = r_%us_seq_name%.m_length;
+.
+
+L_seq_twombr_assign_bgn (ext_seq_name, us_seq_name, s_seq_name, mpfx, cpfx)
+     -->
+
+ // assignment
+   %ext_seq_name%& %ext_seq_name%::operator= (const %ext_seq_name%& r_%us_seq_name%) {
+         if (this == &r_%us_seq_name%) 
+             return *this;
+         if (m_buffer && m_release)
+              freebuf (m_buffer);
+         if (m_length > 0)  
+              delete [] m_varbuffer;
+          m_buffer = allocbuf (r_%us_seq_name%.m_maximum);
+.
+
+
+L_seq_onembr_assign(us_seq_name, s_seq_name, mpfx, cpfx) -->
+          for (%cpfx%ULong index = 0; index < m_length; index++) {
+              m_buffer[index] = r_%us_seq_name%.m_buffer[index];
+          }
+          return *this;
+       }
+.
+
+L_seq_onembr_assign_a(us_seq_name, s_seq_name, mpfx, cpfx, mbr_array_name) -->
+          for (%cpfx%ULong index = 0; index < m_length; index++) {
+              %mbr_array_name%_copy(
+                  m_buffer[index], r_%us_seq_name%.m_buffer[index]);
+          }
+          return *this;
+       }
+.
+
+
+# probably unnecssary distinction
+# (didn't yet test consolidation with assign nonobj on gcc 
+L_twombr_assign_obj(us_seq_name,mbr_type_unq, maxlen, cpfx, mbr_type,
+       bare_mbr_type) --> 
+        m_varbuffer = new %mbr_type%[%maxlen%];
+         m_release = ILUCPP_TRUE;
+         m_length = r_%us_seq_name%.m_length;
+         m_maximum = r_%us_seq_name%.m_maximum;
+
+#if (defined(OLDGNUC_WORKAROUND) || defined (_MSC_VER))
+       {
+         // workaround to GNU 2.7.2 internal compiler error
+         // note, this GNU workaround approach should work every where else, 
+         // so we may just want to do this for the general case.
+            %mbr_type_unq%  p_buffer_ptr;
+            %mbr_type%* p_buffer_var;
+            for (%cpfx%ULong index = 0; index < m_length; index++) {
+                p_buffer_ptr= r_%us_seq_name%.m_buffer[index];
+                m_buffer[index] = p_buffer_ptr;
+               p_buffer_var =  &(m_varbuffer[index]);
+               (*(p_buffer_var)) =
+                 %bare_mbr_type%::_duplicate((%mbr_type_unq%)r_%us_seq_name%.
+                      m_varbuffer[index]);
+            }
+        }
+
+#else
+        for (%cpfx%ULong index = 0; index < m_length; index++) {
+               m_buffer[index] = r_%us_seq_name%.m_buffer[index];
+               m_varbuffer[index] = r_%us_seq_name%.m_varbuffer[index];
+         } 
+#endif
+        return *this;
+  }
+.
+
+L_twombr_assign_nonobj(us_seq_name, mbr_type_unq, cpfx, mbr_type) --> 
+        m_varbuffer = new %mbr_type%[r_%us_seq_name%.m_length];
+
+#if (defined(OLDGNUC_WORKAROUND) || defined (_MSC_VER))
+         // for some reason GNUC does not allow m_length set before copy
+         // and/or doesn't allow m_length to govern iteration 
+        // experimentally moved  then should consolidate 
+         // and check if also solves object version of problem
+          for (%cpfx%ULong index = 0; index < r_%us_seq_name%.m_length;
+              index++) {
+               m_buffer[index] = r_%us_seq_name%.m_buffer[index];
+               m_varbuffer[index] = r_%us_seq_name%.m_varbuffer[index];
+       }
+          m_release = ILUCPP_TRUE;
+          m_length = r_%us_seq_name%.m_length;
+          m_maximum = r_%us_seq_name%.m_maximum;
+#else
+         m_release = ILUCPP_TRUE;
+         m_length = r_%us_seq_name%.m_length;
+         m_maximum = r_%us_seq_name%.m_maximum;
+        for (%cpfx%ULong index = 0; index < m_length; index++) {
+               m_buffer[index] = r_%us_seq_name%.m_buffer[index];
+               m_varbuffer[index] = r_%us_seq_name%.m_varbuffer[index];
+         } 
+#endif
+        return *this;
+  }
+.
+
+
+L_seq_access_size(ext_seq_name, us_seq_name, s_seq_name, mpfx, cpfx)--> 
+  
+ // accessors
+   %cpfx%ULong %ext_seq_name%::maximum() const {
+        return m_maximum;
+  }
+  
+  %cpfx%ULong %ext_seq_name%::length() const {
+        return m_length;
+  }  
+.
+  
+L_unb_onembr_len_mem_begin (ext_seq_name, mbr_type,  cpfx)--> 
+
+  // memory management
+  %mbr_type%* %ext_seq_name%::allocbuf(%cpfx%ULong num_elements) {
+      return (num_elements > 0 ? (new %mbr_type%[num_elements]) : NULL);
+  }
+  
+  void %ext_seq_name%::freebuf(%mbr_type%* p_buf) {
+        delete [] p_buf;
+  }
+
+  void %ext_seq_name%::length (%cpfx%ULong len) {
+         if (len <= m_maximum)
+               m_length = len;
+          else {
+                 %mbr_type%* p_oldbuf = m_buffer;
+                 %cpfx%ULong oldlen = m_length;
+                 %cpfx%Boolean b_oldrelease = m_release;
+                 m_release = ILUCPP_TRUE;
+                 m_length = len;
+                 m_maximum = len;
+                 m_buffer = allocbuf(m_length);
+                 for (%cpfx%ULong index = 0; index < oldlen; index++) {
+.
+L_unb_onembr_len_mem() -->
+                     m_buffer[index] = p_oldbuf[index];
+                 }
+                if (b_oldrelease)
+                   freebuf(p_oldbuf);
+                } 
+  }
+.
+L_unb_onembr_len_mem_a(mbr_array_name) -->
+                    %mbr_array_name%_copy( m_buffer[index], p_oldbuf[index]);
+                 }
+                if (b_oldrelease)
+                   freebuf(p_oldbuf);
+                } 
+  }
+.
+
+
+#THis possibly wrong
+L_bd_onembr_len_mem(ext_seq_name, mbr_type_ref, cpfx) -->
+
+  void %ext_seq_name%::length (%cpfx%ULong len) {
+      if (len > m_maximum) {
+      // really undefined by CORBA as to what to do,
+      // but better safe than sorry!
+         %cpfx%UNKNOWN an_exception(0, %cpfx%COMPLETED_NO);
+         throw (an_exception);
+         }
+         else {
+           m_length = len;
+        }
+  }      
+ 
+// memory management
+  %mbr_type_ref%* %ext_seq_name%::allocbuf(%cpfx%ULong num_elements) {
+       if (num_elements > 0) {
+          %mbr_type_ref%* p_new_buffer = new %mbr_type_ref%[num_elements];
+          for (%cpfx%ULong ul_index = 0; ul_index < num_elements; ul_index++)
+             p_new_buffer[ul_index] = *(new %mbr_type_ref%);
+          return p_new_buffer;
+        }
+        else return ILUCPP_NULL;
+  }
+ 
+  void %ext_seq_name%::freebuf(%mbr_type_ref%* p_buf) {
+        delete [] p_buf;
+  }
+.
+
+
+
+L_bd_twombr_set_len (ext_seq_name, mbr_type_unq, mbr_type, cpfx) --> 
+
+  void %ext_seq_name%::length (%cpfx%ULong len) {
+      if (len > m_maximum) {
+      // really undefined by CORBA as to what to do,
+      // but better safe than sorry!
+         %cpfx%UNKNOWN an_exception(0, %cpfx%COMPLETED_NO);
+         throw (an_exception);
+         }
+       else {
+          if (len < m_length && m_release) {
+             for (%cpfx%ULong index = len; index < m_length; index++) {
+                 // attempt to NULL, not sure correct 
+                 m_buffer[index] = *(new %mbr_type_unq%);
+              }
+          }
+          m_length = len;
+       }
+  }
+.
+
+L_unb_twombr_set_len( ext_seq_name, mbr_type_unq, mbr_type, cpfx,
+    data_ptr) -->
+
+   void %ext_seq_name%::length (%cpfx%ULong len) {
+         if (len <= m_maximum) {
+             for (%cpfx%ULong index = len; index < m_length; index++) {
+                 // attempt to NULL, not sure correct 
+                 m_buffer[index] = *(new %mbr_type_unq%);
+             }
+             m_length = len;
+           }
+          else {
+                 %mbr_type_unq%%data_ptr% p_oldbuf = m_buffer;
+                 %mbr_type%* p_oldbufvar = m_varbuffer;
+
+                 %cpfx%ULong oldlen = m_length;
+                 %cpfx%Boolean b_oldrelease = m_release;
+                 m_release = ILUCPP_TRUE;
+                 m_length = len;
+                 m_maximum = len;
+                 m_buffer = allocbuf(m_length);
+                 m_varbuffer = new %mbr_type%[m_length];
+                 for (%cpfx%ULong index = 0; index < oldlen; index++) {
+                     m_buffer[index] = p_oldbuf[index];
+                     m_varbuffer[index] = p_oldbufvar[index];
+                 }
+                if (b_oldrelease) {
+                   freebuf(p_oldbuf);
+                 if(oldlen > 0)
+                   delete [] p_oldbufvar; 
+                }
+         }
+  }
+.
+  
+
+L_seq_bracket_ops(ext_seq_name, mbr_type, cpfx, rtncell) -->  
+
+  // [] operators
+  %mbr_type%& %ext_seq_name%::operator [] (%cpfx%ULong index) {
+       if (index >= m_length) {
+       // really undefined by CORBA as to what to do,
+       // but better safe than sorry!
+           %cpfx%UNKNOWN an_exception(0, %cpfx%COMPLETED_NO);
+            throw (an_exception);
+       }
+      return %rtncell%[index];
+  }
+  
+  const %mbr_type%& %ext_seq_name%::operator [] (%cpfx%ULong index) const {
+       if (index >= m_length) {
+       // really undefined by CORBA as to what to do,
+       // but better safe than sorry!
+          %cpfx%UNKNOWN an_exception(0, %cpfx%COMPLETED_NO);
+          throw (an_exception);
+       }
+       // _temp added for SUNPRO 5.0 sequences,
+       // cast for vc++ 
+       const %mbr_type% *_temp = 
+              (const %mbr_type% *) &%rtncell%[index];
+ 
+       return *_temp;
+  }
+.
+  
+L_unb_onembr_memory(ext_seq_name, mbr_type, cpfx) --> 
+
+  // memory management
+  %mbr_type%* %ext_seq_name%::allocbuf(%cpfx%ULong num_elements) {
+      return (num_elements > 0 ? (new %mbr_type%[num_elements]) : NULL);
+  }
+  
+  void %ext_seq_name%::freebuf(%mbr_type% p_buf) {
+        delete [] p_buf;
+  }
+.
+
+L_twombr_memory(ext_seq_name, mbr_type_unq, cpfx, data_ptr) -->
+
+  // memory management
+  %mbr_type_unq%%data_ptr% %ext_seq_name%::allocbuf(%cpfx%ULong num_elements) {
+       if (num_elements > 0) {
+          %mbr_type_unq%%data_ptr% p_new_buffer =
+                new %mbr_type_unq% [num_elements];
+          for (%cpfx%ULong ul_index = 0; ul_index < num_elements; ul_index++)
+             p_new_buffer[ul_index] = *(new %mbr_type_unq%);
+          return p_new_buffer;
+        }
+        else return ILUCPP_NULL;
+  }
+  
+  void %ext_seq_name%::freebuf(%mbr_type_unq%%data_ptr% p_buf) {
+        delete [] p_buf;
+  }
+.
+
+R_seq_insert(Sequence seq, ext_seq_name, us_seq_name, cpfx)
+  (max, Any etype) -->
+
+  E_ [  etype = seq.oftype] 
+
+  L_seq_insert_comment(ext_seq_name)
+
+  L_seq_insert_begin("+=", ext_seq_name, us_seq_name, cpfx, "const") 
+  R_seq_insert_op("+=", seq, etype, us_seq_name, "size_const", "", "", 0)
+  L_seq_insert_end("+=")
+  L_seq_insert_begin("<<", ext_seq_name, us_seq_name, cpfx, "const") 
+  R_seq_insert_op("<<", seq, etype,  us_seq_name, "output_const", "", "", 0)
+  L_seq_insert_end("<<")
+  # if unbounded seq use max initializer   
+  L_seq_extract_begin(">>", ext_seq_name, us_seq_name, cpfx, max) 
+         [[ seq.limit == 0 max = "(card_length)" ] | max = ""]  
+  R_seq_insert_op(">>", seq, etype, us_seq_name, "input", "", "",0)
+  L_seq_extract_end(us_seq_name, ext_seq_name)
+.
+
+# etype may be element type or, for optional iteration, oftype of optional 
+# ad indicates need for indirect for simple optionals 
+# two if second pass
+R_seq_insert_op(op, Sequence s, Any etype, us_seq_name, opname, ad, self,
+   Int rpt) 
+  (Any of_of, fun_name, wh, typekind, chtype, seq_name_ref, longtype, meth) --> 
+
+   E_ [ typekind = F_ur_typename(etype) 
+        [ [ op != ">>"    seq_name_ref = F_concat("r_", us_seq_name) ] 
+           |  seq_name_ref = "_seq_temp"] 
+       # some compiler problem, at least with sunpro,
+       # sometimes requires disambiguation for long types
+       longtype = F_ilu_long_name(etype, 0) 
+       of_of = F_optional_ofurtype(etype) 
+      ]
+
+   {
+     L_seq_enum_wrap(seq_name_ref, op, ad) [typekind == "Enumeration"]
+     |
+     L_seq_bool_wrap(seq_name_ref, op, ad) [typekind == "Boolean"] 
+     |
+     L_seq_char_wrap(seq_name_ref, op, ad) [typekind == "Character"] 
+     |
+     # do nested for optional, once for existence, once for op
+     # does not allow optionals of optionals
+     R_seq_optional_op(op, s, us_seq_name, seq_name_ref, opname)
+            [of_of != NULL rpt == 0] 
+     |
+     { E_  [ chtype = F_string_chartype(etype) chtype != NULL 
+          [[ chtype == "shortcharacter" wh = "CString"]
+           | [ chtype == "byte"   wh= "Bytes" ]
+           |  wh= "WString" ]
+        ]
+       { L_seq_str_ins_wrap(seq_name_ref, wh, op)
+            [op != ">>"  chtype != "character"]
+         | L_seq_wstr_ins_wrap(seq_name_ref, wh, op)
+            [op != ">>"]
+       | L_seq_str_ext_wrap(seq_name_ref, wh, op)
+       }
+     }
+    |
+    L_seq_array_op( fun_name, seq_name_ref )
+          [ typekind == "Array"   rpt == 0
+           fun_name = F_ur_pfxd_name(opname,etype) ]
+    |
+    L_seq_array_var_op( fun_name, seq_name_ref, meth )
+          [ typekind == "Array"  
+           fun_name = F_ur_pfxd_name(opname,etype) 
+           [ [op != ">>" meth = "in"] | meth = "out"]]
+    |
+    L_seq_struct_op(seq_name_ref, op, self) 
+     [ typekind == "Record" |typekind == "Sequence"| typekind == "Union"
+         | typekind == "Pickle" ]
+    |
+    L_seq_other_op(seq_name_ref, op, ad)
+       [ longtype == ""]
+    |
+     L_seq_other_op_long_in(seq_name_ref, op, ad, longtype)
+       [ op != ">>" ] 
+    |
+     L_seq_other_op_long_out(seq_name_ref, op, ad, longtype)
+     
+  }
+.
+
+R_seq_optional_op(op, Sequence seq, us_seq_name, seq_name_ref, opname) 
+   (Any of_type, Any of_vartype, of_typename, ad, self, chtype, cast) -->
+
+     E_ [ of_type  = F_optional_ofurtype(seq.oftype)
+          of_vartype = F_optional_vartype(seq.oftype)
+          of_typename = F_full_mbr_typeref(of_type)
+          [ [ of_vartype != NULL  ad = ""
+              [ [ F_ur_typename(of_vartype) != "Object"
+                   self = "->self()"]
+              | self = "" ] ]
+            | [ ad = "*"  self = "" ] ] 
+         ] 
+     { { E_ [ op != ">>"]
+         { L_seq_optional_in_var(seq_name_ref, op) [of_vartype != NULL]
+         | L_seq_optional_in_nonvar(seq_name_ref, op) } 
+       }
+       |
+       { L_seq_optional_get_begin(seq_name_ref, op)
+         #build temp for value 
+         {L_seq_optional_get_non_var(seq_name_ref, of_typename)
+           [ of_vartype == NULL]
+          | TRUE }
+       }
+    }
+
+    # iterate for referenced type, use indiretion for non var  
+    R_seq_insert_op(op, seq, of_type, us_seq_name, opname, ad, self,1 ) 
+     
+   {
+     L_seq_optional_get_end(seq_name_ref)
+         [ op == ">>" of_vartype == NULL]
+   | L_seq_optional_get_end_var(seq_name_ref, cast)
+         [ op == ">>"  chtype = F_string_chartype(of_vartype) 
+           [ [chtype == "shortcharacter" cast = "(const iluShortCharacter *)"] 
+             |[chtype == "character" cast = "(const iluCharacter *)"] 
+             | cast = "" ]
+          ] 
+   |  L_()        "}"
+  }
+. 
+
+
+L_seq_optional_in_nonvar(seq_name_ref, op) -->
+           iluOptionalWrapper s_element_wrap( (void *) %seq_name_ref%[index]);
+           r_call %op% s_element_wrap; 
+           if(s_element_wrap.m_present) {
+.
+L_seq_optional_in_var(seq_name_ref, op) -->
+           iluOptionalWrapper s_element_wrap;
+           s_element_wrap.m_present = 
+                !%seq_name_ref%[index].iluIsNull();
+           r_call %op% s_element_wrap; 
+           if(s_element_wrap.m_present) {
+.
+L_seq_optional_get_begin(seq_name_ref, op) -->
+           iluOptionalWrapper s_element_wrap;
+           r_call %op% s_element_wrap; 
+           if(s_element_wrap.m_present) {
+.
+
+L_seq_optional_get_non_var(seq_name_ref, of_typename) -->
+           if(%seq_name_ref%[index] == NULL)
+              %seq_name_ref%[index] = new %of_typename%;
+.
+
+L_seq_optional_get_end(seq_name_ref) -->
+          }
+          else {
+             %seq_name_ref%[index] = NULL;
+         }
+.
+L_seq_optional_get_end_var(seq_name_ref, cast) -->
+          }
+          else {
+             %seq_name_ref%[index] = %cast% ILUCPP_NULL;
+          } 
+.
+              
+L_seq_enum_wrap(seq_name_ref, op, ad) -->
+           iluEnumWrapper s_element( (iluDummyEnum &) %ad%%seq_name_ref%[index]);
+           r_call %op% s_element; 
+.
+L_seq_bool_wrap(seq_name_ref, op, ad) -->
+           iluBoolWrapper s_element( (ILUCPP_BOOL &) %ad%%seq_name_ref%[index]);
+           r_call %op% s_element; 
+.
+L_seq_char_wrap(seq_name_ref, op, ad) -->
+           iluCharacterWrapper s_element( (iluShortCardinal &) %ad%%seq_name_ref%[index]);
+           r_call %op% s_element; 
+.
+L_seq_str_ins_wrap(seq_name_ref, wh, op) -->
+          iluCardinal s_element_length =
+              strlen(%seq_name_ref%[index].iluStringVarReference());
+          ilu%wh%Wrapper  s_element(
+            %seq_name_ref%[index].iluStringVarReference(), s_element_length);
+          r_call %op% s_element; 
+.
+L_seq_wstr_ins_wrap(seq_name_ref, wh, op) -->
+          iluCardinal s_element_length =
+               iluCppRuntime::iluCharacterStringLength(
+                  %seq_name_ref%[index].iluStringVarReference());
+          ilu%wh%Wrapper  s_element(
+            %seq_name_ref%[index].iluStringVarReference(), s_element_length);
+          r_call %op% s_element; 
+.
+L_seq_str_ext_wrap(seq_name_ref, wh, op) -->
+          iluCardinal s_element_length;
+          ilu%wh%Wrapper  s_element(
+            %seq_name_ref%[index].iluStringVarReference(), s_element_length);
+          r_call %op% s_element; 
+.
+L_seq_str_ext_wrap(seq_name_ref, wh, op) -->
+          iluCardinal s_element_length;
+          ilu%wh%Wrapper  s_element(
+            %seq_name_ref%[index].iluStringVarReference(), s_element_length);
+          r_call %op% s_element; 
+.
+
+L_seq_array_op(fun_name, seq_name_ref) -->
+         %fun_name%(r_call, %seq_name_ref%[index]);
+.
+L_seq_array_var_op(fun_name, seq_name_ref, meth) -->
+         // additional disambiguation seems needed for gnuc only
+         %fun_name%(r_call, %seq_name_ref%[index].%meth%());
+.
+
+L_seq_struct_op(seq_name_ref, op, self) -->
+          r_call %op% %seq_name_ref%[index]%self%; 
+.
+
+L_seq_other_op (seq_name_ref, op, ad ) -->
+          r_call %op% %ad%%seq_name_ref%[index]; 
+.
+
+L_seq_other_op_long_in (seq_name_ref, op, ad, longtype ) -->
+          %longtype% _element_temp = %ad%%seq_name_ref%[index];
+          r_call %op% _element_temp;
+.
+
+L_seq_other_op_long_out (seq_name_ref, op, ad, longtype ) -->
+          %longtype% _element_temp;
+          r_call %op% _element_temp;
+          %ad%%seq_name_ref%[index] = _element_temp;
+.
+
+L_seq_insert_comment(ext_seq_name) -->
+
+  // insertion, extraction, and sizing operators for %ext_seq_name%
+.
+  
+L_seq_insert_begin(op, ext_seq_name, us_seq_name, cpfx,const) -->
+
+  iluBaseCall& operator%op%(iluBaseCall& r_call,
+        %const% %ext_seq_name%& r_%us_seq_name%){
+
+        iluCardinal card_length = r_%us_seq_name%.length();
+        iluSequenceWrapper _r_%us_seq_name%(card_length);
+        r_call %op% _r_%us_seq_name%;
+        for (%cpfx%ULong index = 0; index < r_%us_seq_name%.length(); index++) {
+.
+
+# iffy.. possible sunpro problem avoided by reading of 
+# sequence into temp, and then assignment to actual
+# otherwise record member var not set 
+# max is "" if bounded sequence
+L_seq_extract_begin(op, ext_seq_name, us_seq_name, cpfx, max) -->
+
+    // use of seq_temp is workaround for possible sunpro problem 
+  iluBaseCall& operator%op%(iluBaseCall& r_call,
+        %ext_seq_name%& r_%us_seq_name%){
+
+        %cpfx%ULong card_length;
+        iluSequenceWrapper _r_wrapper(card_length);
+        r_call %op% _r_wrapper;
+        %ext_seq_name% _seq_temp%max%; // sets max
+        _seq_temp.length(card_length);
+        
+        for (%cpfx%ULong index = 0; index < _seq_temp.length(); index++) {
+.
+
+
+L_seq_insert_end(op) -->
+        }
+        r_call %op% iluEndSequence;
+        return r_call;
+  }
+.
+
+# modified, see if ok
+L_seq_extract_end(us_seq_name, ext_seq_name) -->
+         }
+        r_call >> iluEndSequence;
+        r_%us_seq_name% = %ext_seq_name%(_seq_temp); 
+        return r_call;
+  }
+.
+
+  
+L_seq_surrogate_cleanup(ext_seq_name, cpfx) -->
+
+  // for ilustub use only - call before the surrogate side stub returns
+  void %ext_seq_name%::iluSurrogateSideCleanup() const {
+	  for (%cpfx%ULong index = 0; index < m_length; index++) {
+		  (m_varbuffer[index]).iluDeleteWrapper();
+	  }
+  }
+.
+
+========================================================================
+
+# experimenting with treating optional array arms like arrays
+# assumes default arm in list of arms, as per c-stubber
+R_union_ops(Union union)
+      (Arm arm, ext_union_name, us_union_name, cpfx, extpfx, mpfx, dpfx) -->
+    E_ [ext_union_name = F_full_typeref(union)
+        us_union_name = F_underscore_name(union)
+        cpfx = F_corba_pfx()
+        extpfx = F_full_prefix(union, 0)
+        mpfx = F_noninterface_prefix(union, 0)
+        [ [ F_ur_typename(union.discrim_type) == "Enumeration"
+           dpfx = F_full_prefix(F_ur_instance(union.discrim_type), 0) ] |
+           dpfx = "" ]
+       ]
+
+    L_union_begin(ext_union_name, mpfx, union.name)
+
+    R_union_assign(union, ext_union_name, mpfx, union.name, dpfx)
+
+    #workaround
+    L_struct_self(ext_union_name) 
+
+    R_union_disc_access(union, ext_union_name, dpfx)
+
+    R_union_arm_access: arm in union.arms: (arm, dpfx,  ext_union_name, union) 
+
+    { R_union_surrogate_cleanup(union, ext_union_name, dpfx)
+            [F_contains_object(union) == 1]
+    | TRUE}
+
+    R_union_unset(union, ext_union_name, dpfx)
+
+    # putting this before ops is workaround for
+    R_union_ops_1(union, ext_union_name, us_union_name, dpfx)
+
+    R_typecode_related(union, us_union_name, ext_union_name, union.name,
+               cpfx, extpfx)
+.
+
+
+# 98 spec says copy constructor does deep copy
+L_union_begin(ext_union_name, mpfx, s_union_name) -->
+
+
+  //////////////////////////////////////////////////////////////////////
+  // %ext_union_name% members
+		
+  // constructors & destructor
+  %ext_union_name%::%mpfx%%s_union_name%() : m_b_beenset(ILUCPP_FALSE) {}
+
+  %ext_union_name%::%mpfx%%s_union_name%(const %ext_union_name%& r_union_type) : m_b_beenset(ILUCPP_FALSE) {
+	  (*this) = r_union_type;
+  }
+
+  
+  %ext_union_name%::~%mpfx%%s_union_name%() {
+	  unset();
+  }
+.
+
+========================================================================-
+
+R_union_assign(Union union, ext_union_name, mpfx, uname, dpfx) (Arm arm)-->
+
+    L_union_assign_begin(ext_union_name)
+    R_union_assign_arm: arm in union.arms: (arm, dpfx)
+    L_union_assign_end()
+.
+
+R_union_assign_arm(Arm arm, dpfx)
+   (Any fof_type, armkind, Any arm_type, arm_tname, arm_name, cpfx) -->
+
+    E_ [ arm_type= arm.type   
+         arm_tname= F_full_mbr_typeref(arm_type)
+        [ [arm.name == NULL  arm_name = F_build_arm_name(arm.type) ] |
+           arm_name = arm.name]
+         fof_type = F_optional_ofurtype(arm.type) 
+       ]
+
+    R_union_arm_cases(arm, dpfx)
+    { L_builtin_arm_assign(arm_name) [F_ur_builtin(arm_type) == 1]
+     | L_string_arm_assign(arm_name, cpfx, arm_tname)
+          [F_string_chartype(arm_type) != NULL   cpfx = F_corba_pfx()]
+     # for non-var
+     | L_opt_arm_assign(arm_name, arm_tname)
+        [ fof_type != NULL F_ur_typename(fof_type) != "Array" 
+          F_optional_vartype(arm.type) == NULL]
+     | L_array_arm_assign(arm_name, F_full_ur_typeref(fof_type))
+        [ fof_type != NULL F_ur_typename(fof_type) == "Array"]
+     | L_array_arm_assign(arm_name, F_full_ur_typeref(arm.type))
+         [F_ur_typename(arm.type) == "Array"] 
+     | L_structured_arm_assign(arm_name, arm_tname) 
+    }
+.
+
+L_union_assign_begin(ext_union_name) -->  
+
+  // assignment
+  %ext_union_name%& %ext_union_name%::operator=
+          (const %ext_union_name%& r_union_type) {
+
+	  if (this == &r_union_type) return (*this);
+	  unset();
+	  m_b_beenset = r_union_type.m_b_beenset;
+	  if (!m_b_beenset) return (*this);
+	  
+	  m_discriminator = r_union_type.m_discriminator;
+	  switch (m_discriminator) {
+.
+
+L_builtin_arm_assign(arm_name) -->
+                  m_%arm_name% = r_union_type.m_%arm_name%;
+                  break;
+.
+
+L_string_arm_assign (arm_name, cpfx, tname) -->
+                   m_%arm_name% =
+                      new %tname%(
+                        r_union_type.m_%arm_name%->iluStringVarReference());
+                   break;
+.
+
+# only for non vars
+L_opt_arm_assign(arm_name, ext_arm_type) -->
+                   if(r_union_type.m_%arm_name% != NULL) { 
+                     if(m_%arm_name% == NULL) { 
+                         m_%arm_name% = *(new %ext_arm_type%()); 
+                      } 
+                      *m_%arm_name% = *r_union_type.m_%arm_name%; 
+                    }
+                    else m_%arm_name% = NULL; 
+                   break; 
+.  
+
+L_array_arm_assign(arm_name, ext_arm_type) --> 
+                   if(r_union_type.m_%arm_name% == NULL)  
+                       m_%arm_name%= NULL;
+                   else {
+                      if(m_%arm_name% == NULL) 
+                          %ext_arm_type%_dup(r_union_type.m_%arm_name%);
+                      else
+                         %ext_arm_type%_copy( m_%arm_name%,
+                               r_union_type.m_%arm_name%);
+                   }  
+                   break;
+.
+L_structured_arm_assign(arm_name, ext_arm_type) --> 
+                   m_%arm_name% =
+                      new %ext_arm_type%(*r_union_type.m_%arm_name%);
+                   break;
+.
+
+L_union_assign_end() -->
+             }
+             return(*this);
+ }
+.
+
+========================================================================-
+
+R_union_disc_access(Union union, ext_union_name,dpfx)
+        (discrim_type, Arm arm, Arm arm1)-->
+
+    L_union_disc_get(ext_union_name, discrim_type)
+         [discrim_type = F_full_ur_typeref(union.discrim_type)]
+    { L_union_disc_set_begin(ext_union_name, discrim_type)
+           [ union.default_arm != NULL | union.others_allowed == 1]
+      # if neither default nor others_allowed, check given value
+      | { L_union_disc_set_check_begin(ext_union_name, discrim_type)
+          R_union_disc_check_range: arm1 in union.arms: (arm1, dpfx)
+                [arm1.values != NULL ]
+         L_union_disc_set_check_end()
+        }
+    }
+
+    # see if disc set matches existing setting
+    R_union_m_disc_case: arm in union.arms: (arm, dpfx)
+    R_union_m_disc_default(union, dpfx)
+.
+
+
+L_union_disc_get(ext_union_name, discrim_type) -->
+
+  // discriminator access
+  %discrim_type% %ext_union_name%::_d () const { 
+	  return m_discriminator; 
+  }
+. 
+
+L_union_disc_set_begin(ext_union_name, discrim_type) -->
+
+  void %ext_union_name%::_d (%discrim_type% new_d) { 
+	  
+	  if (! m_b_beenset) {
+		  m_discriminator = new_d;
+		  return;
+	  }
+          switch(m_discriminator) {
+.
+
+# if neither default or others allowed, see if in range
+L_union_disc_set_check_begin(ext_union_name, discrim_type) -->
+
+  void %ext_union_name%::_d (%discrim_type% new_d) { 
+	  
+    if (!m_b_beenset) {
+          // neither default nor others allowed, so see if new setting in range
+          switch (new_d) { 
+.
+
+R_union_disc_check_range(Arm arm, dpfx)(Any v1, value1) --> 
+
+    L_armcase2 :v1 in arm.values: (value1, dpfx) 
+           [value1 = F_constant_value(v1)]
+.
+
+L_union_disc_set_check_end() -->
+		              m_discriminator = new_d;
+                              return;
+                       default:
+                              ILUCPP_BAD_DISC_SET()
+                              return;
+                   }
+          }
+         switch(m_discriminator) {
+.
+R_union_m_disc_case(Arm arm, dpfx)
+        (arm_name,  Any v, value, Any v1, value1)   -->
+
+    E_ [ [arm.name == NULL arm_name = F_build_arm_name(arm.type) ] | 
+          arm_name = arm.name 
+       ]
+    R_union_arm_cases(arm,dpfx) [arm.values != NULL]
+    L_switch()     
+    L_armcase2 :v1 in arm.values: (value1,dpfx) 
+           [value1 = F_constant_value(v1)]
+    L_end_m_disc_case()
+.  
+
+R_union_m_disc_default(Union union, dpfx) (Arm arm)   -->
+
+    L_m_disc_default_begin()
+    R_union_m_disc_default_1 :arm in union.arms : (arm, dpfx)
+    L_m_disc_default_end()
+.
+
+L_switch()-->     
+                  switch(new_d) { 
+.
+L_armcase2(value,dpfx) -->
+                       case %dpfx%%value%: 
+.
+
+R_union_m_disc_default_1 (Arm arm, dpfx) (Any v, value) --> 
+    L_armcase2 :v in arm.values: (value, dpfx) 
+             [value = F_constant_value(v)]
+.
+
+
+L_m_disc_default_begin() -->
+
+                //default
+                  default:
+                    switch(new_d) {
+.
+
+L_m_disc_default_end() -->
+                             break;
+                       default: 
+                             m_discriminator = new_d; 
+                             return; 
+                    }
+                    break;
+
+       }
+       ILUCPP_WARN(\"Ignoring attempt to set union discriminator\"
+                   \" outside current membership\");
+       return;
+ }
+.  
+
+L_end_m_disc_case() -->
+                            m_discriminator = new_d;
+                            return;  
+                       default:
+                            break; 
+                  }
+                  break;
+.  
+
+=================================================================
+
+# pickles?
+# first alt for access1 is for default arm. second gets first of armvals 
+R_union_arm_access(Arm arm, dpfx,  ext_union_name, Union union)
+        (Any v, Int i, value, value1) -->
+
+ {
+   R_union_arm_access1(arm, value, ext_union_name)
+          [ arm.values == NULL 
+            value1 = F_get_union_default(union)
+            value = F_concat(dpfx, value1)]
+  | R_union_arm_access1:v(i) in arm.values:
+           (arm, value, ext_union_name)
+           [i == 0  value1 = F_constant_value(v)
+            value = F_concat(dpfx, value1)]
+ } 
+.
+
+# why don't checkcurrent accessor and release
+# For optional structured types, changed to return pointer, not ref.
+# ??
+R_union_arm_access1(Arm arm, firstv, ext_union_name) 
+    (Any arm_type, Any optof, armkind, ext_arm_ref, 
+    ext_arm_mbr, arm_name, chartype, chtype, Any opt_arm_vartype)--> 
+
+   E_ [ optof = F_optional_ofurtype(arm.type) ]
+
+   E_ [ [  optof != NULL
+           chartype = F_string_chartype(optof)
+          [ F_ur_typename(optof) == "Object" |
+            [chartype != NULL chartype != "byte"]
+           ]
+           arm_type = optof
+        ]
+         | [ arm_type = arm.type
+            chartype = F_string_chartype(arm_type)
+          ]
+      ]
+
+     E_ [ armkind = F_ur_typename(arm_type) 
+          ext_arm_mbr = F_full_mbr_typeref(arm.type)   
+          ext_arm_ref = F_full_ur_typeref(arm_type)
+          opt_arm_vartype = F_optional_vartype(arm.type) 
+        ]
+
+     E_ [[arm.name == NULL arm_name = F_build_arm_name(arm.type) ] | 
+          arm_name = arm.name ]
+
+    L_() " " 
+    L_(arm_name) "   // %arm_name% access" 
+
+    { L_builtin_arm_access(ext_union_name, arm_name, firstv,ext_arm_ref)
+         [F_ur_builtin(arm_type) == 1  F_ur_typename(arm_type) != "Pickle"]
+    | L_string_arm_access( ext_union_name,arm_name,firstv,chtype, ext_arm_mbr)
+       [chartype != NULL   chartype != "byte"  
+       [ [ chartype == "shortcharacter" chtype ="iluShortCharacter" ] |
+          | [ chartype == "character"      chtype = "iluCharacter" ] ]
+       ]
+
+    | L_array_arm_access(ext_union_name,arm_name,firstv,ext_arm_ref,
+         F_full_ur_typeref(arm.type))
+          [ armkind == "Array" ]
+    | L_array_arm_access(ext_union_name,arm_name,firstv,
+         F_full_typeref(optof), F_full_ur_typeref(optof))
+          [  optof != NULL F_ur_typename(optof) == "Array" ]
+    | L_object_arm_access(ext_union_name,arm_name,firstv,ext_arm_mbr,
+         ext_arm_ref) [ armkind == "Object" ]
+    | L_optional_var_arm_access(ext_union_name,arm_name,firstv,
+                 ext_arm_ref, F_full_typeref(opt_arm_vartype)) 
+             [ optof != NULL  opt_arm_vartype != NULL]
+    | L_optional_arm_access(ext_union_name,arm_name,firstv,ext_arm_ref,
+             F_full_typeref(optof))
+             [ optof != NULL ]
+    | L_structured_arm_access(ext_union_name,arm_name,firstv,ext_arm_ref)
+    }
+.
+
+L_builtin_arm_access(ext_union_name, arm_name, firstv, ext_arm_type) -->
+     %ext_arm_type% %ext_union_name%::%arm_name% () const {
+       return m_%arm_name%;
+     }
+
+     void %ext_union_name%::%arm_name% (%ext_arm_type% a_%arm_name%) {
+          unset();			
+          m_discriminator = %firstv%;
+          m_%arm_name% = a_%arm_name%;
+          m_b_beenset = ILUCPP_TRUE;
+    }
+.
+  
+
+L_object_arm_access(ext_union_name, arm_name, firstv, ext_arm_mbr,
+      ext_arm_ref) -->
+     %ext_arm_ref%_ptr %ext_union_name%::%arm_name%() const {
+       return (*m_%arm_name%);
+    }
+  
+    void %ext_union_name%::%arm_name% (%ext_arm_ref%_ptr a_%arm_name%) {
+          unset();			
+          m_discriminator = %firstv%;
+          // duplicate per corba spec
+          %ext_arm_ref%::_duplicate(a_%arm_name%);
+          m_%arm_name% = new %ext_arm_mbr%(a_%arm_name%);
+          m_b_beenset = ILUCPP_TRUE;
+    }
+.
+
+L_structured_arm_access(ext_union_name,arm_name,firstv, ext_arm_ref) -->
+    const %ext_arm_ref%& %ext_union_name%::%arm_name%() const {
+           return( (const %ext_arm_ref%&) *m_%arm_name%);
+    }
+
+    %ext_arm_ref%& %ext_union_name%::%arm_name%(){
+           return( (%ext_arm_ref%&) *m_%arm_name%);
+    }
+
+    void %ext_union_name%::%arm_name%(const %ext_arm_ref% & a_%arm_name%){
+         unset();
+         m_discriminator = %firstv%;
+         m_%arm_name% = new %ext_arm_ref%(a_%arm_name%);
+         m_b_beenset = ILUCPP_TRUE;
+   }
+.
+
+L_optional_var_arm_access(ext_union_name,arm_name,firstv, ext_arm_ref,
+                opt_arm_oftype) -->
+
+    %ext_arm_ref% %ext_union_name%::%arm_name%() const {
+              return( (%opt_arm_oftype%*&) *m_%arm_name%);
+    }
+
+
+    void %ext_union_name%::%arm_name%(%ext_arm_ref% a_%arm_name%){
+         unset();
+         m_discriminator = %firstv%;
+         m_%arm_name% =  new %opt_arm_oftype%_var(a_%arm_name%);
+         m_b_beenset = ILUCPP_TRUE;
+   }
+.
+
+# will be built in
+L_optional_arm_access(ext_union_name,arm_name,firstv,
+     ext_arm_ref, optof_ref) -->
+
+    %ext_arm_ref% %ext_union_name%::%arm_name%() const {
+               return(m_%arm_name%);
+    }
+
+    void %ext_union_name%::%arm_name%(%ext_arm_ref% a_%arm_name%){
+         unset();
+         m_discriminator = %firstv%;
+         if(a_%arm_name% != NULL)   {
+                m_%arm_name% = new %optof_ref%;
+               *m_%arm_name%  = *a_%arm_name%; 
+         }
+         else m_%arm_name% = NULL;
+         m_b_beenset = ILUCPP_TRUE;
+   }
+.
+
+   
+L_array_arm_access( ext_union_name,arm_name,firstv,ext_arm_ref,ext_arm_mbr) -->
+
+    %ext_arm_ref%_slice *%ext_union_name%::%arm_name%() const {
+           return((%ext_arm_ref%_slice *) m_%arm_name%);
+    }
+
+
+    void %ext_union_name%::%arm_name%( %ext_arm_ref%_slice* a_%arm_name%){
+         unset();
+         m_discriminator = %firstv%;
+         if(a_%arm_name% == NULL) m_%arm_name% = NULL;
+         else { 
+              if(m_%arm_name% == NULL)
+                  m_%arm_name% = %ext_arm_ref%_alloc();
+             %ext_arm_ref%_copy(m_%arm_name%, a_%arm_name%);
+         }
+         m_b_beenset = ILUCPP_TRUE;
+    }
+.
+         
+L_string_arm_access( ext_union_name,arm_name,firstv, chtype, svar) -->
+
+   const %chtype% *%ext_union_name%::%arm_name%() const{
+        return (m_%arm_name%->iluStringVarReference());
+   }
+
+   void %ext_union_name%::%arm_name%(%chtype% * a_%arm_name%){
+         unset();
+         m_discriminator = %firstv%;
+         m_%arm_name% = new %svar%(a_%arm_name%);
+         m_b_beenset = ILUCPP_TRUE;
+   }
+         
+
+   void %ext_union_name%::%arm_name%(const %chtype% * a_%arm_name%){
+         unset();
+         m_discriminator = %firstv%;
+         m_%arm_name% = new %svar%(a_%arm_name%);
+         m_b_beenset = ILUCPP_TRUE;
+   }
+
+   void %ext_union_name%::%arm_name%(const %svar%& a_%arm_name%){
+         unset();
+         m_discriminator = %firstv%;
+         m_%arm_name% = new %svar%(a_%arm_name%);
+         m_b_beenset = ILUCPP_TRUE;
+   }
+.
+
+====================================================================
+R_union_surrogate_cleanup(Union union, ext_union_name, dpfx) (Arm arm) -->
+    L_union_cleanup_begin(ext_union_name)
+    R_union_cleanup_arm: arm in union.arms: (arm, dpfx) 
+     L_cleanup_end()
+.
+
+R_union_cleanup_arm(Arm arm, dpfx)
+    (arm_name, Any arm_type, Any arm_type1) -->
+
+   R_union_arm_cases(arm, dpfx)
+
+   { L_cleanup_object(arm_name)
+     [ arm_type1 = F_optional_vartype(arm.type)
+       [[arm_type1 != NULL arm_type = arm_type1] | arm_type = arm.type] 
+        F_ur_typename(arm_type) == "Object"
+        [[arm.name == NULL arm_name = F_build_arm_name(arm.type) ] | 
+          arm_name = arm.name ]
+      ]
+    | L_break() 
+   }
+.
+
+L_union_cleanup_begin(ext_union_name) -->
+		  
+  // for ilustub use only -
+  // should be called before the surrogate side stub returns
+  void %ext_union_name%::iluSurrogateSideCleanup() const {
+	  if (m_b_beenset) {
+		  switch (m_discriminator) {
+.
+
+L_break() -->
+			  break;
+.
+
+L_cleanup_object(arm_name) -->
+			  m_%arm_name%->iluDeleteWrapper();
+			  break;
+.
+
+L_cleanup_end()-->
+		  }
+	  }
+  }
+.
+
+=========================================================================
+R_union_arm_cases(Arm arm,dpfx) (Any v, value, arm_name)-->
+   E_ [ [arm.name == NULL arm_name = F_build_arm_name(arm.type) ] | 
+          arm_name = arm.name ]
+   L_armname(arm_name)
+   { L_default_case() [arm.values == NULL]
+      | L_arm_case: v in arm.values:(value,dpfx)
+            [value = F_constant_value(v)]
+   }
+.
+L_arm_case(value, dpfx) -->
+		  case %dpfx%%value%:  
+.
+L_default_case() -->
+                  default:
+.
+L_armname(arm_name) -->
+
+                 // %arm_name%
+.
+====================================================================
+R_union_unset(Union union, ext_union_name, dpfx) (Arm arm) -->
+    L_union_unset_begin(ext_union_name)
+    R_union_unset_arm: arm in union.arms: (arm, dpfx) 
+    { L_union_add_default() [union.default_arm == NULL]
+      | TRUE
+    }
+    L_union_unset_end()
+.
+
+R_union_unset_arm(Arm arm, dpfx) (arm_name, Any fof_type) -->
+
+   R_union_arm_cases(arm, dpfx)
+   E_  [ [arm.name == NULL arm_name = F_build_arm_name(arm.type)] |
+           arm_name = arm.name] 
+
+   { L_union_delete_array_arm(arm_name)
+         [ F_ur_typename(arm.type) == "Array" |
+           [ fof_type = F_optional_ofurtype(arm.type)
+             fof_type != NULL F_ur_typename(fof_type) == "Array"]
+         ]
+      | L_union_delete_arm(arm_name)
+        [F_ur_builtin(arm.type)  != 1 ]
+    | L_unset_break() 
+   }
+.
+
+L_union_unset_begin(ext_union_name) -->
+		  
+  void %ext_union_name%::unset() {
+	  if (m_b_beenset) {
+		  switch (m_discriminator) {
+.
+
+L_unset_break() -->
+                     break;
+.
+
+L_union_delete_arm(arm_name) -->
+                     delete m_%arm_name%;
+                     break;
+.
+L_union_delete_array_arm(arm_name) -->
+                     delete [] m_%arm_name%;
+                     break;
+.
+
+L_union_add_default() -->
+                  default: 
+                      break;
+.
+
+L_union_unset_end() -->
+                }
+                m_b_beenset = ILUCPP_FALSE;
+       }
+  }
+.
+====================================================================
+
+R_union_ops_1(Union union, ext_union_name, us_union_name, dpfx)
+     (disc_itype, discrim_type, discrim_typeref, oppfx) -->
+
+   E_ [ disc_itype = F_ur_typename(union.discrim_type)
+      [[ disc_itype == "ShortCardinal"  discrim_type = "ilu_shortcardinal_tk"]
+      | [ disc_itype == "Cardinal"      discrim_type  = "ilu_cardinal_tk"    ]
+      | [ disc_itype == "ShortInteger"  discrim_type  = "ilu_shortinteger_tk"]
+      | [ disc_itype == "Integer"       discrim_type  = "ilu_integer_tk"     ]
+      | [ disc_itype == "Byte"          discrim_type  = "ilu_byte_tk"        ]
+      | [ disc_itype == "Boolean"       discrim_type  = "ilu_boolean_tk"     ]
+      | [ disc_itype == "Enumeration"   discrim_type  = "ilu_enumeration_tk" ]
+      ] 
+   ]
+
+#     E_ [  [F_use_namespace() == 1  oppfx = F_full_prefix(union, 0) ]    
+#           |  oppfx = ""]
+    E_ [ oppfx = "" ] 
+    L_union_op_comment(ext_union_name) 
+    R_union_size_insert(union, ext_union_name, us_union_name,
+              discrim_type, "+=", dpfx, "size_const", oppfx) 
+    R_union_size_insert(union, ext_union_name, us_union_name,
+              discrim_type, "<<",dpfx, "output_const", oppfx) 
+    R_union_extract(union, ext_union_name, us_union_name,
+              discrim_type, ">>", dpfx, "input", oppfx) 
+.
+
+L_union_op_comment(ext_union_name) -->
+
+  // insertion, extraction, and sizing operators for %ext_union_name%
+
+.
+
+# for insertion and sizing
+R_union_size_insert(Union union, ext_union_name, us_union_name,
+              discrim_type, op, dpfx, opname, oppfx) (Arm arm) -->
+
+   L_union_insert_begin(ext_union_name, us_union_name, op,discrim_type, oppfx)
+   L_insert_switch("", us_union_name, "m_") 
+   R_arm_size_insert:arm in union.arms: (us_union_name, arm, op, opname, dpfx)
+   { L_others_ok( )
+      [ union.default_arm == NULL  union.others_allowed == 1]
+    | L_others_bad()
+      [ union.default_arm == NULL  union.others_allowed != 1]
+    | TRUE
+   }
+   L_union_insert_end(op) 
+.
+
+# for extraction
+R_union_extract(Union union, ext_union_name, us_union_name,
+    discrim_type, op, dpfx, opname, oppfx) (Arm arm, Arm arm1, d_typeref) -->
+
+   L_union_extract_begin(ext_union_name, us_union_name, discrim_type, oppfx)
+   L_insert_switch("_", us_union_name, "m_card_") 
+   R_union_extract_arm:arm in union.arms: (us_union_name, arm, op, dpfx,opname)
+   { L_others_ok( )
+      [ union.default_arm == NULL  union.others_allowed == 1]
+    | L_others_bad()
+      [ union.default_arm == NULL  union.others_allowed != 1]
+    | TRUE
+   }
+  {
+     L_union_extract_end (us_union_name, d_typeref)
+       [ discrim_type != "ilu_boolean_tk"
+          d_typeref = F_full_ur_typeref(union.discrim_type)]
+   | L_union_extract_end_bool(us_union_name)
+   }
+.
+
+L_insert_switch(wr_us,us_union_name, wr_member) -->
+
+          switch (%wr_us%r_%us_union_name%.%wr_member%discriminator) {
+.
+
+L_others_ok() -->
+               default:
+                   break;  
+.
+   
+L_others_bad() -->
+               default:
+                    ILUCPP_BAD_DISC()  
+                    break;
+.
+
+L_union_insert_begin(ext_union_name, us_union_name,op,discrim_type,oppfx) -->
+  
+  iluBaseCall& %oppfx%operator%op%(iluBaseCall& r_call,
+                           const %ext_union_name%& r_%us_union_name%) {
+
+          iluUnionWrapper _r_%us_union_name%(
+                                r_%us_union_name%._d(),
+                                %discrim_type%);
+          r_call %op% _r_%us_union_name%;
+.
+
+
+L_union_extract_begin(ext_union_name, us_union_name, discrim_type, oppfx) --> 
+
+  iluBaseCall& %oppfx%operator>>(iluBaseCall& r_call, %ext_union_name%& r_%us_union_name%) {
+        
+          iluUnionWrapper _r_%us_union_name%(0, ilu_shortcardinal_tk);
+        
+          r_call >> _r_%us_union_name%;
+.
+
+
+L_union_insert_end (op) -->
+          }
+
+          r_call %op% iluEndUnion;
+          return r_call;
+ }
+.
+
+L_union_extract_end (us_union_name, d_typeref) -->
+
+          };
+
+          r_call >> iluEndUnion;
+          r_%us_union_name%._d((%d_typeref%) (_r_%us_union_name%.m_card_discriminator));
+	  return r_call;
+  }
+.
+
+L_union_extract_end_bool (us_union_name) -->
+
+          };
+
+          r_call >> iluEndUnion;
+          r_%us_union_name%._d(_r_%us_union_name%.m_card_discriminator!= 0);
+          return r_call;
+  }
+.
+===========================================================================
+R_arm_size_insert( us_src_name, Arm arm, op, opname, dpfx)
+      (arm_name,  armkind, h) -->
+
+    E_ [ [ [arm.name == NULL arm_name = F_build_arm_name(arm.type)] |
+           arm_name = arm.name]
+           armkind = F_ur_typename(arm.type)] 
+ 
+  R_union_arm_cases(arm, dpfx)
+
+  { 
+    R_arm_si_opt(arm, us_src_name, arm_name, op, opname)
+       [ F_optional_ofurtype(arm.type) != NULL ]
+    | R_arm_si_nonopt(arm, us_src_name, arm_name, op, arm.type, opname, "", "")
+  }
+
+  L_break()
+.
+
+R_arm_si_opt(Arm arm, us_src_name, arm_name, op, opname)
+   (Any arm_type, Any fof_type, Any fof_vartype, fof_typename, fof_kind) -->
+
+   E_ [ arm_type = arm.type
+       fof_type = F_optional_ofurtype(arm_type)   
+       fof_vartype = F_optional_vartype(arm_type) 
+       fof_kind =  F_ur_typename(fof_type)
+     ]
+
+  # bracket optional ops with retrieve/send of presence, and test
+  # if present, follow with op on actual value
+   {  L_optional_size_insert(us_src_name, arm_name, op)
+         [ fof_vartype == NULL |  F_ur_typename(fof_type) == "Array" ] 
+     | L_optional_size_insert(us_src_name, arm_name, op)
+         [ F_ur_typename(fof_type) == "Array" ] 
+     | L_optional_size_insert_var(us_src_name, arm_name, op) }
+  
+  { R_arm_si_nonopt(arm, us_src_name, arm_name, op, fof_type, opname, "*", "")
+     [ fof_vartype == NULL ] 
+  | R_arm_si_nonopt(arm, us_src_name, arm_name,op,fof_type, opname, "","")
+     [ fof_kind == "Array" ]
+  | R_arm_si_nonopt(arm, us_src_name, arm_name,op,fof_type, opname, "", "")
+     [   fof_kind == "Object" ]
+  | R_arm_si_nonopt(arm, us_src_name, arm_name,op,fof_type, opname, "",
+      "->self()")
+   }
+
+  L_() "                  }"
+  L_() "                 }"
+.      
+
+L_optional_size_insert(us_src_name, arm_name, op) -->
+                  { iluOptionalWrapper _opt_%arm_name%_wrap(
+                       (void *) r_%us_src_name%.m_%arm_name%);
+                    r_call %op% _opt_%arm_name%_wrap;
+                    if(_opt_%arm_name%_wrap.m_present) {
+.
+L_optional_size_insert_var(us_src_name, arm_name, op) -->
+                {
+                  iluOptionalWrapper _opt_%arm_name%_wrap;
+                  _opt_%arm_name%_wrap.m_present =
+                     !((*r_%us_src_name%.m_%arm_name%).iluIsNull());
+                  r_call %op% _opt_%arm_name%_wrap;
+                  if(_opt_%arm_name%_wrap.m_present) {
+.
+  
+# pickles?
+# ad adds indirection for optionals
+R_arm_si_nonopt(Arm arm, us_src_name, arm_name, op, Any arm_type,
+    opname, ad, h) (armkind, fun_name, chtype, longtype, meth) --> 
+   
+   E_  [ armkind = F_ur_typename(arm_type) 
+         chtype = F_string_chartype(arm_type) 
+       # some compiler problem, at least with sunpro,
+       # sometimes requires disambiguation for long types
+       longtype = F_ilu_long_name(arm_type, 0) ]
+
+  {  L_enum_wrap(us_src_name, arm_name,op, ad)
+       [armkind == "Enumeration"]
+     |
+     L_boolean_wrap(us_src_name, arm_name, op, ad)
+       [armkind == "Boolean"]
+     |
+     L_character_wrap(us_src_name, arm_name,op, ad)
+       [armkind == "Character"]
+     |
+     L_cstring_wrap(us_src_name, arm_name,op)
+       [ chtype != NULL chtype == "shortcharacter"] 
+     |
+     L_wstring_wrap(us_src_name, arm_name, op)
+       [ chtype != NULL chtype == "character"] 
+     |
+     L_bytes_wrap(us_src_name, arm_name, op)
+       [ chtype != NULL chtype == "byte"] 
+     |
+     L_array_fun(us_src_name, fun_name, arm_name)
+         [armkind == "Array" h == ""
+          fun_name = F_ur_pfxd_name(opname, arm_type)]
+     |
+     # does not occur now
+     L_array_opt_fun(us_src_name, fun_name, arm_name, meth)
+         [armkind == "Array" h != ""
+          fun_name = F_ur_pfxd_name(opname, arm_type)
+           [[ op != ">>"  meth = "in"] | meth = "out"]]
+     |
+     L_struct_op(us_src_name, arm_name, op, h)
+        [armkind == "Sequence" || armkind == "Record" || armkind =="Union"
+         | armkind == "Pickle" ]
+     |
+     L_non_ptr_long(us_src_name, arm_name, op, ad, longtype)
+           [F_ur_builtin(arm_type) == 1  longtype != ""]
+     |
+     L_non_ptr(us_src_name, arm_name, op, ad)
+           [F_ur_builtin(arm_type) == 1  
+             | F_string_chartype(arm_type)!= NULL ]
+     | 
+     L_ptr(us_src_name, arm_name, op)
+  }
+.
+
+L_enum_wrap(us_src_name, arm_name, op, ad) -->
+                { iluEnumWrapper _r_%arm_name%_wrap(
+                  (iluDummyEnum &) %ad%r_%us_src_name%.m_%arm_name%);
+                   r_call %op% _r_%arm_name%_wrap;
+                }
+.
+L_boolean_wrap(us_src_name, arm_name, op, ad) -->
+                  { iluBoolWrapper _r_%arm_name%_wrap(
+                    (ILUCPP_BOOL &) %ad%r_%us_src_name%.m_%arm_name%);
+                    r_call %op% _r_%arm_name%_wrap;
+                  }
+.
+L_character_wrap(us_src_name, arm_name, op, ad) -->
+                  { iluCharacterWrapper _r_%arm_name%_wrap(
+                    (iluShortCardinal &) %ad%r_%us_src_name%.m_%arm_name%);
+                    r_call %op% _r_%arm_name%_wrap;
+                  }
+.
+L_cstring_wrap(us_src_name, arm_name,op) -->
+                   { iluCardinal _r_%arm_name%_length =
+                    strlen(r_%us_src_name%.m_%arm_name%->iluStringVarReference());
+                    iluCStringWrapper _r_%arm_name%_wrap(
+                       (*r_%us_src_name%.m_%arm_name%).iluStringVarReference(),
+                            _r_%arm_name%_length);
+                    r_call %op% _r_%arm_name%_wrap;
+                   }
+.
+L_wstring_wrap(us_src_name, arm_name,op) -->
+                    { iluCardinal _r_%arm_name%_length =
+                      iluCppRuntime::iluCharacterStringLength(
+                          r_%us_src_name%.m_%arm_name%->iluStringVarReference());
+                      iluWStringWrapper _r_%arm_name%_wrap(
+                       (*r_%us_src_name%.m_%arm_name%).iluStringVarReference(),
+                      _r_%arm_name%_length);
+                      r_call %op% _r_%arm_name%_wrap;
+                     }
+.
+
+L_bytes_wrap(us_src_name, arm_name,op) -->
+                    { iluCardinal _r_%arm_name%_length =
+                        r_%us_src_name%.m_%arm_name%.length();
+                      iluBytesWrapper _r_%arm_name%_wrap(
+                       (*r_%us_src_name%.m_%arm_name%.self(),
+                           _r_%arm_name%_length);
+                      r_call %op% _r_%arm_name%_wrap;
+                    }
+.
+
+L_array_fun(us_src_name, fun_name, arm_name) -->
+                    %fun_name%(r_call, r_%us_src_name%.m_%arm_name%);
+.
+L_array_opt_fun(us_src_name, fun_name, arm_name, meth) -->
+                    %fun_name%(r_call, (*r_%us_src_name%.m_%arm_name%).%meth%());
+.
+
+L_struct_op(us_src_name, arm_name, op, h) -->
+                    r_call %op% (*r_%us_src_name%.m_%arm_name%)%h%; 
+.
+
+L_non_ptr_long(us_src_name, arm_name, op, ad, longtype) -->
+                   {                     
+                    %longtype% _longtemp_%arm_name% = 
+                                    %ad%r_%us_src_name%.m_%arm_name%;
+                    r_call %op%  _longtemp_%arm_name%;
+                   }
+.
+L_non_ptr(us_src_name, arm_name, op, ad) -->
+                    r_call %op% %ad%r_%us_src_name%.m_%arm_name%;
+.
+L_ptr(us_src_name, arm_name, op) -->
+                    r_call %op% (* (r_%us_src_name%.m_%arm_name%));
+
+.
+
+L_break() -->
+                   break;
+.
+
+===========================================================================
+
+R_union_extract_arm(us_src_name, Arm arm, op, dpfx, opname)
+     (arm_name, armkind) -->
+
+   E_ [ [ [arm.name == NULL arm_name = F_build_arm_name(arm.type)] |
+           arm_name = arm.name]
+     ]
+ 
+  R_union_arm_cases(arm, dpfx)
+
+ { R_arm_extract_opt(arm, us_src_name, arm_name, op, opname)
+      [F_optional_ofurtype(arm.type) != NULL]
+  | R_arm_extract_nonopt(arm, us_src_name, arm_name, op, arm.type, opname,
+        "", "")
+  }
+
+  L_break()
+.
+
+
+R_arm_extract_opt(Arm arm, us_src_name, arm_name, op, opname)
+   (Any arm_type, Any fof_type, Any fof_vartype, fof_typename, chtype, cast)
+   -->
+    
+
+   E_ [ arm_type = arm.type
+       fof_type = F_optional_ofurtype(arm_type)   
+       fof_vartype = F_optional_vartype(arm_type) 
+       fof_typename = F_full_mbr_typeref(fof_type) 
+     ]
+
+  # bracket optional ops with send of presence, and test
+  # if present, follow with op on actual value
+   L_optional_get(us_src_name, arm_name, op)
+  {  L_optional_get_non_var(us_src_name, arm_name, fof_typename) 
+         [ fof_vartype == NULL | F_ur_typename(fof_vartype) == "Array" ] 
+     | TRUE }
+  
+  { R_arm_extract_nonopt(
+         arm, us_src_name, arm_name, op, fof_type, opname, "&" , "")
+     [ fof_vartype == NULL ] 
+  | R_arm_extract_nonopt(
+        arm, us_src_name, arm_name, op, fof_type, opname, "&", "") }
+
+
+ { L_optional_get_end(us_src_name, arm_name, fof_typename)
+     [ fof_vartype == NULL]
+  | L_optional_get_end_var(us_src_name, arm_name)
+  }
+.
+
+
+L_optional_get(us_src_name, arm_name, op) -->
+                 {
+                   iluOptionalWrapper _opt_%arm_name%_wrap;
+                   r_call %op% _opt_%arm_name%_wrap;
+                   if(_opt_%arm_name%_wrap.m_present) { 
+.
+L_optional_get_non_var(us_src_name, arm_name, opttypename) -->
+                   if(r_%us_src_name%.m_%arm_name% == NULL)
+                       r_%us_src_name%.m_%arm_name% = new %opttypename%;
+.
+
+# finish the internals, then finish mpresent test 
+L_optional_get_end(us_src_name, arm_name, fof_typename) -->
+                    }
+                  }
+                   else {
+                     r_%us_src_name%.%arm_name%((%fof_typename%*) NULL);
+                   }
+.
+L_optional_get_end_var(us_src_name, arm_name) -->
+                    }
+                  }
+                  else {
+                     delete r_%us_src_name%.m_%arm_name%;
+                  }
+.
+
+
+R_arm_extract_nonopt(Arm arm, us_src_name, arm_name, op, Any arm_type,
+    opname, ad, h) (armkind, fun_name, arm_type_name, chtype, longtype) -->
+
+   E_ [armkind = F_ur_typename(arm_type) 
+       arm_type_name = F_full_mbr_typeref(arm_type)
+       chtype = F_string_chartype(arm_type) 
+       longtype = F_ilu_long_name(arm_type, 1)
+      ]
+
+  {L_case_begin(arm_name, arm_type_name)
+      [armkind != "Array" ]
+  | L_()"         {" }
+
+
+ { {  L_enum_wrap(us_src_name, arm_name,  op, ad)
+       [armkind == "Enumeration"]
+     |
+     L_boolean_wrap(us_src_name, arm_name, op, ad)
+       [armkind == "Boolean"]
+     |
+     L_character_wrap(us_src_name, arm_name, op, ad)
+       [armkind == "Character"]
+     |
+     L_cstring_wrap(us_src_name, arm_name, op)
+       [ chtype != NULL chtype == "shortcharacter"] 
+     |
+     L_wstring_wrap(us_src_name, arm_name,  op)
+       [ chtype != NULL chtype == "character"] 
+     |
+     L_bytes_wrap(us_src_name, arm_name,  op)
+       [ chtype != NULL chtype == "byte"] 
+     |
+     L_array_fun(us_src_name, fun_name, arm_name)
+         [armkind == "Array"
+          fun_name = F_ur_pfxd_name(opname, arm_type)]
+     |
+     L_struct_op(us_src_name, arm_name, op, ad)
+        [armkind == "Sequence" | armkind == "Record" | armkind =="Union"
+         | armkind == "Pickle"]
+     |
+     L_object_op(us_src_name, arm_name, op)
+         [ armkind == "Object" ]
+     |
+     L_non_ptr(us_src_name, arm_name, op, ad, longtype)
+  }
+  | TRUE
+ }
+.
+
+L_case_begin(arm_name, arm_type) -->
+                 { %arm_type%  %arm_name%_temp;
+.
+
+L_enum_wrap(us_src_name, arm_name, op, ad) -->
+                  iluEnumWrapper _r_%arm_name%_wrap(
+                      (iluDummyEnum &) %arm_name%_temp);
+                  r_call %op% _r_%arm_name%_wrap;
+                  r_%us_src_name%.%arm_name%(%ad%%arm_name%_temp);
+.
+L_boolean_wrap(us_src_name, arm_name, op, ad) -->
+                  iluBoolWrapper _r_%arm_name%_wrap(
+                        (ILUCPP_BOOL &)  %arm_name%_temp);
+                  r_call %op% _r_%arm_name%_wrap;
+                  r_%us_src_name%.%arm_name%(%ad%%arm_name%_temp);
+.
+L_character_wrap(us_src_name, arm_name, op, ad) -->
+                  iluCharacterWrapper _r_%arm_name%_wrap(
+                        (iluShortCardinal &) %arm_name%_temp);
+                  r_call %op% _r_%arm_name%_wrap;
+                  r_%us_src_name%.%arm_name%(%ad%%arm_name%_temp);
+.
+
+L_object_wrap(us_src_name, arm_name, arm_type, op) -->
+                       iluObjectWrapper _r_%arm_name%_wrap(
+                         ILUCPP_FALSE, %arm_type%::iluGetILUClassRecord());
+                       r_call %op% _r_%arm_name%_wrap;
+                       r_%us_src_name%.%arm_name%( (%arm_type%_ptr)
+                                      _r_%arm_name%_wrap.m_pv_iluobject);
+.
+                         
+L_cstring_wrap(us_src_name, arm_name, op) -->
+                     iluCardinal _r_%arm_name%_length;
+                     iluCStringWrapper _r_%arm_name%_wrap(
+                             %arm_name%_temp.iluStringVarReference(),
+                            _r_%arm_name%_length);
+                     r_call %op% _r_%arm_name%_wrap;
+                     r_%us_src_name%.%arm_name%(%arm_name%_temp);
+.
+L_wstring_wrap(us_src_name, arm_name, op) -->
+                     iluCardinal _r_%arm_name%_length;
+                     iluWStringWrapper _r_%arm_name%_wrap(
+                               %arm_name%_temp.iluStringVarReference(),
+                            _r_%arm_name%_length);
+                     r_call %op% _r_%arm_name%_wrap;
+                     r_%us_src_name%.%arm_name%(%arm_name%_temp);
+.
+L_bytes_wrap(us_src_name, arm_name, op) -->
+                     iluCardinal _r_%arm_name%_length;
+                     iluBytesWrapper _r_%arm_name%_wrap(
+                             %arm_name%_temp.iluStringVarReference(),
+                            _r_%arm_name%_length);
+                     r_call %op% _r_%arm_name%_wrap;
+                     r_%us_src_name%.%arm_name%(%arm_name%_temp);
+.
+
+L_array_fun(us_src_name, fun_name, arm_name) -->
+                    %fun_name%(r_call, r_%us_src_name%.m_%arm_name%);
+.
+
+L_struct_op(us_src_name, arm_name, op, ad) -->
+                    r_call %op% %arm_name%_temp;
+                    r_%us_src_name%.%arm_name%(%ad%%arm_name%_temp);
+.
+
+L_non_ptr(us_src_name, arm_name,  op, ad, longtype) -->
+                    r_call %op% %arm_name%_temp;
+                    r_%us_src_name%.%arm_name%(%ad%%arm_name%_temp);
+.
+L_object_op(us_src_name, arm_name, op) -->
+                    r_call %op% %arm_name%_temp;
+                    r_%us_src_name%.%arm_name%(%arm_name%_temp);
+.
+
+L_break() -->
+                    break;
+                   }
+.
+
+===========================================================================
+R_obj_ops(Object object)
+   (ext_obj_name, us_obj_name, cpfx, extpfx, mpfx, dotted_ext_obj, brand,
+          singleton, optional, collectible, docstring, Int method_ct,
+          Int superclass_ct, Method method, Int mi, Any super, ext_super,
+          Any s, Any ur_s, suid, s1, Any super1) --> 
+
+    E_ [ext_obj_name = F_full_typeref(object)
+        us_obj_name = F_underscore_name(object)
+        cpfx = F_corba_pfx()
+        extpfx = F_full_prefix(object, 0)
+        mpfx = F_module_prefix(object, 0)
+       ]
+
+    L_object_begin (ext_obj_name, object.name, mpfx, cpfx)
+
+    L_narrow_begin (ext_obj_name, cpfx)
+
+    L_narrow_super: super in object.superclasses: (ext_super)  
+       [ ext_super = F_full_typeref(super) 
+         super.name != "CORBA_Object" ]
+
+    L_narrow_corba: super1 in object.superclasses: (cpfx) 
+       [ super1.name != "CORBA_Object"]
+
+    L_narrow_end()
+ 
+    E_ [ dotted_ext_obj = F_dotted_reg_name(object)
+
+        [[ object.brand == NULL brand = "" ]| brand = object.brand] 
+
+        [ [ object.singleton == NULL
+            singleton = "REINTERPRET_CAST(iluCString, ((ILUCPP_NULL_PTR)0) )" ] |
+          [ s1 = F_concat("CONST_CAST(iluCString, \"", object.singleton)
+           singleton = F_concat(s1, "\")")]
+        ]
+      
+        [[ object.optional == 0 optional = "ILUCPP_FALSE"] |  
+              optional = "ILUCPP_TRUE"]
+        [[ object.collectible == 0 collectible = "ILUCPP_FALSE"] |  
+             collectible = "ILUCPP_TRUE"]
+        [[ object.doc_string == NULL docstring = "" ]| 
+             docstring = F_escape_string(object.doc_string) ] 
+         method_ct = F_list_ct(object.methods)  
+         superclass_ct = F_list_ct(object.superclasses)
+       ]
+ 
+    L_class_init_begin(ext_obj_name)
+
+    {
+      { E_ [object.superclasses != NULL]
+        LP_()  "     char *_superclasses[] = {" 
+        L_suid:s in object.superclasses:(suid) 
+               [ ur_s = F_ur_instance(s)
+                 suid = ur_s.uid]
+        LP_()  "       };"
+       }
+      |  
+        LP_()  "     char **_superclasses = NULL; "
+      }
+
+     L_class_init_body(ext_obj_name, dotted_ext_obj, brand,
+          object.uid, singleton, optional, collectible, docstring,
+          method_ct, superclass_ct)
+
+
+     R_method: method(mi) in object.methods: (method, mi)
+   
+     L_class_init_end()
+
+     L_object_typecode_related(ext_obj_name, us_obj_name, object.name,
+                          cpfx, extpfx)
+
+     L_object_any_insert_extract(ext_obj_name, object.name, cpfx, extpfx) 
+.
+
+# cacheable == functional?
+R_method (Method method, Int mi)
+ (Int method_id, cacheable, asynch, Int exception_ct,Int arg_ct,
+  return_uid, Int ai, arg_sibling, arg_dir, Argument arg, arg_uid) -->
+
+
+     L_method_begin(method.name)
+     {
+      L_method_noexception(method.name) [method.exceptions == NULL]
+      |
+      R_method_exceptions(method)
+      }
+     L_method_define_begin(mi, method.name, method.isl_name, method_id,
+            cacheable,  asynch, exception_ct, arg_ct, return_uid)
+         [  
+           [[ method.functional == 0 cacheable = "ILUCPP_FALSE"] |  
+                 cacheable = "ILUCPP_TRUE"]
+           [[ method.asynch == 0 asynch = "ILUCPP_FALSE"] |  
+                 asynch = "ILUCPP_TRUE"]
+           method_id = method.protocolid
+           exception_ct = F_list_ct(method.exceptions)
+           arg_ct = F_list_ct(method.arguments)
+           [ [ method.returntype != NULL  
+               return_uid = F_ur_property(method.returntype, "uid") ] |
+               return_uid = ""] 
+         ]
+
+      L_arg_define : arg(ai) in method.arguments:
+          (ai, arg.isl_name, arg_sibling, arg_dir, arg_uid)   
+          [ arg_uid = F_ur_property(arg.type, "uid")
+            arg_dir = F_concat("ilu_", arg.direction)
+            [ [arg.sibling == 0 arg_sibling = "ILUCPP_FALSE"] | 
+               arg_sibling = "ILUCPP_TRUE" ]
+           ]
+      L_method_define_end(method.name)
+.
+
+
+R_method_exceptions(Method method)
+        (Exception except, Int ei, us_except_name) --> 
+
+      L_method_exception_array(method.name, F_list_ct(method.exceptions))
+      L_method_exceptions: except(ei) in method.exceptions:
+               (method.name, ei, us_except_name)
+               [ us_except_name = F_underscore_name(except)] 
+.
+
+L_object_begin(ext_obj, s_obj_name, mpfx, cpfx) -->
+
+  //////////////////////////////////////////////////////////////////////
+  // %ext_obj% members
+
+  // CORBA object reference operations
+
+  %ext_obj%_ptr %ext_obj%::_duplicate( %mpfx%%s_obj_name%_ptr a_ptr) {
+    if (a_ptr) a_ptr->iluIncrementReferenceCount();
+    return a_ptr;
+  }
+
+  %ext_obj%_ptr %ext_obj%::_nil() {
+    return (%mpfx%%s_obj_name%_ptr) NULL;
+  }
+
+  // default constructor
+  %ext_obj%::%mpfx%%s_obj_name%() {
+     // to be determined
+  }
+
+  // destructor
+  %ext_obj%::~%mpfx%%s_obj_name%() {
+    // to be determined
+  }
+
+  // copy constructor
+  %ext_obj%::%mpfx%%s_obj_name%(const %mpfx%%s_obj_name%&) {
+    // to be determined
+  }
+
+  // assignment operator
+  void %ext_obj%::operator=(const %mpfx%%s_obj_name%&) {
+    // to be determined
+  }
+
+  // Simple Object Lookup
+  %ext_obj%_ptr %ext_obj%::iluLookup(char* pc_server_id, char* pc_instance_handle) {
+    return (%mpfx%%s_obj_name%_ptr) iluObject::iluLookup(pc_server_id, pc_instance_handle, m_ILUClassRecord);
+  }
+.
+
+L_narrow_begin (ext_obj, cpfx) -->
+  // for use in narrowing
+  void *%ext_obj%::iluDowncast (iluClass class_to_cast_down_to) {
+    if (!class_to_cast_down_to  || class_to_cast_down_to == ilu_rootClass)
+      return((void *)((iluObject*) this));
+    // if %ext_obj% were a CORBA::Object type too, we'd also need
+    //if (class_to_cast_down_to == %cpfx%Object::iluGetILUClassRecord())
+    // return((void *)((%cpfx%Object_ptr)) this));
+.
+
+L_narrow_super( ext_super) -->
+    if (class_to_cast_down_to == %ext_super%::iluGetILUClassRecord()) 
+      return (REINTERPRET_CAST(void *, STATIC_CAST(%ext_super%_ptr, this)));
+.
+L_narrow_corba(cpfx) -->
+    if (class_to_cast_down_to == %cpfx%Object::iluGetILUClassRecord())
+       return((void *) ((%cpfx%Object_ptr) this));
+.
+
+L_narrow_end() -->
+    if (class_to_cast_down_to == m_ILUClassRecord)
+      return ((void*) this);
+    return (NULL);
+  }
+.
+          
+
+L_class_init_begin(ext_obj) -->
+
+  // initialize to use of this class of objects - called by iluInitialize
+
+  void %ext_obj%::iluInitialize() {
+
+    ilu_Method a_method;
+.
+L_suid(suid) -->
+                   CONST_CAST( iluCString,  \"%suid%\"), 
+.
+
+L_class_init_body(ext_obj, dotted_ext_obj, brand, object_uid, singleton,
+          optional, collectible, docstring,
+          Int method_ct, Int superclass_ct) --> 
+
+  // initialize to use of this class of objects - called by iluInitialize
+    // create and set the class record member to be the iluClass
+    // for this object type
+    m_ILUClassRecord = iluCppInternal::iluDefineObjectType(
+      CONST_CAST( iluCString, \"%dotted_ext_obj%\"),   // ILU name
+      CONST_CAST( iluCString, \"%brand%\"), 
+      CONST_CAST( iluCString, \"%object_uid%\"),   // type id
+      %singleton%,              // singleton?
+      %optional%,             // optional?
+      %collectible%,           // collectible?
+      CONST_CAST( iluCString, \"%docstring%\"),          // docstring
+      %method_ct%,          // number of methods
+      %superclass_ct%,          // number of superclasses
+      _superclasses
+   );
+.
+
+
+L_method_begin(method_name) -->
+
+    {
+     // for method %method_name%
+.
+
+L_method_exception_array(method_name, Int exception_ct) -->
+
+       iluException %method_name%_exception_array[%exception_ct%];
+.
+
+L_method_exceptions(method_name, Int ei, us_except_name) --> 
+       %method_name%_exception_array[%ei%] =
+            interface_exceptions[g_%us_except_name%_index];
+.
+
+L_method_noexception(method_name) -->
+
+       iluException* %method_name%_exception_array = NULL;
+.
+
+L_method_define_begin(Int method_index, method_name, method_isl_name,
+               Int method_id, cacheable, asynch, Int exception_ct,
+               Int arg_ct, return_uid) -->
+
+        a_method = iluCppInternal::iluDefineMethod(
+                     m_ILUClassRecord,
+                     %method_index%,      // method index
+                     CONST_CAST(iluCString, \"%method_isl_name%\"), // name
+                     %method_id%,       //method ID
+                     %cacheable%,    // cacheable
+                     %asynch%,        // asynch
+                     %exception_ct% ,     // number of exceptions
+                     %method_name%_exception_array,
+                     %arg_ct%,             // number of args
+                     CONST_CAST(iluCString,\"%return_uid%\") // return type ID
+        );
+.
+
+
+L_arg_define (Int arg_index, arg_name, arg_sibling, arg_dir, arg_uid)-->
+        iluCppInternal::iluDefineMethodArg (a_method, %arg_index%,
+             CONST_CAST(iluCString, \"%arg_name%\"),
+             %arg_sibling%, %arg_dir%,
+             CONST_CAST(iluCString, \"%arg_uid%\"));
+.
+
+L_method_define_end(method_name) -->
+    }  //end for method %method_name%
+.
+
+L_class_init_end() -->
+
+    iluCppInternal::iluObjectTypeDefined(m_ILUClassRecord);
+
+};
+.
+
+
+L_object_typecode_related(ext_obj, us_obj_name, s_obj_name, cpfx, extpfx) -->
+
+//////////////////////////////////////////////////////////////////////
+//  %ext_obj% typecode related
+
+      void ILUCPP_TYPE_CODE_CLASS_NAME(%us_obj_name%)::iluDeleteValue (void* pv_value) {
+                %ext_obj%_ptr p_thevalue = (%ext_obj%_ptr) pv_value;
+                if (p_thevalue)
+                    p_thevalue->iluDecrementReferenceCount();
+       }
+
+     void* ILUCPP_TYPE_CODE_CLASS_NAME(%us_obj_name%)::iluDeepCopy (void* pv_value) {
+                %ext_obj%_ptr p_thevalue = (%ext_obj%_ptr) pv_value;
+                if (p_thevalue)
+                     p_thevalue->iluIncrementReferenceCount();
+                return p_thevalue;
+      }
+
+      // objects require wrappers
+      %cpfx%Boolean ILUCPP_TYPE_CODE_CLASS_NAME(%us_obj_name%)::iluValueToPickle (void* pv_value, iluPickleCall& r_pickle_call) {
+            try {
+               %ext_obj%_ptr p_thevalue = (%ext_obj%_ptr) pv_value;
+               iluObjectWrapper _p_thevalue(*p_thevalue, ILUCPP_FALSE);
+               r_pickle_call += _p_thevalue;
+               r_pickle_call.iluOutputPickle();
+               r_pickle_call << _p_thevalue;
+            }
+            catch (...) {return ILUCPP_FALSE;}
+            return ILUCPP_TRUE;
+      }
+	
+      void* ILUCPP_TYPE_CODE_CLASS_NAME(%us_obj_name%)::iluPickleToValue (iluPickleCall& r_pickle_call) {
+            iluObjectWrapper _the_value_wrapper(ILUCPP_FALSE, %ext_obj%::iluGetILUClassRecord());
+            try {
+                r_pickle_call >> _the_value_wrapper;
+            }
+           catch (...) { return ILUCPP_NULL;}
+           return _the_value_wrapper.m_pv_iluobject;
+      }
+
+
+      void* ILUCPP_TYPE_CODE_CLASS_NAME(%us_obj_name%)::iluUpcast (void* p_an_object_of_your_type, iluClass casttoclass) {
+           %ext_obj%_ptr p_object = (%ext_obj%_ptr) p_an_object_of_your_type;
+           if ((!casttoclass) || casttoclass == ilu_rootClass)
+               return ((void*)((iluObject*)p_object));
+           // If %ext_obj% were a CORBA::Object type too, we'd also need
+           // if (casttoclass == %cpfx%Object::iluGetILUClassRecord())
+           //    return ((%cpfx%Object_ptr)p_object);
+           if (casttoclass == %ext_obj%::iluGetILUClassRecord())
+                return ((void*) p_object);
+           return ILUCPP_NULL;
+       }
+
+
+      %cpfx%TypeCode_ptr ILUCPP_TYPE_CODE_CLASS_NAME(%us_obj_name%)::iluMostSpecificTypeCode (void* p_an_object_of_your_type) {
+           %ext_obj%_ptr p_object = (%ext_obj%_ptr) p_an_object_of_your_type;
+           return %cpfx%TypeCode::LookupTypeCode(p_object->iluClassId());
+      }
+
+
+        // typecode instance for %ext_obj%
+        const %cpfx%TypeCode_ptr %extpfx%tc_%s_obj_name% = new ILUCPP_TYPE_CODE_CLASS_NAME(%us_obj_name%);
+.
+
+L_object_any_insert_extract(ext_obj, s_obj_name, cpfx, extpfx) --> 
+
+      // define the Any insertion and extraction operators for %ext_obj%
+
+      void operator<<=(%cpfx%Any& r_any, %ext_obj%_ptr p_object){
+             // free up anything we had inside
+             r_any.iluDeleteContent();
+             // assign the appropriate typecode and value
+             r_any.replace(%extpfx%tc_%s_obj_name%, p_object, ILUCPP_TRUE);
+      }
+
+      %cpfx%Boolean operator>>=(const %cpfx%Any& r_any, %ext_obj%_ptr& r_p_object) {
+
+          %cpfx%Any* p_nc_any = CONST_CAST(%cpfx%Any*, &r_any);
+
+          if (p_nc_any->iluGetFromPickle(%extpfx%tc_%s_obj_name%)) { 
+                 r_p_object = (%ext_obj%_ptr) p_nc_any->value();
+                 return ILUCPP_TRUE;
+          }
+          return ILUCPP_FALSE;
+     }
+.
+
+===========================================================================
+
+# THIS IS PROBABLY INCORRECT. JUST DISTINGUISHES OPTIONAL OBJECTS
+# FROM OTHERS
+R_optional_ops (Optional t)
+  ( Any t1, Any oftype, cpfx, us_name, ext_name, ext_base_name,
+          ext_tc_name, ofkind, opname, opname1)  -->
+  E_  [ t1 = F_ur_instance(t)
+       oftype = F_ur_instance(t1.oftype)
+       cpfx = F_corba_pfx()
+       us_name = F_underscore_name(t) 
+       ext_name = F_full_typeref(t)
+       ext_tc_name = F_full_pfxd_name("tc", t)
+       ext_base_name = F_full_typeref(oftype) 
+       ofkind = F_ur_typename(oftype)
+     ]
+
+  {
+   L_opt_obj_any(cpfx, us_name, ext_name, ext_base_name, ext_tc_name)  
+      [ F_ur_typename(oftype) == "Object"]
+   |
+   {
+    L_opt_other_any_begin(cpfx, us_name, ext_name, ext_base_name, ext_tc_name)  
+    L_opt_value_to_pickle_begin(cpfx, us_name, ext_name)
+    {  L_opt_bool_wrap("+=") [ ofkind == "Boolean"]
+      |L_opt_enum_wrap("+=") [ ofkind == "Enumeration"] 
+      |L_opt_char_wrap("+=") [ ofkind == "Character"] 
+      |L_opt_cstring_wrap("+=") 
+         [ F_string_chartype(oftype) == "shortcharacter" ] 
+      |L_opt_wstring_wrap("+=") 
+         [ F_string_chartype(oftype) == "character" ] 
+      |L_opt_array(opname)
+         [ ofkind == "Array"
+           opname = F_ur_pfxd_name("size_const", oftype) ] 
+      |L_other("+=")
+    } 
+
+    L_opt_value_to_pickle_continue()
+
+   {  L_opt_bool_wrap("<<") [ ofkind == "Boolean"]
+     |L_opt_enum_wrap("<<") [ ofkind == "Enumeration"] 
+     |L_opt_char_wrap("<<") [ ofkind == "Character"] 
+     |L_opt_cstring_wrap("<<") 
+         [ F_string_chartype(oftype) == "shortcharacter" ] 
+     |L_opt_wstring_wrap("<<") 
+         [ F_string_chartype(oftype) == "character" ] 
+     |L_opt_array(opname1)
+         [ ofkind == "Array"
+           opname1 = F_ur_pfxd_name("output_const", oftype) ] 
+     |L_other("<<")
+   }
+
+   L_opt_value_to_pickle_end()
+
+   L_opt_pickle_to_value_begin( us_name, ext_name)
+   {  L_opt_bool_out_wrap(ext_base_name) [ ofkind == "Boolean"]
+     |L_opt_enum_out_wrap(ext_base_name) [ ofkind == "Enumeration"] 
+     |L_opt_char_out_wrap() [ ofkind == "Character"] 
+     |L_opt_cstring_out_wrap() 
+         [ F_string_chartype(oftype) == "shortcharacter" ] 
+     |L_opt_wstring_out_wrap() 
+         [ F_string_chartype(oftype) == "character" ] 
+     |L_opt_array_out(opname1)
+         [ ofkind == "Array"
+           opname1 = F_ur_pfxd_name("input", oftype) ] 
+     |L_other_out(ext_base_name)
+   }
+    L_opt_pickle_to_value_end()
+
+    L_opt_other_any_end(cpfx, us_name, ext_name, ext_base_name, ext_tc_name)  
+   }
+ }
+.
+
+#use GNUC workaround for all because decomposed
+#   // define the four member functions in typecode class for %us_name%
+##if( defined(OLDGNUC_WORKAROUND) ||  defined (_MSC_VER))
+#    // workaround to GNU 2.7.2 preprocessor bug
+#    // note, this GNU workaround approach should work every where else, so
+L_opt_other_any_begin(cpfx, us_name, ext_name, ext_base_name, ext_tc_name) --> 
+
+
+  //////////////////////////////////////////////////////////////////////
+  //  %ext_name% any support
+
+        // define the four member functions in typecode class for %us_name%
+        ILUCPP_DEFINE_ILU_TYPE_CODE_DELETEVALUE(%us_name%, %ext_name%_forany)
+        ILUCPP_DEFINE_ILU_TYPE_CODE_DEEPCOPY(%us_name%, %ext_name%_forany)
+.
+
+L_opt_value_to_pickle_begin(cpfx, us_name, ext_name) -->
+         %cpfx%Boolean _ilu_%us_name%_TypeCode::iluValueToPickle (void* pv_value, iluPickleCall& r_pickle_call) {
+                try {
+                     %ext_name%_forany* p_forany = (%ext_name%_forany*)pv_value;
+                    iluOptionalWrapper _p_thevalue(p_forany->m_p_value);
+                    r_pickle_call += _p_thevalue;
+                    if (p_forany->m_p_value) {
+.
+L_opt_value_to_pickle_continue() -->
+                     }
+                     r_pickle_call.iluOutputPickle();
+                     r_pickle_call << _p_thevalue;
+                     if (p_forany->m_p_value) { 
+.
+L_opt_value_to_pickle_end() -->
+                     }
+            }
+                catch (...) {return ILUCPP_FALSE;}
+                return ILUCPP_TRUE;
+        }
+.
+L_opt_bool_wrap(op) -->
+                        iluBoolWrapper _the_value_wrapper(
+                                     *(p_forany->m_p_value));
+                        r_pickle_call %op% _the_value_wrapper;
+.      
+L_opt_enum_wrap(op) -->
+                        iluEnumWrapper _the_value_wrapper(
+                                 (iluDummyEnum &) *(p_forany->m_p_value));
+                        r_pickle_call %op% _the_value_wrapper;
+.
+L_opt_char_wrap(op) -->
+                        iluCharacterWrapper _the_value_wrapper(
+                                   *(p_forany->m_p_value));
+                        r_pickle_call %op% _the_value_wrapper;
+.
+L_opt_cstring_wrap(op) -->
+                        iluCStringWrapper _the_value_wrapper(
+                             p_forany->m_p_value,
+                             strlen(p_forany->m_p_value);
+                        r_pickle_call %op% _the_value_wrapper;
+.
+L_opt_wstring_wrap(op) -->
+                       iluCardinal _r_len =
+                                iluCppRuntime::iluCharacterStringLength(
+                                     p_forany->m_p_value);
+                       iluWStringWrapper _the_value_wrapper(
+                             p_forany->m_p_value, _r_len);
+                        r_pickle_call %op% _the_value_wrapper;
+.
+L_opt_array(opname) -->
+                       %opname%(r_pickle_call, p_forany->m_p_value);
+.
+
+L_other(op) -->
+                        r_pickle_call %op% *(p_forany->m_p_value);
+.
+
+L_opt_pickle_to_value_begin(us_name, ext_name) -->
+         void * _ilu_%us_name%_TypeCode::iluPickleToValue (
+              iluPickleCall& r_pickle_call) {
+                 %ext_name%_forany* p_thevalue = new %ext_name%_forany;
+                try {
+                        iluOptionalWrapper _the_opt_wrapper;
+                        r_pickle_call >> _the_opt_wrapper;
+                        if (_the_opt_wrapper.m_present) {
+.
+L_opt_pickle_to_value_end() -->
+                        }
+                        }
+                        catch (...) { delete p_thevalue; return ILUCPP_NULL;}
+                return p_thevalue;
+        }
+.
+L_opt_bool_out_wrap(oftypename) -->
+                        p_thevalue->m_p_value = new %oftypename%;  
+                        iluBoolWrapper _the_value_wrapper(
+                                    *(p_thevalue->m_p_value));
+                        r_pickle_call >> _the_value_wrapper;
+.      
+L_opt_enum_out_wrap(oftypename) -->
+                        p_thevalue->m_p_value = new %oftypename%;  
+                        iluEnumWrapper _the_value_wrapper(
+                                 (iluDummyEnum &) *(p_thevalue->m_p_value));
+                        r_pickle_call >> _the_value_wrapper;
+.
+L_opt_char_out_wrap() -->
+                        p_thevalue->m_p_value = new iluCharacter; 
+                        iluCharacterWrapper _the_value_wrapper(
+                                     *(p_thevalue->m_p_value));
+                        r_pickle_call >> _the_value_wrapper;
+.
+L_opt_cstring_out_wrap() -->
+                       iluCardinal _r_len;
+                       iluCStringWrapper _the_value_wrapper(
+                             p_thevalue->m_p_value, _r_len); 
+                        r_pickle_call >> _the_value_wrapper;
+.
+L_opt_wstring_out_wrap() -->
+                       iluCardinal _r_len;
+                       iluWStringWrapper _the_value_wrapper(
+                             p_thevalue->m_p_value, _r_len);
+                        r_pickle_call >> _the_value_wrapper;
+.
+L_opt_array_out(opname) -->
+                       %opname%(r_pickle_call, p_thevalue->m_p_value);
+.
+L_other_out(oftypename) -->
+                       p_thevalue->m_p_value = new %oftypename%;
+                       r_pickle_call >> *(p_thevalue->m_p_value);
+.
+
+
+L_opt_other_any_end(cpfx, us_name, ext_name, ext_base_name, ext_tc_name) --> 
+
+        // typecode instance for %us_name%
+        const %cpfx%TypeCode_ptr %ext_tc_name% =
+              new ILUCPP_TYPE_CODE_CLASS_NAME(%us_name%);
+
+        // define the Any insertion and extraction operators for %ext_name%
+        ILUCPP_DEFINE_NONCOPYING_INSERTION_OPERATOR(%ext_name%_forany, %ext_tc_name%)
+        ILUCPP_DEFINE_COPYING_INSERTION_OPERATOR(%ext_name%_forany, %ext_tc_name%)
+        ILUCPP_DEFINE_EXTRACTION_OPERATOR(%ext_name%_forany, %ext_tc_name%)
+.
+
+L_opt_obj_any(cpfx, us_name, ext_name, ext_base_name, ext_tc_name)  -->
+
+  // Support for use of optional objects in pickles/anys  
+
+  // define the four member functions in typecode class for %ext_name% 
+    ILUCPP_DEFINE_ILU_TYPE_CODE_DELETEVALUE(%us_name%, %ext_name%_forany)
+    ILUCPP_DEFINE_ILU_TYPE_CODE_DEEPCOPY(%us_name%, %ext_name%_forany)
+
+  void* ILUCPP_TYPE_CODE_CLASS_NAME(%us_name%)::iluPickleToValue
+        (iluPickleCall& r_pickle_call) {
+                %ext_name%_forany* p_thevalue = new %ext_name%_forany;
+                try {
+                        iluOptionalWrapper _the_value_wrapper;
+                        r_pickle_call >> _the_value_wrapper;
+                        if (_the_value_wrapper.m_present) {
+                                iluObjectWrapper _the_obj_wrapper(ILUCPP_FALSE,
+ %ext_base_name%::iluGetILUClassRecord());
+                                r_pickle_call >> _the_obj_wrapper;
+                                p_thevalue->m_p_value = (%ext_base_name%_ptr)
+_the_obj_wrapper.m_pv_iluobject;
+                        }
+                }
+                catch (...) { delete p_thevalue; return ILUCPP_NULL;}
+                return p_thevalue;
+        }
+ 
+  %cpfx%Boolean ILUCPP_TYPE_CODE_CLASS_NAME(%us_name%)::iluValueToPickle (void* pv_value, iluPickleCall& r_pickle_call) {
+                iluOptionalWrapper opt_wrapper(((%ext_name%_forany*)pv_value)->m_p_value);
+                %ext_base_name%_ptr p_thevalue = ((%ext_name%_forany*) pv_value)->m_p_value;
+                try {
+                        r_pickle_call += opt_wrapper;
+                        if (p_thevalue) {
+                                iluObjectWrapper obj_wrapper(*p_thevalue, ILUCPP_FALSE);
+                                r_pickle_call += obj_wrapper;
+                                r_pickle_call.iluOutputPickle();
+                                r_pickle_call << opt_wrapper;
+                                r_pickle_call << obj_wrapper;
+                        }
+                        else {
+                                r_pickle_call.iluOutputPickle();
+                                r_pickle_call << opt_wrapper;
+                        }
+                }
+                catch (...) {return ILUCPP_FALSE;}
+                return ILUCPP_TRUE;
+        }
+        
+  // typecode instance for %us_name%
+  const %cpfx%TypeCode_ptr %ext_tc_name% =
+          new ILUCPP_TYPE_CODE_CLASS_NAME(%us_name%);
+ 
+  // define the Any insertion and extraction operators for %ext_name%
+  ILUCPP_DEFINE_NONCOPYING_INSERTION_OPERATOR(%ext_name%_forany, %ext_tc_name%)
+  ILUCPP_DEFINE_COPYING_INSERTION_OPERATOR(%ext_name%_forany, %ext_tc_name%)
+  ILUCPP_DEFINE_EXTRACTION_OPERATOR(%ext_name%_forany, %ext_tc_name%)
+.
+
+===========================================================================
+
+# defines ops only for non-imported exceptions
+R_exception_ops(Interface i) (Exception e, ext_except_name) -->
+
+  L_except_begin(i.name)
+
+  R_except_ops: e in i.exceptions: (e, ext_except_name) 
+       [ e.importedfrom == NULL  
+         ext_except_name = F_full_ref(e) ]
+.
+
+R_except_ops(Exception e, ext_except_name) 
+    (mpfx, Any a_urtype, a_mbr_type, a_mbr_type1) --> 
+     
+    E_ [mpfx = F_noninterface_prefix(e, 0)]
+
+    { L_except_nonmember_ops ( mpfx, ext_except_name, e.name)
+       [ e.type == NULL]
+      |
+       { E_ [ a_urtype = F_ur_instance(e.type) 
+             [[ F_ur_typename(a_urtype) == "Object" 
+               a_mbr_type = F_concat(F_full_typeref(a_urtype), "_ptr") ] |
+              [ [ [ F_string_chartype(a_urtype) !=NULL 
+                  F_string_chartype(a_urtype) != "Byte" ]|
+                  F_ur_typename(a_urtype) == "Optional" |
+                  F_ur_typename(a_urtype) == "Array" ]
+                a_mbr_type = F_full_typeref(a_urtype) ]
+             |  a_mbr_type = F_concat(F_full_typeref(a_urtype), "&") ]
+           ]
+              
+         L_except_member_ops_begin ( mpfx, ext_except_name, e.name)
+         {L_except_member_ops( mpfx, ext_except_name, e.name, a_mbr_type)
+              [ F_ur_typename(e.type) != "Array"]
+         | L_except_member_ops_a( mpfx, ext_except_name, e.name,
+                  a_mbr_type, a_mbr_type1)
+            [a_mbr_type1 = F_full_typeref(a_urtype) ]
+         }
+         { R_except_record_ops ( mpfx, ext_except_name, e)  
+            [ F_ur_typename(e.type) == "Record" ]
+         | TRUE}
+      }
+   }  
+.
+
+R_except_record_ops(mpfx, ext_except_name, Exception e)  
+  (Record record, Argument f, Argument f2, Int i, f2t, asfx, sfx, const )
+   -->
+
+  E_ [ record = F_ur_instance(e.type) ]
+  L_except_rcd_mbrs_const_begin(mpfx, ext_except_name, e.name) 
+  # don't use const initializer if stored as var 
+  L_except_rcd_mbr_arg:f2(i) in record.fields:(f2t, f2.name, sfx, const) 
+       [ 
+        [ [F_ur_typename(f2.type) == "Object" asfx = "_ptr"]
+          |  [[ [F_string_chartype(f2.type) != NULL
+               F_string_chartype(f2.type) != "Byte"] |
+               F_ur_typename(f2.type) == "Optional"|
+               F_ur_typename(f2.type) == "Array" ]
+            asfx = ""]
+          | asfx = "&" ]
+          const = "const" 
+          f2t = F_concat(F_full_typeref(f2.type), asfx) 
+        [[ i == F_last_index(record.fields) sfx = ""] | sfx = "," ]
+       ]
+  L_() "   ) {"
+
+  R_except_rcd_field_assign:f in record.fields:(f, f.name, e.name) 
+  L_() "   }"
+.
+  
+
+R_except_rcd_field_assign( Argument f, f_name, e_name) 
+   ( Any a_urtype, a_mbr_type) -->
+
+ {
+   L_except_rcd_field_assign(f_name) 
+       [ F_ur_typename(f.type) != "Array" ]
+ | L_except_rcd_field_assign_a(a_mbr_type,f_name) 
+       [ a_urtype = F_ur_instance(f.type) 
+        a_mbr_type =  F_full_mbr_typeref(a_urtype) ]
+  }
+.
+
+
+L_except_begin(intf_name) -->
+
+
+/////////////////////////////////////////////////////////////////
+// Exception implementations for locally-defined
+// exceptions of interface %intf_name% 
+.
+
+
+L_except_rcd_mbrs_const_begin(mpfx, ext_except_name, s_except_name) -->
+
+  //member list constructor
+  %ext_except_name%::%mpfx%%s_except_name%(
+.
+
+L_except_rcd_mbr_arg(mbrtype, mbrname, sfx, const) -->
+               %const% %mbrtype%  a_%mbrname%%sfx% 
+.
+
+L_except_rcd_assign_begin(mpfx, ext_except_name, s_except_name) -->
+
+  // assignment operator
+  %ext_except_name%& %ext_except_name%::operator=(const %ext_except_name%& a_%s_except_name%) {
+.
+
+# probably should distinguish optionals
+L_except_rcd_field_assign(fieldname) -->
+    _m_value.%fieldname% = a_%fieldname%;
+.
+
+L_except_rcd_field_assign_a(a_mbr_type,fieldname) -->
+     %a_mbr_type%_copy(_m_value.%fieldname%,
+                        a_%fieldname%);
+.
+
+L_except_destruct(mpfx, ext_except_name, s_except_name) -->
+
+  //destructor
+  %ext_except_name%::~%mpfx%%s_except_name%() {
+  }
+.
+
+
+L_except_member_ops_begin( mpfx, ext_except_name, s_except_name) --> 
+
+/////////////////////////////////////////////////
+// %mpfx%%s_except_name% member functions
+.
+
+L_except_member_ops( mpfx, ext_except_name, s_except_name, mbrtype) --> 
+
+  //constructor
+  %ext_except_name%::%mpfx%%s_except_name%(const %ext_except_name%& a_%s_except_name%) {
+  _m_value = a_%s_except_name%._m_value;
+  }
+
+  //destructor
+  %ext_except_name%::~%mpfx%%s_except_name%() {
+  }
+
+  // constructor with member value
+  %ext_except_name%::%mpfx%%s_except_name%(const %mbrtype% value) {
+    _m_value = value;
+  }
+
+  // assignment operator
+  %ext_except_name%& %ext_except_name%::operator=(const %ext_except_name%& a_%s_except_name%) {
+	_m_value = a_%s_except_name%._m_value;
+  return *this;
+  }
+.
+
+L_except_member_ops_a( mpfx, ext_except_name, s_except_name, mbrtype, mbrtype1) --> 
+
+  //constructor
+  %ext_except_name%::%mpfx%%s_except_name%(const %ext_except_name%& a_%s_except_name%) {
+     %mbrtype1%_copy(_m_value,  a_%s_except_name%._m_value);
+  }
+
+  //destructor
+  %ext_except_name%::~%mpfx%%s_except_name%() {
+  }
+
+  // constructor with member value
+  %ext_except_name%::%mpfx%%s_except_name%(const %mbrtype1% value) {
+     %mbrtype1%_copy(_m_value, value);
+  }
+
+  // assignment operator
+  %ext_except_name%& %ext_except_name%::operator=(const %ext_except_name%& a_%s_except_name%) {
+        %mbrtype1%_copy(_m_value, a_%s_except_name%._m_value);
+  return *this;
+  }
+.
+
+L_except_nonmember_ops( mpfx, ext_except_name, s_except_name) --> 
+
+/////////////////////////////////////////////////
+// %mpfx%%s_except_name% functions
+
+  //constructor
+  %ext_except_name%::%mpfx%%s_except_name%(const %ext_except_name%& a_%s_except_name%) { }
+
+  //destructor
+  %ext_except_name%::~%mpfx%%s_except_name%() { }
+
+  // assignment operator
+  %ext_except_name%& %ext_except_name%::operator=(const %ext_except_name%& a_%s_except_name%) {
+  return *this;
+  }
+.
+

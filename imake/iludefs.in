@@ -1,0 +1,280 @@
+/*
+BeginILUCopyright
+
+Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+Unlimited use, reproduction, modification, and distribution of this
+software and modified versions thereof is permitted.  Permission is
+granted to make derivative works from this software or a modified
+version thereof.  Any copy of this software, a modified version
+thereof, or a derivative work must include both the above copyright
+notice of Xerox Corporation and this paragraph.  Any distribution of
+this software, a modified version thereof, or a derivative work must
+comply with all applicable United States export control laws.  This
+software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+OF THE POSSIBILITY OF SUCH DAMAGES.
+  
+EndILUCopyright
+
+$Id: iludefs.in,v 1.68 1999/08/12 04:43:20 janssen Exp $
+*/
+/* Chris Jacobi, January 7, 1999 6:49 pm PST */
+#ifdef @host_cpu@
+#undef @host_cpu@
+#endif
+
+#ifdef @host_vendor@
+#undef @host_vendor@
+#endif
+
+/* First, the basic locations of some ILU things */
+
+  IMAKE_RULES_SRCDIR = @IMAKE_RULES_SRCDIR@
+#define WORK_IN_ILU_SOURCE_TREE
+
+  ILUSRC = @ILUSRC@
+
+  DESTDIR = @DESTDIR@
+  /* where you're putting the ILU release */
+
+  ILUHOME = @ILUHOME@
+  /* how users will know it (sometimes different from DESTDIR) */
+
+#ifdef ILU_BINDING_DIRECTORY
+
+  SIMPLE_BIND_DIRECTORY = @BINDINGDIR@
+  /* directory for simple binding files */
+#endif
+
+#ifdef ILU_BINDING_MCASTADDR
+
+  MULTICAST_INCLUDES = @MULTICAST_INCLUDES@
+  /* place to find multicast include files, if needed */
+
+#endif
+
+/* Next, parameters for various supported options */
+
+#ifdef ADD_PYTHON_LANGUAGE
+  PYTHON_HOME = @PYTHONHOME@
+  PYTHON_PREFIX = @PYTHON_PREFIX@
+  PYTHON_EXEC_PREFIX = @PYTHONHOME@
+  PYTHON_SUFFIX = @PYTHON_SUFFIX@
+  PYTHON_EXEC_SUFFIX = @PYTHON_EXEC_SUFFIX@
+  PYTHON_INCLUDE_SUFFIX = @PYTHON_INCLUDE_SUFFIX@
+#endif
+
+#if (defined(ADD_ILU_CPLUSPLUS_LANGUAGE) || defined(ADD_CORBA_CPLUSPLUS_LANGUAGE) || defined(ADD_IDL_SUPPORT))
+  CPLUSPLUS_COMMAND = @CXX@
+  CPLUSPLUS_LIBRARIES = @CPLUSPLUS_LIBRARIES@
+#endif
+
+#ifdef ADD_JAVA_LANGUAGE
+  JAVAC = @ILUJAVA_S_JH@/bin/javac
+  JAVAH = @ILUJAVA_S_JH@/bin/javah
+  JAVAJAR = @ILUJAVA_S_JH@/bin/jar
+  ILUJAVA_M_JAVAHOME = @ILUJAVA_S_JH@
+  ILUJAVA_M_CORECLASSES = @ILUJAVA_S_CORECLASSES@
+  ILUJAVA_M_INCLUDES = @ILUJAVA_S_INCLUDES@
+  ILUJAVA_M_OLD_INCLUDES = @ILUJAVA_S_OLD_INCLUDES@
+  ILUJAVA_M_MACH_DEP_INCLUDES = @ILUJAVA_S_MACH_DEP_INCLUDES@
+  ILUJAVA_M_OLD_MACH_DEP_INCLUDES = @ILUJAVA_S_OLD_MACH_DEP_INCLUDES@
+  ILUJAVA_M_CLASSESDIR = classes
+  ILUJAVA_M_COSNAMING_PREFIX = @ILUJAVA_M_COSNAMING_PREFIX@
+#endif
+
+#ifdef ADD_COMMONLISP_LANGUAGE
+  LISP_BATCH_COMMAND = @LISP_BATCH_COMMAND@
+  LISP_BIN_EXT = @LISP_BIN_EXT@
+  LISP_C_BIN_EXT = @LISP_C_BIN_EXT@
+  LISP_FLAG_BITS = @LISP_FLAG_BITS@
+#endif
+
+#ifdef ADD_GUILE_LANGUAGE
+  GUILE_LIB_DIR = @GUILE_LIB_DIR@
+  GUILE_INCLUDES = @GUILE_INCLUDES@
+#endif
+
+  /* For XView support */
+
+#ifdef ADD_XVIEW_SUPPORT
+  XVIEW_INCLUDES = @XVIEW_INCLUDES@
+#endif /* ADD_XVIEW_SUPPORT */
+  
+  /* For Xt support */
+
+#ifdef ADD_XT_SUPPORT
+  XT_INCLUDES = @XT_INCLUDES@
+#endif /* ADD_XT_SUPPORT */
+  
+  /* For Tk support */
+
+#ifdef ADD_TK_SUPPORT
+  TK_INCLUDES = @TK_INCLUDES@
+#endif /* ADD_TK_SUPPORT */
+  
+  /* For OMG IDL support */
+
+#ifdef ADD_IDL_SUPPORT
+  IDL_CFE_OSV = @IDL_CFE_OSV@
+  IDL_CFE_CPP_DRIVER = @IDL_CPP_COMMAND@
+#endif /* ADD_IDL_SUPPORT */
+
+       /* for debugging support */
+#ifdef ENABLE_DEBUGGING
+  CDEBUGFLAGS = -g
+#endif
+
+  SECURITYLIBS =
+  SECURITYINCLUDES =
+#ifdef ADD_SECURE_TRANSPORT
+  BUILD_GSS_INCLUDES=-I@GSS_INCLUDE_DIR@
+  BUILD_GSS_LIBS=@GSS_LIBRARIES@
+#ifdef USING_ILUGSS
+  GSS_INCLUDES=-I$(ILUHOME)/include
+  GSS_LIBS=$(ILUHOME)/lib/libgss.a
+#else
+  GSS_INCLUDES=-I@GSS_INCLUDE_DIR@
+  GSS_LIBS=@GSS_LIBRARIES@
+#endif
+  RSALIBS=
+  RSAINCL=
+  DESLIBS=
+  DESINCL=
+  SSLLIBS=
+  SSLINCL=
+  BUILDSSLINCL=
+  BUILDSSLLIBS=
+#ifdef INCLUDE_SSL_SECMECH
+  RSALIBS=@RSAREF_LIB@
+  RSAINCL=-I@RSAREF_DIR@
+  DESLIBS=@LIBDES_LIB@
+  DESINCL=-I@LIBDES_INCL_DIR@
+  BUILDSSLINCL=-I@SSL_INCLUDE_DIR@
+  BUILDSSLLIBS=@SSL_LIBRARIES@
+#ifdef USING_ILUGSS
+  SSLINCL=-I$(ILUHOME)/include
+  SSLLIBS=$(ILUHOME)/lib/libgss-ssl.a
+#else
+  SSLINCL=-I@SSL_INCLUDE_DIR@
+  SSLLIBS=@SSL_LIBRARIES@
+#endif /* def USING_ILUGSS */
+#endif /* def INCLUDE_SSL_SECMECH */
+  SECURITYLIBS = $(SSLLIBS) $(GSS_LIBS) $(RSALIBS) $(DESLIBS)
+  SECURITYINCLUDES = $(GSS_INCLUDES) $(SSLINCL) $(RSAINCL) $(DESINCL)
+  BUILD_SECURITY_INCLUDES = $(BUILD_GSS_INCLUDES) $(BUILDSSLINCL) $(RSAINCL) $(DESINCL)
+  BUILD_SECURITY_LIBRARIES = $(BUILDSSLLIBS) $(BUILD_GSS_LIBS) $(RSALIBS) $(DESLIBS)
+#endif
+
+#ifdef ILU_XML_PARSER_LIBRARY /* symbolic name for XML parser lib in source tree */
+  ILU_XML_PARSER_LIB_SRC = $(ILUSRC)/stubbers/XML-parser/libxml.a
+#endif
+
+#ifdef ILU_XMLIDL_SUPPORT
+  ILU_PARSER_XMLIDL_LIB = $(ILU_XML_PARSER_LIB_SRC)
+#endif
+
+  ILU_STUBBER_LIBRARIES = $(ILUSRC)/stubbers/parser/libilu-parser.a $(ILU_PARSER_XMLIDL_LIB)
+
+  SYSAUX_LIBRARIES = @LIBS@
+
+  THREADDEFINES = @THREADDEFINES@
+
+  CCSHARED_FLAGS = @CCSHARED_FLAGS@
+  SHAREDEXT = @LDSHARED_FILE_EXT@
+
+#ifdef ILU_FIXED_POINT_SUPPORT
+  BUILD_BIGNUM_INCLUDES=-I../../common/bignum
+#ifdef WORK_IN_ILU_SOURCE_TREE
+  BIGNUMINCLUDES=-I../../common/bignum
+#else /* not WORK_IN_ILU_SOURCE_TREE */
+  BIGNUMINCLUDES=-I$(ILUHOME)/include
+#endif /* def WORK_IN_ILU_SOURCE_TREE */
+#else /* not ILU_FIXED_POINT_SUPPORT */
+  BIGNUMINCLUDES=
+#endif /* def ILU_FIXED_POINT_SUPPORT */
+
+#ifdef ILU_ZLIB_TRANSPORT
+  ILU_ZLIB_LIBRARY=@ILU_ZLIB_LIBRARY@
+  ILU_ZLIB_INCLUDE_DIR=@ILU_ZLIB_INCLUDE_DIR@
+#endif /* def ILU_ZLIB_TRANSPORT */
+
+/********** The following need to be defined for the various TIM utilities.
+ ********** However, the various TIM utilities are not needed to use ILU.  */
+
+#ifdef ADD_TIM_TOOLS
+
+  /* for all TIM tools */
+
+  PERL = @PERL@
+
+  /* for texinfo2ps */
+
+  TEXINDEX = @TEXINDEX@
+  TEX = @TEX@
+  DVIPS = @DVIPS@
+  DVIPS4050 = @DVIPS4050@
+
+  /* for eps2jpeg, used by timdif2html */
+
+  GHOSTSCRIPT = @GHOSTSCRIPT@
+
+  /* for texinfo2info */
+
+  GIFTOPPM = @GIFTOPPM@
+  PPMQUANT = @PPMQUANT@
+  PPMTOPGM = @PPMTOPGM@
+  PNMSCALE = @PNMSCALE@
+  PGMTOPBM = @PGMTOPBM@
+  PBMTOASCII = @PBMTOASCII@
+  MAKEINFO = @MAKEINFO@
+
+  DIST_TIM = $(ILUSRC)/etc/tim/tim
+  DIST_TIMDIF2HTML = $(ILUSRC)/etc/tim/timdif2html
+  DIST_EPS2JPEG = $(ILUSRC)/etc/tim/eps2jpeg
+
+#endif /* def ADD_TIM_TOOLS */
+
+/********** End of TIM defs *******************/
+
+/* Finally, define the various commands that are needed */
+
+  ANSI_C_COMPILER = @CC@
+  ANSI_C_LIBRARY = @ANSI_C_LIBRARY@
+  AR = @AR@ cq
+  ARDEL = @AR@ d
+  AS = as
+  AWK = awk
+  BISON = @BISON@
+  CHMODW = chmod +w
+  CHMOD_READONLY = chmod 0444
+  CP = cp
+  CPP = @CPP@
+  FLEX = @FLEX@
+  IMAKE = @IMAKE@
+  INSTALL = @INSTALL@
+  LD = ld
+  LDSHARED = @LDSHARED_COMMAND@
+  LN = @LN_S@
+  LS = ls
+  MAKE = make
+  MAKEWHATIS = @MAKEWHATIS@
+  MKDIR = mkdir
+  MV = mv
+  NM = nm
+  RANLIB = @RANLIB@
+  RM = rm -f
+  SED = sed
+  SHELL = @BOURNE_SHELL@
+  SORT = sort
+  TESTING_PYTHON = @TESTING_PYTHON@
+  TR = tr
+
+  IRULESRC = $(TOP)/imake
+  TOP = TOPDIR

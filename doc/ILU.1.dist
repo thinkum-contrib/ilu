@@ -1,0 +1,84 @@
+BeginILUCopyright
+
+Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+Unlimited use, reproduction, modification, and distribution of this
+software and modified versions thereof is permitted.  Permission is
+granted to make derivative works from this software or a modified
+version thereof.  Any copy of this software, a modified version
+thereof, or a derivative work must include both the above copyright
+notice of Xerox Corporation and this paragraph.  Any distribution of
+this software, a modified version thereof, or a derivative work must
+comply with all applicable United States export control laws.  This
+software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+OF THE POSSIBILITY OF SUCH DAMAGES.
+  
+EndILUCopyright
+.\" ILU
+.TH ILU 1 "24 July 1996"
+.SH NAME
+ILU \- Inter-Language Unification object interface system
+.SH DESCRIPTION
+The Inter-Language Unification system (\fBILU\fR) is a multi-language
+object interface system.  The object interfaces provided by ILU hide
+implementation distinctions between different languages, between
+different address spaces, and between operating system types.  ILU can
+be used to build multi-lingual object-oriented libraries (\fBclass libraries\fR)
+with well-specified language-independent interfaces.  It
+can also be used to implement \fBdistributed systems\fR.  It can also be
+used to define and document interfaces between the modules of
+non-distributed programs.  ILU interfaces can be specified in either
+the OMG's IDL language, or in ILU's Interface Specification Language,
+which contains extensions to the CORBA spec.  Programming languages
+supported in 2.0alpha8 are \fBANSI C\fR and \fBPython\fR; rough \fBC++\fR support is
+also present.  Operating systems supported in 2.0alpha8 are all
+\fBWindows\fR platforms with Win32 and WinSock, and all \fBUNIX\fR platforms with
+BSD sockets and minimal POSIX compliance.  2.0alpha8 supports
+interoperability with \fBONC RPC\fR services, \fBOMG CORBA\fR services, \fBWorld Wide Web HTTP\fR services,
+and \fBXNS Courier\fR services.  ``Plug-in''
+extensibility is provided for RPC message formats, message transport
+schemes, URL schemes, accounting and authorization identity types,
+threading and event loop processing, and various other things.  ILU is
+provided free for unrestricted use.
+.sp
+ILU works by having programmers or systems designers write down the
+interface exported by a particular program module in a programming-language neutral
+\fIinterface description language\fR, called ISL.  During the implementation
+of that module, the programmer uses an ILU tool called a \fIstubber\fR to produce code, in the preferred
+programming language, which corresponds to the API described in ISL file.
+This code is linked with the programmer's implementation of the module's
+functionality, and the ILU ``kernel'' library, to form an \fIILU module\fR.
+Multiple ILU modules may be linked into a single executable, or the system
+implementor may prefer to keep each module in a separate dynamically-linked
+library.  At run-time, the various ILU modules in the program communicate
+by calling back and forth through the interfaces specified in the ISL file.
+The ILU kernel library provides communications services between modules in different
+address spaces, and provides data conversion services between modules written
+in different programming lanuages.  The ISL file also serves as system documentation of
+the interface for each module.
+.sp
+On this system, ILU is installed under \fCYYILUHOMEYY\fR.
+.SH ENVIRONMENT VARIABLES
+To use ILU, the directory \fCYYILUHOMEYY/bin\fR should be on
+your \fCPATH\fR environment
+variable.  If you are using the Python programming
+lanugage, your \fCPYTHONPATH\fR environment variable should include the directory
+\fCYYILUHOMEYY/lib\fR.  If you are using the Java programming language, the directory
+\fCYYILUHOMEYY/lib/classes\fR should be on your \fCCLASSPATH\fR
+environment variable, and the directory \fCYYILUHOMEYY/lib\fR 
+should be on your \fCLD_LIBRARY_PATH\fR environment variable.
+The environment variable \fCILU_DEBUG\fR can have an effect on built-in ILU debugging messages in
+the kernel library; see the ILU reference manual for more information.
+.SH "SEE ALSO"
+\fCc++-stubber(1), lisp-stubber(1), python-stubber(1), c-stubber(1), java-stubber(1)\fR
+.sp
+\fBThe ILU Reference Manual\fR, in \fCYYILUHOMEYY/doc/manual.ps\fR.
+.SH "AUTHORS"
+.RE
+Antony Courtney, Doug Cutting, Mark Davidson, Scott Hassan, Rob Head, Chris Jacobi, Bill Janssen, Swen Johnson, Dan Larner, Denis Severson, Bridget Spitznagel, Mike Spreitzer, Mark Stefik, Farrell Wymore, Rick Yardumian

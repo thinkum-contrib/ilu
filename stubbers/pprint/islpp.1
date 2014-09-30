@@ -1,0 +1,46 @@
+.\" islpp.1
+.TH ISLPP 1 "25 October 1995"
+.SH NAME
+islpp \- pretty-print ILU ISL interface descriptions
+.SH SYNOPSIS
+\fBislpp\fR [\fB-I\fR \fIinterface-dir\fR ...] [\fB-brief\fR] \fIISLFILE\fR [ \fI...ISLFILE\fR ]
+.SH DESCRIPTION
+.B islpp
+reads in one or more ILU ISL interface specification files,
+and writes a normalized version of those files to the standard output.
+If no directory
+is specified as part of \fIISLFILE\fR, the stubber will search
+for the file in the directories specified with the \fB-I\fR options,
+followed by list of directories specified by the
+environment variable \fCILUPATH\fR.  If no file extension is
+specified for \fIISLFILE\fR, the extension "\fC.isl\fR" is assumed.
+If \fB-brief\fR is specified, the comments in the generated output
+will be briefer than normal.
+.sp
+.SH EXAMPLES
+.LP
+.RS
+\fC
+% ./islpp foo.isl >a
+.br
+% ./islpp -I /usr/include/isl -brief foo.isl >b
+.br
+% \fR
+.SH "ENVIRONMENT VARIABLES"
+The environment variable "ILUPATH" is consulted to find referenced
+interfaces.  It should consist of a sequence of colon-separated directories,
+which contain interface specifications in the form of files
+with names like \fI<interface-name>\fC.isl\fR.
+.SH "BUGS"
+Any comments in the original ISL file are discarded.
+.SH "SEE ALSO"
+\fCILU(1)\fR
+.sp
+\fIThe ILU Home Page\fR
+.br
+(\fCftp://ftp.parc.xerox.com/pub/ilu/ilu.html\fR)
+.sp
+\fIThe ILU Reference Manual\fR
+.SH "AUTHOR"
+.RE
+Bill Janssen

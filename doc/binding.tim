@@ -1,0 +1,186 @@
+@c $Id: binding.tim,v 1.7 1999/08/19 21:17:26 janssen Exp $
+@setfilename ilu-binding.info
+@settitle Binding Names in ILU
+@ifset ilucopyright
+BeginILUCopyright
+
+Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+Unlimited use, reproduction, modification, and distribution of this
+software and modified versions thereof is permitted.  Permission is
+granted to make derivative works from this software or a modified
+version thereof.  Any copy of this software, a modified version
+thereof, or a derivative work must include both the above copyright
+notice of Xerox Corporation and this paragraph.  Any distribution of
+this software, a modified version thereof, or a derivative work must
+comply with all applicable United States export control laws.  This
+software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+OF THE POSSIBILITY OF SUCH DAMAGES.
+  
+EndILUCopyright
+@end ifset
+@ifclear largerdoc
+@include ilu-macros.tim
+
+@defcodeindex ft
+@defcodeindex vt
+@defcodeindex et
+@defcodeindex mt
+@defcodeindex tt
+@defcodeindex dt
+
+@syncodeindex dt ft
+@syncodeindex vt ft
+@syncodeindex et ft
+@syncodeindex mt ft
+@syncodeindex tt ft
+
+@syncodeindex pg cp
+@syncodeindex tp ft
+
+@c Experiment with smaller amounts of whitespace between chapters
+@c and sections.
+@tex
+\global\chapheadingskip = 15pt plus 4pt minus 2pt 
+\global\secheadingskip = 12pt plus 3pt minus 2pt
+\global\subsecheadingskip = 9pt plus 2pt minus 2pt
+\global\parskip 6pt plus 1pt
+@end tex
+
+@titlepage
+@title Binding Names in ILU
+@author Bill Janssen @code{<janssen@@parc.xerox.com>}
+@sp
+@today{}
+@sp
+Copyright @copyright{} 1996-1997 Xerox Corporation@*
+All Rights Reserved.
+@end titlepage
+@ifinfo
+@node Top, ,(dir),(dir)
+@top Binding Names in ILU
+@end ifinfo
+@end ifclear
+
+@ifclear largerdoc
+@section Introduction
+This document explains some of the issues around binding names to objects and services,
+and the various mechanisms that ILU provides to deal with them.
+@end ifclear
+@ifset largerdoc
+@section Introduction
+This chapter explains some of the issues around binding names to objects and services,
+and the various mechanisms that ILU provides to deal with them.
+@end ifset
+
+@node ILU Simple Binding, CORBA CosNaming, Introduction, Top
+@section ILU Simple Binding
+@cindex Name Service
+@cindex Simple Binding
+@findex Publish
+@findex Withdraw
+@findex Lookup
+
+@menu
+* Listing the Registered Objects::
+* Using Shared Files for Simple Binding::
+* Using an ILU Service for Simple Binding::
+@end menu
+
+@system{ILU} includes a simple binding/naming facility.  It allows a module to @dfn{publish} an object, so that another module can import that object knowing only its object ID (as defined in @ref{ILU Concepts}).  The interface to this facility is deliberately quite simple; one reason is to allow various implementations.
+
+The interface consists of three operations: @dfn{Publish}, @dfn{Withdraw}, and @dfn{Lookup}.  @fn{Publish} takes one argument, an @system{ILU} object.  @fn{Publish} returns a string that is needed to successfully invoke @fn{Withdraw}.  @fn{Withdraw} undoes the effects of @fn{Publish}, and takes two arguments: (1) the object in question, and (2) the string returned from @fn{Publish}.  In some langauge mappings, the string is not explicitly passed, but conveyed in the language mapping's representation of @system{ILU} objects.  @fn{Lookup} takes two arguments: an object ID and a type the identified object should have.  If the object with that ID is currently being published, and has the given type (among others), @fn{Lookup} returns that object.
+
+The implementation shipped with this release of @system{ILU} can use either an @system{ILU} service, or a shared filesystem directory, to store information on the currently published objects.  This choice must be specified at system configuration time.  If the shared filesystem approach is used, this directory must be available by the same name, on all machines which wish to interoperate.  The way in which clients interact with binding is the same, regardless of which approach is selected.
+
+@node Listing the Registered Objects, Using Shared Files for Simple Binding, , Top
+@subsection Listing the Registered Objects
+
+The simple program @program{ilusbls} will list the currently registered objects.  It may be invoked with an argument, in which case only those objects with string binding handles containing the argument as a substring will be listed.
+
+@node Using Shared Files for Simple Binding, Using an ILU Service for Simple Binding, Listing the Registered Objects, Top
+@subsection Using Shared Files for Simple Binding
+
+If simple binding is to be done with shared files, a default directory is compiled into the @system{ILU} library.  This directory may be explicitly specified at system configuration time with the @code{--with-binding-dir=@metavar{DIRECTORY}} switch to @program{configure}.  (The compiled-in setting may also be overridden at run time, by setting the environment variable @var{ILU_BINDING_DIRECTORY} to a different directory.)  @system{ILU} creates a file in this directory for each published object.  The name of the file is an 8-digit hex string, formed by taking the CRC-32 hash of the server ID and instance handle of the object.  The file contains the string binding handle of the object and a random string, which serves as the `proof' that has to be provided when withdrawing a registration.  Note that when using the shared file approach, the protection state of the directory must be such that programs calling @fn{Publish} can remove files and create new files, and programs calling @fn{Lookup} must be able to read files in the directory.
+
+@node Using an ILU Service for Simple Binding, , Using Shared Files for Simple Binding, Top
+@subsection Using an ILU Service for Simple Binding
+@pindex ilusb
+
+If an @system{ILU} service is used, the situation is a bit more flexible.  The idea is that a program called @program{ilusb} is run on some machine, and exports the binding service via a specified port.  All clients have compiled-in knowledge as to which machine and port the binding service is running on, and they contact the service to perform @fn{Publish}, @fn{Withdraw}, and @fn{Lookup} calls.  Each binding service is given a name, called a @dfn{binding realm}, which is the name of the `space' for which it provides simple binding services.  There may therefore be many instances of the @program{ilusb} server running, even on a single machine, each one serving a different binding realm.  It is often useful to establish multiple binding realms for different purposes.  For instance, one might be used for everyday registration of services, another for testing, still another for experimenting.
+
+To start the binding service, run the program @program{@metavar{ILUHOME}/bin/ilusb}.  It takes the following options:
+@itemize @bullet
+@item @code{-r @metavar{REALM-NAME}} -- this allows specification of the @metavar{REALM-NAME} which the server will serve.  The default is the compiled-in realm name.
+@item @code{-h @metavar{IP-ADDRESS}} -- this allows overriding the compiled in IP address for the machine.  This switch is mainly for multi-ported machines (machines which have two or more different IP addresses).
+@item @code{-p @metavar{PORT}} -- this allows overriding the compiled in @metavar{PORT} specification.  This is the port on which the server listens for connections.
+@item @code{-f @metavar{FILENAME}} -- this allows you to specify the name of a file in which the server will store a backup of the various registrations currently active.  If the server is restarted, and this file already exists, the server will read this file, and use the registrations in it as the current set of registrations.  This file should be in a directory which can be read and written by the user identity under which the @program{ilusb} program is running.  The default is a file called @file{/tmp/ILUSimpleBindingService.@metavar{REALM-NAME}}.
+@item @code{-s} -- this option enables `protected' operation.  This prevents active registrations from being overridden; @fn{Withdraw} must be called first, to remove the current registration, before a new registration for the same object can be made.  This is useful in an environment which only wants to permit certain users to change certain registrations.  However, without secure communications, this operation is not truly secure, and enabling it is often clumsy for casual use of the simple binding service.  The default is unprotected operation.
+@end itemize
+
+By default, @system{ILU} programs use the compiled-in binding realm, host, and port.  However, they can be directed to use a different combination of these three, by defining the environment variable @var{ILU_BINDING_SERVICE} to a string of the form @code{"@metavar{REALM}:@metavar{HOST}:@metavar{PORT}"}, before running the program.  If you want only to override one or two of the compiled-in defaults, use a string with empty fields for the other parts.  For example, if you just wanted to redirect to a particular host, you could use a string of the form @code{":foo.bar.company.com:"}, with empty strings for @metavar{REALM} and @metavar{PORT}.
+
+The program @program{ilusbls} will list all the currently registered objects.  It takes an optional string argument.  If the argument is specified, only objects which have that string in their string binding handles will be listed.
+
+@node CORBA CosNaming, , ILU Simple Binding, Top
+@section CORBA CosNaming
+
+Another rather different notion of binding is covered by the @system{CORBA} standard `COS Naming' service.
+An implementation of this service is installed with ILU if the configuration options include
+support for the @language{C} programming language, the @language{OMG IDL} interface definition
+language, and the @protocol{CORBA IIOP} wire protocol.
+The interface to the service is defined in @file{@metavar{ILUHOME}/interfaces/CosNaming.idl}.
+
+To start the binding service, run the program @program{@metavar{ILUHOME}/bin/ILUCosNaming}.
+It takes the following options:
+@itemize @bullet
+@item @code{-p @metavar{PORT}} -- this allows specification of the port on which the server will listen for connection requests.  If this
+is not specified, the default port will be 9999.  If you'd like the service to pick a free port, specify 0 for the value of @metavar{PORT}.  Note that if you do specify 0, the IOR of the service will change from invocation to invocation, as different port numbers are used.
+@item @code{-h @metavar{HOSTNAME}} -- this allows overriding the default hostname for the machine.  This switch is mainly for multi-ported machines (machines which have two or more different IP addresses).  The default hostname is whatever is returned by the @fn{@C{gethostname()}} system call on your machine.
+@item @code{-sid @metavar{SID}} -- this allows specification of a server ID for the root object exported
+by the naming service, and all subsequent naming contexts created in that server.  If none is specified, but an instance handle is specified,
+the default used is @code{"CosNaming_@metavar{HOSTNAME}"}, where @metavar{HOSTNAME} is the hostname being used.  This option is not generally useful.
+@item @code{-ih @metavar{IH}} -- this allows specification of an instance handle for the root NamingContext
+exported by the naming service.  If none is specified, but a serverID is specified, this defaults to @code{"root"}.  If neither server ID nor instance handle is specified, the root NamingContext is exported with an object key, instead.  This option is not generally useful.
+@item @code{-f @metavar{FILENAME}} -- this allows you to specify the name of a file in which the server will store a backup of the various registrations currently active.  If the server is restarted, and this file already exists, the server will read this file, and use the registrations in it as the current set of registrations.  This file should be in a directory which can be read and written by the user identity under which the @program{ILUCosNaming} program is running.  The default is a file called @file{/tmp/ILUCosNaming.@metavar{SID}}, where @metavar{SID} is the server ID specified or defaulted to for the program.
+@item @code{-ior} -- if this option is specified, the service will write the @system{CORBA} IOR of its root @class{NamingContext} to the standard output after it has successfully initialized.  This is sometimes useful when this service
+is being used with a non-@system{ILU} @system{CORBA} ORB.
+@item @code{-ior_to_file @metavar{FILENAME}} -- if this option is specified, the service will write the @system{CORBA} IOR of its root @class{NamingContext} to the file with the specified @metavar{FILENAME} after it has successfully initialized.  This is sometimes useful when this service is being used with a non-@system{ILU} @system{CORBA} ORB.
+@item @code{-publish} -- if this option is specified, the service will register its root @class{NamingContext} with @system{ILU}'s simple binding.
+@item @code{-sid_and_ih_from_IOR @metavar{STRINGIFIED-IOR}} -- it
+is sometimes useful to use the `ILUCosNaming' program to mimic
+the name service provided by another ORB.  In particular, this means
+that the root object should have the same server ID and instance
+handle provided by that other service.  To accomplish this, you can
+start @program{ILUCosNaming} with the stringified IOR for that other service,
+and it will use the server ID and instance handle in that IOR for
+its server ID and instance handle.  Note that you may also need to
+specify the port and hostname with the @code{-h} and @code{-p} options
+to exactly mimic the other service.  This option is not generally useful.
+@item @code{-object_key @metavar{KEY}} -- will export the root NamingContext object with the object key @metavar{KEY}.  If no value is specified, and if neither a server ID nor an instance handle is specified, will export the root NamingContext with the object key @code{"NameService"}.
+@end itemize
+@noindent
+In general, the user shouldn't have to specify the hostname, server ID, object key, instance handle, or filename; the defaults
+work pretty well.  It is useful to specify the port in most applications, just so that the service
+always has the same string binding handle, which will be@*
+@code{iioploc://@metavar{HOST}:@metavar{PORT}/NameService},
+if no other options are specified, or
+@code{ilusbh:@metavar{SID}/@metavar{IH};IDL%3Aomg.org%2FCosNaming%2FNamingContext%3A1.0;iiop_1_0_1@@tcp_@metavar{HOST}_@metavar{PORT}},
+if either @metavar{SID} or @metavar{IH} are specified.
+
+You should look at any @system{CORBA} book, or the@*
+@url{COS Naming service specification, ftp://ftp.omg.org/pub/docs/formal/97-07-04.pdf} 
+itself, for more information on how to use the naming service with applications.  Note that the @system{ILU}
+implementation does not include the client-side `Names Library' described in the specification.
+Applications are expected to use the service functionality directly.
+
+@ifclear largerdoc
+@section Index of Functions
+@printindex ft
+@end ifclear

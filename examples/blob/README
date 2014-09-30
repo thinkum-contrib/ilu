@@ -1,0 +1,63 @@
+README for the "blob" example directory.
+$Id: README,v 1.3 1999/08/03 01:58:00 janssen Exp $
+[
+ BeginILUCopyright
+
+ Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+ Unlimited use, reproduction, modification, and distribution of this
+ software and modified versions thereof is permitted.  Permission is
+ granted to make derivative works from this software or a modified
+ version thereof.  Any copy of this software, a modified version
+ thereof, or a derivative work must include both the above copyright
+ notice of Xerox Corporation and this paragraph.  Any distribution of
+ this software, a modified version thereof, or a derivative work must
+ comply with all applicable United States export control laws.  This
+ software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+ WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+ LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+ EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+ NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+ OF THE POSSIBILITY OF SUCH DAMAGES.
+
+ EndILUCopyright ]
+
+This directory contains an example of a simple shared interaction system
+using Python, TK, and ILU.  This example was contributed by Jim Holmes,
+at Rank Xerox's Cambridge Research Center.
+
+A server keeps track of a number of colored tokens on a surface.  Each
+client can move any token around, by dragging it with a mouse.  Any
+moves made by any client are seen by all the other clients.
+
+To build this example, you must first have installed Python, with support
+for Tk (the Tkinter Python module).  Then copy the files in this directory
+to another test directory, and cd to that directory.
+
+  % ilumkmf
+  % make
+  python-stubber BlobExample.isl
+  client stubs for interface "BlobExample" to BlobExample.py ...
+  server stubs for interface "BlobExample" to BlobExample__skel.py ...
+  % 
+
+To run this example, first start the server:
+
+  % python blobServer.py &
+  1@holmes.745.308700b8.26984e9a@sunrpc_2_0x61a78_2476105499|sunrpcrm|tcp_holmes_4401
+  %
+
+Then start several clients:
+
+  % python blobClient.py & python blobClient.py &
+  sbh= 1@holmes.745.308700b8.26984e9a@sunrpc_2_0x61a78_2476105499|sunrpcrm|tcp_holmes_4401
+  sbh= 1@holmes.745.308700b8.26984e9a@sunrpc_2_0x61a78_2476105499|sunrpcrm|tcp_holmes_4401
+  %
+
+You should see a window come up for every client you've started.
+
+Now click with the mouse in one of the client windows.  A small circle will appear in
+all the client windows for each click.  You can also grab the circles and move them
+around with the mouse, and the movement will be updated in all the client.

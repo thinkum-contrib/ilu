@@ -1,0 +1,68 @@
+# $Id: ILUTestingConfig.py.dist,v 1.8 1999/08/03 01:56:26 janssen Exp $
+# BeginILUCopyright
+
+# Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+# Unlimited use, reproduction, modification, and distribution of this
+# software and modified versions thereof is permitted.  Permission is
+# granted to make derivative works from this software or a modified
+# version thereof.  Any copy of this software, a modified version
+# thereof, or a derivative work must include both the above copyright
+# notice of Xerox Corporation and this paragraph.  Any distribution of
+# this software, a modified version thereof, or a derivative work must
+# comply with all applicable United States export control laws.  This
+# software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+# WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+# PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+# LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+# EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+# NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+# OF THE POSSIBILITY OF SUCH DAMAGES.
+
+# EndILUCopyright
+
+import re, string, posixpath
+
+#
+# Read the ILU configuration file iluconf.h and any Makefile
+#
+iluconf_pattern = re.compile(r"^\s*#define\s*([^\s]*)\s*(.*)")
+makefile_pattern = re.compile(r"^ *([A-Za-z0-9_]*)\s*=\s*([^@\s].*)\s*$")
+
+def read_file (path, regexp):
+	dict = {}
+	f = open(path, 'r')
+	line = f.readline()
+	while (line):
+		match = regexp.match(line)
+		if match:
+			dict[match.group(1)] = match.group(2)
+		line = f.readline()
+	f.close()
+	return dict
+
+iluconf_dict = read_file ("ILU_C_CONFIGURATION_FILE", iluconf_pattern)
+iludefs_dict = read_file ("ILU_C_IMAKEDEFS_FILE", iluconf_pattern)
+if posixpath.exists("Makefile") and posixpath.isfile("Makefile"):
+	makefile_dict = read_file ("Makefile", makefile_pattern)
+else:
+	makefile_dict = read_file ("ILU_C_IMAKEDEFS_FILE", makefile_pattern)
+
+var = re.compile(r"\$\(([A-Za-z0-9_]*)\)")
+def replace_it (key, value, dict, level):
+	# print " " * level, key
+	# print " " * level, "Checking", value
+	match = var.search(value)
+	while match:
+		if dict.has_key(match.group(1)):
+			
+			replacement = replace_it(match.group(1), dict[match.group(1)], dict, level + 1)
+		else:
+			replacement = ""
+		value = value[:match.start(0)] + replacement + value[match.end(0):]
+		match = var.search(value)
+	return value
+
+for key in makefile_dict.keys():
+	makefile_dict[key] = replace_it(key, makefile_dict[key], makefile_dict, 0)

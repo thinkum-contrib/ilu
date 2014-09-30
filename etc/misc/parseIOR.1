@@ -1,0 +1,54 @@
+.\" parseIOR.1
+.TH PARSEIOR 1 "8 July 1997"
+.SH NAME
+parseIOR \- display information about a stringified CORBA IOR
+.SH SYNOPSIS
+\fBparseIOR\fR [\fB-v\fR] \fISTRINGIFIED-IOR\fR
+.SH DESCRIPTION
+.B parseIOR
+invokes the ILU IIOP IOR parsing code on the specified CORBA IOR,
+and prints a summary of the results to standard output.  The object
+key is displayed as a string, with non-printing characters displayed
+using two-digit hex strings prefixed with the hash character;
+any reliable type information in the IOR is displayed; any useful
+guess about the ORB type is displayed; the version of IIOP in use,
+along with the host and port, are displayed.  If the
+verbose option is selected with the \fB-v\fR option,
+the internal ILU debugging statements will be shown as the parsing
+process takes place.
+.sp
+.SH EXAMPLES
+.LP
+.RS
+% \fB./parseIOR IOR:000000000000002849444c...\fR
+.br
+object <#AF#AB#CA#FE#00#00#00#023#BDu#A2#00#00#00#00#00#00#00#08#00#00#00#00#00#00#00#00>;
+.br
+ no absolute type info; unrecognizable ORB;
+.br
+ reachable with IIOP 1.0 at host "rubberducky.parc.xerox.com", port 36782
+.br
+% \fB./parseIOR IOR:000000000000002d49444c...\fR
+.br
+object <:\\neptune.mtc.ti.com:dcm:mgr1::IR:DataCollection_DataCollectionManager#00>;
+.br
+ no absolute type info; possibly an Iona ORB;
+.br
+ reachable with IIOP 1.0 at host "neptune.mtc.ti.com", port 42934
+.br
+% \fB./parseIOR IOR:000000000000001f49444c...\fR
+.br
+object <#00PMC#00#00#00#01#00#00#00#1FIDL:DataCollection/Display:1.0#00#00#00#00#00#01#11B#AB#19>;
+.br
+ no absolute type info; probably Visigenic ORB;
+.br
+ reachable with IIOP 1.0 at host "156.117.62.232", port 1228
+.br
+% \fR
+.SH "SEE ALSO"
+\fCILU(1)\fR
+.sp
+\fIThe ILU Reference Manual\fR
+.SH "AUTHOR"
+.RE
+Bill Janssen

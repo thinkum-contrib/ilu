@@ -1,0 +1,278 @@
+<!-- This HTML file has been created by timdif2html 1.11
+     from manual.dif on 20 September 1999 -->
+
+<TITLE>ILU Reference Manual - Security</TITLE>
+<BODY TEXT=#000000 BGCOLOR=#ffffff>
+<P>Go to the <A HREF="manual_14.html">previous</A>, <A HREF="manual_16.html">next</A> section.<P>
+<H1><A NAME="SEC498" HREF="manual_toc.html#SEC498">Security</A></H1>
+<P>
+There are a number of components that make up a successful security
+policy for an application based on a distributed object system.  Only a
+few of them deal with the distributed object system.  This document
+gives an overview of some of the issues, and explains how they may be
+achieved with the mechanisms provided in ILU 2.0.  For a fuller
+discussion of the issues, see the OMG Security Working Group's white
+paper on security, <A HREF="http://www.omg.org/docs/1994/94-04-16.ps"><TT>http://www.omg.org/docs/1994/94-04-16.ps</TT></A>.
+<P>
+There are a number of things which are often lumped under the umbrella of `security'.  They include:
+<P>
+<UL>
+<LI><EM>identities</EM> -- some partitioning and naming scheme that lets the system separate one principal from another;
+<LI><EM>authentication</EM> -- a way of proving that an entity claiming some identity actually has the right to that identity;
+<LI><EM>communications authentication</EM> -- some way of proving that a message supposedly sent by some identity actually was sent by that identity;
+<LI><EM>communications integrity</EM> -- some way of knowing that a received message is the same message that was sent, that no bits were altered along the way;
+<LI><EM>communications privacy</EM> -- some way of concealing the contents of a message from all but the intended recipient;
+<LI><EM>authorization</EM> -- a mechanism for deciding whether an identity should be allowed access to some data or function;
+<LI><EM>auditing</EM> -- a way of remembering, securely, who did what to what.
+</UL>
+<P>
+Some of these items are more complex than they appear to be at first
+glance.  For example, the notion of authentication includes not only the
+mechanisms needed to check identities, but also the more social problems
+of effective password and key management.  Authorization and auditing
+may include various schemes of payment and chargeback, for access to
+services.  They are also inter-related; communications privacy is a kind
+of authorization problem.
+<P>
+ILU provides two major hooks for an application to use in implementing
+a security policy.  The first is a flexible notion of identities.  The second
+is an interface to communications security which allows authentication,
+integrity, and privacy to be provided in all message traffic between two ILU-connected
+programs.  We believe that with these two mechanisms, arbitrary security policies
+can be implemented with ILU.
+<P>
+<H2><A NAME="SEC499" HREF="manual_toc.html#SEC499">Identities</A></H2>
+<P>
+Identities are ways in which authorization principals in a
+security system are named.  They can be various; human names, social
+security numbers, computer login accounts, and credit cards are all
+examples of identities.  ILU provides a few prespecified
+identity types, one of which (the GSS identity) is flexible and
+user-extensible.  In addition, the <CODE>ilu_IdentityType</CODE> data type in the kernel
+exports a meta-object protocol for defining new identity types, which can be used
+by various application-specific protocols and transports.
+<P>
+ILU also defines a <I>passport</I>, which is
+a data structure which can contain an arbitrary number of identities.
+Identities are communicated during calls through an ILU
+interface by having the caller pass a passport as part of the call, so
+that the implementor of the true method can find out which principal is
+making the call.  This passport transfer can be accomplished
+automatically as part of the wire-protocol used in the call,
+or on a per-connection basis by the transport machinery, or explicitly
+as a parameter of the call.
+<P>
+The identity types provided in ILU 2.0 are:
+<UL>
+<LI><CODE>ilu_ConnectionIdentity</CODE> -- a string identifying the connection over which the call was made;
+<LI><CODE>ilu_SunRPCAuthUnixIdentity</CODE> -- a data structure (see <TT>`runtime/kernel/iluxport.h'</TT> for details) identifying the (unauthenticated) user ID, group ID, and UNIX group memberships on the (putative) calling machine (this identity type is only available if ILU has been configured with support for the <CODE>sunrpc</CODE> protocol);
+<LI><CODE>ilu_GSSIdentity</CODE> -- an opaque value which identifies the caller via one or more GSS security mechanisms (this identity type is only available if support for the <CODE>security</CODE> transport layer has been configured into ILU).
+</UL>
+<P>
+Passports, and the identities in them, are represented in different ways in different language-specific runtimes.  This section contains only a brief description of the various identity types; refer to the ILU documentation for your programming language to see how passports and identities are manipulated in that language.
+<P>
+The `connection' identity can be used to display the apparent IP host address of the caller; due to the possibility of IP packet spoofing in IPv4, that address should not be relied upon for security purposes.  Another problem with using connection identities in server applications is that ILU will close them and re-constitute them at need, which means that a client might in the extreme case use a different connection for every call.  This renders the connection identity somewhat inappropriate for identifying particular client-server `sessions'.
+<P>
+The `Sun RPC Unix Authentication' identity follows the `system authentication' scheme described in Internet RFC 1831.  It contains the host IP address, the UNIX user ID, and the UNIX group ID of the caller, and a list of the UNIX groups to which the caller belongs.  Note that the user ID and group ID are relative to the caller's host, not the server's host.  This information is only passed if the caller is running on a UNIX machine, and if the protocol used in the connection is the <CODE>sunrpc</CODE> protocol.  Note that this information may be easily spoofed if the communications channel is insecure.
+<P>
+The `GSS' identity may contain multiple different identities, in the form of GSS `names'.  GSS naming is flexible and extensible, so should be able to represent any type of name desired.  <A NAME="FOOT13" HREF="manual_foot.html#FOOT13">(13)</A>  These identities may be reliable, even in the face of insecure networks, if they have been negotiated and communicated with an appropriately secure GSS security mechanism.  Any effective security mechanism for use with ILU should use some form of GSS identity.  ILU provides ways to retrieve parameters of the GSS identity, including the <CODE>gss_name_t</CODE> of the caller, the lifetime of the security context, and the security mechanism that has validated the identity and protected the communications.  There are also routines to convert a <CODE>gss_name_t</CODE> value to a printable string, and to create a GSS identity given a value of type <CODE>gss_cred_id_t</CODE>.  Further information on the GSS can be found in the ILU distribution, in the directory <TT>`<VAR>ILUSRC</VAR>/GSS/doc/'</TT>.
+<P>
+<H2><A NAME="SEC500" HREF="manual_toc.html#SEC500">Communications Security</A></H2>
+<P>
+ILU
+provides for transparent communication between ILU address spaces when an
+operation is invoked on a foreign (supported outside the calling address space) object
+reference.  There is a generic scheme for securing inter-address-space
+communication, using the IETF Common Authentication Technology working
+group's Generic Security Service (GSS) API.  (The ILU distribution also
+provides an implementation of the GSS, which contains a meta-object
+protocol allowing specific security mechanisms to be registered with and
+used by the GSS shell implementation.)  Inside the generic mechanism,
+specific security mechanisms can be selected to give various degrees of
+protection.
+ 
+The GSS-based inter-address-space security provides message integrity and/or
+message privacy services, depending on which specific services are
+requested of the specific security mechanism selected for use.  All
+parts of the message are protected; all messages on a secured transport
+are sent as record-marked GSS tokens.  Multiple tokens may be sent for a
+single RPC-level message; some security mechanisms may insert empty
+padding messages to further confuse traffic analysis attacks.  This
+inter-address-space security may also be used for ILU `transport-buffer-based'
+object persistence mechanisms, but it is not clear to us what security
+implications this has.
+<P>
+<P><CENTER><IMG SRC="security-diagram.idraw.jpeg"></CENTER><P><P>
+ILU communications security is orthogonal to the choice of RPC protocol
+or transport mechanism.
+The ILU transport stack consists of the following pieces: an
+application layer, which calls into a caller-side stub layer, which
+calls into RPC-mechanism-specific marshalling code, which calls into one
+or more transport filters, arranged in a stack.  For example, an
+application in C++ may call into the stubs for some specific interface,
+which call down into the RPC message marshalling code, which calls down
+to the compression transport layer (passing it either whole RPC
+messages or fragments thereof), which calls down to the security
+transport layer (which turns byte streams passed from above into
+security data tokens), which calls down to a simple record-marking layer
+(which puts 32-bit length headers on each GSS data token), which calls
+down to the TCP/IP transport layer (which actually writes the bytes to
+the TCP/IP stream).  Thus, each message passed between address spaces in this
+example is a record-marked GSS token containing an encrypted signed
+compressed fragment of a full RPC message.  The fragment may be a
+`improper' fragment -- a whole RPC message.  Note that this is only one
+possible ILU transport stack; the layers may be arranged in other
+orders, within some constraints.  In particular, our current design
+requires the security transport layer to be immediately above a GSS
+token record-marking layer, which in turn must be immediately above the
+actual transport layer (the layer which actually writes to the TCP/IP
+buffers, for instance).  The GSS token record-marking layer may adapt to
+the particular security scheme being used; in particular, if the wire
+format of the security mechanism already specifies record-marking
+information, the record-marking layer will simply interpret that
+information, rather than adding any new information to the packets
+passing through it.
+<P>
+<H4><A NAME="SEC501" HREF="manual_toc.html#SEC501">Kernel Servers</A></H4>
+<P>
+ILU objects are managed by <I>kernel servers</I>.  There may be multiple
+kernel servers per address space.  Each kernel server `owns' some set of ILU
+object instances, and manages certain functionality for those
+instances.  One item of functionality managed by an kernel server is
+communication with kernel servers in other address spaces.  This
+inter-kernel-server communication is always performed between a `true'
+kernel server, or <I>TKS</I>, and its counterpart in another address space, the
+`surrogate' kernel server, or <I>SKS</I>.  Instances in a TKS are those
+which actually contain implementations for the operations of the
+instances' types, so the TKS may be thought of as the `server-side'
+kernel server.  A SKS manages surrogate or proxy instances for some
+subset of the instances managed by its corresponding TKS, so the SKS may
+be thought of as the `client-side' kernel server.  There may be many
+SKSs corresponding to any single TKS, but there may only be one SKS for
+each TKS in any one address space.  All inter-address-space communication is between a SKS
+and its corresponding TKS.
+<P>
+<H4><A NAME="SEC502" HREF="manual_toc.html#SEC502">Creating Ports</A></H4>
+<P>
+Selection of security mechanisms for access to instance operations is
+done by calls to the ILU kernel on the server side which create
+`ports' on true kernel servers.  Each port describes a particular
+communication mechanism which SKS's may use in communicating with the
+TKS.  Each port may independently select an RPC protocol and transport
+stack, and (if the transport stack includes the security transport
+layer) identify which security mechanism to use, and which server-side
+identity to use in establishing security contexts via that security
+mechanism.  Communication with that TKS by any of its corresponding
+SKS's may then be accomplished through any of the ports on the TKS.  In the call
+to create a port, the
+server-side application code passes a passport containing an
+ILU GSS identity, which is used as the identity of the principal
+offering the service, and put into the connection information in the string
+binding handle of objects on that server.
+<P>
+<H4><A NAME="SEC503" HREF="manual_toc.html#SEC503">Client Connections to Ports</A></H4>
+<P>
+When a client decides to use a particular object, it consults the string binding handle of
+the object to discover communication parameters for that object,
+including the parameters of the various ports of the TKS for the object.
+The client then creates a SKS for the TKS, if one does not already exist
+in its address space, and indicates which types of communication channels it
+wishes to use.  A communication channel is an abstraction which
+incorporates the notions of RPC protocol (say, the OMG <CODE>IIOP</CODE>, though others are
+possible with ILU), message transport (say, TCP/IP), and possible message transformations
+such as compression or security.
+Note that TKS's can force a particular communication channel type by
+either only opening one port, or only telling this particular client
+about one of its ports.
+<P>
+When a client opens a communications channel of a particular type, the
+SKS initialization code automatically creates the proper RPC protocol
+object and transport layer stack on the client side, initializing each
+layer in the transport stack as appropriate.  If the transport stack
+includes the security transport layer, it also initializes this layer.
+The security transport layer is written against the GSS C API, using no
+extensions.  The initialization code retrieves the client's identity
+(from the passport of the client), the server's identity (one
+of the parameters of the port, and passed as a parameter to the secure
+transport layer's initialization code), and the specific security
+mechanism to use (specified as a string, which may be either the
+GSS-specified string form of the security mechanism OID, or an ILU
+nickname for it (an optional feature)).  The init code then calls
+<CODE>gss_init_sec_context()</CODE> with the client
+credentials, the server identity, and the security mechanism.  Any
+context token output by that call is passed through the lower-level
+transport layers to the TKS, where it is passed to
+<CODE>gss_accept_sec_context()</CODE>.  Any return token is passed back, etc, until
+the security context is established.  This sequence of messages is
+called the security context handshake.
+<P>
+Note that at this time, and in all future uses of the channel, the
+actual transport mechanism, TCP/IP, is used only to convey GSS tokens
+back and forth, typically with some simple record-marking protocol which
+may either be provided by the particular wire format of the security
+mechanism (if any), or via an additional optional record marking layer
+between the security layer and the TCP/IP layer.  No recognizable RPC
+messages are ever sent on the TCP/IP connection.
+<P>
+<H4><A NAME="SEC504" HREF="manual_toc.html#SEC504">Calls</A></H4>
+<P>
+After the client has opened a channel to the TKS, calls may be made
+on objects in that TKS.  When a call is made, the client calls down into the marshalling stubs
+with an indication of which channel is to be used for the call.  If no
+port is specified, the SKS makes the choice according to simple
+defaulting rules.  Typically, a SKS has only one channel open to its
+TKS, and the client accepts it by default.  The marshalling stubs build
+up the appropriate RPC message, and dispatch it, either whole or in
+fragments, to the top layer of the transport stack.  For the purpose of
+this discussion we'll use the term fragment, but it is important to
+remember that a whole message is also a valid `fragment'.  Each layer of
+the transport stack transforms the fragment in some way, and passes it to the next lower layer.  In
+particular, the security transport layer takes the fragment and applies
+<CODE>gss_wrap()</CODE> to it, using the security context that was negotiated when
+the channel was set up.  The wrap procedure may perform either message
+integrity on the fragment, or message privacy, or both.  This produces a
+GSS data token, which is passed to the next lowest layer for possible
+additional transformation and eventual transport to the TKS.  On the
+true side, the stack is reversed; a GSS data token coming in is passed
+to <CODE>gss_unwrap()</CODE>, which either verifies the message integrity check, or decrypts the token to
+produce a fragment, or both, and sends it up to the next highest level.
+<P>
+<H2><A NAME="SEC505" HREF="manual_toc.html#SEC505">Using the GSS Transport Filter</A></H2>
+<A NAME="IDX783"></A>
+<P>
+To use GSS security in an ILU application, either client or server, your ILU
+installation configuration must have included the GSS transport filter.  You will also need an
+implementation of the GSS, with the C API specified in the now obsolete internet draft <TT>`<VAR>ILUSRC</VAR>/GSS/doc/draft-ietf-cat-gssv2-cbind-01.txt'</TT>.  The ILU distribution
+comes with such an implementation, in the directory <TT>`<VAR>ILUSRC</VAR>/GSS/'</TT>, and will build and
+use this implementation unless another is explicitly specified at configuration time.
+<P>
+To export an object via a secure connection, the true module will need to (1) establish an identity via
+some GSS scheme, and (2) create a true kernel server with a port that uses the GSS transport filter in its <CODE>tinfo</CODE>
+stack.  In this discussion, we'll use the ANSI C mappings and funtions.
+<P>
+To establish an identity, the true module must first acquire GSS credentials for some identity + security-mechanism pair; see the documentation on the GSS in <TT>`<VAR>ILUSRC</VAR>/GSS/doc/'</TT> to see how to do this, or take a look at the code in <TT>`<VAR>ILUSRC</VAR>/examples/test1/srvr.c'</TT>.  Then the module will create an ILU <I>GSS identity</I>, by calling the C API function <CODE><CODE>ILU_C_AcquireGSSIdentity</CODE></CODE>.  This identity must be placed in an ILU passport, by calling either of the functions <CODE><CODE>ILU_C_CreatePassport</CODE></CODE> or <CODE><CODE>ILU_C_AddIdentity</CODE></CODE>.  The server module then creates a TKS by calling <CODE><CODE>ILU_C_InitializeServer</CODE></CODE>, passing in as parameters a transport info list which includes the GSS transport filter, and the passport.  A suitable transport info list should contain a record-marking layer immediately below the GSS transport filter, and may need another record-marking layer above the GSS transport filter, depending on the RPC protocol being used.  For example, if the protocol being used is <CODE>sunrpc</CODE>, an appropriate transport info list would be <CODE>{ "sunrpcrm", "gss_1_Xerox.ILU.GSS.NIL", "sunrpcrm", "tcp_0_0" }</CODE>.  For the CORBA <CODE>IIOP</CODE>, which does not need a record-marking layer below it, a suitable layering would be <CODE>{ "gss_1_Xerox.ILU.GSS.NIL", "sunrpcrm", "tcp_0_0" }</CODE>.
+<P>
+You will note that there are two parameters in the transport info string for the GSS transport filter, <CODE>"1"</CODE> and <CODE>"Xerox.ILU.GSS.NIL"</CODE>.  The first is the ILU version number of the GSS transport filter; the second identifies the security mechanism being used `behind' the GSS shell.  This security mechanism identifier is typically specified as a dotted-decimal representation for the ISO OID for that security mechanism.  For example, to specify the Kerberos 5 security mechanism, you would use the string <CODE>"1.3.5.1.5.2"</CODE>, which is the assigned OID for the Kerberos 5 security mechanism.  The GSS transport filter can recognize a small number of nicknames for security mechanisms (currently just <CODE>"Xerox.ILU.GSS.NIL"</CODE> and <CODE>"Xerox.ILU.GSS.SSL"</CODE>).  You should consult your GSS implementation to see what specific security mechanisms are supported, and what the ISO OIDs for them are.
+<P>
+When the client makes a call on an object exported via a secure channel, the client may have to provide an identity of its own, if the security mechanism selected by the true module requires one.  To do this, the client performs the same steps the true module went through:  calling the GSS to acquire credentials, and then calling the ILU kernel to create a passport containing a GSS identity.  The client passes the passport in a language specific way, when making the call.  For the ILU C bindings, the client should call <CODE><CODE>ILU_C_SetPassportContext</CODE></CODE>, before making the call.  If the object has been exported via a secure port, the first call on the object will result in the client address space negotiating a secure channel to the server address space, using the identities passed in by the client, and provided at port creation time by the server.  Subsequent calls on that object will use the same security context and identities.
+<P>
+In the true method code for an object exported via a secure channel, the GSS identity of the caller will be available in the <CODE>callerPassport</CODE> field of the <CODE>ILU_C_ENVIRONMENT</CODE> parameter for the call; in C, use the function <CODE><CODE>ILU_C_CallerIdentity</CODE></CODE> call to retrieve the caller's passport, then use the <CODE><CODE>ILU_C_FindIdentity</CODE></CODE> function to obtain a GSS identity from the passport, and the <CODE><CODE>ILU_C_DecodeGSSIdentity</CODE></CODE> function or the <CODE><CODE>ILU_C_DisplayIdentity</CODE></CODE> function to display it.  (Note that the <CODE><CODE>ILU_C_GSSNameToString</CODE></CODE> function is provided as a convenience.)  The true method can use this identity to do authorization, accounting, and other application-specific security functions.  If the security mechanism doesn't require an identity from the caller, the special GSS identity of <CODE>anonymous</CODE> (<CODE>"2.16.840.1.113687.1.2.1:&#60;* anonymous *&#62;"</CODE>) will be passed as the GSS identity for the caller.
+<P>
+<H3><A NAME="SEC506" HREF="manual_toc.html#SEC506">GSS Namespace Schemes</A></H3>
+<P>
+The GSS system allows many different namespace schemes to co-exist, though specific security mechanisms may require the use of specific namespace schemes.  As of release 2.0alpha13, the following namespace schemes are supported in ILU:
+<UL>
+<LI><KBD>anonymous</KBD> -- required by the GSS specification, this namespace scheme allows only a single name, for the anonymous identity.  The OID for this scheme is 2.16.840.1.113687.1.2.1.
+<LI><KBD>rfc822</KBD> -- allows names specified in simplified RFC 822 notation: <CODE>account@host</CODE>.  The OID for this namespace scheme is 1.2.840.113550.9.1.4.  The ILU GSS tranport filter also supports an alias for this namespace, <CODE>Xerox.ILU.GSS.RFC822</CODE>.
+<LI><KBD>x509</KBD> -- Uses X.509 identifiers as names.  The OID for this scheme is 1.2.840.113550.9.1.2.  The ILU GSS transport filter also supports an alias for this namespace, <CODE>Xerox.ILU.GSS.X509</CODE>.  <EM>This mechanism is not available in the freeware version of ILU, due to U. S. export control considerations.  Xerox users of ILU may apply to <CODE>ilu-core@parc.xerox.com</CODE> for a copy.</EM>
+</UL>
+<P>
+<H3><A NAME="SEC507" HREF="manual_toc.html#SEC507">GSS Security Schemes</A></H3>
+<P>
+The GSS system allows many different security schemes to co-exist.  As of release 2.0alpha13, the following security schemes are supported in ILU:
+<UL>
+<LI><KBD>nil</KBD> -- the NIL security scheme.  Though it exercises most parts of the GSS implementation, this scheme is not authenticated via strong cryptography, so provides no real security.  However, it does successfully transmit RFC 822 names through a negotiated context.  The OID for this scheme is 1.2.840.113550.9.1.3.  The ILU GSS transport filter also supports an alias for this namespace, <CODE>Xerox.ILU.GSS.NIL</CODE>.
+<LI><KBD>SSL</KBD> -- negotiates a security context using X.509 names and SSL-based security.  Uses strong cryptography to secure context.  Requires RSAREF and libdes.  The OID for this scheme is 1.2.840.113550.9.1.1.  The ILU GSS transport filter also supports an alias for this namespace, <CODE>Xerox.ILU.GSS.SSL</CODE>.  <EM>This security mechanism is not available in the freeware version of ILU, due to U. S. export control considerations.  Xerox users of ILU may apply to <CODE>ilu-core@parc.xerox.com</CODE> for a copy.</EM>
+</UL>
+<P>
+<P>Go to the <A HREF="manual_14.html">previous</A>, <A HREF="manual_16.html">next</A> section.<P>

@@ -1,0 +1,1321 @@
+<!-- This HTML file has been created by timdif2html 1.11
+     from manual.dif on 20 September 1999 -->
+
+<TITLE>ILU Reference Manual - Using ILU with Python</TITLE>
+<BODY TEXT=#000000 BGCOLOR=#ffffff>
+<P>Go to the <A HREF="manual_3.html">previous</A>, <A HREF="manual_5.html">next</A> section.<P>
+<H1><A NAME="SEC116" HREF="manual_toc.html#SEC116">Using ILU with Python</A></H1>
+<P>
+<A NAME="IDX314"></A>
+<H2><A NAME="SEC117" HREF="manual_toc.html#SEC117">Introduction</A></H2>
+This document is for the Python programmer who wishes to use 
+ILU. The following sections will show how ILU is
+mapped into Python constructs and how both Python
+clients and servers are generated and built.
+<P>
+<H2><A NAME="SEC118" HREF="manual_toc.html#SEC118">The ISL Mapping to Python</A></H2>
+<P>
+<A NAME="IDX315"></A>
+<H3><A NAME="SEC119" HREF="manual_toc.html#SEC119">Names</A></H3>
+In general, ILU constructs Python symbols from
+ISL names by replacing hyphens with underscores.
+For example, an ISL object type <CODE>T-1</CODE> would correspond to
+the Python class <CODE>T_1</CODE>.
+Any place an ISL name appears as part or all of a Python
+identifier, this translation occurs.
+<P>
+<H3><A NAME="SEC120" HREF="manual_toc.html#SEC120">Interface</A></H3>
+Each ISL <CODE>interface</CODE> <CODE><VAR>I</VAR></CODE>
+generates two Python modules:
+one named <CODE><VAR>I</VAR></CODE> containing common definitions,
+and another named <CODE><VAR>I</VAR>__skel</CODE> containing skeletons (server stubs).
+For example,
+<CODE>INTERFACE map-test;</CODE> generates the Python modules
+<CODE>map_test</CODE> and <CODE>map_test__skel</CODE>, contained in the files
+<TT>`map_test.py'</TT> and <TT>`map_test__skel.py'</TT>, respectively.
+<P>
+<H3><A NAME="SEC121" HREF="manual_toc.html#SEC121">Basic Types</A></H3>
+The basic ISL types have the following mapping to Python
+types:
+<P>
+<OL>
+<LI>
+BYTE,
+BOOLEAN,
+SHORT CHARACTER,
+CHARACTER,
+SHORT INTEGER,
+INTEGER,
+and SHORT CARDINAL
+all map to Python int.
+<LI>
+LONG INTEGER,
+CARDINAL,
+and LONG CARDINAL
+all map to Python long int.
+<LI>
+SHORT REAL
+and REAL
+map to Python float.
+<LI>
+LONG REAL
+maps to the Python type ilu_longreal, a type implemented by the
+ILU Python runtime.
+This type has limited functionality, but can be passed around without loss of
+precision, converted to float or int, and compared.
+A value of this type may be constructed by calling <CODE>ilu.LongReal()</CODE>.
+</OL>
+<P>
+<H4><A NAME="SEC122" HREF="manual_toc.html#SEC122">Constant</A></H4>
+ISL constants translate to
+Python variables initialized to the specified value.
+For example,
+<PRE>
+CONSTANT pi : real = 3.14159265358979323846;
+</PRE>
+maps to
+<PRE>
+pi = 3.14159265358979323846e0
+</PRE>
+<P>
+<H3><A NAME="SEC123" HREF="manual_toc.html#SEC123">Strings</A></H3>
+An ISL <CODE>SEQUENCE OF SHORT CHARACTER</CODE> maps into a Python
+string.  <CODE>SEQUENCE OF BYTE</CODE> is also mapped into a Python string.
+<P>
+<H3><A NAME="SEC124" HREF="manual_toc.html#SEC124">Pickles and Typecodes</A></H3>
+A value corresponding to the ISL type <CODE>PICKLE</CODE> is an instance
+of the Python class <CODE>ilu.Pickle</CODE>.  Instances of
+this class have the following methods:
+<P>
+<UL>
+<LI><CODE>typecode()</CODE> - returns the typecode of the pickle's value as a string.
+<LI><CODE>value()</CODE> - returns the Python form of the value in the pickle.
+<LI><CODE>bytes()</CODE> - the pickled bytes of the pickled value as a string.
+</UL>
+<P>
+The constructor for this class takes two arguments, <VAR>typecode</VAR> and <VAR>value</VAR>,
+and returns
+a new pickle containing the value specified by <VAR>value</VAR> of the ISL type
+specified by <VAR>typecode</VAR>.  Pickles may also be created by calling the constructor
+with a single argument string, which must be the result of an earlier call on the <CODE>bytes()</CODE>
+method of another pickle instance.
+<P>
+Typecodes are represented by the Python class <CODE>ilu.Typecode</CODE>.  Typecodes are constructed
+with a single string argument, 
+of the form <CODE>'<VAR>interface</VAR>.<VAR>type</VAR>'</CODE>, where
+<VAR>interface</VAR> is the ISL name for the interface, and <VAR>type</VAR> is the
+ISL name for the type.  Instances of the <CODE>Typecode</CODE> class support the method
+<P>
+<UL>
+<LI><CODE>id()</CODE> - return the ILU type ID (CORBA repository ID) for the typecode's type.
+<LI><CODE>name()</CODE> - return the ISL name of the typecode's type.
+</UL>
+<P>
+Note that typecodes for the built-in ILU types (<CODE>boolean</CODE>, <CODE>cardinal</CODE>, etc.) are available through
+this mechanism as well as typecodes for constructed types.  For example, the Python call
+<CODE>ilu.Typecode("ilu.cardinal")</CODE> will return the typecode for the ILU <CODE>cardinal</CODE>
+type.
+<P>
+<H3><A NAME="SEC125" HREF="manual_toc.html#SEC125">Constructed Types</A></H3>
+<P>
+<H4><A NAME="SEC126" HREF="manual_toc.html#SEC126">Enumeration</A></H4>
+Enumerations are mapped to a method-less class object which
+contains an attribute of the correct type and value for each
+value in the enumeration.
+The class also contains a dictionary, called "__image__", for each enumeration type
+that maps an enumeration value to a
+string corresponding to its Python enumeration value name.
+<P>
+For example,
+<PRE>
+TYPE color = ENUMERATION red, dark-blue END;
+</PRE>
+maps to
+<PRE>
+class color:
+    red = 0;
+    dark_blue = 1;
+    __image__ = {
+       red: 'red',
+       dark_blue: 'dark_blue'};
+</PRE>
+<P>
+<H4><A NAME="SEC127" HREF="manual_toc.html#SEC127">Array</A></H4>
+An ISL array maps into a Python list with the
+specified number of elements.
+Tuples as well as lists are accepted as input, but lists are always
+produced as output from ILU.
+Arrays of BYTE or SHORT CHARACTER are represented with Python strings.
+<P>
+<H4><A NAME="SEC128" HREF="manual_toc.html#SEC128">Sequence</A></H4>
+Sequences of BYTE or SHORT CHARACTER are represented as Python strings.
+<P>
+If your ILU system has been configured with
+<I>--enable-python-dictionaries</I>, sequence types matching a
+particular profile will be mapped to Python dictionaries.  The sequence
+type must have a name that ends with either "dict" or "Dict"; the base
+type of the sequence type must be a record type; the record type must
+have exactly two fields; the two fields must be named <CODE>name</CODE> and
+<CODE>value</CODE>, in that order; and the type of the <CODE>name</CODE> field must be either an
+integer, byte, string, or cardinal type.
+<P>
+All other ISL sequence types map into Python lists.
+Tuples as well as lists are accepted as input, but lists are always
+produced as output from ILU.
+<P>
+<H4><A NAME="SEC129" HREF="manual_toc.html#SEC129">Record</A></H4>
+ISL records map into generated Python classes with
+the same name, with the record's field names as attributes.  The name
+of the record becomes a constructor function which accepts exactly the
+same number of arguments as the record has fields, in the same order.
+<P>
+For example, a record value of the ISL type
+<PRE>
+TYPE segment = RECORD left-limit : integer, right-limit : integer END;
+</PRE>
+with a left-limit of -3 and a right-limit of 7 would map to
+<PRE>
+segment(-3, 7) =&#62; &#60;segment:{'left-limit' : -3, 'right-limit' : 7}&#62;
+</PRE>
+<P>
+<H4><A NAME="SEC130" HREF="manual_toc.html#SEC130">Union</A></H4>
+An ISL union maps into a Python tuple with two
+components:
+an integer discriminator, and the discriminated value.
+There are three possibilities:
+<OL>
+<LI>
+If the discriminator matches one of the union case values of an arm,
+the second component is of the type specified by that arm.
+<LI>
+If the discriminator matches no union case values and there is a default arm,
+the second component is of the type specified by the default arm.
+<LI>
+If the discriminator matches no union case values and there is no default arm
+but the union has the <CODE>OTHERS</CODE> attribute,
+the second component is <CODE>None</CODE>.
+</OL>
+<P>
+<H4><A NAME="SEC131" HREF="manual_toc.html#SEC131">Optional</A></H4>
+A value corresponding to the ISL type <CODE>OPTIONAL <VAR>T</VAR></CODE>
+may be <CODE>None</CODE> (indicating the null case) in addition to the values of the
+type <VAR>T</VAR>.
+<P>
+<H3><A NAME="SEC132" HREF="manual_toc.html#SEC132">Object Types</A></H3>
+Each ISL object type is mapped into a Python class.
+These classes have the methods specified in the ISL, as well as
+some built-ins.
+<P>
+<H4><A NAME="SEC133" HREF="manual_toc.html#SEC133">Surrogate and True Object Types</A></H4>
+<P>
+All surrogate object types inherit from <CODE>iluRt.IluObjSurr</CODE>, which in turn inherits
+from <CODE>iluRt.IluObject</CODE>.  True object types inherit from <CODE>IluRt.IluObjTrue</CODE>,
+which also inherits from <CODE>iluRt.IluObject</CODE>.  The method <CODE>IluTrueP()</CODE>
+will return a true value on true instances, and a false value on surrogate instances.
+The string binding handle of an
+object instance can be retrieved with the method <CODE>IluSBH()</CODE>.  The object-id of
+an instance can be retrieved with <CODE>IluObjectID()</CODE>; it returns a tuple containing
+a string server ID and a string instance-handle.  If support for the
+CORBA <CODE>IIOP</CODE> is configured into your ILU build, the 
+string IOR of an instance can be retrieved by calling the function <CODE>ilu.IOROfObject()</CODE>,
+passing the instance as the argument.  The type name of the most specific type of an instance
+can be retrieved with the method <CODE>IluTypeName()</CODE>; the unique ID of that type can
+be retrieve with the method <CODE>IluTypeID()</CODE>.
+<P>
+Object types which inherit from the ISL type <CODE>ilu.CORBA-Object</CODE> (which include
+all object types defined with OMG IDL), will inherit from the Python
+class <CODE><CODE>ilu.CORBA_Object</CODE></CODE>, which is the same as the class
+<CODE><CODE>CORBA.Object</CODE></CODE>.
+<P>
+<H4><A NAME="SEC134" HREF="manual_toc.html#SEC134">Methods, Parameters, and Exceptions</A></H4>
+<P>
+ISL methods of an object type map to Python methods
+of the corresponding class.
+<CODE>IN</CODE> and <CODE>INOUT</CODE> parameters appear in the Python method
+signature in the same order as they do in ISL.
+<P>
+Let us define a <EM>result</EM> value to be either
+a return value (corresponding to a method's return type) or
+an <CODE>INOUT</CODE> or <CODE>OUT</CODE> parameter.
+Result values are returned by the Python method as a tuple,
+with the return value (if present) appearing before any parameters.
+If the method has only one result value, then it is simply returned
+(i.e., a tuple of length one is <EM>not</EM> constructed to hold this value).
+If the method has no result values, then <CODE>None</CODE> is returned.
+<P>
+An ISL exception translates to a Python variable
+initialized with a string representing the exception.
+These variables are used in Python <CODE>raise</CODE> statements
+in object implementation code, and in <CODE>try ... except</CODE> statements
+in client code.
+For example, the declaration
+<PRE>
+EXCEPTION division-by-zero;
+</PRE>
+in the interface <CODE>map-test</CODE> maps to the following statement in
+<TT>`map_test.py'</TT>:
+<PRE>
+division = 'map-test: division-by-zero'
+</PRE>
+<P>
+<CODE>ASYNCHRONOUS</CODE> methods have no return values and raise no user-specified exceptions.
+They may return before the completion of the true method.  <CODE>FUNCTIONAL</CODE> methods
+that have no parameters are cached so that a surrogate address space makes only
+one call to the true address space to retrieve the return value.
+<P>
+<H4><A NAME="SEC135" HREF="manual_toc.html#SEC135">Garbage Collection and COLLECTIBLE</A></H4>
+<P>
+All instances of ILU object types are covered by the normal Python
+garbage collection; i.e., the application program must maintain a reference to the instance,
+or it will be garbage collected.  With true instances of COLLECTIBLE object types, the
+ILU kernel will maintain an additional reference to the instance as long as it
+has registered clients using that instance.
+<P>
+<H2><A NAME="SEC136" HREF="manual_toc.html#SEC136">Access to standard ILU features</A></H2>
+<P>
+<H3><A NAME="SEC137" HREF="manual_toc.html#SEC137">Servers and Ports</A></H3>
+<P>
+Each object exported by an implementation must belong to a true server,
+an instance of the Python type <CODE>ilu_Server</CODE> which is
+implemented by the ILU runtime.
+An <CODE>ilu_Server</CODE> can be created by calling the function
+<CODE>ilu.Server(serverID, port-info, objectTable, default?)</CODE>
+which returns a value of type <CODE>ilu_Server</CODE>.
+If <VAR>serverID</VAR> is a string, it specifies the server ID;
+if it is <CODE>None</CODE>, one will be invented automatically.
+The <VAR>port-info</VAR> is either <CODE>None</CODE>, in which case no
+<CODE>ilu_Port</CODE> will be created for the server, or a sequence of either
+two or three values.  The first value is always a string naming the protocol
+to use on the port, or may be <CODE>None</CODE> to indicate the default protocol.
+The second value is either a tuple of strings indicating the transport
+elements to use, or <CODE>None</CODE> to indicate the default transport stack.
+The third value, if provided, is a boolean value; if 'true', indicates that the port should be
+<I>private</I>, which means that it won't be advertised in the SBH of an object
+exported through this server.
+The <VAR>objectTable</VAR> argument is an object table for use with the
+server.  The <VAR>default?</VAR> argument, a boolean value, says whether or not to 
+make this server the default server.
+Additional ports
+can be added to a server with the <CODE><CODE>addPort()</CODE></CODE> method,
+if an application needs to make it available with via multiple protocols
+or addresses.
+<P>
+See the description of <CODE>ilu.Server</CODE> in the API reference for
+details of the methods available on an <CODE>ilu_Server</CODE> instance.
+<P>
+An older version of <CODE>ilu.Server</CODE>, called <CODE>ilu.CreateServer</CODE>
+is still available.  See the API reference for details.
+<P>
+The default server is used for an exported object if a server is not
+otherwise specified.
+If an object is exported before any servers have been created,
+one will be created automatically using default parameters and a message
+to that effect will be written to stderr.
+<P>
+<H4><A NAME="SEC138" HREF="manual_toc.html#SEC138">Object Tables</A></H4>
+<P>
+The <VAR>objectTable</VAR> argument to <CODE>ilu.Server</CODE> and <CODE>ilu.CreateServer</CODE>
+allows specification of a callback
+function for creating true instances on demand.  The callback function
+should take one argument, a string, which is the instance handle of the
+instance to be created, and return a true instance.
+<P>
+On the client side, surrogate instances may be created by calling
+<CODE>ilu.FindOrCreateSurrogate</CODE>.  The first call on this surrogate
+instance which attempts to communicate with the server will cause the object
+table to be invoked, and the true instance of the object to be created.
+<P>
+<H4><A NAME="SEC139" HREF="manual_toc.html#SEC139">Server Relocation</A></H4>
+<P>
+It is sometimes useful to have a `dummy' server, that will redirect any requests
+to it to a real server somewhere else.  This can be used for load balancing,
+automatic start-up of services, redirecting name service, code migration, and other
+various purposes.  ILU supports this via a mechanism called <I>server relocation</I>,
+which can be used in Python via the <CODE><CODE>setRelocator</CODE></CODE> method
+on the <CODE><CODE>ilu_Server</CODE></CODE> class.
+<P>
+<H3><A NAME="SEC140" HREF="manual_toc.html#SEC140">Threading and Event Loops</A></H3>
+<P>
+To use threads, you must have configured both ILU and Python with thread
+support when building them.  If you have done this, your ILU/Python runtime support
+will be thread-capable.  To have ILU begin using threads, place a call to the
+function <CODE>ilu.ThreadedOperation()</CODE> in your Python program before any other
+ILU calls are made.
+<P>
+<H4><A NAME="SEC141" HREF="manual_toc.html#SEC141">Animating Servers</A></H4>
+Running the ILU main loop
+by calling <CODE>ilu.RunMainLoop()</CODE>
+brings the true servers to life.
+This function does not return until <CODE>ilu.ExitMainLoop()</CODE> is called.
+If you are using ILU with <CODE>Tkinter</CODE>, you should
+import <CODE>ilu_tk</CODE> before creating a loop handle, or calling <CODE>RunMainLoop</CODE>.
+<CODE>ilu_tk</CODE> sets things up so that both Tk
+and ILU events are handled.
+<P>
+<H4><A NAME="SEC142" HREF="manual_toc.html#SEC142">Using Alarms</A></H4>
+In order to schedule a Python function to be called at a certain
+time in the future when executing the ILU main loop,
+an <CODE>ilu_Alarm</CODE> may be used.
+Objects of this type are created by calling <CODE>ilu.CreateAlarm()</CODE>.
+An <CODE>ilu_Alarm</CODE> must be set to have any effect.
+<P>
+The alarm's method <CODE>set(time, proc, args)</CODE> is used to set the alarm.
+The <CODE>int</CODE>, <CODE>float</CODE>, or <CODE>ilu_FineTime</CODE> <CODE>time</CODE> argument
+is the time at which the alarm will fire;
+the <CODE>proc</CODE> argument is the Python function that will be
+called when the alarm fires;
+and
+the <CODE>args</CODE> argument is a tuple of arguments to be passed to <CODE>proc</CODE>.
+The tuple <CODE>args</CODE> must match <CODE>proc</CODE>'s signature.
+For example, if <CODE>proc</CODE>
+is declared <CODE>def P(a, b):</CODE> then <CODE>args</CODE> must be a two-tuple.
+Likewise, if <CODE>proc</CODE> takes only one argument then <CODE>args</CODE> must be
+a one-tuple,
+or if no arguments then a zero-tuple.
+<P>
+The function <CODE>ilu.FineTime_Now()</CODE> may be called to obtain ILU's
+idea of the current time.
+A value <CODE>sec</CODE> of type <CODE>int</CODE> or <CODE>float</CODE> in units of seconds
+may be converted to type <CODE>ilu_FineTime</CODE> by calling
+<CODE>ilu.FineTime(sec)</CODE>.
+Values of type <CODE>ilu_FineTime</CODE> may be compared, added, and subtracted.
+These operations may be used to construct values representing any relative
+time (subject to precision and range limitations), which is what is needed
+by an alarm's <CODE>set</CODE> method.
+<P>
+The alarm may be set multiple times with different arguments, in which
+case the parameters of the most recent call to <CODE>set</CODE> are in effect.
+Thus, once an alarm fires, it may be reused by calling <CODE>set</CODE> again.
+<P>
+An alarm may be unset by calling its method <CODE>unset()</CODE>.
+<P>
+<H3><A NAME="SEC143" HREF="manual_toc.html#SEC143">Custom Records</A></H3>
+<P>
+ILU generally supports a facility named
+<I>custom records</I>.  This means that an application can declare that
+the language-specific mapping of a particular record type
+<VAR>ISL(A)</VAR> to <VAR>lang(A)</VAR> is to be overridden, and that
+instead a specific type <VAR>X</VAR> will be used in this language to
+represent values of <VAR>ISL(A)</VAR>.  In Python, this
+is done by simply replacing the generated class definition with a different
+class definition.
+<P>
+For example, suppose we had the ISL record type
+<PRE>
+INTERFACE Ifc;
+  ...
+TYPE Foo = RECORD color : RGB-tuple, position : XY-pair END;
+</PRE>
+The normal mapping of <CODE>Ifc.Foo</CODE> to Python would be to a class called <CODE>Foo</CODE>
+with the following definition:
+<PRE>
+class Foo (iluRt.IluRecord):
+    __ilu_type_name__ = 'Ifc.Foo'
+    def __init__(self, _color, _position)
+        self.color = _color;
+        self.position = _position;
+
+    def __getinitargs__(self):
+      return (self.color, self.position)
+</PRE>
+To override this, define a new class in your application that has matching
+signatures for <CODE>__init__</CODE> and <CODE>__getinitargs__</CODE>, and a matching
+value for <CODE>__ilu_type_name__</CODE>.  It must also inherit from <CODE>IluRt.IluRecord</CODE>.
+Then assign the class object for this new class to the symbol <CODE>Foo</CODE> in the
+Python module <CODE>Ifc</CODE>.  So:
+<PRE>
+class MyFoo (iluRt.IluRecord):
+    __ilu_type_name__ = 'Ifc.Foo'
+    def __init__(self, _color, _position):
+        self.color = _color
+        self.position = _position
+        self.some_other_attr = whatever_I_want
+        call_some_other_code(self)
+
+    def __getinitargs__(self):
+        return self.color, self.position
+
+    <I>...possible other methods...</I>
+
+Ifc.Foo = MyFoo
+</PRE>
+<P>
+<H3><A NAME="SEC144" HREF="manual_toc.html#SEC144">String Binding Handle Formation</A></H3>
+<P>
+To use object tables properly, it is usually necessary for a client program
+to create a surrogate instance for which the true instance does not yet exist.
+In Python, this is done by creating a string binding handle for
+the object, then calling <CODE><CODE>ilu.ObjectOfSBH()</CODE></CODE> on that SBH.
+String binding handles may be formed by calling the function <CODE><CODE>ilu.FormSBH()</CODE></CODE>.
+<P>
+<H3><A NAME="SEC145" HREF="manual_toc.html#SEC145">Simple Binding</A></H3>
+A true instance may be published with the simple binding service by calling its
+method <CODE>IluPublish()</CODE>.
+A true instance may be unpublished by calling its method <CODE>IluWithdraw()</CODE>.
+<P>
+A published ILU object may be obtained by calling
+<CODE>ilu.LookupObject(sid, ih, cl)</CODE>,
+where <CODE>sid</CODE> is object's server's server ID, <CODE>ih</CODE>
+is the object's instance handle, and <CODE>cl</CODE> is its class.
+<P>
+<H3><A NAME="SEC146" HREF="manual_toc.html#SEC146">Principal Identities and Passports</A></H3>
+<P>
+An ILU passport (see section <A HREF="manual_15.html#SEC498">Security</A>) is represented in
+Python by an instance of the <CODE><CODE>ilu_Passport</CODE></CODE>
+object type.  Instances of this type can be obtained by calling
+<CODE><CODE>ilu.CreatePassport()</CODE></CODE>.  Please see the documentation
+of that function for more information on the abilities of this object type.
+<P>
+The passport of the caller may be obtained in the true method by calling
+the ILU runtime routine <CODE>ilu.CallerIdentity()</CODE>.
+The `native' passport may be obtained by calling <CODE><CODE>ilu.GetPassport()</CODE></CODE>.
+In the case of a local call, these two passports may be the same object.
+Passports are thread-local; that is, an application may use a different passport
+in each thread.
+<P>
+<H2><A NAME="SEC147" HREF="manual_toc.html#SEC147">Building Python/ILU Applications</A></H2>
+<P>
+<H3><A NAME="SEC148" HREF="manual_toc.html#SEC148">Stub Generation</A></H3>
+To generate Python stubs from an ISL file,
+use the program <CODE>python-stubber</CODE>.
+Two files are generated from each ISL
+<CODE>INTERFACE <VAR>name</VAR></CODE>:
+<UL>
+<LI>
+<TT>`<VAR>name</VAR>.py'</TT> containing code for constants, exceptions,
+and types defined in the interface,
+and
+<LI>
+<TT>`<VAR>name</VAR>__skel.py'</TT> containing code for the skeletons
+(server stubs) for object types defined in the interface.
+</UL>
+<P>
+Alternatively, for surrogate-side use the stubber can be run automatically
+by a hook in the <CODE>ilu</CODE> module.  Calling <CODE><CODE>ilu.AutoImport()</CODE></CODE>
+will establish the stubber as part of the normal Python <CODE>import</CODE>
+machinery, and will cause <TT>`.isl'</TT> and <TT>`.idl'</TT> files in directories on your <CODE>ILUPATH</CODE>
+environment variable path to be automatically stubbed and loaded.
+<P>
+<H4><A NAME="SEC149" HREF="manual_toc.html#SEC149">Command-line Options</A></H4>
+<P>
+The program <CODE>python-stubber</CODE> supports the following options:
+<UL>
+<LI><CODE>-I <VAR>directory</VAR></CODE> -- add <VAR>directory</VAR> to the list of directories to search for interface definition files.  Note that the <VAR>directory</VAR> must be separated from the <CODE>-I</CODE> with whitespace, unlike the convention for C compilers.
+<LI><CODE>-dir <VAR>directory</VAR></CODE> -- put output files in <VAR>directory</VAR>.  Will attempt to create <VAR>directory</VAR> with <CODE>"mkdir <VAR>directory</VAR>"</CODE> if not already present.
+<LI><CODE>-quiet</CODE> -- run without normal output to stderr.
+<LI><CODE>-stub</CODE> -- generate the <TT>`<VAR>name</VAR>.py'</TT> file.
+<LI><CODE>-skel</CODE> -- generate the <TT>`<VAR>name</VAR>__skel.py'</TT> file.
+<LI><CODE>-removefirst</CODE> -- for generated files, remove file before generating a new version of the file.
+</UL>
+<P>
+If neither <CODE>-stub</CODE> nor <CODE>-skel</CODE> is specified, both files are produced.  However, if either is explicitly specified, only those specified will be produced.
+<P>
+<H3><A NAME="SEC150" HREF="manual_toc.html#SEC150">Implementing an ILU module in Python</A></H3>
+A Python module that implements ILU objects of types
+defined in <CODE>INTERFACE <VAR>I</VAR></CODE>
+also imports from <CODE><VAR>I</VAR>__skel</CODE>.
+This gives access to the skeleton classes from which implementation classes
+inherit.
+<P>
+<H4><A NAME="SEC151" HREF="manual_toc.html#SEC151">Implementation Inheritance</A></H4>
+An implementation of object type <VAR>T</VAR> from interface <VAR>I</VAR>
+needs to inherit from the class <CODE><VAR>I</VAR>__skel.<VAR>T</VAR></CODE>.
+If there is inheritance in the ISL, and an implementation of a
+subtype wants to inherit from an implementation of a supertype,
+the skeleton class must be appear in the list of base types
+before the implementation class.
+<P>
+For example, objects for the ISL
+<PRE>
+INTERFACE j;
+
+TYPE c1 = OBJECT METHODS one() END;
+TYPE c2 = OBJECT METHODS two() END;
+TYPE c3 = OBJECT SUPERTYPES c1, c2 END METHODS three() END;
+</PRE>
+could be implemented in Python by
+<PRE>
+import ilu, j, j__skel
+
+class c1(j__skel.c1):
+    def one(self):
+        ...
+
+class c2(j__skel.c2):
+    def two(self):
+        ...
+
+class c3(j__skel.c3, c1, c2):
+    def three(self):
+        ...
+</PRE>
+In this case <CODE>c3</CODE>'s method <CODE>one</CODE> is implemented by <CODE>c1.one</CODE>
+and 
+<CODE>c3</CODE>'s method <CODE>two</CODE> is implemented by <CODE>c2.two</CODE>.
+<P>
+<H4><A NAME="SEC152" HREF="manual_toc.html#SEC152">Exporting Objects</A></H4>
+An object can be exported in one of three ways:
+<OL>
+<LI>
+The object's string binding handle may be obtained by calling its
+method <CODE>IluSBH()</CODE> and communicating this somehow to a client,
+who then turns the handle back into an object by calling
+<CODE>ilu.ObjectOfSBH(cl, sbh)</CODE>.
+<LI>
+The object may be published using the simple binding service
+by calling its method <CODE>IluPublish()</CODE>.
+In order for this to be effective, the object must have a well-known
+object ID, or the object ID must be communicated to clients, so clients can
+know what to pass to <CODE>ilu.LookupObject</CODE>.
+The object ID is a function of the object's instance handle and
+its server's server ID.
+<LI>
+The object may be returned by a method or passed back in a method's
+<CODE>INOUT</CODE> or <CODE>OUT</CODE> parameter.
+</OL>
+<P>
+An object's instance handle can be controlled by setting the
+instance variable <CODE>IluInstHandle</CODE> before the object is first exported.
+If this instance variable is not set, and instance handle will be
+invented automatically.
+<P>
+An object's server can be controlled by setting the instance or class variable
+<CODE>IluServer</CODE> to a value of type <CODE>ilu_Server</CODE>.
+The value of this variable at the time an object is first exported will be
+used as the server for that object.
+If such a variable is not set, the default server is used.
+<P>
+<H3><A NAME="SEC153" HREF="manual_toc.html#SEC153">Using an ILU module in Python</A></H3>
+The ILU runtime interface is in the Python module
+<CODE>ilu</CODE>.
+Python definitions for ISL
+<CODE>INTERFACE <VAR>I</VAR></CODE> are in the Python module
+<CODE><VAR>I</VAR></CODE>.
+As with any other modules in Python, these modules are imported
+using the <CODE>import</CODE> statement.
+<P>
+A client program may create an ILU object in one of three ways:
+<OL>
+<LI>
+Knowing the string binding handle <CODE>sbh</CODE> and class <CODE>cl</CODE> of an
+object,
+call <CODE>ilu.ObjectOfSBH(cl, sbh)</CODE> which returns an instance of that class.
+For example, to obtain an instance of ISL type <CODE>square</CODE> from
+<CODE>INTERFACE shapes</CODE>
+whose string binding handle is <CODE>sbh</CODE>,
+one would call <CODE>ilu.ObjectOfSBH(shapes.square, sbh)</CODE>.
+<LI>
+Knowing the object ID <CODE>(sid, ih)</CODE> and class <CODE>cl</CODE> of an object that
+has been published using the simple binding service,
+call <CODE>ilu.LookupObject(sid, ih, cl)</CODE> which returns an instance of that class
+(or <CODE>None</CODE> if the lookup fails).
+<LI>
+Receive an instance as a result value from a method call that returns an
+object type or has an object type as an <CODE>INOUT</CODE> or <CODE>OUT</CODE> parameter.
+</OL>
+<P>
+<H3><A NAME="SEC154" HREF="manual_toc.html#SEC154">CORBA Support in Python</A></H3>
+<P>
+This release of ILU has several nods to an eventual CORBA mapping
+for the Python language.  The Python <CODE>CORBA</CODE> module
+contains support for the classes <CODE><CODE>CORBA::ORB</CODE></CODE>
+and <CODE><CODE>CORBA::Object</CODE></CODE>, and the <CODE><CODE>CORBA::ORB_init()</CODE></CODE> function.
+See the Python/ILU API Reference for more information on these.
+<P>
+<H3><A NAME="SEC155" HREF="manual_toc.html#SEC155">Freezing a Python Application Containing ILU</A></H3>
+<P>
+<PRE>
+From: "Martin v. Loewis" &#60;loewis@informatik.hu-berlin.de&#62;
+Subject: Freezing ILU
+Date: Fri, 13 Mar 1998 07:54:30 PST
+
+I currently try to freeze a Python application that uses ILU. With ILU
+building libilupython, this is already simple. It would be even
+simpler if ILU installed a file Setup in the library directory with
+the contents
+
+  iluPr -L/usr/ilu-2.0a12/lib -lilupython -lilu
+
+(Of course, it could contain comments :-) This tells makesetup that
+the iluPr module is available by linking ilupython and python to the
+freezed image. With this installation, I can freeze my application
+with the command line
+
+  PYTHONPATH=/usr/ilu-2.0a12/lib python -O freeze/freeze.py
+        -o outdir -e /usr/ilu-2.0a12/lib myscript.py
+
+Of course, /usr/ilu-2.0a12 has to be replaced with the actual
+ILUHOME/lib in both cases. For the Setup file, needs to be done prior
+to the installation.
+
+Regards,
+Martin
+</PRE>
+<P>
+The file <TT>`<VAR>ILUHOME</VAR>/lib/Setup'</TT> exists in this distribution, so it should be possible
+to `freeze' a Python image containing ILU with the commands
+<P>
+<PRE>
+% <STRONG>python -O freeze/freeze.py -o outdir -e ${ILUHOME}/lib myscript.py</STRONG>
+</PRE>
+<P>
+assuming that <TT>`myscript.py'</TT> contains your Python program, and that <TT>`<VAR>ILUHOME</VAR>/lib'</TT>
+is on your <CODE>PYTHONPATH</CODE> environment variable.
+<P>
+<H3><A NAME="SEC156" HREF="manual_toc.html#SEC156">Python/ILU Environment Variables</A></H3>
+<P>
+A number of environment variables are consulted by the ILU Python support.
+The environment variables <CODE>ILUPATH</CODE> and <CODE>ILUPATH_NO_ILUHOME</CODE> are significant to the Python stubber.  They collectively define a set of directories to be appended to the interface search path given on the relevant tool's command line.  If <CODE>ILUPATH</CODE> is not defined, <TT>`.'</TT> and <TT>`<VAR>ILUHOME</VAR>/interfaces'</TT> are appended.  If <CODE>ILUPATH</CODE> is defined, it should contain a colon-separated list of directories.  That list will then be used, with an appended -- unless <CODE>ILUPATH_NO_ILUHOME</CODE> is defined (with any value) -- by <TT>`<VAR>ILUHOME</VAR>/interfaces'</TT>.
+<P>
+The Python language runtime supports the standard CORBA method <CODE>CORBA::ORB::list_initial_services()</CODE>.  If the environment variable <CODE>ILU_COS_NAMING_IOR</CODE> is set to the IOR of a CosNaming service, ILU will offer the <CODE>NameService</CODE> service, using that IOR to access the service.
+<P>
+During execution, ILU can experience three kinds of internal error conditions:  assertion failures, memory allocation failures, and `check' failures (similar to an assertion failure).  What it does when any of these three are experienced can be set, in the Python runtime, by setting the environment variables <CODE>ILU_ASSERTION_FAILURE_ACTION</CODE>, <CODE>ILU_MEMORY_FAILURE_ACTION</CODE>, and <CODE>ILU_CHECK_FAILURE_ACTION</CODE> to an integer value, which is then used to set the respective ILU kernel failure mode.  See <TT>`<VAR>ILUSRC</VAR>/runtime/kernel/iluxport.h'</TT> for the documentation of which integer codes are appropriate for <CODE>ilu_SetAssertionFailureAction()</CODE>, <CODE>ilu_SetMemFailureAction()</CODE>, and <CODE>ilu_SetCheckFailureAction()</CODE>.
+<P>
+Also during execution, the Python import mechanism is augmented by default with an additional module loader which will load support for ILU ISL or OMG IDL interfaces found on the <CODE>ILUPATH</CODE> environment variable directly into Python.  Automatic enabling of this mechanism can be defeated by setting the environment variable <CODE>ILU_PYTHON_DISABLE_AUTOIMPORT</CODE> to any value before loading the ILU module into Python.  In addition, setting the variable <CODE>ILU_PYTHON_IMPORT_VERBOSE</CODE> will cause the auto-import mechanism to print status messages when loading an interface.
+<P>
+<H2><A NAME="SEC157" HREF="manual_toc.html#SEC157">Python/ILU API Reference</A></H2>
+<P>
+<H3><A NAME="SEC158" HREF="manual_toc.html#SEC158">Identifiers Exported From Module <CODE>ilu</CODE></A></H3>
+<P>
+<A NAME="IDX316"></A>
+<A NAME="IDX317"></A>
+<U>Function:</U> <B>AutoImport</B> <I>([<VAR>path</VAR>=() [<VAR>verbose</VAR>=0]])</I><P>
+<P>
+If called, enables the auto-loading of <TT>`.isl'</TT> and, if OMG IDL support is
+configured into ILU, <TT>`.idl'</TT>, files that are on the user's <CODE>ILUPATH</CODE>
+environment variable.  The <CODE>python-stubber</CODE> program is run to generate the
+Python surrogate stubs for the interface description into a temporary directory, and those stubs are
+loaded into the current program.  The stubber is re-run every time the interface is imported.
+If an error occurs while producing the Python stubs, an exception is raised
+and the import process stops.  The <VAR>path</VAR> parameter has no effect; the
+<VAR>verbose</VAR> parameter will cause various messages to be written to the
+standard output during the process of importing, if set to a non-false value.
+<P>
+<A NAME="IDX318"></A>
+<A NAME="IDX319"></A>
+<U>Function:</U> <B>CallerIdentity</B> <I>()</I><P>
+<P>
+Returns the passport containing identities of the caller.  This routine is only valid inside the code of a true method.
+<P>
+<A NAME="IDX320"></A>
+<A NAME="IDX321"></A>
+<U>Constant:</U> <B>CORBAMapping</B><P>
+<P>
+A value which evaluates to Python boolean True if the CORBA mapping for Python has been selected, and False if the `classic' ILU mapping has been selected.
+<P>
+<A NAME="IDX322"></A>
+<A NAME="IDX323"></A>
+<U>Function:</U> <B>CreateAlarm</B> <I>()</I><P>
+<P>
+Creates an object of type <CODE>ilu_Alarm</CODE>.
+<P>
+<A NAME="IDX324"></A>
+<A NAME="IDX325"></A>
+<U>Function:</U> <B>CreateLoopHandle</B> <I>()</I><P>
+<P>
+Creates and returns an instance of a "loop handle" object, which can
+be passed to <CODE>ilu.RunMainLoop</CODE> and <CODE>ilu.ExitMainLoop()</CODE>.
+<P>
+<A NAME="IDX326"></A>
+<A NAME="IDX327"></A>
+<A NAME="IDX328"></A>
+<U>Function:</U> <B>CreatePassport</B> <I>()</I><P>
+<P>
+Creates and returns an empty instance of a <CODE><CODE>ilu_Passport</CODE></CODE> object.
+The <CODE><CODE>ilu_Passport</CODE></CODE> object is used to provide a sense of identity
+in the ILU system.  It can hold any number of different identities,
+each of which is represented with an appropriate data structure that varies
+from identity type to identity type.
+<P>
+The <CODE><CODE>ilu_Passport</CODE></CODE> object type has the following methods:
+<UL>
+<LI><CODE><CODE>lookupIdentity (<VAR>IDENTITY-TYPE-NAME</VAR>)</CODE></CODE> - returns
+the data structure for the specified identity, if the passport contains one;
+Returns <CODE>None</CODE> otherwise.  Raises <CODE>ilu.IluGeneralError</CODE> if the
+named identity type does not exist.  The identity type <CODE><CODE>'ConnectionIdentity'</CODE></CODE>
+is always supported; the identity type <CODE><CODE>'SunRPCAuthUnixIdentity'</CODE></CODE>
+will be supported if support for the <CODE>sunrpc</CODE> protocol has been configured
+into ILU.
+<LI><CODE><CODE>addSunRPCAuthUnix (<VAR>HOSTNAME</VAR>, <VAR>UID</VAR>, <VAR>GID</VAR>, <VAR>TUPLE-OF-GROUPS</VAR>)</CODE></CODE> -
+adds an identity of type <CODE><CODE>'SunRPCAuthUnixIdentity'</CODE></CODE> to the passport
+with the specified <VAR>HOSTNAME</VAR>, <VAR>UID</VAR>, <VAR>GID</VAR>, and <VAR>TUPLE-OF-GROUPS</VAR>.
+See Appendix A of RFC 1831 at <A HREF="http://info.internet.isi.edu:80/in-notes/rfc/files/rfc1831.txt"><TT>http://info.internet.isi.edu:80/in-notes/rfc/files/rfc1831.txt</TT></A> for details on the meaning of these parameters.  This method will only be available if support for
+the <CODE>sunrpc</CODE> protocol has been configured into ILU.
+</UL>
+<P>
+<A NAME="IDX329"></A>
+<A NAME="IDX330"></A>
+<A NAME="IDX331"></A>
+<U>Function:</U> <B>CreatePipeline</B> <I>()</I><P>
+<P>
+Creates and returns an empty instance of a <CODE><CODE>ilu_Pipeline</CODE></CODE> object.
+The <CODE><CODE>ilu_Pipeline</CODE></CODE> object is used to allow
+multiple requests to be outstanding on non-concurrent protocol streams.
+The <CODE><CODE>ilu_Pipeline</CODE></CODE> object has no methods.
+<P>
+<A NAME="IDX332"></A>
+<A NAME="IDX333"></A>
+<A NAME="IDX334"></A>
+<U>Function:</U> <B>CreateServer</B> <I>( [serverID [transport [protocol [objtable]]]] )</I><P>
+<P>
+This function is obsolete; you should use <CODE>ilu.Server</CODE> instead.
+<P>
+Used to create an <CODE>ilu_Server</CODE> object with the specified
+serverID, transport, and protocol.
+If <VAR>serverID</VAR> is unspecified or <CODE>None</CODE>, an identifier will be invented automatically.
+If transport or protocol are unspecified or <CODE>None</CODE>, they will default to
+<CODE>('sunrpcrm', 'tcp_0_0')</CODE> and <CODE>'sunrpc'</CODE>, respectively.  (Other combinations that
+would work are transport of <CODE>('tcp_0_0')</CODE> and protocol of <CODE>'iiop_1_0_1'</CODE>,
+transport of <CODE>('sunrpcrm', 'tcp_0_0')</CODE> and protocol of <CODE>'courier'</CODE>, and
+transport of <CODE>('tcp_0_0')</CODE> and protocol of <CODE>'http'</CODE>,
+depending on the configuration of your ILU system.)
+The first time <CODE><CODE>CreateServer</CODE></CODE> is called, the server so created becomes
+the default server.
+If there is no default server when one is required, one will be created
+using default parameters and a message will be issued on stderr.
+The <VAR>objtable</VAR> argument allows specification of a callback
+function for creating true instances on demand.  The callback function
+should take one argument, a string, which is the instance handle of the
+instance to be created, and return a true instance.
+<P>
+See the description of <CODE>ilu.Server</CODE> for a description of the methods
+available on the <CODE>ilu_Server</CODE> object.
+<P>
+<A NAME="IDX335"></A>
+<A NAME="IDX336"></A>
+<U>Function:</U> <B>DefaultServer</B> <I>()</I><P>
+<P>
+Returns the default server.
+<P>
+<A NAME="IDX337"></A>
+<A NAME="IDX338"></A>
+<U>Constant:</U> <B>DictionaryPassing</B><P>
+<P>
+A value which evaluates to Python boolean True if the configuration option <I>--enable-python-dictionaries</I> has been selected, and False otherwise.  That is, this is True if certain sequence types are mapped to Python dictionaries.
+<P>
+<A NAME="IDX339"></A>
+<A NAME="IDX340"></A>
+<U>Function:</U> <B>DoSoon</B> <I>(<VAR>FUNCTION</VAR>, <VAR>ARGS-TUPLE</VAR>, <VAR>STRING-DESCRIPTION</VAR>)</I><P>
+<P>
+Causes the function <VAR>FUNCTION</VAR> to be run with args <VAR>ARGS-TUPLE</VAR>
+to be run at some point in the future, when the system finds it to be convenient.
+In the threaded world, a new thread is forked to run the function; in the non-threaded
+world, the function is executed at some point by the event loop as a background
+task.
+<P>
+<A NAME="IDX341"></A>
+<A NAME="IDX342"></A>
+<U>Function:</U> <B>ExitMainLoop</B> <I>(loophandle)</I><P>
+<P>
+Exits the ILU main loop, assuming it is running.  The <VAR>loophandle</VAR>
+is created by a call to <CODE>ilu.CreateLoopHandle()</CODE>, and must have been
+previously used as an argument to a call to <CODE>ilu.RunMainLoop()</CODE>.
+<P>
+<A NAME="IDX343"></A>
+<A NAME="IDX344"></A>
+<U>Constant:</U> <B>FALSE</B><P>
+<P>
+A value which evaluates to Python boolean False.
+<P>
+<A NAME="IDX345"></A>
+<A NAME="IDX346"></A>
+<U>Function:</U> <B>FindOrCreateSurrogate</B> <I>(server, instance_handle, class)</I><P>
+<P>
+Creates a new surrogate instance of class <VAR>class</VAR> with <CODE>ilu.Server</CODE> <VAR>server</VAR>,
+and instance handle <VAR>instance_handle</VAR>.  This is often used in clients in conjunction
+with an object table on the server.
+<P>
+<A NAME="IDX347"></A>
+<A NAME="IDX348"></A>
+<U>Function:</U> <B>FineTime</B> <I>(seconds)</I><P>
+<P>
+Converts its <CODE>int</CODE> or <CODE>float</CODE> argument <VAR>seconds</VAR> in units of seconds
+to type <CODE>ilu_FineTime</CODE>.
+Objects of this type can be compared, added, subtracted, and converted to
+<CODE>int</CODE> or <CODE>float</CODE>.
+The main use of objects of this type is in setting alarms.
+<P>
+<A NAME="IDX349"></A>
+<A NAME="IDX350"></A>
+<U>Function:</U> <B>FormSBH</B> <I>(sid, ih, type, pinfo, tinfo_vec)</I><P>
+<P>
+Forms a valid ILU string binding handle from the arguments and returns it.
+The <VAR>sid</VAR> and <VAR>ih</VAR> arguments are strings containing the server ID and
+instance handle for the desired instance.
+The <VAR>type</VAR> argument should be the Python class for the most specific
+object type of the desired object.  The <VAR>pinfo</VAR> argument is a tuple containing
+the protocol information describing the object implementation's preferred communication
+protocol.  The <VAR>tinfo_vec</VAR> argument is a tuple of tuples, specifying the transport
+stack needed to connect to the implementation.  Each sub-tuple in the <VAR>tinfo_vec</VAR>
+is a tuple describing a particular transport layer.
+<P>
+For instance, to create a string binding handle for an instance of type <CODE>Foo.Bar</CODE>,
+with server id <CODE>"some-server-id"</CODE> and instance handle <CODE>"some-instance-handle"</CODE>,
+exported via <CODE>Sun RPC</CODE>, version 2, with program number 1000007, version 3, via <CODE>TCP/IP</CODE>
+from host <CODE>"foobar.somewhere.com"</CODE>, port 3456, we'd say<BR>
+<CODE>sbh = ilu.FormSBH('some-server-id', 'some-instance-handle', Foo.Bar,<BR>
+('sunrpc_2', 1000007, 3), (('sunrpcrm',), ('tcp', 'foobar.somewhere.com', 3456)))</CODE><BR>
+Note the comma used after <CODE>'sunrpcrm'</CODE> to create a true tuple; note also that use of this procedure requires some specialized knowledge, such as knowing that use of <CODE>Sun RPC</CODE> also requires use of the <CODE>Sun RPC</CODE> record-marking transport layer when used over <CODE>TCP/IP</CODE>.
+<P>
+<A NAME="IDX351"></A>
+<A NAME="IDX352"></A>
+<U>Constant:</U> <B>FineTimeRate</B><P>
+<P>
+The precision of type <CODE>ilu_FineTime</CODE> in seconds is the reciprocal of
+this constant.
+<P>
+<A NAME="IDX353"></A>
+<A NAME="IDX354"></A>
+<U>Function:</U> <B>FineTime_Now</B> <I>()</I><P>
+<P>
+Returns the current time as an <CODE>ilu_FineTime</CODE> object.
+<P>
+<A NAME="IDX355"></A>
+<A NAME="IDX356"></A>
+<U>Function:</U> <B>FormSBH</B> <I>(objectID, contactInfo)</I><P>
+<P>
+Returns the string binding handle corresponding to the
+object id <VAR>objectID</VAR>
+and contact info <VAR>contactInfo</VAR>.
+This is the inverse of <CODE><CODE>ParseSBH</CODE></CODE>.
+<P>
+<A NAME="IDX357"></A>
+<A NAME="IDX358"></A>
+<U>Function:</U> <B>GetFDBudget</B> <I>()</I><P>
+<P>
+Returns the current setting of the file descriptor budget.
+<P>
+<A NAME="IDX359"></A>
+<A NAME="IDX360"></A>
+<U>Function:</U> <B>GetPassport</B> <I>()</I><P>
+<P>
+Returns the current passport for this thread.  See also <CODE><CODE>CreatePassport()</CODE></CODE> and <CODE><CODE>SetPassport()</CODE></CODE>.
+<P>
+<A NAME="IDX361"></A>
+<A NAME="IDX362"></A>
+<U>Function:</U> <B>GetPipeline</B> <I>()</I><P>
+<P>
+Returns the current pipeline context for this thread.  See also <CODE><CODE>CreatePipeline()</CODE></CODE> and <CODE><CODE>SetPipeline()</CODE></CODE>.
+<P>
+<A NAME="IDX363"></A>
+<A NAME="IDX364"></A>
+<U>Function:</U> <B>GetSerializer</B> <I>()</I><P>
+<P>
+Returns the current serialization context for this thread.  See also the <CODE><CODE>createSerializer()</CODE></CODE> method on the <CODE><CODE>ilu_Server</CODE></CODE> class, and the <CODE><CODE>SetSerializer()</CODE></CODE> function.
+<P>
+<A NAME="IDX365"></A>
+<A NAME="IDX366"></A>
+<U>Exception:</U> <B>IluGeneralError</B><P>
+<P>
+An exception that may be returned from the ILU runtime.
+This exception is used to return all `standard' exceptions, with
+a string value to indicate the specific type of standard
+exception that occurred.
+<P>
+<A NAME="IDX367"></A>
+<A NAME="IDX368"></A>
+<U>Exception:</U> <B>IluProtocolError</B><P>
+<P>
+An exception that may be returned from the ILU runtime.
+This exception is raised for all on-the-wire exceptions,
+with a value that indicates which kind of protocol exception
+occurred.
+<P>
+<A NAME="IDX369"></A>
+<A NAME="IDX370"></A>
+<U>Exception:</U> <B>IluUnimplementedMethodError</B><P>
+<P>
+An exception that may be returned from the ILU runtime.
+Raised when an unimplemented method is called, typically
+on a true instance.
+<P>
+<A NAME="IDX371"></A>
+<A NAME="IDX372"></A>
+<U>Exception:</U> <B>IluUnknownTypeIDError</B><P>
+<P>
+An exception that may be raised from the ILU runtime.
+It indicates that the associated type ID value is unknown in
+this address space.
+<P>
+<A NAME="IDX373"></A>
+<A NAME="IDX374"></A>
+<U>Function:</U> <B>IOROfObject</B> <I>(obj)</I><P>
+<P>
+If the <CODE>IIOP</CODE> protocol has been configured in, returns the string IOR
+of the object, as specified in the CORBA 2 IIOP specification.  If
+the <CODE>IIOP</CODE> protocol has not been configured in, throws an
+error.
+<P>
+<A NAME="IDX375"></A>
+<A NAME="IDX376"></A>
+<U>Function:</U> <B>LongReal</B> <I>(v)</I><P>
+<P>
+Converts its <CODE>int</CODE>, <CODE>float</CODE>, or sixteen-integer <CODE>list</CODE> or
+<CODE>tuple</CODE> argument to type <CODE>ilu_LongReal</CODE>.
+In case of a list or tuple, the elements encode the bytes of the
+IEEE long real value, from most significant to least.
+<P>
+<A NAME="IDX377"></A>
+<A NAME="IDX378"></A>
+<U>Function:</U> <B>LookupObject</B> <I>(sid, ih, cl)</I><P>
+<P>
+Returns the object with object server ID <VAR>sid</VAR>, object instance handle <VAR>ih</VAR>,
+and Python class <CODE>cl</CODE>,
+assuming it was previously published using the simple binding service.
+If the lookup fails, <CODE>None</CODE> is returned.
+<P>
+<A NAME="IDX379"></A>
+<A NAME="IDX380"></A>
+<U>Function:</U> <B>ObjectOfSBH</B> <I>(cl, sbh)</I><P>
+<P>
+Returns the object corresponding to the Python class <VAR>cl</VAR>
+and string binding handle <VAR>sbh</VAR>.
+<P>
+<A NAME="IDX381"></A>
+<A NAME="IDX382"></A>
+<U>Function:</U> <B>ParseSBH</B> <I>(sbh)</I><P>
+<P>
+Returns the pair (object id, contact info) corresponding to the string
+binding handle <VAR>sbh</VAR>.
+<P>
+<A NAME="IDX383"></A>
+<A NAME="IDX384"></A>
+<U>Function:</U> <B>RegisterCustomSurrogate</B> <I>(class)</I><P>
+<P>
+Registers <VAR>class</VAR> as the object type to create when receiving a surrogate of the
+type indicated by the <CODE>_IluClass</CODE> field of <VAR>class</VAR>.  <VAR>class</VAR> must
+be a subtype of the default surrogate type for this ILU type.  This allows custom
+surrogates, with implications for caching and other object-type-specific functions.
+<P>
+<A NAME="IDX385"></A>
+<A NAME="IDX386"></A>
+<U>Function:</U> <B>RegisterInputHandler</B> <I>(file, handler_fn)</I><P>
+<P>
+Sets up an association between the <VAR>file</VAR> (which must be a file object
+opened for reading), and the <VAR>handler_fn</VAR> (which must be a callable function
+with no arguments) so that <VAR>handler_fn</VAR> is called whenever input is available
+on <VAR>file</VAR>.  This is useful for implementing a server that also responds
+to commands typed to its standard input, for example.  Passing a value of
+<CODE>None</CODE> for the <VAR>handler_fn</VAR> removes the association.  This
+procedure should only be used in non-threaded applications.  In threaded applications,
+you should fork a thread to handle this, instead.
+<P>
+<A NAME="IDX387"></A>
+<A NAME="IDX388"></A>
+<U>Function:</U> <B>RegisterOutputHandler</B> <I>(file, handler_fn)</I><P>
+<P>
+Sets up an association between the <VAR>file</VAR> (which must be a file
+object opened for writing), and the <VAR>handler_fn</VAR> (which must be
+a callable function with no arguments) so that <VAR>handler_fn</VAR> is
+called whenever input is available on <VAR>file</VAR>.  Passing a value
+of <CODE>None</CODE> for the <VAR>handler_fn</VAR> removes the association.
+<P>
+<A NAME="IDX389"></A>
+<A NAME="IDX390"></A>
+<U>Function:</U> <B>RunMainLoop</B> <I>(loophandle)</I><P>
+<P>
+Runs the ILU main loop.  The argument <VAR>loophandle</VAR> is a "handle" on that loop invocation,
+created by a call to <CODE>ilu.CreateLoopHandle()</CODE>.  This function can be used with either threaded
+or non-threaded use of ILU/Python.  In the threaded use, it simply runs <CODE>sleep.sleep</CODE> in the
+calling thread.
+<P>
+<A NAME="IDX391"></A>
+<A NAME="IDX392"></A>
+<A NAME="IDX393"></A>
+<U>Function:</U> <B>Server</B> <I>( serverID cinfo objtable useAsDefault? )</I><P>
+<P>
+Used to create an <CODE>ilu_Server</CODE> object with the specified
+serverID, transport, and protocol.
+If <VAR>serverID</VAR> is unspecified or <CODE>None</CODE>, an identifier will be invented automatically.
+If <VAR>cinfo</VAR> is <CODE>None</CODE>, only an <CODE>inmem</CODE> port will be created for the server.
+Otherwise, <VAR>cinfo</VAR> should be a tuple containing either two or three values, controlling the
+characteristics of the port created for the server.  The first value
+is the protocol to use.  If specified as <CODE>None</CODE>, the default protocol will be used.
+The second value is a tuple of strings specifying the transport stack.  If specified as <CODE>None</CODE>,
+the default transport stack will be used.  The optional third value is a boolean; if True, it
+specifies that the port created will be <I>private</I>, meaning that it will not be advertised
+in the cinfo of objects exported through this server.  If omitted, it defaults to False.
+The <VAR>objtable</VAR> argument allows specification of a callback
+function for creating true instances on demand.  The callback function
+should take one argument, a string, which is the instance handle of the
+instance to be created, and return a true instance.
+If <VAR>useAsDefault?</VAR> is True, the server will become the default server.
+<P>
+An <CODE>ilu_Server</CODE> object has the following methods:
+<UL>
+<LI><CODE><CODE>id ()</CODE></CODE> - returns the string identifier of that server.
+<LI><CODE><CODE>addPort (<VAR>TRANSPORT</VAR>, <VAR>PROTOCOL</VAR> [, <VAR>PRIVATE?</VAR>])</CODE></CODE> - adds
+a port with the specified <VAR>TRANSPORT</VAR> and <VAR>PROTOCOL</VAR> (described above) to the
+server instance.  If <VAR>PRIVATE?</VAR> is specified as True, the port created will be
+private; otherwise, it will be public.
+<LI><CODE><CODE>createSerializer ()</CODE></CODE> - creates and returns a new serialization
+context object.
+<A NAME="IDX394"></A>
+<LI><CODE><CODE>setRelocator (<VAR>RELOCATOR-FUNCTION</VAR>)</CODE></CODE> - sets the relocation
+procedure of the server to be <VAR>RELOCATOR-FUNCTION</VAR>.  <VAR>RELOCATOR-FUNCTION</VAR>
+should be a function with no arguments, that returns either <CODE>None</CODE>, or a tuple
+with two elements.  If it returns the two-element tuple, the first element should be
+a string specifying pinfo as in the arguments to <CODE>CreateServer</CODE>, and the
+second argument should be a tuple of tinfo, again as in the arguments to <CODE>CreateServer</CODE>.
+<LI><CODE><CODE>nativeCInfo ([ PRIVATE? ])</CODE></CODE> - returns a tuple containing the protocol
+and transport info for the first port of the server.  If <VAR>PRIVATE?</VAR> is specified,
+the first private port will be used; otherwise the first public port will be used.
+If no cinfo is available for the server, <CODE>None</CODE> will be returned.
+<LI><CODE><CODE>addCInfo (PINFO, TINFO)</CODE></CODE> - adds the specified <VAR>PINFO</VAR> and
+<VAR>TINFO</VAR> to the connection information for the port.  This can be used to
+override the natural connection information for a server.
+</UL>
+<P>
+<A NAME="IDX395"></A>
+<A NAME="IDX396"></A>
+<U>Function:</U> <B>SetCalloutExceptionHandler</B> <I>(handler-fn)</I><P>
+<P>
+This function can be used to define a function <VAR>handler-fn</VAR> which is called when an internal Python
+exception is signalled in code called from the ILU C code.  The handler function receives
+four arguments:  a string indicating where in the ILU runtime the exception was encountered, the exception
+type, the exception value, and a traceback object.  This function is typically used to note the exception
+to a file or stderr; see the example usage in <TT>`<VAR>ILUSRC</VAR>/runtime/python/iluRt.py'</TT>.  If a parameter
+of <CODE>None</CODE> is passed to <CODE>SetCalloutExceptionHandler</CODE>, it cancels any handler function in use,
+and a default built-in one is used.
+<P>
+<A NAME="IDX397"></A>
+<A NAME="IDX398"></A>
+<U>Function:</U> <B>SetDebugLevel</B> <I>(flags-or-switches)</I><P>
+<P>
+Sets the ILU kernel debugging flags according to its <CODE>int</CODE>
+argument, if an int is specified, or via the colon-separated list of
+debug switches, if a string is specified.  See the Debugging section of the
+ILU Manual for more information on these switches.
+<P>
+<A NAME="IDX399"></A>
+<A NAME="IDX400"></A>
+<U>Function:</U> <B>SetFDBudget</B> <I>(desiredbudget)</I><P>
+<P>
+Attempts to set the file descriptor budget.  Returns what the new budget actually is (may be different than requested).
+<P>
+<A NAME="IDX401"></A>
+<A NAME="IDX402"></A>
+<U>Function:</U> <B>SetMainLoop</B> <I>(DoEvent, RegisterInput, CancelInput, RegisterOutput, CancelOutput, CreateAlarm, SetAlarm, CancelAlarm)</I><P>
+<P>
+The purpose of this function is to be able to use a foreign main loop
+(such as for a user interface toolkit)
+with an ILU server.
+The details will not be described here.
+Look at the runtime module <CODE><CODE>ilu_tk</CODE></CODE> for an example of its use.
+This function should only be used with non-threaded use of ILU/Python.
+<P>
+<A NAME="IDX403"></A>
+<A NAME="IDX404"></A>
+<U>Function:</U> <B>SetPassport</B> <I>(passport)</I><P>
+<P>
+Sets the current passport identity for this thread, and returns the passport active before this call.
+Either of these can be <CODE>None</CODE>.  Also see the function <CODE><CODE>CreatePassport</CODE></CODE>,
+and the function <CODE><CODE>GetPassport</CODE></CODE>.
+<P>
+<A NAME="IDX405"></A>
+<A NAME="IDX406"></A>
+<U>Function:</U> <B>SetPipeline</B> <I>(pipeline)</I><P>
+<P>
+Sets the current pipelining context for this thread, and returns the context active before this call.
+Either of these can be <CODE>None</CODE>.  Also see the function <CODE><CODE>CreatePipeline</CODE></CODE>,
+and the function <CODE><CODE>GetPipeline</CODE></CODE>.
+<P>
+<A NAME="IDX407"></A>
+<A NAME="IDX408"></A>
+<U>Function:</U> <B>SetSerializer</B> <I>(serializer)</I><P>
+<P>
+Sets the current serialization context for this thread, and returns the context active before this call.
+Either of these can be <CODE>None</CODE>.  Also see the <CODE><CODE>createSerializer</CODE></CODE> method on
+the class <CODE><CODE>ilu_Server</CODE></CODE>, and the function <CODE><CODE>GetSerializer</CODE></CODE>.
+<P>
+<A NAME="IDX409"></A>
+<A NAME="IDX410"></A>
+<U>Function:</U> <B>TCPDefaultBufferSize</B> <I>(size)</I><P>
+<P>
+Sets the default buffer sized used for TCP/IP transport buffers to <VAR>size</VAR>.
+Returns the previous default buffer size.  Raises <CODE><CODE>IluGeneralError</CODE></CODE>
+if support for the TCP/IP transport is not configured into ILU.
+<P>
+<A NAME="IDX411"></A>
+<A NAME="IDX412"></A>
+<U>Function:</U> <B>TCPStatistics</B> <I>(*reset)</I><P>
+<P>
+Returns a dictionary containing the current TCP/IP statistics for this process.
+If a True value is specified for the optional argument, the statistics counters are reset.
+If TCP/IP support is not configured into ILU, this routine will
+raise the exception <CODE><CODE>IluGeneralError</CODE></CODE>.
+<P>
+<A NAME="IDX413"></A>
+<A NAME="IDX414"></A>
+<U>Function:</U> <B>ThreadedOperation</B> <I>()</I><P>
+<P>
+Enables thread use in both the ILU kernel and the ILU/Python runtime.  This routine should be called
+before any other ILU calls are made.
+<P>
+<A NAME="IDX415"></A>
+<A NAME="IDX416"></A>
+<U>Constant:</U> <B>TRUE</B><P>
+<P>
+A value which evaluates to Python boolean True.
+<P>
+<A NAME="IDX417"></A>
+<A NAME="IDX418"></A>
+<U>Function:</U> <B>TypeID</B> <I>(cl)</I><P>
+<P>
+Returns the ILU unique type identifier
+corresponding to the Python class <VAR>cl</VAR>.
+<P>
+<A NAME="IDX419"></A>
+<A NAME="IDX420"></A>
+<U>Function:</U> <B>TypeName</B> <I>(cl)</I><P>
+<P>
+Returns the ILU type name
+corresponding to the Python class <VAR>cl</VAR>.
+<P>
+<A NAME="IDX421"></A>
+<A NAME="IDX422"></A>
+<U>Constant:</U> <B>Version</B><P>
+<P>
+The ILU version string.
+<P>
+<H3><A NAME="SEC159" HREF="manual_toc.html#SEC159">Identifiers Exported from the <CODE>CORBA</CODE> Module</A></H3>
+<P>
+<A NAME="IDX423"></A>
+<A NAME="IDX424"></A>
+<U>Variable:</U> <B>InitialReferences</B><P>
+A dictionary with string keys, and values of type <CODE><CODE>CORBA.Object</CODE></CODE>.
+It is used to resolve strings passed as parameters to <CODE><CODE>CORBA.ORB.resolve_initial_references()</CODE></CODE>.
+The following names are supported automatically by Python runtime:
+<UL>
+<LI><B>NameService</B><BR>
+If the environment variable <CODE>ILU_COS_NAMING_IOR</CODE> is bound to a string IOR
+for a OMG IDL <CODE>CosNaming::NamingContext</CODE> object instance,
+the Python runtime will attempt to create a surrogate for that
+instance locally, ping it, and if successful will bind it to the string <CODE>"NameService"</CODE>.
+</UL>
+<P>
+<A NAME="IDX425"></A>
+<A NAME="IDX426"></A>
+<U>Exception:</U> <B>InvalidName</B><P>
+Raised when an invalid name is passed to <CODE><CODE>CORBA.ORB.resolve_initial_references()</CODE></CODE>.
+Has the associated bad name as its value.
+<P>
+<A NAME="IDX427"></A>
+<A NAME="IDX428"></A>
+<U>Class:</U> <B>Object</B> <I>(ilu.IluObjSurr)</I><P>
+A type which all object types defined in OMG IDL, or inheriting
+from <CODE>ilu.CORBA-Object</CODE> in ISL, participate in.  It supports
+the following methods:
+<UL>
+<LI><CODE>_is_a(<VAR>type_uid</VAR>)</CODE> - returns <CODE>True</CODE> if the object is
+of the specified type, <CODE>False</CODE> otherwise; raises <CODE>ilu.IluUnknownTypeIDError</CODE>
+if the <VAR>type_uid</VAR> is unknown in this address space;
+<A NAME="IDX430"></A>
+<A NAME="IDX429"></A>
+<LI><CODE>_is_nil()</CODE> - returns <CODE>False</CODE>; raises <CODE>TypeError</CODE> if called
+via <CODE><CODE>CORBA.Object._is_nil()</CODE></CODE> on a non-Python-object type;
+<A NAME="IDX432"></A>
+<A NAME="IDX431"></A>
+<LI><CODE>_non_existent()</CODE> - returns the logical inverse of the result of calling
+<CODE>ilu.PingObject()</CODE> on the object;
+<A NAME="IDX434"></A>
+<A NAME="IDX433"></A>
+<LI><CODE>_is_equivalent(<VAR>other</VAR>)</CODE> - returns the result of comparing
+<VAR>self</VAR> and <VAR>other</VAR> with the Python <CODE>==</CODE> operator;
+<A NAME="IDX436"></A>
+<A NAME="IDX435"></A>
+<A NAME="IDX437"></A>
+<A NAME="IDX438"></A>
+<LI><CODE>_duplicate()</CODE> - does nothing, returns <VAR>self</VAR>;
+<A NAME="IDX439"></A>
+<A NAME="IDX440"></A>
+<LI><CODE>_release()</CODE> - does nothing, returns nothing;
+<A NAME="IDX441"></A>
+<A NAME="IDX442"></A>
+<LI><CODE>_hash(<VAR>max_value</VAR>)</CODE> - returns <CODE>(hash(<VAR>self</VAR>) % (<VAR>max_value</VAR> + 1))</CODE>;
+<A NAME="IDX443"></A>
+<A NAME="IDX444"></A>
+<LI><CODE>_get_implementation()</CODE> - raises <CODE><CODE>IluUnimplementedMethodError</CODE></CODE>;
+<A NAME="IDX445"></A>
+<A NAME="IDX446"></A>
+<LI><CODE>_get_interface()</CODE> - raises <CODE><CODE>IluUnimplementedMethodError</CODE></CODE>;
+</UL>
+The <CODE><CODE>CORBA.Object</CODE></CODE> class is actually implemented in <CODE><CODE>iluRt.CORBA_Object</CODE></CODE>,
+so all classes which inherit from <CODE><CODE>ilu.CORBA_Object</CODE></CODE> will have access to these
+methods.
+<P>
+<A NAME="IDX447"></A>
+<A NAME="IDX448"></A>
+<U>Class:</U> <B>ORB</B><P>
+The general class for manipulating the object request broker.  There is typically
+only one instance of this class per address space.  It is retrieved with the
+function <CODE><CODE>CORBA.ORB_init()</CODE></CODE>; it supports the following methods:
+<UL>
+<LI><CODE>object_to_string(<VAR>instance</VAR>)</CODE> - returns
+a string which can be used in a subsequent <CODE><CODE>string_to_object()</CODE></CODE> call;
+<A NAME="IDX449"></A>
+<LI><CODE>string_to_object(<VAR>string</VAR>)</CODE> - if the specified <VAR>string</VAR>
+is well formed and specifies an object, the object is created locally and a reference is returned; the
+reference may be to a true instance if the string names a true instance; if the string
+is poorly formed, the Python exception <CODE><CODE>ilu.IluGeneralError</CODE></CODE>
+is raised.  This method does not test for the existence of the instance.
+<A NAME="IDX450"></A>
+<LI><CODE>resolve_initial_references(<VAR>string</VAR>)</CODE> - If the
+<VAR>string</VAR> argument is bound in the dictionary <CODE><CODE>CORBA.InitialReferences</CODE></CODE>,
+the value is returned.  Otherwise, the exception <CODE><CODE>CORBA.InvalidName</CODE></CODE> is raised.
+See the documentation of <CODE><CODE>CORBA.InitialReferences</CODE></CODE> for a listing of the
+names that are bound automatically, if any.
+<A NAME="IDX451"></A>
+</UL>
+<P>
+<A NAME="IDX452"></A>
+<A NAME="IDX453"></A>
+<U>Function:</U> <B>ORB_init</B> <I>(<VAR>argv</VAR>=(), <VAR>orb_id</VAR>='ilu')</I><P>
+Returns an instance of <CODE><CODE>CORBA.ORB</CODE></CODE> with the specified <VAR>orb_id</VAR> (currently
+only the ORB ID <CODE>'ilu'</CODE> is supported).  The arguments which may be passed
+in via <VAR>argv</VAR> are ignored.
+<P>
+<H3><A NAME="SEC160" HREF="manual_toc.html#SEC160">Methods and Attributes of ILU Objects</A></H3>
+<P>
+<UL>
+<LI>
+<CODE>IluObjectID()</CODE> returns the object ID of the object.
+<A NAME="IDX454"></A>
+<LI>
+<CODE>IluPublish()</CODE> publishes the object using the simple binding service.
+<A NAME="IDX455"></A>
+<LI>
+<CODE>IluSBH()</CODE> returns the object's string binding handle.
+<A NAME="IDX456"></A>
+<LI>
+<CODE>IluTypeID()</CODE> returns the unique type identifier of the
+object's ILU type.
+<A NAME="IDX457"></A>
+<LI>
+<CODE>IluTypeName()</CODE> returns the type name of the object's ILU type.
+<A NAME="IDX458"></A>
+<LI>
+<CODE>IluWithdraw()</CODE> undoes the effect of IluPublish().
+<A NAME="IDX459"></A>
+</UL>
+<P>
+Special attributes of ILU true objects:
+One or more of the following attributes may be set in a
+true (implementation) object of an ISL object type
+to control certain aspects of that object.
+<P>
+<UL>
+<LI>
+<CODE>IluInstHandle</CODE>, a string instance variable,
+gives the object's instance handle.
+If not present, an instance handle is invented automatically.
+<A NAME="IDX460"></A>
+<LI>
+<CODE>IluServer</CODE>, a variable of type <CODE>ilu_Server</CODE>,
+determines the object's server.
+This can be an instance or a class variable.
+If not present, the default server is used.
+<A NAME="IDX461"></A>
+</UL>
+<P>
+<P>Go to the <A HREF="manual_3.html">previous</A>, <A HREF="manual_5.html">next</A> section.<P>

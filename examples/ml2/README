@@ -1,0 +1,75 @@
+README for the "ml2" interface example.
+
+[ $Id: README,v 1.3 1999/08/03 01:59:17 janssen Exp $
+ BeginILUCopyright
+
+ Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+ Unlimited use, reproduction, modification, and distribution of this
+ software and modified versions thereof is permitted.  Permission is
+ granted to make derivative works from this software or a modified
+ version thereof.  Any copy of this software, a modified version
+ thereof, or a derivative work must include both the above copyright
+ notice of Xerox Corporation and this paragraph.  Any distribution of
+ this software, a modified version thereof, or a derivative work must
+ comply with all applicable United States export control laws.  This
+ software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+ WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+ LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+ EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+ NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+ OF THE POSSIBILITY OF SUCH DAMAGES.
+
+ EndILUCopyright ]
+
+This example illustrates how to use ILU to make a C++ library
+accessible from either Python or Java.  We describe an interface to
+the C++ library in test.isl, implement some "glue" code which glues
+the libraries functionality to the true side of the interface in C++,
+and implement a simple Python module for it with pyGlue.c, or a Java
+module with strlen.java.  The "library" is just the strlen function
+from the standard library, but this could be extended to be
+arbitrarily complicated, if desired.  In addition, this approach
+can also be used with Lisp or other ILU languages.
+
+To successfully build this example, you must have configured ILU so
+that any libraries used by C++, but not normally present in your
+Python or Java executables, are specified with the
+--with-cplusplus-libs=LIBS switch.  The exact value of LIBS will vary
+from system to system (and even on a single system, from C++ compiler
+to compiler).  You may have to do some research to figure out the
+correct setting.
+
+To build:
+
+% ilumkmf
+% make
+[ a variety of output ]
+% 
+
+Here's how to try it from Python.  Make sure that your PYTHONPATH
+includes the directory $(ILUHOME)/lib.
+
+% python testprog.py one two three
+The length of "one" is 3L
+The length of "two" is 3L
+The length of "three" is 5L
+% 
+
+Here's how to try it from Java.  Make sure that your LD_LIBRARY_PATH
+includes both the current working directory, and $(ILUHOME)/lib, and
+that your CLASSPATH includes both the appropriate ILU setting
+($(ILUHOME)/lib/ilu.jar for 1.2) and the current working directory,
+along with whatever else is necessary for your Java.
+
+% java testprog one two three
+loading ILU runtime for Java...
+loading strlen library...
+successfully accessed Strlen object test.StrlenStub:ilu-oi@e8fa51c6<1bc100>(e8e251c6)...
+length of "one" is 3
+length of "two" is 3
+length of "three" is 5
+% 
+

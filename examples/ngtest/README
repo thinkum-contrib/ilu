@@ -1,0 +1,498 @@
+README for the "ngtest" example.
+[ $Id: README,v 1.11 1999/08/03 01:58:08 janssen Exp $
+ BeginILUCopyright
+
+ Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+ Unlimited use, reproduction, modification, and distribution of this
+ software and modified versions thereof is permitted.  Permission is
+ granted to make derivative works from this software or a modified
+ version thereof.  Any copy of this software, a modified version
+ thereof, or a derivative work must include both the above copyright
+ notice of Xerox Corporation and this paragraph.  Any distribution of
+ this software, a modified version thereof, or a derivative work must
+ comply with all applicable United States export control laws.  This
+ software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+ WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+ LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+ EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+ NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+ OF THE POSSIBILITY OF SUCH DAMAGES.
+
+ EndILUCopyright ]
+
+
+The 2 programs in "ngtest" are used to test and demonstrate the use of 
+HTTP-NG in ILU. 
+
+nggetbot is a robot program for retrieving urls.
+ngwebserver is a simple webserver program.
+
+These programs are fairly brute force implementations.  The current 
+implementation is essentially just what's needed to perform HTTP-NG
+Project Phase 1 testing.
+
+
+
+********************************************************************
+ngwebserver
+********************************************************************
+
+
+Implemented Methods
+===================
+
+The ngwebserver program provides the interfaces (except data sink) found 
+in the HTTP-NG Web interfaces Draft.  Although many of the methods found 
+in the draft are not yet implemented in ngwebserver, ngwebserver does serve 
+as an implementation starting point for a complete implementation.  
+
+Method implementations for an interface X, are contained in a file whose 
+root name has the suffix x_webserv_impl.
+
+Methods that are currently unimplemented print out a message
+to that effect (using ilu_DebugPrintf), and then cause an access violation
+(core dump).
+
+Implementations currently provided are :
+
+    iluhttp Resource: 
+	    Get Head and Post
+
+    NgDocument WebDocument : 
+	    GetAvailableRenderings, GetRendering, SendRendering, SendRenderingSynched 
+
+    NgStream DataSource : 
+	    Abort, Pause, Resume, Resend, SuggestChunkSize
+
+
+
+ILU Servers and Object IDs
+==========================
+
+ngwebserver currently creates 5 ILU servers in which true objects reside.
+All ILU server names are suffixed with '.', the hostname and the value of
+the command line argument -suffix, which defaults to parc.xerox.com.
+The assignment of object types to ILU servers is as follows:
+
+
+HTTPServer - serves iluhttp : Resource Objects
+----------------------------------------------
+
+In this server, object id's for iluhttp.Resource objects are expected to
+begin with a /.  The native content for the object is then taken to
+be contained in the file denoted by ngwebserver's filebase (see -filebase
+command line argument), prepended to the instance id.  If the instance id
+is simply /, then ngwebserver treats this as /index.html
+
+A port on HTTPServer is created using the protocol specified by the 
+-httppinfo command line argument (typically one of http_1_0, http_1_0p or 
+http_1_1(default)), and the transport specified by the -httptinfo command
+line argument (default tcp_0_80)
+
+
+
+
+DocumentServer - serves NgDocument : WebDocument PutableWebDocument HTTPCompatibleWebDocument
+FormServer     - serves NgFormProcessor : FormProcessor
+PropertyServer - serves NgProperty : PropertySet PutablePropertySet
+StreamServer   - serves NgStream : DataSource
+----------------------------------------------------------------------------
+
+In these servers, object id's for the served objects are expected to
+begin with a the object type name followed by a colon, e.g. WebDocument:
+
+[In DocumentServer however, the instance handle can be just WebDocument: 
+or just / to indicate the 'default' document.  In DocumentServer, Instance 
+handles that don't begin with the object type name : are implicitly assumed to 
+be WebDocuments -- this allows the WebDocument: part of the instance handle
+to be omitted for WebDocument object types. ]
+
+Native content for the object is then taken to be contained in the file 
+denoted by ngwebserver's filebase (see -filebase command line argument), 
+followed by a /, followed by the remainder (after the typename:) of the 
+object id.
+
+The ports opened on these servers are opened with the protocol specified by
+the -ngpinfo command line argument default w3ng_1.0.  The transport info
+used on these ports is specified by the combination of the two command line
+arguments -ngtinfo (default w3mux_16_NGWebServerEndpoint) and -ngport, the 
+tcp port to start making ng servers with, (default 2718).
+
+If -ngtinfo contains w3mux_X_Y (where X is a number and Y is an endpoint), 
+and -ngport is Z, then the ports are opened as follows
+
+	DocumentServer - Mux channel X, TCP port Z
+	FormServer     - Mux channel X + 1, TCP port Z
+	PropertyServer - Mux channel X + 2, TCP port Z
+	StreamServer   - Mux channel X + 3, TCP port Z
+
+If If -ngtinfo does not contain a w3mux component, and -ngport is Z, then the ports
+are opened as follows:
+	DocumentServer - TCP port Z
+	FormServer     - TCP port Z + 1
+	PropertyServer - TCP port Z + 2
+	StreamServer   - TCP port Z + 3
+
+
+
+
+Method specifics
+================
+
+
+GET and HEAD or POST methods on iluhttp Resource objects
+---------------------------------------------------------
+
+HTTP request headers  are ignored - that is, there is no
+cache control, no mime type checking, etc. -- a very simple
+implementation. 
+
+HTTP response headers returned typically include Data, Server, Content-Length, 
+Last-Modified, and Content-Type.
+
+
+iluhttpresponse files
+
+GET and HEAD or POST methods on iluhttp Resource objects treat any file that 
+ends with the extension 'iluhttpresponse' (e.g. redirect.iluhttpresponse) 
+as a file containing precisely what the http response should contain for 
+GET and HEAD or POST requests. This capability is useful for experimenting 
+with various http situations.  The line format of an .iluhttpresponse file is:
+
+	HTTP_Status_Number
+	Number_of_headers
+	headername: optional_headervalue
+	...
+	headername: optional_headervalue
+	body_bytes
+
+For example, a file redirect.iluhttpresponse might contain
+
+	302
+	2
+	Location: http://pundit.parc.xerox.com/foo.html
+	Content-Length: 62
+	<a href=http://pundit.parc.xerox.com/foo.html>New Location</a>
+
+
+
+GetAvailableRenderings, GetRendering, SendRendering, SendRenderingSynched methods
+on NgDocument WebDocument
+-----------------------------------------------------------------------------
+	    
+GetAvailableRenderings - basically does all it needs to.
+
+GetRendering, SendRendering, SendRenderingSynched - basically do
+what they should (check, preferences, ranges, etc.) except they completely
+ignore encoding preference and all CacheControl.
+
+
+Abort, Pause, Resume, Resend, SuggestChunkSize on NgStream DataSource
+---------------------------------------------------------------------
+
+These methods do all they really should, with the exception of 
+setting up Cache control.
+
+
+
+ngwebserver usage
+=================
+
+
+A typical startup line
+	Assuming the files to be served are rooted at
+		/opt/local/larner/http-ng/serverdocs
+	Assuming http requests are to be served off port 8080
+is:
+
+ngwebserver -filebase /opt/local/larner/http-ng/serverdocs -logfile stdout -verbose 1 -httptinfo tcp_0_8080
+
+You can make ngwebserver to stop and print out it tcp stats:
+	On Unix,  by sending it an INT signal, e.g. kill -INT 5158 where 5158 is its process id.
+	On Win32 just type control C at it.
+
+
+Usage:  ngwebserver [-httppinfo (http_1_0 | http_1_0p | http_1_1)]
+                     [-httptinfo tinfo]
+                     [-ngpinfo pinfo]
+                     [-ngtinfo tinfo]
+                     [-ngport portnum]
+                     [-batch period]
+                     [-filebase pathname]
+                     [-suffix serversuffix]
+                     [-fdbudget budget]
+                     [-logfile filename]
+                     [-verbose level]
+        -httppinfo - protocol for iluhttp.Resource, typically one of http_1_0, http_1_0p or http_1_1(default)
+        -httptinfo - transport for iluhttp.Resource - default tcp_0_80
+        -ngpinfo   - protocol for non http ports - default w3ng_1.0
+        -ngtinfo   - transports over tcp for non http ports - default w3mux_16_NGWebServerEndpoint
+        -ngport    - tcp port to start making ng servers with, default 2718
+        -batch     - use ILU Batching, period in microseconds
+        -filebase  - root location of where server files are stored - default \htmldocs
+        -suffix    - string used as suffix to ILU server names - default .parc.xerox.com
+        -fdbudget  - ILU file descriptor budget - defaults to ILU's default
+        -logfile   - name of logfile where verbose output goes - default stdout
+        -verbose   - output to stdout information about what's going,
+                     level 0 = nothing, 1 = summary, 2 = basic, 3 = full - default 0
+
+
+
+
+
+********************************************************************
+nggetbot
+********************************************************************
+
+The primary function of the nggetbot program is to exercise the calls related
+to getting Renderings, and perform timing measurements in doing so.  
+Parts of it are also used in conjunction with 
+SURGE and the Microsoft Explorer HTTP-NG plug-in-protocol example.
+
+A single URL whose rendering is to be retrieved can be specified on the
+command line.  Altenatively, one can supply the name of a file containing 
+a list of urls (see URL Files section).
+
+A URL is first tested to see if it represents a NgDocument WebDocument
+object.  If so, GetRendering (or SendRendering if the -sink command line
+argument is specified) is called on it.  
+
+Next it is tested to see if it is an iluhttp Resource object.  If so,
+GET is called on it.  Usually, the returned rendering is simply
+discarded, but through use of the -file argument, the rendering can be
+written to a file (not possible when using -sink however).
+
+The -r command line argument can be used to cause a URL's rendering
+to be retrieved more than once.
+
+The -mt X comand line argument specifies that X worker threads should
+be used to retrieve the renderings.  Each worker thread works on 
+one URL at a time.  
+
+Specifying -pipeline and -serial command line arguments will cause 
+a single connection to be used to reach the server.  Without
+these you'll typically end up with as many connections to the
+server as you have worker threads.
+
+Using -batch X will cause requests to be batched, and only flushed
+every X microseconds.
+
+
+
+
+
+Implemented Methods
+===================
+
+The nggetbot does implement some true objects - NgRendering RenderingSink
+objects that are used when retrieving renderings using the streaming
+approach (nggetbot command line argument -sink).  These RenderingSink
+objects reside in an ILU server named nggetbot.StreamServer, suffixed with 
+'.', the hostname and the value of the command line argument -suffix, 
+which defaults to parc.xerox.com.  This server has a port that uses the
+protocol and transport as specified by the -ngpinfo -ngtinfo, and
+-ngport command line arguments.  The default will be w3ng , w3mux_16_NGGetbotEndpoint
+tcp_0_2728.
+
+
+Methods that are currently unimplemented print out a message
+to that effect (using ilu_DebugPrintf), and then cause an access violation
+(core dump).
+
+The RenderingSink implements the following methods:
+
+	RegisterSourceControl - (nggetbot never actually makes calls to the source control though)
+	Done
+	RenderingProblem 
+	ReceiveRendering 
+	ReceiveRenderingChunk
+
+
+
+
+
+
+
+nggetbot usage
+==============
+
+
+A typical startup line 
+	Gets all the urls listed in the file 
+		/opt/local/larner/http-ng/ngtesturls/mscapeinsightng.urls
+	Runs with a pool of 5 worker threads
+	Retrieves each url 5 times
+	Shows summary timing
+	Writes it output to stdout
+	Uses ILU pipeline, batching with a 50 msec timeout and serialization
+is:
+
+nggetbot -urls /opt/local/larner/http-ng/ngtesturls/mscapeinsightng.urls -mt 5 -r 5 -v 2 -logfile stdout -pipeline -batch 50000 -serial
+
+
+NOTE: by default, nggetbot is built using a 'pool' of worker threads approach.
+Undefine THREAD_POOL in nggetbot.c and rebuild if you want a new thread for every 
+request, as opposed to a pool of worker threads.
+
+
+Usage:  nggetbot -url url | -urls urlFilename  [-mt maxthreads] [-v level]
+        [-r repeat] [-pipeline] [-batch period] [-serial] [-httppinfo (http_1_0 | http_1_0p | http_1_1)]
+        [-httptinfo tinfo] [-file bodyfilename] [-ngpinfo pinfo] [-ngtinfo tinfo] [-ngport portnum]
+        [-filebase pathname] [-suffix serversuffix] [-fdbudget budget] [-logfile logfilename] [-sink]
+Note: For Http_1_1 Pipelining behavior, use -pipeline, -serial, and -batch
+
+        -url        url of object to do Get on
+        -urls       name of file containing URL's (one per line) to be retrieved (can be stdin)
+        -mt         run ILU multi threaded (default single)
+                    maxthreads = max number of worker threads, 0 = No Limit when compiled thread per every request
+        -pipeline   use ILU Pipeline - implies -mt
+        -batch      use ILU Batching, period in microseconds
+        -serial     use ILU Serializer - implies -mt
+        -v level    verbosity level (default is 0), 0 = no output, 1 = shows summary timing,
+                    2 = basic timing, 3 = basic timing, plus requests & response headers
+                    4 = basic timing, plus requests & complete response
+        -r repeat   how many times to Get each URL (default 1)
+        -httppinfo  http version, one of http_1_0 or http_1_0p or http_1_1 - default http_1_1
+        -httptinfo  transport for http ports - default tcp_0_80
+        -file       filename where body from Get should be written (can be stdout)
+        -logfile    name of logfile where verbose output goes (can be stdout)
+        -ngpinfo    protocol for non http ports - default w3ng_1.0
+        -ngtinfo    transports over tcp for non http ports - default w3mux_16_NGGetbotEndpoint
+        -ngport     tcp port to start making ng servers with, default 2728
+        -suffix     string used as suffix to ILU server names - default .parc.xerox.com
+        -fdbudget   ILU file descriptor budget - defaults to ILU's default
+        -boost      Boosts nggetbot worker thread pool priorities (Win32 only)
+        -sink       Use a RenderingSink to asynchronously receive NG Renderings
+
+
+
+
+URL Files
+---------
+
+Any line in a URL file that begins with a # is ignored.
+
+A line containing a URL only will cause that URL to be retrieved.
+
+A line containing a URL followed by a number X, will cause that URL to be retrieved
+prevent any further URLS in the file for being retrieved for X millixeconds.
+
+
+The following are URLS using the w3ng and http protocols respectively, for retrieving
+the 'microscape' files. 
+
+(e.g. if the miscroscape files are in the directory
+
+	/opt/local/larner/http-ng/serverdocs/microscape, 
+
+a ngwebserver should started with filebase  
+
+	/opt/local/larner/http-ng/serverdocs
+)
+
+
+
+Here's a list of URLS that will retrieve the microscape files using w3ng as the wire
+protocol and w3mux as the transport, and the NG Web Interfaces (substitute for 
+pundit.parc.xerox.com according to your site)  Note that since these are all
+WebDocument object types served by DocumentServer, the leading WebDocument:
+of the instance handle can be omitted - e.g.. 
+w3ng:DocumentServer.pundit.parc.xerox.com/microscape/microscape.html;type=ilu%3AkbPvAJhN4GUWi5lt+YO6ts3Je+x;cinfo=w3ng@w3mux_16_NGWebServerEndpoint=tcp_pundit.parc.xerox.com_2718
+denotes the same object as
+w3ng:DocumentServer.pundit.parc.xerox.com/WebDocument:microscape/microscape.html;type=ilu%3AkbPvAJhN4GUWi5lt+YO6ts3Je+x;cinfo=w3ng@w3mux_16_NGWebServerEndpoint=tcp_pundit.parc.xerox.com_2718
+
+
+w3ng:DocumentServer.pundit.parc.xerox.com/microscape/microscape.html;type=ilu%3AkbPvAJhN4GUWi5lt+YO6ts3Je+x;cinfo=w3ng@w3mux_16_NGWebServerEndpoint=tcp_pundit.parc.xerox.com_2718
+w3ng:DocumentServer.pundit.parc.xerox.com/microscape/home_igloo.gif;type=ilu%3AkbPvAJhN4GUWi5lt+YO6ts3Je+x;cinfo=w3ng@w3mux_16_NGWebServerEndpoint=tcp_pundit.parc.xerox.com_2718
+w3ng:DocumentServer.pundit.parc.xerox.com/microscape/home_on.gif;type=ilu%3AkbPvAJhN4GUWi5lt+YO6ts3Je+x;cinfo=w3ng@w3mux_16_NGWebServerEndpoint=tcp_pundit.parc.xerox.com_2718
+w3ng:DocumentServer.pundit.parc.xerox.com/microscape/prod.gif;type=ilu%3AkbPvAJhN4GUWi5lt+YO6ts3Je+x;cinfo=w3ng@w3mux_16_NGWebServerEndpoint=tcp_pundit.parc.xerox.com_2718
+w3ng:DocumentServer.pundit.parc.xerox.com/microscape/search.gif;type=ilu%3AkbPvAJhN4GUWi5lt+YO6ts3Je+x;cinfo=w3ng@w3mux_16_NGWebServerEndpoint=tcp_pundit.parc.xerox.com_2718
+w3ng:DocumentServer.pundit.parc.xerox.com/microscape/support.gif;type=ilu%3AkbPvAJhN4GUWi5lt+YO6ts3Je+x;cinfo=w3ng@w3mux_16_NGWebServerEndpoint=tcp_pundit.parc.xerox.com_2718
+w3ng:DocumentServer.pundit.parc.xerox.com/microscape/shop.gif;type=ilu%3AkbPvAJhN4GUWi5lt+YO6ts3Je+x;cinfo=w3ng@w3mux_16_NGWebServerEndpoint=tcp_pundit.parc.xerox.com_2718
+w3ng:DocumentServer.pundit.parc.xerox.com/microscape/spacer.gif;type=ilu%3AkbPvAJhN4GUWi5lt+YO6ts3Je+x;cinfo=w3ng@w3mux_16_NGWebServerEndpoint=tcp_pundit.parc.xerox.com_2718
+w3ng:DocumentServer.pundit.parc.xerox.com/microscape/msft.gif;type=ilu%3AkbPvAJhN4GUWi5lt+YO6ts3Je+x;cinfo=w3ng@w3mux_16_NGWebServerEndpoint=tcp_pundit.parc.xerox.com_2718
+w3ng:DocumentServer.pundit.parc.xerox.com/microscape/nav_home.gif;type=ilu%3AkbPvAJhN4GUWi5lt+YO6ts3Je+x;cinfo=w3ng@w3mux_16_NGWebServerEndpoint=tcp_pundit.parc.xerox.com_2718
+w3ng:DocumentServer.pundit.parc.xerox.com/microscape/tagline.gif;type=ilu%3AkbPvAJhN4GUWi5lt+YO6ts3Je+x;cinfo=w3ng@w3mux_16_NGWebServerEndpoint=tcp_pundit.parc.xerox.com_2718
+w3ng:DocumentServer.pundit.parc.xerox.com/microscape/h_microsoft.gif;type=ilu%3AkbPvAJhN4GUWi5lt+YO6ts3Je+x;cinfo=w3ng@w3mux_16_NGWebServerEndpoint=tcp_pundit.parc.xerox.com_2718
+w3ng:DocumentServer.pundit.parc.xerox.com/microscape/1ptrans.gif;type=ilu%3AkbPvAJhN4GUWi5lt+YO6ts3Je+x;cinfo=w3ng@w3mux_16_NGWebServerEndpoint=tcp_pundit.parc.xerox.com_2718
+w3ng:DocumentServer.pundit.parc.xerox.com/microscape/spacer1.gif;type=ilu%3AkbPvAJhN4GUWi5lt+YO6ts3Je+x;cinfo=w3ng@w3mux_16_NGWebServerEndpoint=tcp_pundit.parc.xerox.com_2718
+w3ng:DocumentServer.pundit.parc.xerox.com/microscape/spacer2.gif;type=ilu%3AkbPvAJhN4GUWi5lt+YO6ts3Je+x;cinfo=w3ng@w3mux_16_NGWebServerEndpoint=tcp_pundit.parc.xerox.com_2718
+w3ng:DocumentServer.pundit.parc.xerox.com/microscape/arrowr.gif;type=ilu%3AkbPvAJhN4GUWi5lt+YO6ts3Je+x;cinfo=w3ng@w3mux_16_NGWebServerEndpoint=tcp_pundit.parc.xerox.com_2718
+w3ng:DocumentServer.pundit.parc.xerox.com/microscape/arrowbl.gif;type=ilu%3AkbPvAJhN4GUWi5lt+YO6ts3Je+x;cinfo=w3ng@w3mux_16_NGWebServerEndpoint=tcp_pundit.parc.xerox.com_2718
+w3ng:DocumentServer.pundit.parc.xerox.com/microscape/arrowgr.gif;type=ilu%3AkbPvAJhN4GUWi5lt+YO6ts3Je+x;cinfo=w3ng@w3mux_16_NGWebServerEndpoint=tcp_pundit.parc.xerox.com_2718
+w3ng:DocumentServer.pundit.parc.xerox.com/microscape/solutions.gif;type=ilu%3AkbPvAJhN4GUWi5lt+YO6ts3Je+x;cinfo=w3ng@w3mux_16_NGWebServerEndpoint=tcp_pundit.parc.xerox.com_2718
+w3ng:DocumentServer.pundit.parc.xerox.com/microscape/commish.gif;type=ilu%3AkbPvAJhN4GUWi5lt+YO6ts3Je+x;cinfo=w3ng@w3mux_16_NGWebServerEndpoint=tcp_pundit.parc.xerox.com_2718
+w3ng:DocumentServer.pundit.parc.xerox.com/microscape/action.gif;type=ilu%3AkbPvAJhN4GUWi5lt+YO6ts3Je+x;cinfo=w3ng@w3mux_16_NGWebServerEndpoint=tcp_pundit.parc.xerox.com_2718
+w3ng:DocumentServer.pundit.parc.xerox.com/microscape/Pacman1.gif;type=ilu%3AkbPvAJhN4GUWi5lt+YO6ts3Je+x;cinfo=w3ng@w3mux_16_NGWebServerEndpoint=tcp_pundit.parc.xerox.com_2718
+w3ng:DocumentServer.pundit.parc.xerox.com/microscape/ie_animated.gif;type=ilu%3AkbPvAJhN4GUWi5lt+YO6ts3Je+x;cinfo=w3ng@w3mux_16_NGWebServerEndpoint=tcp_pundit.parc.xerox.com_2718
+w3ng:DocumentServer.pundit.parc.xerox.com/microscape/msinternet.gif;type=ilu%3AkbPvAJhN4GUWi5lt+YO6ts3Je+x;cinfo=w3ng@w3mux_16_NGWebServerEndpoint=tcp_pundit.parc.xerox.com_2718
+w3ng:DocumentServer.pundit.parc.xerox.com/microscape/comdex_6.gif;type=ilu%3AkbPvAJhN4GUWi5lt+YO6ts3Je+x;cinfo=w3ng@w3mux_16_NGWebServerEndpoint=tcp_pundit.parc.xerox.com_2718
+w3ng:DocumentServer.pundit.parc.xerox.com/microscape/worldwide.gif;type=ilu%3AkbPvAJhN4GUWi5lt+YO6ts3Je+x;cinfo=w3ng@w3mux_16_NGWebServerEndpoint=tcp_pundit.parc.xerox.com_2718
+w3ng:DocumentServer.pundit.parc.xerox.com/microscape/about1.gif;type=ilu%3AkbPvAJhN4GUWi5lt+YO6ts3Je+x;cinfo=w3ng@w3mux_16_NGWebServerEndpoint=tcp_pundit.parc.xerox.com_2718
+w3ng:DocumentServer.pundit.parc.xerox.com/microscape/comdex.gif;type=ilu%3AkbPvAJhN4GUWi5lt+YO6ts3Je+x;cinfo=w3ng@w3mux_16_NGWebServerEndpoint=tcp_pundit.parc.xerox.com_2718
+w3ng:DocumentServer.pundit.parc.xerox.com/microscape/n.gif;type=ilu%3AkbPvAJhN4GUWi5lt+YO6ts3Je+x;cinfo=w3ng@w3mux_16_NGWebServerEndpoint=tcp_pundit.parc.xerox.com_2718
+w3ng:DocumentServer.pundit.parc.xerox.com/microscape/woofer.gif;type=ilu%3AkbPvAJhN4GUWi5lt+YO6ts3Je+x;cinfo=w3ng@w3mux_16_NGWebServerEndpoint=tcp_pundit.parc.xerox.com_2718
+w3ng:DocumentServer.pundit.parc.xerox.com/microscape/pointcast_small.gif;type=ilu%3AkbPvAJhN4GUWi5lt+YO6ts3Je+x;cinfo=w3ng@w3mux_16_NGWebServerEndpoint=tcp_pundit.parc.xerox.com_2718
+w3ng:DocumentServer.pundit.parc.xerox.com/microscape/clinton.gif;type=ilu%3AkbPvAJhN4GUWi5lt+YO6ts3Je+x;cinfo=w3ng@w3mux_16_NGWebServerEndpoint=tcp_pundit.parc.xerox.com_2718
+w3ng:DocumentServer.pundit.parc.xerox.com/microscape/vrule.gif;type=ilu%3AkbPvAJhN4GUWi5lt+YO6ts3Je+x;cinfo=w3ng@w3mux_16_NGWebServerEndpoint=tcp_pundit.parc.xerox.com_2718
+w3ng:DocumentServer.pundit.parc.xerox.com/microscape/tbi.gif;type=ilu%3AkbPvAJhN4GUWi5lt+YO6ts3Je+x;cinfo=w3ng@w3mux_16_NGWebServerEndpoint=tcp_pundit.parc.xerox.com_2718
+w3ng:DocumentServer.pundit.parc.xerox.com/microscape/netnow3.gif;type=ilu%3AkbPvAJhN4GUWi5lt+YO6ts3Je+x;cinfo=w3ng@w3mux_16_NGWebServerEndpoint=tcp_pundit.parc.xerox.com_2718
+w3ng:DocumentServer.pundit.parc.xerox.com/microscape/rolodex.gif;type=ilu%3AkbPvAJhN4GUWi5lt+YO6ts3Je+x;cinfo=w3ng@w3mux_16_NGWebServerEndpoint=tcp_pundit.parc.xerox.com_2718
+w3ng:DocumentServer.pundit.parc.xerox.com/microscape/sports.gif;type=ilu%3AkbPvAJhN4GUWi5lt+YO6ts3Je+x;cinfo=w3ng@w3mux_16_NGWebServerEndpoint=tcp_pundit.parc.xerox.com_2718
+w3ng:DocumentServer.pundit.parc.xerox.com/microscape/idc.gif;type=ilu%3AkbPvAJhN4GUWi5lt+YO6ts3Je+x;cinfo=w3ng@w3mux_16_NGWebServerEndpoint=tcp_pundit.parc.xerox.com_2718
+w3ng:DocumentServer.pundit.parc.xerox.com/microscape/appfoundry.gif;type=ilu%3AkbPvAJhN4GUWi5lt+YO6ts3Je+x;cinfo=w3ng@w3mux_16_NGWebServerEndpoint=tcp_pundit.parc.xerox.com_2718
+w3ng:DocumentServer.pundit.parc.xerox.com/microscape/one_sm.gif;type=ilu%3AkbPvAJhN4GUWi5lt+YO6ts3Je+x;cinfo=w3ng@w3mux_16_NGWebServerEndpoint=tcp_pundit.parc.xerox.com_2718
+w3ng:DocumentServer.pundit.parc.xerox.com/microscape/inbox_img.gif;type=ilu%3AkbPvAJhN4GUWi5lt+YO6ts3Je+x;cinfo=w3ng@w3mux_16_NGWebServerEndpoint=tcp_pundit.parc.xerox.com_2718
+w3ng:DocumentServer.pundit.parc.xerox.com/microscape/navigation_bar.gif;type=ilu%3AkbPvAJhN4GUWi5lt+YO6ts3Je+x;cinfo=w3ng@w3mux_16_NGWebServerEndpoint=tcp_pundit.parc.xerox.com_2718
+
+
+Here's a list of URLS that will retrieve the microscape files using http as the wire
+protocol, and the ILU http.Resource Interface (substitute for pundit.parc.xerox.com according
+to your site), assuming iluhttp.Resource objects are exported from the
+webserver at port 8080 (e.g. use -httptinfo tcp_0_8080 as argument to ngwebserver)
+
+http://pundit.parc.xerox.com:8080/microscape/microscape.html
+http://pundit.parc.xerox.com:8080/microscape/home_igloo.gif
+http://pundit.parc.xerox.com:8080/microscape/home_on.gif
+http://pundit.parc.xerox.com:8080/microscape/prod.gif
+http://pundit.parc.xerox.com:8080/microscape/search.gif
+http://pundit.parc.xerox.com:8080/microscape/support.gif
+http://pundit.parc.xerox.com:8080/microscape/shop.gif
+http://pundit.parc.xerox.com:8080/microscape/spacer.gif
+http://pundit.parc.xerox.com:8080/microscape/msft.gif
+http://pundit.parc.xerox.com:8080/microscape/nav_home.gif
+http://pundit.parc.xerox.com:8080/microscape/tagline.gif
+http://pundit.parc.xerox.com:8080/microscape/h_microsoft.gif
+http://pundit.parc.xerox.com:8080/microscape/1ptrans.gif
+http://pundit.parc.xerox.com:8080/microscape/spacer1.gif
+http://pundit.parc.xerox.com:8080/microscape/spacer2.gif
+http://pundit.parc.xerox.com:8080/microscape/arrowr.gif
+http://pundit.parc.xerox.com:8080/microscape/arrowbl.gif
+http://pundit.parc.xerox.com:8080/microscape/arrowgr.gif
+http://pundit.parc.xerox.com:8080/microscape/solutions.gif
+http://pundit.parc.xerox.com:8080/microscape/commish.gif
+http://pundit.parc.xerox.com:8080/microscape/action.gif
+http://pundit.parc.xerox.com:8080/microscape/Pacman1.gif
+http://pundit.parc.xerox.com:8080/microscape/ie_animated.gif
+http://pundit.parc.xerox.com:8080/microscape/msinternet.gif
+http://pundit.parc.xerox.com:8080/microscape/comdex_6.gif
+http://pundit.parc.xerox.com:8080/microscape/worldwide.gif
+http://pundit.parc.xerox.com:8080/microscape/about1.gif
+http://pundit.parc.xerox.com:8080/microscape/comdex.gif
+http://pundit.parc.xerox.com:8080/microscape/n.gif
+http://pundit.parc.xerox.com:8080/microscape/woofer.gif
+http://pundit.parc.xerox.com:8080/microscape/pointcast_small.gif
+http://pundit.parc.xerox.com:8080/microscape/clinton.gif
+http://pundit.parc.xerox.com:8080/microscape/vrule.gif
+http://pundit.parc.xerox.com:8080/microscape/tbi.gif
+http://pundit.parc.xerox.com:8080/microscape/netnow3.gif
+http://pundit.parc.xerox.com:8080/microscape/rolodex.gif
+http://pundit.parc.xerox.com:8080/microscape/sports.gif
+http://pundit.parc.xerox.com:8080/microscape/idc.gif
+http://pundit.parc.xerox.com:8080/microscape/appfoundry.gif
+http://pundit.parc.xerox.com:8080/microscape/one_sm.gif
+http://pundit.parc.xerox.com:8080/microscape/inbox_img.gif
+http://pundit.parc.xerox.com:8080/microscape/navigation_bar.gif

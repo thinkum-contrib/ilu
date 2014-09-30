@@ -1,0 +1,83 @@
+/* Imakefile */
+/* Chris Jacobi, October 8, 1998 11:12 pm PDT */
+
+/*
+ * Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+ * 
+ * Unlimited use, reproduction, modification, and distribution of this
+ * software and modified versions thereof is permitted.  Permission is
+ * granted to make derivative works from this software or a modified
+ * version thereof.  Any copy of this software, a modified version
+ * thereof, or a derivative work must include both the above copyright
+ * notice of Xerox Corporation and this paragraph.  Any distribution of
+ * this software, a modified version thereof, or a derivative work must
+ * comply with all applicable United States export control laws.  This
+ * software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+ * WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+ * LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+ * EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+ * NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+ * OF THE POSSIBILITY OF SUCH DAMAGES.
+ */
+ 
+/*  $Id: Imakefile,v 1.22 1999/08/03 01:51:08 janssen Exp $ */
+ 
+ 
+LOCALINCLUDES = -I../parser
+ILUCINCLUDES =
+
+
+OBJS = \
+	gencust.o \
+	isl2java.o \
+	genstub.o \
+	genunion.o \
+	genrecord.o \
+	io.o \
+	name.o \
+	stubops.o \
+	context.o \
+	genopt.o \
+	genseq.o \
+	genarr.o \
+	genobj.o \
+	genenum.o \
+	genex.o \
+	hlpcls.o \
+	genpick.o \
+	util.o
+
+NormalObjectRule()
+
+HEADERFILES = util.h stubops.h context.h ../parser/iluptype.h
+/* not too complete dependencies for speed of developpment;
+ * A developper is not likely to forget "make Clean" for internal changes
+ * But I forgote make Clean more often then not after changes to 
+ * iluptype.h and context.h
+ */
+
+gencust.o  : gencust.c gencust.h $(HEADERFILES)
+isl2java.o : isl2java.c $(HEADERFILES)
+genstub.o : genstub.c genstub.h $(HEADERFILES)
+genunion.o : genunion.c genunion.h $(HEADERFILES)
+genrecord.o : genrecord.c genrecord.h $(HEADERFILES)
+io.o  : io.c io.h $(HEADERFILES)
+name.o  : name.c name.h $(HEADERFILES)
+stubops.o  : stubops.c $(HEADERFILES)
+context.o  : context.c $(HEADERFILES)
+genopt.o  : genopt.c genopt.h $(HEADERFILES)
+genseq.o  : genseq.c genseq.h $(HEADERFILES)
+genarr.o  : genarr.c genarr.h $(HEADERFILES)
+genobj.o  : genobj.c genobj.h $(HEADERFILES)
+genenum.o  : genenum.c genenum.h $(HEADERFILES)
+genex.o  : genex.c genex.h $(HEADERFILES)
+hlpcls.o  : hlpcls.c hlpcls.h $(HEADERFILES)
+genpick.o  : genpick.c genpick.h $(HEADERFILES)
+util.o  : util.c $(HEADERFILES)
+
+ProgramTarget(java-stubber, $(OBJS), $(ILU_STUBBER_LIBRARIES),)
+
+InstallProgram(java-stubber, $(DESTDIR)/bin)
+InstallRO(java-stubber.1, $(DESTDIR)/man/man1)

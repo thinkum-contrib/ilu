@@ -1,0 +1,200 @@
+@setfilename ilu-internals.info
+@settitle ILU Internals
+@ifset ilucopyright
+BeginILUCopyright
+
+Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+Unlimited use, reproduction, modification, and distribution of this
+software and modified versions thereof is permitted.  Permission is
+granted to make derivative works from this software or a modified
+version thereof.  Any copy of this software, a modified version
+thereof, or a derivative work must include both the above copyright
+notice of Xerox Corporation and this paragraph.  Any distribution of
+this software, a modified version thereof, or a derivative work must
+comply with all applicable United States export control laws.  This
+software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+OF THE POSSIBILITY OF SUCH DAMAGES.
+  
+EndILUCopyright
+@end ifset
+@ifclear largerdoc
+@titlepage
+@title ILU Internals
+@author Bill Janssen @code{<janssen@@parc.xerox.com>}
+@sp
+@today{}
+@sp
+Copyright @copyright{} 1993 Xerox Corporation@*
+All Rights Reserved.
+@end titlepage
+@end ifclear
+
+This document describes the structure and functioning
+of the @system{ILU} runtime kernel library, which is linked with both
+client and server programs (really, in @system{ILU} there is no
+significant difference between the two), and provides basic
+@system{ILU} services to language-specific runtime libraries.  It covers
+transport services, RPC protocols, object identification
+and mapping, and the way that object classes are managed.
+
+Much of the kernel documentation is in the file @file{@metavar{ILUHOME}/include/iluxport.h},
+particularly the discussions on locking, garbage collection, and event processing loops.  It is kept
+there in an attempt to be somewhat more up-to-date than the material in this chapter may be.
+
+@section Introduction
+
+The kernel library consists of the following files:
+
+@dfn{Core code}, which contains routines which implement functionality which is in turn exported to various language runtimes:
+@itemize @bullet
+@item
+@file{alarmux.c} - ILU timed alarm procedures;
+@item
+@file{mainloop.c} - main loop code, along with input and output handler registrations;
+@item
+@file{call.c} - entry points to the marshalling/unmarshalling code, and to the request and reply formation code;
+@item
+@file{object.c} - code that implements SBH (string-binding-handle) parsing, and various methods on ILU objects;
+@item
+@file{connect.c} - code that implements the generic actions associated with a connection from a client to a service;
+@item
+@file{gc.c} -- implementation of the network garbage collection system;
+@item
+@file{locks.c} -- implementation of the locking veneer for thread support;
+@item
+@file{method.c} -- simple accessors for the method struct;
+@item
+@file{pipe.c} -- support for pipes;
+@item
+@file{port.c} -- support for an ILU Port, an fd on which a server listens for connection requests;
+@item
+@file{debug.c} -- support code for the built-in kernel debugging system;
+@item
+@file{server.c} -- support for an ILU Server object;
+@item
+@file{ilutransport.c} -- generic support for reliable transports;
+@item
+@file{type.c} -- support for object types, and type manipulation;
+@item
+@file{iluprotocol.c} -- generic support for RPC protocols; and
+@item
+@file{simpbind.c} -- support for the simple binding model.
+@end itemize
+
+@dfn{Support code}, which provides implementations of various programming constructs:
+@itemize @bullet
+@item
+@file{vector.c} -- implementation of a vector object (used in garbage collection);
+@item
+@file{hash.c} -- hash table implementation;
+@end itemize
+
+@dfn{System code} provides implementations of optional functionality:
+@itemize @bullet
+@item
+@file{tcp.c} -- support for TCP/IP transports;
+@item
+@file{tcp.c} -- support for UDP/IP transports;
+@item
+@file{spp.c} -- support for XNS Sequenced Packet Protocol transports (buggy at present);
+@item
+@file{immemory.c} -- in-memory transport implementation, used for communicating between two modules in the same address space, but usually in different languages;
+@item
+@file{courier.c} -- support for XNS Courier RPC protocol (buggy at present).
+@item
+@file{sunrpc.c} -- support for the ONC RPC protocol;
+@item
+@file{dcerpc.c} -- support for the OSF DCE RPC protocol (incomplete at present);
+@end itemize
+
+@section Objects
+
+In the @system{ILU} kernel, the Object is represented by the
+@type{struct _ilu_Object_s}, pointed at by values of the type @type{ilu_Object}
+(see @file{src/runtime/kernel/ilu.h}).  This structure
+is used for both surrogate and true objects.
+
+@system{ILU} preserves @dfn{eq'ness} of objects.  This means that
+two objects may be examined for equality by comparing the addresses of
+their structs; if the address are the same, the objects are said to be
+@dfn{eq}.  This distinction means that if, for example, a client receives
+an object as a return value from a method call, and receives it again as
+a return value from a different method call, the same object in memory
+will be returned from both method calls.  Note that this behavior is
+not required by @system{CORBA}.
+
+Surrogate objects are related to true objects by the @code{server} field
+of the @code{ilu_Object} struct.  This field, of type @type{ilu_Server} points to a value of type
+@type{struct _ilu_Server_s}, which contains a pointer to a connection,
+a service id string, and a hash table of objects that are served by that
+server.  The connection, pointed at by a value of type @type{ilu_Connection},
+indicates the transport channel to the actual server process,
+and the RPC protocol spoken between the server process and its clients.
+The object hash table is used in maintaining eq'ness; when an instance is
+received from the particular server associated with the hash table,
+the receiver checks the instance-id of the object against the hash table,
+to see if that particular object has already been instantiated in the
+address space.
+
+@section Program Numbers
+
+@system{ILU} uses the Sun and/or Xerox Courier RPC protocols to communicate, and
+both use class identifiers called @dfn{program numbers},
+@cindex program number
+and version numbers,
+to identify the object class being used.  These numbers are not represented
+directly in the @language{ISL} file, but rather the program number and version
+assigned to a class are remembered in a separate `registry', which is simply a text file
+which has one class per line, in the form
+
+@codeexample
+@metavar{interface-name}.@metavar{class-name}:@metavar{class-unique-id} @metavar{hex-program-number} @metavar{decimal-version-number}
+@end codeexample
+
+For example,
+@codeexample
+rwho.machine:NgZs92nNMUOYWrb7Z4GR=ZZ2fBa 310001c9 1
+nms.server:7sUFAwcfVPucrRskkKaud6FI9gc 310001a2 2
+rwho.m2:kwvFDgDtY2qE0hgRKAwL5UwXMUd 310001d2 1
+...
+@end codeexample
+
+This registry is found by the kernel at run time, and the contents are loaded
+into an internal hash table for use.  To find the registry, the kernel looks for
+a file called @file{SunRPCRegistry} (or, the Courier case, @file{CourierRegistry}),
+by looking in @emph{one} of the following 3 locations:
+
+@enumerate
+@item
+If the environment variable @var{ILUREGISTRY} is set, it is assumed that
+its value indicates the directory in which the registry lives.
+@item
+If the environment variable @var{ILUHOME} is set, it is assumed that
+the registry lives in the subdirectory @file{lib/} of the @var{ILUHOME}
+directory.
+@item
+If neither @var{ILUREGISTRY} or @var{ILUHOME} are set, the runtime
+looks in the directory specified during the @system{ILU} installation
+as the value of @var{REGISTRY_LAST_RESORT}.
+@end enumerate
+
+The programs @program{sunrpc-register-interface} and @program{courier-register-interface}
+can be used to register all the classes in a given @language{ISL} file:
+
+@transcript
+% sunrpc-register-interface @metavar{ISL-file-name}
+@end transcript
+
+The registry can also be edited by hand to add or delete registrations for classes.
+When editing by hand, be sure to update the value of @var{.LastAssignedProgramNumber},
+so that future program numbers are allocated properly.
+
+@emph{This system is overly fragile, and a better replacement system for relating
+@system{ILU} object types to Sun RPC program numbers is under design.}

@@ -1,0 +1,75 @@
+
+
+    <type>
+      <uname>UNAME</uname> 
+      <typeid> TYPEID </typeid> 
+      <array>  
+        <typeref> TYPEREF </typeref> 
+        <dims>
+           <dim> INTEGER </dim>
+        </dims>
+      </array>
+      </type>
+    <type>
+      <object>
+      <doc>QSTRING</doc>
+      <collectible/>    
+      <optional/>
+      <typeid>TYPEID </typeid>
+      <brand>BRAND</brand>     
+      <supertypes>
+          <supertype>
+            <typeref>TYPEREF</typeref>
+          </supertype>
+       </supertypes>  
+      <methods>  
+           <method>
+             <lname>LNAME</lname>
+             <functional/>
+             <asynchronous/> 
+             <returntype>TYPE-REF</returntype>
+             <isproc>PROC-ID</isproc>
+             <doc>QSTRING></doc>
+             <args>
+                <arg>
+                   <lname>LNAME</lname>
+                   <typeref>TYPE-REF</typeref>
+                   <direction>INOUT</direction>
+                   <sibling/>
+                </arg> 
+             </args>
+           </method>
+         </methods>
+      <exceptions>
+          <exception>
+             <lname>NAME</lname>
+             <typeref>TYPE-REF</typeref>
+             <doc>QSTG</doc>
+          </exception>
+       </exceptions> 
+    </object>
+  </type> 
+    
+    
+
+    
+
+    
+    
+                             
+    
+
+         
+         
+
+
+
+
+   
+
+                  
+                   
+
+
+      
+

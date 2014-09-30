@@ -1,0 +1,257 @@
+@setfilename tim.info
+@settitle The TIM Documentation Language
+@ifset ilucopyright
+BeginILUCopyright
+
+Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+Unlimited use, reproduction, modification, and distribution of this
+software and modified versions thereof is permitted.  Permission is
+granted to make derivative works from this software or a modified
+version thereof.  Any copy of this software, a modified version
+thereof, or a derivative work must include both the above copyright
+notice of Xerox Corporation and this paragraph.  Any distribution of
+this software, a modified version thereof, or a derivative work must
+comply with all applicable United States export control laws.  This
+software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+OF THE POSSIBILITY OF SUCH DAMAGES.
+  
+EndILUCopyright
+@end ifset
+@ifclear largerdoc
+@titlepage
+@title The TIM Documentation Language
+@author Bill Janssen @code{<janssen@@parc.xerox.com>}
+@sp
+@today{}
+@sp
+Copyright @copyright{} 1993 Xerox Corporation@*
+All Rights Reserved.
+@end titlepage
+@end ifclear
+
+@timmacro dif           code
+@timmacro texinfo       code
+
+This document describes the @language{TIM} documentation language that the documentation for
+@system{ILU} is written in.  It is not necessary to be familiar with @language{TIM} to
+use @system{ILU}; you will only need to know @language{TIM} if you wish to use it to
+write or modify documentation.
+
+@language{TIM} is essentially a superset of the @system{GNU} @language{texinfo} language,
+version 2.
+It adds several features such as support for pictures and URLs, but its most important extension is to provide
+domain-specific markup commands to allow adding arbitrary meta-information to
+@language{Texinfo} documents.  You should be familiar with the basic
+@language{Texinfo} system first.  Documentation on @language{Texinfo} is supplied
+with the @system{ILU} distribution; you should be able to find it in the files
+@file{ILUSRC/doc/texinfo2.ps}.
+
+@section Introduction
+
+Both @language{TIM} and @language{Texinfo} input files contain text `marked up' with document
+markup commands.  These commands are similar to @language{LaTeX} commands, except that they
+start with an at-sign character rather than a backslash.  They 
+contain  meta-information about the area of the text to which they apply.
+For example:
+@codeexample
+  A kernel server @@dfn@{export@}s its objects by making them available
+  to other modules.  It may do so via one or more @@dfn@{port@}s, which are
+  abstractly a tuple of (@@metavar@{rpc protocol@}, @@metavar@{transport type@},
+  @@metavar@{transport address@}).  For example, a typical port might
+  provide access to a kernel server's objects via @@code@{(@@protocol@{Sun RPC@},
+  @@transport@{TCP/IP@}, UNIX port 2076)@}.  Another port on the
+  same kernel server might provide access to the objects via
+  @@code@{(@@protocol@{Xerox Courier@}, @@transport@{XNS SPP@}, XNS port 1394)@}.
+@end codeexample
+@noindent
+When formatted, this paragraph would look like
+@quotation
+A kernel server @dfn{export}s its objects by making them available
+to other modules.  It may do so via one or more @dfn{port}s, which are
+abstractly a tuple of (@metavar{rpc protocol}, @metavar{transport type},
+@metavar{transport address}).  For example, a typical port might
+provide access to a kernel server's objects
+via @code{(@protocol{Sun RPC}, @transport{TCP/IP}, UNIX port 2076)}.  Another port on the
+same kernel server might provide access to the objects via
+@code{(@protocol{Xerox Courier}, @transport{XNS SPP}, XNS port 1394)}.
+@end quotation
+
+There are two
+kinds of markup commands:  without arguments or with arguments.  The commands without
+arguments always span some portion of the document, so we call them @dfn{span commands}.  They may be nested, but may not
+overlap.  There are two forms of span commands, @dfn{style commands} and @dfn{format commands}.
+The style commands mark some section of the text, typically a short sequence of text, with a
+single attribute, which may be either a semantic tag like @kwd{important}, or a formatting style
+like @kwd{italic}.  The format commands apply a similar tag to a block of the input; they begin
+with a single line containing @code{@@@metavar{attribute}}, and end with a single line containing
+@code{@@end @metavar{attribute}}.  Style commands may be nested in a block command, but block
+commands should not be nested in style commands.
+
+Markup commands with arguments always take a single line.  The line begins with @code{@@@metavar{attribute}},
+followed by whitespace, followed by the arguments, separated by whitespace.  If there is whitespace in
+an argument, the argument is surrounded with braces, as in @*   @code{@@deffun @{struct foo@} Bar ( arg )}
+
+@section Extensions to GNU Texinfo
+
+@language{TIM} removes the need to begin every file with @code{\input texinfo},
+and to end every file with @code{@@bye}.  These lines are added automatically by
+@language{TIM} as needed.  This allows a file to define both a stand-alone
+document, and to be included as a section in some larger document.
+
+@subsection TIM Domain-Independent Format
+
+@language{TIM} domain-independent format (@dfn{DIF}) is basically @language{Texinfo} with four new built-in commands.  They are:
+
+@itemize @bullet
+@item
+@kwd{@@url}, a style command, is used to mark @system{World Wide Web} URL forms that appear
+in the text.
+@item
+@kwd{@@picture}, a command with arguments, is used to include an @language{Encapsulated Postscript} picture
+into the document.  It takes two arguments, the name of the file, and a caption for the picture.  The caption
+may be omitted.
+@item
+@kwd{@@ttitalic}, a style command, is used to indicate that this span should be rendered in an italic typewriter font, if available.
+@item
+@kwd{@@timmacro}, a command with arguments, allows the user to define domain-specific markup commands.  The two arguments are the macro name, and the macro's replacement in vanilla DIF.
+@end itemize
+
+@subsection Defining Domain-Specific Markup Commands With @@timmacro
+
+[ TBD ]
+
+@section TIM Tools
+
+@system{ILU} provides a program called @program{tim} to turn @language{TIM} files
+into either @language{PostScript}, text, or @system{GNU} @language{Info} files.  It is
+invoked as
+@sp 1
+@code{     tim @metavar{output-format} [ -s @metavar{flag} ] [ -m @metavar{macros} ] [ -o @metavar{output-file} ] [ @metavar{input-file}.tim ]}
+@sp 1
+@noindent
+where @metavar{output-format} must be either @switch{-p} for Postscript output, @switch{-i} for @system{GNU} @language{Info} output,
+@switch{-d} for @language{TIM} DIF output, @switch{-t} for plain text output, 
+and @switch{-x} for vanilla @system{GNU} @language{Texinfo} output.
+
+In addition, the switch @switch{-v}
+can be specified to cause the @program{tim} script to output information about
+progress, the switch @switch{-m @metavar{macro-file-name}} may be specified to
+have @program{tim} pre-load a file of @dif{@@timmacro} macros, the switch @switch{-s} may
+be specified to set various @language{TexInfo} conditional flags, and the switch
+@switch{-o @metavar{output-file-name}} may used to specify the output file.  If no input
+file is specified, @program{tim} reads from the standard input.  If no output file
+is specified, @program{tim} writes to the standard output.
+
+@program{tim} is a script written in the @language{Python} script language,
+so you will need to have @program{Python} installed to use it.  See the
+@system{ILU} installation instructions for a location from which @program{Python}
+can be FTP'ed.  The script uses the @system{GNU} programs @program{texindex} and
+@program{makeinfo}, along with @program{TeX} and @program{dvips}, so it is necessary
+to have all four of those programs installed to use @program{tim}.
+
+Another program called @program{timdif2html} can be used to turn @language{TIM} DIF
+files into @system{World Wide Web} @language{HTML}.  See the end of the @program{timdif2html}
+script for instructions on how to use it.  It in turn uses the script @program{eps2gif},
+which requires having @program{ghostscript} built with a GIF driver.  Both @program{timdif2html}
+and @program{eps2gif} are @language{Perl} scripts, so the @language{Perl} interpreter @program{perl}
+must be installed to use them.
+
+@section Markup Commands used with ILU
+
+The file @file{@metavar{ILUSRC}/doc/ilu-macros.tim} defines the following @language{TIM} markup commands
+that are used with the @system{ILU} documentation:
+
+@itemize @bullet
+@item
+@kwd{@@var} is used to indicate a regular programming language variable.  The term @kwd{@@metavar}
+is used to mark meta-variables.
+@end itemize
+
+@language{TIM} also extends @language{texinfo} by adding the following markup:
+
+@itemize @bullet
+@item
+@kwd{@@C} is used to mark artifacts of the @language{C} language, e.g., @code{@@C@{#define@}}.
+@item
+@kwd{@@C++} is used to mark artifacts of the @language{C++} language, e.g., @code{@@C++@{#define@}}.
+@item
+@kwd{@@class} is used to mark names of object classes.
+@item
+@kwd{@@command} is used to mark user input, such as a user-typed shell command, when it occurs
+in the normal flow of text.  The term @kwd{@@userinput} is used when the user input occurs
+within a @kwd{@@transcript} section.
+@item
+@kwd{@@codeexample} is used to mark code that is excerpted in the style of a @language{texinfo} @kwd{example}.
+The term @kwd{@@codeexample} should appear on a line by itself, before the text of the code, and the
+terms @kwd{@@end codeexample} should appear on a line by itself, at the end of the text of the code.
+@item
+@kwd{@@cl} is used to mark artifacts of the @language{Common Lisp} language,
+e.g., @code{@@cl@{defmacro@}}.
+@item
+@kwd{@@constant} can be used to mark constant names and values that appear in the text.
+@item
+@kwd{@@exception} is used to mark names of exceptions.
+@item
+@kwd{@@fn} is used to mark function names that occur in the text.
+@item
+@kwd{@@interface} is used to mark interface names.
+@item
+@kwd{@@isl} is used to mark artifacts of the @system{ILU} @language{ISL} language, e.g. @code{@@isl@{SIBLING@}}.
+@item
+@kwd{@@java} is used to mark artifacts of the @language{Java} language, e.g. @code{@@java@{class Foo;@}}.
+@item
+@kwd{@@kwd} is used to mark keywords that occur in the text.
+@item
+@kwd{@@language} is used to mark names of computer or human languages.
+@item
+@kwd{@@m3} is used to mark artifacts of the @language{Modula-3} language, e.g. @code{@@m3@{INTERFACE Foo;@}}.
+@item
+@kwd{@@macro} is used to mark names of macros that occur in the text.
+@item
+@kwd{@@message} is used to mark in-line text that is a message a program may write to its output.
+@item
+@kwd{@@metavar} is used to mark meta-variables.
+@item
+@kwd{@@method} is used to mark method names.
+@item
+@kwd{@@module} is used to denote module names for those languages
+which support them, such as @language{Common Lisp} package names, or @language{Java}
+package names.
+@item
+@kwd{@@parm} is used to mark parameter names.
+@item
+@kwd{@@picture} is used to include a file containing encapsulated @language{Postscript}
+of a diagram or picture.  It should appear on a line, followed by the name of the file containing the picture, followed
+by a newline.  We find the @system{InterViews} tool @program{idraw} works well in creating
+diagrams in the form of encapsulated @language{Postscript}.
+@item
+@kwd{@@program} is used to mark program names that occur in the text.
+@item
+@kwd{@@protocol} is used to mark names of @system{ILU} RPC protocols.
+@item
+@kwd{@@symbol} is used to mark names of symbols in Makefiles or object files.
+@item
+@kwd{@@system} is used to mark system names that occur in the text.
+@item
+@kwd{@@switch} is used to mark command-line switches or options to programs.
+@item
+@kwd{@@transcript} is used to mark an example that is a dialog between a user and a program.
+The term @kwd{@@transcript} should appear on a line by itself, before the text of the dialog, and the
+terms @kwd{@@end transcript} should appear on a line by itself, at the end of the dialog.
+The term @kwd{@@userinput} may be used within a transcript.
+@item
+@kwd{@@transport} is used to mark the names of @system{ILU} data transport systems.
+@item
+@kwd{@@type} is used to mark the names of programming language types.
+@item
+@kwd{@@url} is used to mark World Wide Web urls.
+@item
+@kwd{@@userinput} is used to mark text typed by the user in a transcript section.
+@end itemize

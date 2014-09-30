@@ -1,0 +1,70 @@
+.\" c-stubber.1
+.TH C-STUBBER 1 "23 September 1994"
+.SH NAME
+c-stubber \- generate ILU stubs for the C programming language
+.SH SYNOPSIS
+\fBc-stubber\fR [\fB-I\fR \fIinterface-dir\fR ...] [\fB-dir\fR \fIoutput-dir\fR] [\fB-headers\fR] [\fB-common\fR] [\fB-surrogate\fR] [\fB-true\fR] [\fB-nodefaulttrueclass\fR] [\fB-renames\fR \fIrenames-file\fR] [\fB-removefirst\fR] \fIISLFILE\fR [ \fI...ISLFILES\fR ]
+.SH DESCRIPTION
+.B c-stubber
+generates C code for the
+interface defined in \fIISLFILE\fR, which should be a file
+containing an ISL specification of the interface.  If no directory
+is specified as part of \fIISLFILE\fR, the stubber will search
+for the file in the directories specified with the \fB-I\fR options,
+followed by list of directories specified by the
+environment variable \fCILUPATH\fR.  If no file extension is
+specified for \fIISLFILE\fR, the extension "\fC.isl\fR" is assumed.
+If no directories are explicitly specified, and the environment variable
+ILUPATH is not set, the stubber will search the default list of
+directories, which is \fC(., ILUHOME/interfaces)\fR.
+.sp
+If the interface being stubbed is called \fCfoo\fR,
+four output files will be created, "\fCfoo-common.c\fR", containing
+code used by both the surrogate and true sides of the module,
+"\fCfoo-surrogate.c\fR", containing code used only by the surrogate side,
+"\fCfoo-true.c\fR", containing code used by the true side,
+and "\fCfoo.h\fR", containing a C header file for the module.
+By specifying the \fB-headers\fR, \fB-common\fR, \fB-surrogate\fR,
+and \fB-true\fR options, any combination of these files can
+be produced.  If an \fIoutput-dir\fR is specified, the files will
+be put in that directory; if the directory does not exist, the program
+will attempt to create it with \fC"mkdir \fIoutput-dir\fC"\fR.
+.sp
+If the \fI-nodefaulttrueclass\fR switch is specified, the true stub
+code file will not include the command which creates a default true
+class.  This avoids pulling in references to possibly unused default
+true methods.
+.sp
+The \fIrenames-file\fR allows the user to override the default
+mappings of ISL names to C names, as specified in the ILU Reference Manual.
+.sp
+If the \fB-removefirst\fR switch is specified, the stubber will attempt
+to remove old versions of the stub files before generating new versions,
+rather than attempting to overwrite the old version, which is the default
+behavior.
+.sp
+.SH EXAMPLES
+.LP
+.RS
+\fC% ./c-stubber foo.isl
+.br
+header file interface foo to ./foo.h...
+.br
+common code for interface foo to ./foo-common.c...
+.br
+code for surrogate stubs of interface foo to ./foo-surrogate.c...
+.br
+code for true stubs of interface foo to ./foo-true.c...
+% \fR
+.SH "ENVIRONMENT VARIABLES"
+The environment variable "ILUPATH" is consulted to find referenced
+interfaces.  It should consist of a sequence of colon-separated directories,
+which contain interface specifications in the form of files
+with names like \fI<interface-name>\fC.isl\fR.
+.SH "SEE ALSO"
+\fCc++-stubber(1), lisp-stubber(1), m3-stubber(1), python-stubber(1), ILU(1)\fR
+.sp
+\fIThe ILU Reference Manual\fR
+.SH "AUTHOR"
+.RE
+Bill Janssen

@@ -1,0 +1,114 @@
+/*
+BeginILUCopyright
+
+Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+Unlimited use, reproduction, modification, and distribution of this
+software and modified versions thereof is permitted.  Permission is
+granted to make derivative works from this software or a modified
+version thereof.  Any copy of this software, a modified version
+thereof, or a derivative work must include both the above copyright
+notice of Xerox Corporation and this paragraph.  Any distribution of
+this software, a modified version thereof, or a derivative work must
+comply with all applicable United States export control laws.  This
+software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+OF THE POSSIBILITY OF SUCH DAMAGES.
+  
+EndILUCopyright
+
+$Id: Imakefile,v 1.69 1999/08/18 06:57:24 spreitze Exp $
+*/
+
+#ifdef ADD_TIM_TOOLS
+
+CHAPTERS = concepts.tim \
+           isl.tim \
+           c.tim \
+           python.tim \
+           cpp2.tim \
+           c++.tim \
+           java.tim \
+           commonlisp.tim \
+           scheme.tim \
+           perl.tim \
+           windows.tim \
+           binding.tim \
+           threads.tim \
+           protocol.tim \
+           security.tim \
+           mop.tim \
+           debugging.tim \
+           installation.tim \
+           multlang.tim \
+           imake.tim \
+           langsupp.tim \
+           tim.tim \
+           pdefsys.tim \
+           cl-processes.tim \
+           lisp-ports.tim \
+           mappings.tim \
+           ../runtime/kernel/minors.tim
+
+
+PrebuiltTimDoc(installation, -m ilu-macros.tim -v, -v, -v, installation.tim ilu-macros.tim)
+PrebuiltTimDoc(tutc, -m ilu-macros.tim -v, -v, -v, tutc.tim ilu-macros.tim)
+PrebuiltTimDoc(tutpython, -m ilu-macros.tim -v, -v, -v, tutpython.tim ilu-macros.tim)
+PrebuiltTimDoc(tutjava, -m ilu-macros.tim -v, -v, -v, tutjava.tim ilu-macros.tim)
+
+PrebuiltTimDocWithHTML(manual, -v -m ilu-macros.tim, -X -v, -X -v, -verbose -split_chapter, $(CHAPTERS) ilu-macros.tim)
+
+dist:: ../README
+
+../README : installation.info.dist
+	$(RM) -f ../README
+	$(SED) -e '/^/,/^File:.*$$/d' <installation.info.dist >../README
+	$(CHMOD_READONLY) ../README
+
+#endif /* ADD_TIM_TOOLS */
+
+install::
+	if test -f manual.ps.dist ; then \
+		$(INSTALL) $(INSTINCFLAGS) manual.ps.dist $(DESTDIR)/doc/manual.ps ; fi
+	if test -f manual.info.dist ; then \
+		$(INSTALL) $(INSTINCFLAGS) manual.info.dist $(DESTDIR)/doc/manual.info ; fi
+	if test -f tutc.ps.dist ; then \
+		$(INSTALL) $(INSTINCFLAGS) tutc.ps.dist $(DESTDIR)/doc/tutorial-C.ps ; fi
+	if test -f tutpython.ps.dist ; then \
+		$(INSTALL) $(INSTINCFLAGS) tutpython.ps.dist $(DESTDIR)/doc/tutorial-Python.ps ; fi
+	if test -f tutjava.ps.dist ; then \
+		$(INSTALL) $(INSTINCFLAGS) tutjava.ps.dist $(DESTDIR)/doc/tutorial-Java.ps ; fi
+	if test -f tutc.info.dist ; then \
+		$(INSTALL) $(INSTINCFLAGS) tutc.info.dist $(DESTDIR)/doc/tutorial-C.txt ; fi
+	if test -f tutpython.info.dist ; then \
+		$(INSTALL) $(INSTINCFLAGS) tutpython.info.dist $(DESTDIR)/doc/tutorial-Python.txt ; fi
+	if test -f tutjava.info.dist ; then \
+		$(INSTALL) $(INSTINCFLAGS) tutjava.info.dist $(DESTDIR)/doc/tutorial-Java.txt ; fi
+	if test -f manual_toc.html; then \
+		for file in manual*.html ;\
+			do	echo $${file} ;\
+				$(INSTALL) $(INSTINCFLAGS) $${file} $(DESTDIR)/doc/$${file} ;\
+			done ;\
+	fi
+	if test -f ilu-addr-space.idraw.gif ; then \
+		for file in *.gif ;\
+			do	echo $${file} ;\
+				$(INSTALL) $(INSTINCFLAGS) $${file} $(DESTDIR)/doc/$${file} ;\
+			done ;\
+	fi	
+
+all:: ILU.1
+
+ILU.1 : ILU.1.dist
+	$(SED) -e 's;YYILUHOMEYY;$(ILUHOME);g' -e '/BeginILUCopyright/,/EndILUCopyright/d' <ILU.1.dist >ILU.1
+
+InstallRO(ILU.1, $(DESTDIR)/man/man1)
+InstallRO(index.html, $(DESTDIR)/doc)
+
+clean::
+	-rm -f @* *.cp *.vr *.fn *.toc *.dvi *.aux *.texinfo *.pg *.ky *.tp *.fns *.cps *.kys *.pgs *.tps *.vrs tim-* *.log *.bak *.2

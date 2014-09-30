@@ -1,0 +1,3059 @@
+AC_PREREQ(2.2)
+dnl  
+dnl  $Id: configure.in,v 1.308 1999/09/10 17:11:00 janssen Exp $
+dnl  
+dnl  BeginILUCopyright
+dnl  
+dnl  Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+dnl  
+dnl  Unlimited use, reproduction, modification, and distribution of this
+dnl  software and modified versions thereof is permitted.  Permission is
+dnl  granted to make derivative works from this software or a modified
+dnl  version thereof.  Any copy of this software, a modified version
+dnl  thereof, or a derivative work must include both the above copyright
+dnl  notice of Xerox Corporation and this paragraph.  Any distribution of
+dnl  this software, a modified version thereof, or a derivative work must
+dnl  comply with all applicable United States export control laws.  This
+dnl  software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+dnl  WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+dnl  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+dnl  PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+dnl  LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+dnl  EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+dnl  NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+dnl  OF THE POSSIBILITY OF SUCH DAMAGES.
+dnl    
+dnl  EndILUCopyright
+dnl  
+dnl Process this file with autoconf to produce a configure script.
+dnl
+dnl
+dnl
+dnl  ********** What this file does:
+dnl  
+dnl  GNU Autoconf turns this into a /bin/sh script which attempts to
+dnl  configure your ILU system automatically.  It does this by looking to
+dnl  see what's on your path, what's in your system libraries, what options
+dnl  you've specified on the command line, etc.  It tries various probes to
+dnl  attempt to figure out what your architecture is, and what networking
+dnl  options you have, and what version of the OS, and so forth, and then
+dnl  it summarizes these findings in several configuration files scattered
+dnl  about the ILU source hierarchy.  In particular, it produces the
+dnl  following files:
+dnl  
+dnl  ILUSRC/runtime/kernel/iluconf.h
+dnl  
+dnl    This file is constructed from ILUSRC/imake/iluconf.h.in, by
+dnl  #defining any option or value which is named in
+dnl  ILUSRC/imake/iluconf.h.in, and which is found or discovered by the
+dnl  configure script.  This is used in building the ILU kernel library.
+dnl  
+dnl    When building ILUSRC/stubbers/parser/, the make procedure copies
+dnl  this file from ../../runtime/kernel/, so iluconf.h is actually used
+dnl  in both places.
+dnl
+dnl  ILUSRC/runtime/java/config/ilujava_conf.h
+dnl  
+dnl    This file is constructed from ILUSRC/imake/ilujava_conf.h.in in a
+dnl  manner analogous to iluconf.h.  This file is only constructed if you 
+dnl  have Java built.
+dnl
+dnl  ILUSRC/GSS/kernel/ilugss_conf.h
+dnl  
+dnl    This file is constructed from ILUSRC/imake/ilugss_conf.h.in, and is
+dnl  used to specify which security protocols and name systems you've
+dnl  selected to be included in the GSS security library.  This file is
+dnl  only constructed if you specify to the configure script that you need
+dnl  to have the secure transport option built.
+dnl  
+dnl  ILUSRC/GSS/ssl/locations.cfg
+dnl  
+dnl    This file is constructed from ILUSRC/imake/gsslocations.cfg, and is
+dnl  used to specify to ILU where any various external security libraries
+dnl  that might be needed are located, such as libdes-3.0, or RSAREF.  If
+dnl  you do not specify SSL security to the configure script, this file will
+dnl  not be generated.
+dnl  
+dnl  ILUSRC/imake/ilu.defs.new
+dnl  
+dnl    This file is used by the "imake" step of the ILU build process, and
+dnl  is constructed from ILUSRC/imake/iluchoices.in and ILUSRC/imake/iludefs.in.
+dnl  iluchoices.in is processed in much the same way as iluconf.h.in, with
+dnl  various #define defs being generated for those options and configuration
+dnl  parameters that are needed.  iludefs.in is processed somewhat differently,
+dnl  with any parameters between `@' characters being replaced by whatever value
+dnl  the configure script has determined for that identifier, or not replaced
+dnl  if the configure script has not determined any value.
+dnl  
+dnl  ILUSRC/BootstrapMakefile
+dnl  
+dnl    This makefile is used to configure the actual top-level makefile,
+dnl  which is called ConfiguredMakefile, from the top-level Imakefile.
+dnl  
+dnl  ******* Options
+dnl  
+dnl  The available configure options can be listed by typing
+dnl  
+dnl  	./configure --help
+dnl  
+
+dnl
+dnl Produce iluconf.h, iludefs, and iluchoices
+dnl
+AC_INIT(iludefs.in)
+AC_CONFIG_HEADER(iluconf.h ilugss_conf.h ilujava_conf.h iluchoices)
+
+dnl
+dnl Figure out what kind of system this is
+dnl
+AC_CANONICAL_HOST
+
+dnl
+dnl Checks for programs.
+dnl
+AC_DEFUN(ILU_CHECK_ANSI_C,
+[AC_MSG_CHECKING(to see if $1 can handle ANSI C)
+cat >conftest.c <<EOF
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <limits.h>
+int main(int ac, char **av){
+ int i = INT_MAX;
+ char *p = (char *) malloc(1048);
+ memmove(p, *av, strlen(*av)+1);
+ printf("%s, %d\n", p, i);
+ return 0;
+}
+EOF
+rm -f conftest1.o
+$1 -o conftest1.o conftest.c 2>&5
+if test -s "conftest1.o" ; then
+  ac_tv_prog_ANSI_C="$1"
+  AC_MSG_RESULT(yes)
+else
+  AC_MSG_RESULT(no)
+fi
+])
+
+if test "$ac_cv_prog_ANSI_C" != ""; then
+  ac_tv_prog_ANSI_C="$ac_cv_prog_ANSI_C"
+else
+  AC_PATH_PROG(CC, cc, "")
+  if test "$CC" != ""; then
+    ILU_CHECK_ANSI_C($CC)
+  fi
+  if test "$ac_tv_prog_ANSI_C" = ""; then
+    AC_MSG_RESULT("  perhaps gcc is properly installed...")
+    AC_PATH_PROG(CC2, gcc, "")
+    if test "$CC2" != ""; then
+      ILU_CHECK_ANSI_C($CC2)
+    fi
+    if test "$ac_tv_prog_ANSI_C" = ""; then
+      AC_MSG_RESULT(*** Can't find an ANSI C compiler to use.)
+      AC_MSG_ERROR(*** Please set the environment variable CC to valid ANSI C compilation command.)
+    fi
+  fi
+  AC_CACHE_VAL(ac_cv_prog_ANSI_C,[ac_cv_prog_ANSI_C="$ac_tv_prog_ANSI_C"])
+fi
+if test "$ac_tv_prog_ANSI_C" != ""; then
+  CC="$ac_tv_prog_ANSI_C"
+  AC_MSG_RESULT(using $ac_tv_prog_ANSI_C for ANSI C compilation)
+else
+  AC_MSG_RESULT(*** Can't find an ANSI C compiler to use.)
+  AC_MSG_ERROR(*** Please set the environment variable CC to valid ANSI C compilation command.)
+  exit 1
+fi
+AC_SUBST(ANSI_C_LIBRARY)
+AC_MSG_CHECKING(to see if -lm is needed when linking ANSI C)
+cat >conftest.c <<EOF
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+int main(int ac, char **av){
+ double f1 = 2.0;
+ printf("%f %f\n", sqrt(f1), floor(f1));
+ return 0;
+}
+EOF
+rm -f conftest1
+$ac_cv_prog_ANSI_C -o conftest1 conftest.c 2>&5
+if test -s "conftest1"; then
+  AC_MSG_RESULT(no)
+else
+  $ac_cv_prog_ANSI_C -o conftest1 conftest.c -lm 2>&5
+  if test -s "conftest1"; then
+    AC_MSG_RESULT(yes)
+    ANSI_C_LIBRARY="$ANSI_C_LIBRARY -lm"
+  else
+    AC_MSG_ERROR(Cannot use math library calls)
+  fi
+fi
+
+dnl
+dnl Check for GCC.
+dnl
+AC_MSG_CHECKING(for GCC)
+cat >conftest.c <<EOF
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <limits.h>
+int main(int ac, char **av){
+#ifndef __GNUC__
+#error "not GCC"
+#endif
+ return 0;
+}
+EOF
+rm -f conftest1.o
+$ac_cv_prog_ANSI_C -o conftest1.o conftest.c 2>&5
+if test -s "conftest1.o" ; then
+  ILU_GCC="yes"
+  AC_MSG_RESULT(yes)
+else
+  AC_MSG_RESULT(no)
+fi
+
+AC_PROG_INSTALL
+if test "$INSTALL" = "./install-sh -c" ; then
+  INSTALL="`pwd`/install-sh -c"
+fi
+dnl
+dnl Don't use AC_PROG_RANLIB, as it confuses imake.
+dnl Thanks to duck@novell.com for this tip.
+dnl
+AC_CHECK_PROG(RANLIB, ranlib, ranlib, true)
+
+ac_save_path="$PATH"
+PATH=$PATH:/usr/bin/X11
+AC_PATH_PROG(IMAKE, imake, [""])
+PATH=$ac_save_path
+if test -z "$IMAKE" ; then
+  AC_MSG_ERROR([Can't find imake.  Please make sure imake is on your path and start over.])
+fi
+
+AC_SUBST(IMAKE_RULES_SRCDIR)
+AC_MSG_CHECKING(where sources for imake rules are)
+IMAKE_RULES_SRCDIR="`pwd`"
+AC_MSG_RESULT($IMAKE_RULES_SRCDIR)
+
+AC_SUBST(ILUSRC)
+AC_MSG_CHECKING(where top of ILU source tree is)
+[ILUSRC="`pwd | sed -e 's;/[^/]*$;;'`"]
+AC_MSG_RESULT($ILUSRC)
+
+AC_SUBST(AR)
+AC_CHECK_PROGS(AR, ar aal, ar)
+AC_PROG_LN_S
+AC_PATH_PROGS(BOURNE_SHELL, sh bash, [""])
+AC_PATH_PROG(PERL, perl, [""])
+AC_PATH_PROG(BISON, bison, [""])
+AC_PATH_PROG(DVIPS, dvips, [""])
+AC_PATH_PROG(DVIPS4050, 4050dvips, [""])
+AC_PATH_PROG(FLEX, flex, [""])
+AC_PATH_PROG(GHOSTSCRIPT, gs, [""])
+AC_PATH_PROG(MAKEINFO, makeinfo, [""])
+AC_PATH_PROG(TEXINDEX, texindex, [""])
+AC_PATH_PROG(TEX, tex, [""])
+AC_PATH_PROG(PYTHON, python, [""])
+
+if test "x$PYTHON" != "x" -a "x$PERL" != "x" -a "x$DVIPS" != "x" -a "x$GHOSTSCRIPT" != "x" -a "x$MAKEINFO" != "x" -a "x$TEXINDEX" != "x" -a "x$TEX" != "x" ; then
+  AC_DEFINE(ADD_TIM_TOOLS)
+fi
+
+ac_save_path="$PATH"
+PATH="/etc:/usr/etc:/usr/lib:/sbin:/usr/sbin:$PATH"
+AC_PATH_PROG(MAKEWHATIS_PATH, makewhatis, [""])
+PATH="$ac_save_path"
+AC_SUBST(MAKEWHATIS)
+AC_MSG_CHECKING(how to index man pages on $host_os)
+case "$host_os" in
+  sunos4* | solaris1*)
+	if test "$MAKEWHATIS_PATH" != ""; then
+	  MAKEWHATIS="$MAKEWHATIS_PATH -w -M"
+	fi
+	;;
+  solaris2* | irix*)
+	MAKEWHATIS="/usr/lib/makewhatis"
+	;;
+  linux-gnu*)
+	if test "$MAKEWHATIS_PATH" != ""; then
+	  MAKEWHATIS="$MAKEWHATIS_PATH -v"
+	fi
+	;;
+  *)
+	;;
+esac
+if test "$MAKEWHATIS" != ""; then
+  AC_MSG_RESULT($MAKEWHATIS)
+else
+  AC_MSG_RESULT([Don't know -- won't try])
+  MAKEWHATIS="echo Remember to re-index the man pages after installing"
+fi
+
+AC_CHECK_FUNC(poll,[cf_have_poll="yes"])
+case "$host_os" in
+  irix6.[[4567]])
+	NSL_LIB=""
+	;;
+  *)
+	NSL_LIB="-lnsl"
+	;;
+esac
+
+AC_CHECK_LIB(socket, accept, LIBS="${LIBS} -lsocket ${NSL_LIB}", , ${NSL_LIB})
+AC_CHECK_FUNCS(alloca)
+
+dnl
+dnl Checks for header files.
+dnl
+AC_CHECK_HEADERS(widec.h alloca.h)
+
+dnl
+dnl Checks for typedefs, structures, and runtime characteristics.
+dnl
+AC_TYPE_PID_T
+AC_C_BIGENDIAN
+AC_C_CHAR_UNSIGNED
+AC_CHECK_SIZEOF(char)
+AC_CHECK_SIZEOF(short)
+AC_CHECK_SIZEOF(int)
+AC_CHECK_SIZEOF(long)
+AC_CHECK_SIZEOF(long long)
+AC_CHECK_SIZEOF(float)
+AC_CHECK_SIZEOF(double)
+AC_CHECK_SIZEOF(long double)
+AC_CHECK_SIZEOF(void *)
+
+AC_MSG_CHECKING(size of function pointer)
+AC_CACHE_VAL(ac_cv_sizeof_fn_p,[AC_TRY_RUN([#include <stdio.h>
+main()
+{
+  FILE *f=fopen("conftestval", "w");
+  if (!f) exit(1);
+  fprintf(f, "%d\n", sizeof(void (*)(void)));
+  exit(0);
+}], ac_cv_sizeof_fn_p=`cat conftestval`, ac_cv_sizeof_fn_p=0)])dnl
+AC_MSG_RESULT($ac_cv_sizeof_fn_p)
+AC_DEFINE_UNQUOTED(SIZEOF_FN_P, $ac_cv_sizeof_fn_p)
+undefine([SIZEOF_FN_P])dnl
+undefine([ac_cv_sizeof_fn_p])dnl
+
+AC_MSG_CHECKING(size of enum type)
+AC_CACHE_VAL(ac_cv_sizeof_enum,[AC_TRY_RUN([#include <stdio.h>
+main()
+{
+  enum color { red, blue, green };
+  FILE *f=fopen("conftestval", "w");
+  if (!f) exit(1);
+  fprintf(f, "%d\n", sizeof(enum color));
+  exit(0);
+}], ac_cv_sizeof_enum=`cat conftestval`, ac_cv_sizeof_enum=0)])dnl
+AC_MSG_RESULT($ac_cv_sizeof_enum)
+AC_DEFINE_UNQUOTED(SIZEOF_ENUM, $ac_cv_sizeof_enum)
+undefine([SIZEOF_ENUM])dnl
+undefine([ac_cv_sizeof_enum])dnl
+
+AC_MSG_CHECKING(size of wchar_t)
+AC_CACHE_VAL(ac_cv_sizeof_wchar_t,[AC_TRY_RUN([#include <stdio.h>
+#include <stdlib.h>
+main()
+{
+  FILE *f=fopen("conftestval", "w");
+  if (!f) exit(1);
+  fprintf(f, "%d\n", sizeof(wchar_t));
+  exit(0);
+}], ac_cv_sizeof_wchar_t=`cat conftestval`, ac_cv_sizeof_wchar_t=0)])dnl
+AC_MSG_RESULT($ac_cv_sizeof_wchar_t)
+AC_DEFINE_UNQUOTED(SIZEOF_WCHAR_T, $ac_cv_sizeof_wchar_t)
+undefine([SIZEOF_WCHAR_T])dnl
+undefine([ac_cv_sizeof_wchar_t])dnl
+
+AC_MSG_CHECKING(current LOCALE)
+AC_CACHE_VAL(ac_cv_ctype_locale,[AC_TRY_RUN([#include <stdio.h>
+#include <stdlib.h>
+#include <locale.h>
+main()
+{
+  char *loc;
+
+  FILE *f=fopen("conftestval", "w");
+  if (!f) exit(1);
+  loc = setlocale(LC_CTYPE, "");
+  fprintf(f, "%s\n", (loc == (char *) 0) ? "unknown" : loc);
+  exit(0);
+}], ac_cv_ctype_locale=`cat conftestval`, ac_cv_ctype_locale=0)])dnl
+AC_MSG_RESULT($ac_cv_ctype_locale)
+AC_DEFINE_UNQUOTED(CTYPE_LOCALE, "$ac_cv_ctype_locale")
+undefine([CTYPE_LOCALE])dnl
+undefine([ac_cv_ctype_locale])dnl
+
+if test $ac_cv_sizeof_long -eq 8; then
+  AC_DEFINE(LONG_CARDINAL_TYPE,unsigned long)
+  AC_DEFINE(LONG_INTEGER_TYPE,long)
+elif test $ac_cv_sizeof_long_long -eq 8; then
+  AC_DEFINE(LONG_CARDINAL_TYPE,unsigned long long)
+  AC_DEFINE(LONG_INTEGER_TYPE,long long)
+fi
+
+if test $ac_cv_sizeof_double -eq 16; then
+  AC_DEFINE(LONG_REAL_TYPE,double)
+elif test $ac_cv_sizeof_long_double -eq 16; then
+  AC_DEFINE(LONG_REAL_TYPE,long double)
+fi
+
+dnl
+dnl Check to see if "size_t" is defined
+dnl
+AC_MSG_CHECKING(for size_t)
+AC_CACHE_VAL(ac_cv_has_size_t,[AC_TRY_COMPILE([#include <stdlib.h>],
+[size_t i; i = 10;],
+ac_cv_has_size_t="yes", ac_cv_has_size_t="no")])dnl
+if test "$ac_cv_has_size_t" = "yes"; then
+  AC_DEFINE(SIZE_T, size_t)
+  AC_MSG_RESULT(yes)
+else
+  AC_DEFINE(SIZE_T, unsigned)
+  AC_MSG_RESULT([no -- using 'unsigned' instead])
+fi
+
+dnl
+dnl Check to see if using glibc header files
+dnl
+AC_MSG_CHECKING(whether using GNU libc header files)
+AC_CACHE_VAL(ac_cv_using_glibc,[AC_TRY_COMPILE([#include <sys/types.h>],
+[#ifndef _GNU_TYPES_H
+  &&;
+#endif],
+ac_cv_using_glibc="yes", ac_cv_using_glibc=="no")])dnl
+if test "$ac_cv_using_glibc" = "yes"; then
+  AC_DEFINE(ILU_USING_GLIBC)
+  AC_MSG_RESULT(yes)
+else
+  AC_MSG_RESULT(no)
+fi
+
+dnl
+dnl Checks for library functions, signatures
+dnl
+AC_TYPE_SIGNAL
+AC_FUNC_VPRINTF
+AC_CHECK_FUNCS(gettimeofday strdup memmove getrlimit)
+
+dnl
+dnl SIG_IGN is broken on at least NEXTSTEP 3.2
+dnl
+AC_MSG_CHECKING([if definition of SIG_IGN is broken for C])
+AC_CACHE_VAL(ac_cv_decl_sig_ign_broken,
+[AC_TRY_COMPILE([#include <signal.h>],[(void) signal(SIGPIPE, SIG_IGN)],
+    ac_cv_decl_sig_ign_broken=no, ac_cv_decl_sig_ign_broken=yes)])dnl
+AC_MSG_RESULT($ac_cv_decl_sig_ign_broken)
+if test $ac_cv_decl_sig_ign_broken = yes; then
+    AC_DEFINE(SIG_IGN_BROKEN)
+fi
+
+dnl
+dnl Check for solaris 1 non-blocking I/O bug
+dnl
+
+AC_MSG_CHECKING(for Solaris 1 POSIX non-blocking I/O bug)
+case "$host_os" in
+  sunos4* | solaris1*)
+	AC_DEFINE(HAS_SOLARIS1_NONBLOCKING_BUG)
+	AC_MSG_RESULT(yes)
+	;;
+  *)
+	AC_MSG_RESULT([don't know -- assuming no])
+	;;
+esac
+
+dnl
+dnl Check for solaris 1 getgroups gid_t type problem
+dnl
+
+AC_MSG_CHECKING(for Solaris 1 gid_t size problem)
+case "$host_os" in
+  sunos4* | solaris1*)
+	AC_DEFINE(HAS_SOLARIS1_GID_T_SIZE_BUG)
+	AC_MSG_RESULT(yes)
+	;;
+  *)
+	AC_MSG_RESULT([don't know -- assuming no])
+	;;
+esac
+
+dnl
+dnl Check for solaris 2 TCP socket bug
+dnl
+
+AC_MSG_CHECKING(for Solaris 2 send/recv bug on TCP sockets)
+case "$host_os" in
+  solaris2*)
+	AC_DEFINE(HAS_SOLARIS2_TCP_SOCKET_BUG)
+	AC_MSG_RESULT(yes)
+	;;
+  *)
+	AC_MSG_RESULT([don't know -- assuming no])
+	;;
+esac
+
+dnl
+dnl Figure out how to build shared libraries
+dnl (Mainly cribbed from Python 1.4)
+dnl
+
+AC_MSG_CHECKING(how to build shared libraries)
+# Set info about shared libraries.
+AC_SUBST(LDSHARED_FILE_EXT)
+AC_SUBST(LDSHARED_COMMAND)
+AC_SUBST(CCSHARED_FLAGS)
+# LDSHARED_FILE_EXT is the extension of shared libraries
+# -- usually "so", "sl" on HP-UX
+if test -z "$LDSHARED_FILE_EXT"
+then
+	case $host_os in
+	hp*)   LDSHARED_FILE_EXT=sl;;
+	*)     LDSHARED_FILE_EXT=so;;
+	esac
+fi
+# LDSHARED_COMMAND is the ld *command* used to create shared library
+# -- "ld" on SunOS 4.x.x, "ld -G" on SunOS 5.x, "ld -shared" on IRIX 5
+if test -z "$LDSHARED_COMMAND"
+then
+	case $host_os in
+	aix*) LDSHARED_COMMAND="ld_so_aix \$(CC)";;
+	irix5*) LDSHARED_COMMAND="ld -shared";;
+	irix6*) LDSHARED_COMMAND="ld -n32 -shared -all";;
+	sunos4*) LDSHARED_COMMAND="ld";;
+	solaris*) LDSHARED_COMMAND="ld -G";;
+	hp*) LDSHARED_COMMAND="ld -b";;
+	osf*) LDSHARED_COMMAND="ld -shared -expect_unresolved \"*\"";;
+	sysv4*) LDSHARED_COMMAND="ld -G";;
+	nextstep*) LDSHARED_COMMAND='$(CC) $(CFLAGS) -nostdlib -r';;
+	linux*) LDSHARED_COMMAND="cc -shared";;
+	freebsd*) LDSHARED_COMMAND="ld -Bshareable";;
+	sco*) LDSHARED_COMMAND="cc -G -KPIC -Ki486 -belf -Wl,-Bexport";;
+	*) ;;
+	esac
+fi
+# CCSHARED_FLAGS are the C *flags* used to create objects to go into a shared
+# library -- this is only needed for a few systems
+if test -z "$CCSHARED_FLAGS"
+then
+	case $host_os in
+	hp*) if test "$ILU_GCC" = yes;
+		 then CCSHARED_FLAGS="-fPIC";
+		 else CCSHARED_FLAGS="+z";
+		 fi;;
+	irix6*) CCSHARED_FLAGS="-n32";;
+	linux*) CCSHARED_FLAGS="-fpic";;
+	freebsd*) CCSHARED_FLAGS="-fpic";;
+	solaris*) if test "$ILU_GCC" = yes;
+		   then CCSHARED_FLAGS="-fPIC";
+		   else CCSHARED_FLAGS="-KPIC";
+		  fi;;
+	sco*) CCSHARED_FLAGS="-KPIC -dy -Bdynamic";;
+	esac
+fi
+if test "$LDSHARED_COMMAND" != ""; then
+  AC_MSG_RESULT($LDSHARED_COMMAND with file extension of .$LDSHARED_FILE_EXT)
+  AC_DEFINE(PYTHON_USES_SHARED_LIBRARIES_FOR_EXTENSIONS)
+else
+  AC_MSG_RESULT(don't know)
+fi
+
+AC_MSG_CHECKING(whether to build shared library version of ILU kernel)
+AC_ARG_ENABLE(kernel-shared-library,
+[  --enable-kernel-shared-library       Build shared library version of kernel],
+[if test "$enableval" = no; then
+  AC_MSG_RESULT(no)
+else
+  AC_DEFINE(ADD_KERNEL_SHARED_LIBRARY)
+  AC_MSG_RESULT(yes)
+fi],
+[if test "$LDSHARED_COMMAND" != ""; then
+  AC_DEFINE(ADD_KERNEL_SHARED_LIBRARY)
+  AC_MSG_RESULT([yes, by default, since LDSHARED_COMMAND is defined])
+ else
+  AC_MSG_RESULT([no, by default -- LDSHARED_COMMAND is not defined])
+ fi])
+
+AC_CHECK_HEADERS(sys/select.h, [AC_DEFINE(_NEEDS_SELECT_H)])
+
+dnl
+dnl Check for sockets
+dnl
+AC_CACHE_VAL(ac_cv_ilu_socket_element_missing,
+[ac_cv_ilu_socket_element_missing=""
+ AC_CHECK_HEADERS(sys/socket.h,,[ac_cv_ilu_socket_element_missing="yes"])
+ AC_CHECK_FUNCS(socket accept connect listen bind,,[ac_cv_ilu_socket_element_missing="yes"])])
+if test "$ac_cv_ilu_socket_element_missing" = "" ; then
+  AC_MSG_RESULT(the OS supports BSD sockets)
+  AC_DEFINE(_HAS_SOCKETS)
+else
+  AC_MSG_RESULT(socket support is not provided)
+fi
+
+dnl
+dnl Checks to see if sys/socket.h provides prototypes for send and recv
+dnl
+AC_MSG_CHECKING(to see if sys/socket.h provides prototypes for send and recv)
+cat >conftest.c <<EOF
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+int main(int ac, char **av){
+ printf ("%p %p\n", &recv, &send);
+ return 0;
+}
+EOF
+rm -f conftest1.o
+$ac_cv_prog_ANSI_C -c -o conftest1.o conftest.c 2>&5
+if test -s "conftest1.o"; then
+  AC_DEFINE(HAS_RECV_AND_SEND_PROTOTYPES)
+  AC_MSG_RESULT(yes)
+else
+  AC_MSG_RESULT(no)
+fi
+
+dnl
+dnl Figure out if we need to #include <netinet/tcp.h> to get TCP_NODELAY
+dnl
+
+AC_MSG_CHECKING([whether runtime/kernel/ilusock.h causes TCP_NODELAY to be defined])
+[cat >conftest.c <<EOF
+#include <stdio.h>
+#include <unistd.h>
+#include <ilusock.h>
+int main(int ac, char **av){
+ printf ("%s\n", TCP_NODELAY);
+ return 0;
+}
+EOF]
+rm -f conftest1.o
+$ac_cv_prog_ANSI_C -c -DILU_CONFIGURE_TIME -I$ILUSRC/runtime/kernel -o conftest1.o conftest.c 2>&5
+if test -s "conftest1.o"; then
+  AC_MSG_RESULT(yes)
+else
+  AC_MSG_RESULT(no)
+  AC_MSG_CHECKING([whether including <netinet/tcp.h> causes TCP_NODELAY to be defined])
+  [cat >conftest.c <<EOF
+#include <stdio.h>
+#include <unistd.h>
+#include <ilusock.h>
+#include <netinet/tcp.h>
+int main(int ac, char **av){
+ printf ("%s\n", TCP_NODELAY);
+ return 0;
+}
+EOF]
+  rm -f conftest1.o
+  $ac_cv_prog_ANSI_C -c -DILU_CONFIGURE_TIME -I$ILUSRC/runtime/kernel -o conftest1.o conftest.c 2>&5
+  if test -s "conftest1.o"; then
+    AC_DEFINE(ILU_NEEDS_NETINET_TCP_H_FOR_NODELAY)
+    AC_MSG_RESULT(yes)
+  else
+    AC_MSG_RESULT(no)
+  fi
+fi
+
+dnl
+dnl Figure out if we need to #include <netinet/tcp.h> to get TCP_NODELAY
+dnl
+
+AC_MSG_CHECKING([whether nanosleep is available])
+[cat >conftest.c <<EOF
+#include <stdio.h>
+#include <unistd.h>
+#include <time.h>
+int main(int ac, char **av){
+ struct timespec ts = { 0, 2000000 };
+ nanosleep(&ts, NULL);
+ return 0;
+}
+EOF]
+rm -f conftest1
+$ac_cv_prog_ANSI_C -o conftest1 conftest.c 2>&5
+if test -s "conftest1"; then
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(HAS_NANOSLEEP)
+else
+  AC_MSG_RESULT(no)
+  AC_MSG_CHECKING([whether adding -lposix4 makes nanosleep available])
+  rm -f conftest1
+  $ac_cv_prog_ANSI_C -o conftest1 conftest.c -lposix4 2>&5
+  if test -s "conftest1"; then
+    AC_DEFINE(ILU_NEEDS_POSIX4_FOR_NANOSLEEP)
+    AC_DEFINE(HAS_NANOSLEEP)
+    AC_MSG_RESULT(yes)
+  else
+    AC_MSG_RESULT(no)
+  fi
+fi
+
+dnl
+dnl See if we can build realpath
+dnl
+AC_MSG_CHECKING(to see if we can build the realpath utility)
+[cat >conftest.c <<EOF
+#include <stdlib.h>
+#include <stdio.h>
+#include <errno.h>
+#include <string.h>
+
+int main (int ac, char **av)
+{
+  char buf[2048];
+
+  if (ac < 2) {
+    fprintf(stderr, "Usage:  %s PATH\n", av[0]);
+    exit(1);
+  };
+  if (realpath(av[1], buf) != 0)
+    printf("%s\n", buf);
+  else {
+    fprintf(stderr, "Error:  %s\n", strerror(errno));
+    exit(1);
+  }
+  return 0;
+}
+EOF]
+rm -f realpath
+$ac_cv_prog_ANSI_C -o realpath conftest.c 2>&5
+if test -x "realpath"; then
+  have_realpath="yes"
+  AC_MSG_RESULT(yes)
+else
+  have_realpath="no"
+  AC_MSG_RESULT(no)
+fi
+
+dnl
+dnl Checks to see if unistd.h provides prototype for gethostname()
+dnl
+AC_MSG_CHECKING(to see if unistd.h provides prototype for gethostname)
+[cat >conftest.c <<EOF
+#include <stdio.h>
+#include <unistd.h>
+int main(int ac, char **av){
+ char buf[2000];
+ printf ("%p\n", &gethostname);
+ return gethostname (buf, 2000);
+ return 0;
+}
+EOF]
+rm -f conftest1.o
+$ac_cv_prog_ANSI_C -c -o conftest1.o conftest.c 2>&5
+if test -s "conftest1.o"; then
+  AC_DEFINE(HAVE_GETHOSTNAME_PROTOTYPE)
+  AC_MSG_RESULT(yes)
+else
+  AC_MSG_RESULT(no)
+fi
+
+dnl
+dnl Checks to see if stdio.h or unistd.h provides prototype for sys_errlist()
+dnl
+AC_MSG_CHECKING(to see if unistd.h or stdio.h provides prototype for sys_errlist)
+[cat >conftest.c <<EOF
+#include <stdio.h>
+#include <unistd.h>
+int main(int ac, char **av){
+ printf ("%s\n", sys_errlist[1]);
+ return 0;
+}
+EOF]
+rm -f conftest1.o
+$ac_cv_prog_ANSI_C -c -o conftest1.o conftest.c 2>&5
+if test -s "conftest1.o"; then
+  AC_DEFINE(ILU_HAVE_SYS_ERRLIST_PROTOTYPE)
+  AC_MSG_RESULT(yes)
+else
+  AC_MSG_RESULT(no)
+fi
+
+AC_MSG_CHECKING(fully-qualified domain name)
+AC_CACHE_VAL(ac_cv_fqdn,ac_cv_fqdn=`sh ./fqdn.sh`)
+AC_MSG_RESULT($ac_cv_fqdn)
+AC_DEFINE_UNQUOTED(FULLY_QUALIFIED_DOMAIN_NAME, $ac_cv_fqdn)
+
+AC_MSG_CHECKING(for Xerox firewall handling)
+using_xerox_firewall_handling=""
+AC_ARG_ENABLE(xerox-firewall-handling,
+[  --enable-xerox-firewall-handling      Enable Xerox firewall handling],
+[if test "$enableval" = "yes"; then
+  if test "$ac_cv_fqdn" = "parc.xerox.com" ; then
+    case $host_os in
+      solaris* | sunos* )
+        using_xerox_firewall_handling="yes"
+        AC_MSG_RESULT(yes)
+	;;
+      *)
+        AC_MSG_RESULT([no -- not available for $host_os])
+        ;;
+    esac
+  else
+    AC_MSG_RESULT([no -- code not available])
+  fi
+else
+  AC_MSG_RESULT(no)
+fi],
+  AC_MSG_RESULT([no -- by default])
+)
+if test "$using_xerox_firewall_handling" = "yes"; then
+	AC_DEFINE(XEROX_FIREWALL_HANDLING)
+	AC_DEFINE(REMOVE_AUTOMOUNT_TMP_MNT)
+fi
+
+
+dnl
+dnl check for getwd separately from other BSD functions
+dnl
+AC_CHECK_FUNCS(getwd)
+
+dnl
+dnl check for putenv separately from other BSD functions
+dnl
+AC_CHECK_FUNCS(putenv)
+
+dnl
+dnl check for BSD characteristics
+dnl
+AC_CACHE_VAL(ac_cv_ilu_bsd_element_missing,
+[ac_cv_ilu_bsd_element_missing=""
+ AC_CHECK_FUNCS(gethostname gettimeofday select,,[ac_cv_ilu_bsd_element_missing="yes"])
+ AC_CHECK_HEADERS(netinet/in.h netdb.h,,[ac_cv_ilu_bsd_element_missing="yes"])])
+dnl also need to check for FIONREAD, FIONBIO
+if test "$ac_cv_ilu_bsd_element_missing" = ""; then
+  AC_MSG_RESULT(the OS has sufficient BSD-ness for ILU purposes)
+  AC_DEFINE(_IS_BSD)
+else
+  AC_MSG_RESULT(the OS can\'t be thought of as BSD-compatible)  
+fi
+
+dnl
+dnl check for POSIX characteristics
+dnl
+AC_CACHE_VAL(ac_cv_ilu_posix_element_missing,
+[ac_cv_ilu_posix_element_missing=""
+ AC_CHECK_HEADERS(sys/utsname.h,,[ac_cv_ilu_posix_element_missing="yes"])
+ AC_CHECK_FUNCS(sigaction read write sleep getpid uname unlink access chmod getgid geteuid getgroups getcwd,,
+ [ac_cv_ilu_posix_element_missing="yes"])])
+if test "$ac_cv_ilu_posix_element_missing" = ""; then
+  AC_MSG_RESULT(the OS has the necessary POSIX system calls)
+  AC_DEFINE(_IS_POSIX)
+else
+  AC_MSG_ERROR(ILU requires a POSIX-compatible OS)
+fi
+
+dnl
+dnl check for zlib compression library
+dnl
+AC_SUBST(ILU_ZLIB_LIBRARY)
+AC_SUBST(ILU_ZLIB_INCLUDE_DIR)
+zlib_library=""
+zlib_include_dir=""
+AC_MSG_CHECKING(for zlib compression library)
+AC_ARG_WITH(zlib,
+[  --with-zlib=LIB:INCLUDE_DIR   Specify libgz.a and include directory path for zlib],
+[if test "$withval" = no; then
+  AC_MSG_RESULT(no)
+elif test "$withval" = yes; then
+  AC_MSG_ERROR(Usage:  ./configure --with-zlib=LIB:INCLUDE_DIR)
+else
+  zlib_library=["`echo ${withval} | sed -e 's/:.*$//'`"]
+  zlib_include_dir=["`echo ${withval} | sed -e 's/^.*://'`"]
+  if test "x$zlib_library" = "x" ; then
+    AC_MSG_ERROR([can't find zlib library from $withval])
+    zlib_include_dir=""
+  elif test "x$zlib_include_dir" = "x" ; then
+    AC_MSG_ERROR([can't find zlib include dir from $withval])
+    zlib_library=""
+  elif test \! -r $zlib_library ; then
+    AC_MSG_ERROR([can't access zlib library $zlib_library])
+    zlib_include_dir=""
+    zlib_library=""
+  elif test \! -r ${zlib_include_dir}/zlib.h ; then
+    AC_MSG_ERROR([can't access zlib include directory $zlib_include_dir])
+    zlib_include_dir=""
+    zlib_library=""
+  else
+    AC_MSG_RESULT([yes -- library $zlib_library, include dir $zlib_include_dir])
+    ILU_ZLIB_LIBRARY="$zlib_library"
+    ILU_ZLIB_INCLUDE_DIR="$zlib_include_dir"
+  fi
+fi], [AC_MSG_RESULT([no, by default])])
+
+dnl
+dnl check for RSAREF-2.0 library
+dnl
+AC_SUBST(RSAREF_DIR)
+AC_SUBST(RSAREF_LIB)
+rsaref_library=""
+rsaref_parent_dir=""
+AC_MSG_CHECKING(for RSAREF-2.0 library)
+AC_ARG_WITH(rsaref,
+[  --with-rsaref=LIB:INSTALL_DIR   Specify rsaref.a and parent directory of RSAREF's source/],
+[if test "$withval" = no; then
+  AC_MSG_RESULT(no)
+elif test "$withval" = yes; then
+  AC_MSG_ERROR(Usage:  ./configure --with-rsaref=LIB:INSTALL_DIR)
+else
+  rsaref_library=["`echo ${withval} | sed -e 's/:.*$//'`"]
+  rsaref_parent_dir=["`echo ${withval} | sed -e 's/^.*://'`"]
+  if test "x$rsaref_library" = "x" ; then
+    AC_MSG_ERROR([can't find rsaref library from $withval])
+    rsaref_parent_dir=""
+  elif test "x$rsaref_parent_dir" = "x" ; then
+    AC_MSG_ERROR([can't find rsaref install dir from $withval])
+    rsaref_library=""
+  elif test \! -r $rsaref_library ; then
+    AC_MSG_ERROR([can't access rsaref library $rsaref_library])
+    rsaref_parent_dir=""
+    rsaref_library=""
+  elif test \! -r ${rsaref_parent_dir}/source/rsa.h ; then
+    AC_MSG_ERROR([can't access rsaref install directory $rsaref_parent_dir])
+    rsaref_parent_dir=""
+    rsaref_library=""
+  else
+    AC_MSG_RESULT([yes -- library $rsaref_library, source dir $rsaref_parent_dir/source])
+    RSAREF_LIB="$rsaref_library"
+    RSAREF_DIR="$rsaref_parent_dir"
+  fi
+fi], [AC_MSG_RESULT([not given])])
+
+dnl
+dnl check for libdes 3.0 library
+dnl
+AC_SUBST(LIBDES_INCL_DIR)
+AC_SUBST(LIBDES_LIB)
+libdes_library=""
+libdes_include_dir=""
+AC_MSG_CHECKING(for libdes 3.0 library)
+AC_ARG_WITH(libdes,
+[  --with-libdes=LIB:INCLUDE_DIR   Specify libdes.a and include directory of libdes],
+[if test "$withval" = no; then
+  AC_MSG_RESULT(no)
+elif test "$withval" = yes; then
+  AC_MSG_ERROR(Usage:  ./configure --with-libdes=LIB:INCLUDE_DIR)
+else
+  libdes_library=["`echo ${withval} | sed -e 's/:.*$//'`"]
+  libdes_include_dir=["`echo ${withval} | sed -e 's/^.*://'`"]
+  if test "x$libdes_library" = "x" ; then
+    AC_MSG_ERROR([can't find libdes library from $withval])
+    libdes_include_dir=""
+  elif test "x$libdes_include_dir" = "x" ; then
+    AC_MSG_ERROR([can't find libdes install dir from $withval])
+    libdes_library=""
+  elif test \! -r $libdes_library ; then
+    AC_MSG_ERROR([can't access libdes library $libdes_library])
+    libdes_include_dir=""
+    libdes_library=""
+  elif test \! -r ${libdes_include_dir}/des.h ; then
+    AC_MSG_ERROR([can't access libdes include directory $libdes_include_dir])
+    libdes_include_dir=""
+    libdes_library=""
+  else
+    AC_MSG_RESULT([yes -- library $libdes_library, include dir $libdes_include_dir])
+    LIBDES_LIB="$libdes_library"
+    LIBDES_INCL_DIR="$libdes_include_dir"
+  fi
+fi], [AC_MSG_RESULT([not given])])
+
+dnl
+dnl check for user-specified GSS SSL directory
+dnl
+AC_SUBST(SSL_LIBRARIES)
+AC_SUBST(SSL_INCLUDE_DIR)
+SSL_LIBRARIES=
+SSL_INCLUDE_DIR=
+AC_MSG_CHECKING(for user-specified SSL plug-in for ILU GSS library)
+AC_ARG_WITH(ssl-plugin,
+[  --with-ssl-plugin=LIB:INCLUDE_DIR   Specify library and include directory of ssl-plugin],
+[if test "$withval" = no; then
+  AC_MSG_RESULT(no)
+elif test "$withval" = yes; then
+  AC_MSG_ERROR(Usage:  ./configure --with-ssl-plugin=LIB:INCLUDE_DIR)
+else
+  SSL_LIBRARIES==["`echo ${withval} | sed -e 's/:.*$//'`"]
+  SSL_INCLUDE_DIR=["`echo ${withval} | sed -e 's/^.*://'`"]
+  if test "x$SSL_LIBRARIES" = "x" ; then
+    AC_MSG_ERROR([can't find ssl plugin library from $withval])
+    SSL_INCLUDE_DIR=""
+  elif test "x$SSL_INCLUDE_DIR" = "x" ; then
+    AC_MSG_ERROR([can't find ssl plugin install dir from $withval])
+    SSL_LIBRARIES=""
+  elif test \! -r $SSL_LIBRARIES ; then
+    AC_MSG_ERROR([can't access ssl plugin library $SSL_LIBRARIES])
+    SSL_INCLUDE_DIR=""
+    SSL_LIBRARIES=""
+  elif test \! -r ${SSL_INCLUDE_DIR}/des.h ; then
+    AC_MSG_ERROR([can't access ssl plugin include directory $SSL_INCLUDE_DIR])
+    SSL_INCLUDE_DIR=""
+    SSL_LIBRARIES=""
+  else
+    AC_MSG_RESULT([yes -- library $SSL_LIBRARIES, include dir $SSL_INCLUDE_DIR])
+  fi
+fi], [AC_MSG_RESULT([not given])])
+
+dnl
+dnl Check command line options
+dnl
+
+AC_MSG_RESULT(*)
+AC_MSG_RESULT(*  checking ILU specifics...)
+AC_MSG_RESULT(*)
+
+dnl
+dnl Set default location for ILU installation
+dnl
+AC_PREFIX_DEFAULT(/usr/local/ilu)
+
+dnl
+dnl **************************************************
+dnl
+dnl Include debugging (-g on compile, define DEBUG statement)
+dnl
+AC_MSG_CHECKING(whether to include support for debugging)
+AC_ARG_ENABLE(debugging,
+[  --enable-debugging          Enable -g on compile and add debugging print statements],
+[if test "$enableval" = "yes"; then
+  AC_DEFINE(ENABLE_DEBUGGING)
+  AC_MSG_RESULT(yes)
+else
+  AC_MSG_RESULT(no)
+fi],
+[AC_DEFINE(ENABLE_DEBUGGING)
+AC_MSG_RESULT([yes, by default])])
+
+
+dnl
+dnl **************************************************
+dnl
+dnl Omit the ILU prefix from any new keywords (since 2.0alpha10)
+dnl
+AC_MSG_CHECKING(whether to omit ILU prefix from new ISL keywords)
+AC_ARG_ENABLE(new-keywords-plain,
+[  --enable-new-keywords-plain Omit ILU prefix from new ISL keywords],
+[if test "$enableval" = "yes"; then
+  AC_DEFINE(ILU_USE_NEW_KEYWORDS)
+  AC_MSG_RESULT(yes)
+else
+  AC_MSG_RESULT(no)
+fi],
+[AC_MSG_RESULT([no, by default])])
+
+
+dnl
+dnl **************************************************
+dnl
+dnl What kind of threading, if any?
+dnl
+
+AC_SUBST(THREADDEFINES)
+AC_MSG_CHECKING(whether to include support for OS threads)
+case "$host_os" in
+  solaris2.{1*,2*,3*,4*})
+	THREADING="Solaris2"
+	THREADDEFINES="-D_REENTRANT"
+	SOLARIS2LIBS="-lthread"
+	POSIXLIBS=""
+	DCELIBS=""
+	IRIXLIBS=""
+	;;
+  solaris2.*)
+	THREADING="Solaris2"
+	THREADDEFINES="-D_REENTRANT"
+	SOLARIS2LIBS="-lthread"
+	POSIXLIBS="-lpthread"
+	DCELIBS="-lpthread -lposix4"
+	IRIXLIBS=""
+	;;
+  osf3.*)
+	THREADING="DCE"
+	THREADDEFINES="-D_REENTRANT"
+	SOLARIS2LIBS=""
+	POSIXLIBS=""
+	DCELIBS="-lpthreads -lmach -lc_r -lc -lm"
+	IRIXLIBS=""
+	;;
+  osf4.*)
+	THREADING="POSIX"
+	THREADDEFINES="-D_REENTRANT"
+	SOLARIS2LIBS=""
+	POSIXLIBS="-lpthread -lmach -lexc -lc"
+	DCELIBS="-lpthreads -lpthread -lmach -lexc -lc"
+	IRIXLIBS=""
+	;;
+  irix6.[[23]])
+	THREADING="POSIX"
+	THREADDEFINES=""
+	SOLARIS2LIBS=""
+	POSIXLIBS="-Wf,-woff,85 -lpthread"
+	DCELIBS=""
+	IRIXLIBS=""
+	;;
+  irix6.[[4567]])
+	THREADING="POSIX"
+	THREADDEFINES=""
+	SOLARIS2LIBS=""
+	POSIXLIBS="-lpthread"
+	DCELIBS=""
+	IRIXLIBS=""
+	;;
+  aix4.1.4.*,aix4.2*,aix4.3*,aix4.4*)
+	THREADING="POSIX"
+	THREADDEFINES=""
+	SOLARIS2LIBS=""
+	POSIXLIBS=""
+	DCELIBS=""
+	IRIXLIBS=""
+	;;
+  linux-gnu*)
+        if test -s /usr/lib/libpthread.a ; then
+	  THREADING="POSIX"
+	  THREADDEFINES=""
+	  SOLARIS2LIBS=""
+	  POSIXLIBS="-lpthread"
+	  DCELIBS=""
+	  IRIXLIBS=""
+        fi
+        ;;
+  *)
+	THREADING=""
+	THREADDEFINES=""
+	;;
+esac
+
+AC_ARG_ENABLE(os-threads,
+[  --enable-os-threads         Provide code in the ILU kernel to hook into OS threads],
+[if test "$enableval" = "yes"; then
+  if test "$THREADING" = "Solaris2"; then
+    AC_MSG_RESULT(yes -- Solaris2 threads)
+    AC_DEFINE(ILU_SOLARIS2_THREADS)
+    LIBS="${LIBS} ${SOLARIS2LIBS}"
+  elif test "$THREADING" = "POSIX"; then
+    AC_MSG_RESULT(yes -- Posix threads)
+    AC_DEFINE(ILU_POSIX_THREADS)
+    LIBS="${LIBS} ${POSIXLIBS}"
+  elif test "$THREADING" = "DCE"; then
+    AC_MSG_RESULT(yes -- DCE threads)
+    AC_DEFINE(ILU_DCE_THREADS)
+    LIBS="${LIBS} ${DCELIBS}"
+  else
+    AC_MSG_RESULT([no -- don't know which thread package to use for $host_os])
+  fi
+elif test "$enableval" = "solaris2"; then
+  AC_MSG_RESULT(yes -- Solaris2 threads)
+  AC_DEFINE(ILU_SOLARIS2_THREADS)
+  LIBS="${LIBS} ${SOLARIS2LIBS}"
+elif test "$enableval" = "posix"; then
+  AC_MSG_RESULT(yes -- Posix threads)
+  AC_DEFINE(ILU_POSIX_THREADS)
+  LIBS="${LIBS} ${POSIXLIBS}"
+elif test "$enableval" = "dce"; then
+  AC_MSG_RESULT(yes -- DCE threads)
+  AC_DEFINE(ILU_DCE_THREADS)
+  LIBS="${LIBS} ${DCELIBS}"
+elif test "$enableval" = "no"; then
+  AC_MSG_RESULT(no)
+elif test "$enableval" = ""; then
+  AC_MSG_RESULT(no)
+else
+  AC_MSG_RESULT([no -- don't recognize thread type $enableval])
+fi],[if test "$THREADING" = ""; then
+  AC_MSG_RESULT(no)
+elif test "$THREADING" = "POSIX"; then
+  AC_MSG_RESULT([yes -- Posix threads])
+  AC_DEFINE(ILU_POSIX_THREADS)
+  LIBS="${LIBS} ${POSIXLIBS}"
+elif test "$THREADING" = "DCE"; then
+  AC_MSG_RESULT([yes -- DCE threads])
+  AC_DEFINE(ILU_DCE_THREADS)
+  LIBS="${LIBS} ${DCELIBS}"
+elif test "$THREADING" = "Solaris2"; then
+  AC_MSG_RESULT([yes -- Solaris2 threads])
+  AC_DEFINE(ILU_SOLARIS2_THREADS)
+  LIBS="${LIBS} ${SOLARIS2LIBS}"
+else
+  AC_MSG_RESULT(no)
+fi])  
+
+dnl
+dnl **************************************************
+dnl
+dnl Which ILU protocols to include?
+dnl
+
+ac_cv_protocols=""
+ac_cv_transports=""
+default_protocol=""
+
+AC_MSG_CHECKING(whether to include support for the ILU sunrpc protocol)
+AC_ARG_ENABLE(sunrpc-protocol,
+[  --enable-sunrpc-protocol    Add ILU version of the Sun RPC v2 protocol],
+[if test "$enableval" = "yes"; then
+  AC_DEFINE(ADD_SUNRPC_PROTOCOL)
+  AC_DEFINE(SUNRPC_PROTOCOL)
+  ac_cv_protocols="$ac_cv_protocols sunrpc"
+  if test "$default_protocol" = "" ; then
+    default_protocol="sunrpc"
+  fi
+  AC_MSG_RESULT(yes)
+else
+  AC_MSG_RESULT(no)
+fi],
+[AC_DEFINE(ADD_SUNRPC_PROTOCOL)
+AC_DEFINE(SUNRPC_PROTOCOL)
+ac_cv_protocols="$ac_cv_protocols sunrpc"
+if test "$default_protocol" = "" ; then
+  default_protocol="sunrpc"
+fi
+AC_MSG_RESULT([yes, by default])])
+
+AC_MSG_CHECKING(whether to include support for the Xerox Courier protocol)
+AC_ARG_ENABLE(courier-protocol,
+[  --enable-courier-protocol   Add Xerox Courier protocol],
+[if test "$enableval" = "yes"; then
+  AC_DEFINE(ADD_COURIER_PROTOCOL)
+  AC_DEFINE(COURIER_PROTOCOL)
+  ac_cv_protocols="$ac_cv_protocols courier"
+  if test "$default_protocol" = "" ; then
+    default_protocol="courier"
+  fi
+  AC_MSG_RESULT(yes)
+else
+  AC_MSG_RESULT(no)
+fi], [AC_MSG_RESULT(no)])
+
+using_iiop_protocol=""
+AC_MSG_CHECKING(whether to include support for the CORBA IIOP protocol)
+AC_ARG_ENABLE(corba-iiop,
+[  --enable-corba-iiop         Add OMG CORBA 2 IIOP protocol & transport, version 1.0],
+[if test "$enableval" = "yes"; then
+  using_iiop_protocol="yes"
+  AC_DEFINE(ADD_IIOP_PROTOCOL)
+  AC_DEFINE(IIOP_PROTOCOL)
+  ac_cv_protocols="$ac_cv_protocols iiop"
+  if test "$default_protocol" = "" ; then
+    default_protocol="iiop"
+  fi
+  AC_MSG_RESULT(yes)
+else
+  AC_MSG_RESULT(no)
+fi],
+[ AC_DEFINE(ADD_IIOP_PROTOCOL)
+  AC_DEFINE(IIOP_PROTOCOL)
+  using_iiop_protocol="yes"
+  ac_cv_protocols="$ac_cv_protocols iiop"
+  if test "$default_protocol" = "" ; then
+    default_protocol="iiop"
+  fi
+  AC_MSG_RESULT([yes, by default])
+])
+
+AC_MSG_CHECKING(whether to include support for the World Wide Web HTTP protocol)
+AC_ARG_ENABLE(http-protocol,
+[  --enable-http-protocol      Add World Wide Web HTTP protocol],
+[if test "$enableval" = "yes"; then
+  AC_DEFINE(ADD_HTTP_PROTOCOL)
+  AC_DEFINE(HTTP_PROTOCOL)
+  ac_cv_protocols="$ac_cv_protocols http"
+  if test "$default_protocol" = "" ; then
+    default_protocol="http"
+  fi
+  AC_MSG_RESULT(yes)
+else
+  AC_MSG_RESULT(no)
+fi], [AC_MSG_RESULT(no)])
+
+using_w3ng_protocol=""
+AC_MSG_CHECKING(whether to include support for the W3C HTTP-NG protocol)
+AC_ARG_ENABLE(w3ng-protocol,
+[  --enable-w3ng-protocol      Add W3C HTTP-NG protocol],
+[if test "$enableval" = "yes"; then
+  using_w3ng_protocol="yes"
+  AC_DEFINE(ADD_W3NG_PROTOCOL)
+  AC_DEFINE(W3NG_PROTOCOL)
+  ac_cv_protocols="$ac_cv_protocols w3ng"
+  if test "$default_protocol" = "" ; then
+    default_protocol="w3ng"
+  fi
+  AC_MSG_RESULT(yes)
+else
+  AC_MSG_RESULT(no)
+fi], [AC_MSG_RESULT(no)])
+
+if test "$using_w3ng_protocol" = "yes" ; then
+
+  AC_MSG_CHECKING(whether to allow HTTP-NG protocol to carry arbitrary ILU objects)
+  AC_ARG_ENABLE(w3ng-ilu-objects,
+  [  --enable-w3ng-ilu-objects  Allow arbitrary ILU objects to be carried over w3ng],
+  [if test "$enableval" = yes; then
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(ILU_W3NG_ALLOW_ILU_URLS)
+  elif test "$enableval" = no; then
+    AC_MSG_RESULT(no)
+  else
+    AC_MSG_RESULT(no)
+  fi],
+  [AC_MSG_RESULT(yes -- by default)
+   AC_DEFINE(ILU_W3NG_ALLOW_ILU_URLS)])
+
+  AC_MSG_CHECKING(whether to use relative object ih passing in the HTTP-NG protocol)
+  AC_ARG_ENABLE(w3ng-relative-ih-passing,
+  [  --enable-w3ng-relative-ih-passing  Use relative form of IH when passing objects over w3ng],
+  [if test "$enableval" = yes; then
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(ILU_W3NG_RELATIVE_IH_PASSING)
+  elif test "$enableval" = no; then
+    AC_MSG_RESULT(no)
+  else
+    AC_MSG_RESULT(no)
+  fi],[AC_MSG_RESULT(no -- by default)])
+
+fi
+
+AC_MSG_CHECKING(whether to include support for the Java RMI protocol)
+AC_ARG_ENABLE(javarmi-protocol,
+[  --enable-javarmi-protocol   Add Java RMI protocol],
+[if test "$enableval" = "yes"; then
+  AC_DEFINE(ADD_JAVARMI_PROTOCOL)
+  AC_DEFINE(JAVARMI_PROTOCOL)
+  ac_cv_protocols="$ac_cv_protocols javarmi"
+  if test "$default_protocol" = "" ; then
+    default_protocol="javarmi"
+  fi
+  AC_MSG_RESULT(yes)
+else
+  AC_MSG_RESULT(no)
+fi], [AC_MSG_RESULT(no)])
+
+AC_DEFUN(AC_CHECK_PROTOCOLS,
+[if test "$ac_cv_protocols" = ""; then
+  AC_DEFINE(ADD_SUNRPC_PROTOCOL)
+  AC_DEFINE(SUNRPC_PROTOCOL)
+  AC_MSG_RESULT(including support for ILU sunrpc as default protocol)
+  default_protocol="sunrpc"
+fi]dnl
+
+AC_MSG_CHECKING(whether a default protocol is explicitly specified)
+AC_ARG_WITH(default-protocol,
+[  --with-default-protocol=PROTOCOL     Specify default wire protocol],
+[if test "$withval" = no; then
+  AC_MSG_RESULT(no)
+elif test "$withval" = yes; then
+  AC_MSG_ERROR(Usage:  ./configure --with-default-protocol=PROTOCOL)
+else
+  default_protocol="$withval"
+  AC_MSG_RESULT(yes, "$withval")
+fi], [AC_MSG_RESULT(no)])
+
+AC_DEFINE_UNQUOTED(ILU_DEFAULT_PROTOCOL_INFO,"$default_protocol")
+AC_MSG_RESULT([The default RPC protocol will be "$default_protocol".])
+
+undefine([ac_cv_protocols]))
+
+AC_CHECK_PROTOCOLS
+
+dnl
+dnl **************************************************
+dnl
+dnl Which ILU transports to include?
+dnl
+
+AC_MSG_CHECKING(whether to include support for the Sun RPC record-marking transport layer)
+AC_ARG_ENABLE(sunrpcrm-transport,
+[  --enable-sunrpcrm-transport Add Sun RPC record marking transport filter],
+[if test "$enableval" = "yes" ; then
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(ADD_SUNRPCRM_TRANSPORT)
+  AC_DEFINE(SUNRPCRM_TRANSPORT)
+else
+  AC_MSG_RESULT(no)
+fi],
+[ AC_MSG_RESULT([yes, by default])
+  AC_DEFINE(ADD_SUNRPCRM_TRANSPORT)
+  AC_DEFINE(SUNRPCRM_TRANSPORT)
+])
+
+AC_MSG_CHECKING(whether to include support for the W3C multiplexing record-marking transport layer)
+AC_ARG_ENABLE(w3mux-transport,
+[  --enable-w3mux-transport    Add W3C multiplexing record marking transport filter],
+[if test "$enableval" = "yes" ; then
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(ADD_W3MUX_TRANSPORT)
+  AC_DEFINE(W3MUX_TRANSPORT)
+else
+  AC_MSG_RESULT(no)
+fi],[AC_MSG_RESULT([no, by default])])
+
+AC_MSG_CHECKING(whether to include support for the TCP/IP transport layer)
+AC_ARG_ENABLE(tcp-transport,
+[  --enable-tcp-transport      Add TCP/IP transport],
+[if test "$enableval" = "yes" -a "$ac_cv_ilu_socket_element_missing" = ""; then
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(ADD_TCPSOCKET_TRANSPORT)
+  AC_DEFINE(TCPIP_TRANSPORT)
+  ac_cv_transports="$ac_cv_transports tcp"
+else
+  AC_MSG_RESULT(no -- no sockets)
+fi],
+[if test "$ac_cv_ilu_socket_element_missing" = ""; then
+  AC_MSG_RESULT([yes, by default])
+  AC_DEFINE(ADD_TCPSOCKET_TRANSPORT)
+  AC_DEFINE(TCPIP_TRANSPORT)
+  ac_cv_transports="$ac_cv_transports tcp"
+else
+  AC_MSG_RESULT(no -- no sockets)
+fi])
+
+AC_MSG_CHECKING(whether to include support for the UDP/IP transport layer)
+AC_ARG_ENABLE(udp-transport,
+[  --enable-udp-transport      Add UDP/IP transport],
+[if test "$enableval" = "yes" -a "$ac_cv_ilu_socket_element_missing" = ""; then
+  AC_DEFINE(ADD_UDPSOCKET_TRANSPORT)
+  AC_DEFINE(UDPSOCKET_TRANSPORT)
+  ac_cv_transports="$ac_cv_transports udp"
+  AC_MSG_RESULT(yes)
+else
+  AC_MSG_RESULT(no)
+fi], [AC_MSG_RESULT([no, by default, it is broken right now])])
+
+AC_MSG_CHECKING(whether to include support for the XNS SPP transport layer)
+AC_ARG_ENABLE(xnsspp-transport,
+[  --enable-xns-transport      Add XNS/SPP transport],
+[if test "$enableval" = "yes"; then
+  AC_DEFINE(ADD_XNSSPP_TRANSPORT)
+  AC_DEFINE(XNSSPP_TRANSPORT)
+  ac_cv_transports="$ac_cv_transports udp"
+  AC_MSG_RESULT(yes)
+else
+  AC_MSG_RESULT(no)
+fi], [AC_MSG_RESULT([no, by default])])
+
+AC_MSG_CHECKING(whether to include support for the GSS secure transport layer)
+AC_SUBST(GSS_LIBRARIES)
+AC_SUBST(GSS_INCLUDE_DIR)
+secure_transport="no"
+AC_ARG_ENABLE(security,
+[  --enable-security           Add security transport filter],
+[if test "$enableval" = "yes"; then
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(ADD_SECURE_TRANSPORT)
+  AC_DEFINE(SECURE_TRANSPORT)
+  GSS_LIBRARIES="`pwd`/../GSS/kernel/libgss.a"
+  GSS_INCLUDE_DIR="`pwd`/../GSS/kernel"
+  AC_DEFINE(USING_ILUGSS)
+  secure_transport="yes"
+elif test "$enableval" = "no"; then
+  AC_MSG_RESULT(no)
+else
+  AC_MSG_RESULT([yes -- GSS libs in $enableval])
+  AC_DEFINE(ADD_SECURE_TRANSPORT)
+  AC_DEFINE(SECURE_TRANSPORT)
+  GSS_LIBRARIES="$enableval"
+  GSS_INCLUDE_DIR=[`echo ${enableval} | sed -e 's;/[^/]*$;;'`]
+  secure_transport="yes"
+fi],[AC_MSG_RESULT([no, by default])])
+
+AC_MSG_CHECKING(whether to include support for the zlib compression transport layer)
+AC_ARG_ENABLE(zlib-transport,
+[  --enable-zlib-transport    Add zlib-based compression transport filter],
+[if test "$enableval" = "yes"; then
+  if test "x$zlib_library" = "x" -o "x$zlib_include_dir" = "x" ; then
+    AC_MSG_RESULT([no -- can't find zlib library or include file])
+  elif test ! -r ${ILUSRC}/runtime/kernel/zlib.c ; then
+    AC_MSG_RESULT([no -- zlib transport code not available in this ILU release])
+  else
+    AC_MSG_RESULT([yes -- using $zlib_library and $zlib_include_dir])
+    AC_DEFINE(ILU_ZLIB_TRANSPORT)
+  fi
+else
+  AC_MSG_RESULT(no)
+fi],[AC_MSG_RESULT([no, by default])])
+
+AC_DEFUN(AC_CHECK_TRANSPORTS,
+[if test "$ac_cv_transports" = "" -a "$ac_cv_ilu_socket_element_missing" = ""; then
+  AC_DEFINE(ADD_TCP_TRANSPORT)
+  AC_DEFINE(TCPIP_TRANSPORT)
+  AC_MSG_RESULT([including support for TCP/IP, by default])
+fi ;
+if test "$default_protocol" = "sunrpc" -o "$default_protocol" = "courier" ; then
+   default_transport='"sunrpcrm", "tcp_0_0"' ;
+elif test "$default_protocol" = "http" -o "$default_protocol" = "iiop" ; then
+   default_transport='"tcp_0_0"' ;
+elif test "$default_protocol" = "w3ng" ; then
+   default_transport='"sunrpcrm", "tcp_0_0"' ;
+fi]
+
+AC_DEFINE_UNQUOTED(ILU_DEFAULT_TRANSPORT_INFO,$default_transport)
+AC_MSG_RESULT(The default RPC transport stack will be $default_transport.)
+undefine([ac_cv_transports]))
+
+AC_CHECK_TRANSPORTS
+
+AC_MSG_RESULT(Using relaxed matching for computation of singleton cinfo.)
+AC_DEFINE(ILU_RELAXED_SINGLETON_CHECKING)
+
+dnl
+dnl **************************************************
+dnl
+dnl Which languages to include?
+dnl
+
+needs_bignum_library=""
+
+AC_MSG_CHECKING(whether to include support for use of ILU with ANSI C)
+AC_ARG_ENABLE(c-support,
+[  --enable-c-support          Include support for ANSI C],
+[if test "$enableval" = no; then
+  AC_MSG_RESULT(no)
+else
+  AC_DEFINE(ADD_C_LANGUAGE)
+  AC_MSG_RESULT(yes)
+  needs_bignum_library="ANSI C"
+fi],
+[AC_MSG_RESULT([yes, by default])
+ AC_DEFINE(ADD_C_LANGUAGE)
+ needs_bignum_library="ANSI C"
+])
+
+AC_MSG_CHECKING(whether to build shared library version of C runtime)
+AC_ARG_ENABLE(c-shared-library,
+[  --enable-c-shared-library          Include support for ANSI C],
+[if test "$enableval" = no; then
+  AC_MSG_RESULT(no)
+else
+  AC_DEFINE(ADD_C_SHARED_LIBRARY)
+  AC_MSG_RESULT(yes)
+fi],
+[AC_MSG_RESULT([no, by default])])
+
+AC_PATH_PROGS(CXX, $CCC CC cxx c++ g++, "")
+
+CORBA_CPP_MAPPING=""
+AC_MSG_CHECKING(whether to include newer CORBA-style support for use of ILU with C++)
+AC_ARG_ENABLE(corba-cplusplus-support,
+[  --enable-corba-cplusplus-support  Include new CORBA-style support for C++],
+[if test "$enableval" = yes; then
+  AC_DEFINE(ADD_CORBA_CPLUSPLUS_LANGUAGE)
+  AC_MSG_RESULT(yes)
+  needs_bignum_library="CORBA C++"
+  CORBA_CPP_MAPPING="yes"
+elif test "$enableval" = no; then
+  AC_MSG_RESULT(no)
+else
+  AC_DEFINE(ADD_CORBA_CPLUSPLUS_LANGUAGE)
+  AC_MSG_RESULT([$enableval])
+  CXX="$enableval"
+  needs_bignum_library="CORBA C++"
+  CORBA_CPP_MAPPING="yes"
+fi],
+[if test "$CXX" != ""; then
+   AC_MSG_RESULT(yes)
+   needs_bignum_library="CORBA C++"
+   AC_DEFINE(ADD_CORBA_CPLUSPLUS_LANGUAGE)
+   CORBA_CPP_MAPPING="yes"
+ else
+   AC_MSG_RESULT([no -- no C++ compiler])
+ fi
+])
+
+AC_MSG_CHECKING(whether to include original ILU support for use of ILU with C++)
+if test "x$CORBA_CPP_MAPPING" = "x"; then
+  AC_ARG_ENABLE(old-cplusplus-support,
+  [  --enable-old-cplusplus-support  Include original ILU support for C++],
+  [if test "$enableval" = yes; then
+    AC_DEFINE(ADD_ILU_CPLUSPLUS_LANGUAGE)
+    AC_MSG_RESULT(yes)
+    needs_bignum_library="old C++"
+  elif test "$enableval" = no; then
+    AC_MSG_RESULT(no)
+  else
+    AC_MSG_RESULT(no)
+  fi],
+  [AC_MSG_RESULT(maybe)
+  if test "$CXX" != ""; then
+    AC_MSG_RESULT([Original ILU-style C++ support will be included.])
+    needs_bignum_library="old C++"
+    AC_DEFINE(ADD_ILU_CPLUSPLUS_LANGUAGE)
+  fi])
+else
+  AC_MSG_RESULT([no -- CORBA-style C++ mapping already selected])
+fi
+
+dnl sets up c++ mapping to use -- if we have CORBA c++ enabled
+if test "$CORBA_CPP_MAPPING" != "" ; then
+
+AC_SUBST(CPPMAPPING)
+AC_MSG_CHECKING(mapping to use for CORBA C++)
+AC_ARG_WITH(cplusplus-mapping,
+[  --with-cplusplus-mapping=CPPMAPPING  Specify CPPMAPPING],
+[if test "$withval" = Namespaces; then
+  AC_DEFINE(CPLUSPLUSMAPPING_NAMESPACES)
+  AC_MSG_RESULT(Namespaces)
+elif test "$withval" = NestedClasses; then
+  AC_DEFINE(CPLUSPLUSMAPPING_NESTEDCLASSES)
+  AC_MSG_RESULT(NestedClasses)
+elif test "$withval" = Underscores; then
+  AC_MSG_RESULT(Underscores)
+else
+  AC_MSG_ERROR(Usage:  ./configure --with-cplusplus-mapping=CPPMAPPING)
+fi])
+
+dnl if cplusplus-mapping wasn't present - how do I do this properly?
+
+
+if test "${with_cplusplus_mapping+set}" != set; then
+
+dnl
+dnl A number of compilers seem to have namespace support, but are in fact
+dnl broken in subtle ways.  We specifically exclude the broken ones we know
+dnl about...
+dnl
+cat >conftestns.cpp <<EOF
+#if (defined( _MSC_VER) || (defined( __GNUC__) && (__GNUC__ < 2 || __GNUC_MINOR__ < 9)) || (defined(__SUNPRO_CC) && (__SUNPRO_CC < 0x500)))
+#error
+#endif
+namespace test {}
+EOF
+rm -f conftestns.o
+$CXX -o conftestns.o -c conftestns.cpp 2>&5
+if test -s "conftestns.o"; then
+  AC_DEFINE(CPLUSPLUSMAPPING_NAMESPACES)
+  AC_MSG_RESULT(Namespaces)
+else
+cat >conftestnested.cpp <<EOF
+#if (defined( _MSC_VER))
+#error
+#endif
+class test { class intest {};};
+EOF
+rm -f conftestnested.o
+$CXX -o conftestnested.o -c conftestnested.cpp 2>&5
+if test -s "conftestnested.o"; then
+  AC_DEFINE(CPLUSPLUSMAPPING_NESTEDCLASSES)
+  AC_MSG_RESULT(NestedClasses)
+else
+  AC_MSG_RESULT(Underscores)
+fi
+fi
+
+fi
+dnl end if with_cplusplus_mapping wasn't present
+fi
+dnl end  c++ mapping to use if CXX was set
+
+AC_MSG_CHECKING(whether to build shared library version of C++ runtime)
+AC_ARG_ENABLE(c-shared-library,
+[  --enable-cplusplus-shared-library      Build shared library version of C++ runtime],
+[if test "$enableval" = no; then
+  AC_MSG_RESULT(no)
+else
+  AC_DEFINE(ADD_CPLUSPLUS_SHARED_LIBRARY)
+  AC_MSG_RESULT(yes)
+fi],
+[AC_MSG_RESULT([no, by default])])
+
+AC_SUBST(CPLUSPLUS_LIBRARIES)
+AC_MSG_CHECKING(whether explicit C++ libraries are specified)
+AC_ARG_WITH(cplusplus-libs,
+[  --with-cplusplus-libs=LIBS     colon-separated list of C++ libraries],
+[if test "$withval" = no; then
+  AC_MSG_RESULT(no)
+elif test "$withval" = yes; then
+  AC_MSG_RESULT(no -- no libs specified)
+else
+  AC_MSG_RESULT(yes -- $withval)
+  if test "$withval" = none; then
+    CPLUSPLUS_LIBRARIES=
+  else
+    CPLUSPLUS_LIBRARIES="`echo $withval | sed -e 's;:; ;g'`"
+  fi
+  AC_DEFINE(CPLUSPLUS_LIBRARIES_SPECIFIED)
+fi], [AC_MSG_RESULT(no)])
+
+unset java_version
+unset java_coreclasses
+
+AC_PATH_PROG(JAVA, java, [""])
+AC_MSG_CHECKING(whether to include support for use of ILU with Java)
+AC_SUBST(ILUJAVA_S_JH)
+AC_SUBST(ILUJAVA_S_CORECLASSES)
+AC_ARG_ENABLE(java-support,
+[  --enable-java-support       Include support for Java],
+[if test "$enableval" = yes; then
+  AC_MSG_RESULT(perhaps...)
+  if test "$JAVA" = ""; then
+    AC_MSG_ERROR(Java interpreter not visible.  Use --enable-java-support=ILUJAVA_S_JH.)
+  else
+    if test "$have_realpath" = "yes"; then
+      javapath=`./realpath $JAVA`
+      ILUJAVA_S_JH=`dirname $javapath | sed -e 's;/bin$;;'`
+    else
+      ILUJAVA_S_JH=`echo $JAVA | sed -e 's;/bin/java$;;'`
+    fi
+    java_inclusion="possible";
+  fi
+elif test "$enableval" = no; then
+  AC_MSG_RESULT(no)
+else
+  AC_MSG_RESULT(perhaps...)
+  java_inclusion="possible";
+  ILUJAVA_S_JH="$enableval"
+fi],[AC_MSG_RESULT([perhaps (by default)...])
+if test "$JAVA" = ""; then
+  AC_MSG_RESULT([No Java support -- can't find java executable.])
+else
+  if test "$have_realpath" = "yes"; then
+    javapath=`./realpath $JAVA`
+    ILUJAVA_S_JH=`dirname $javapath | sed -e 's;/bin$;;'`
+  else
+    ILUJAVA_S_JH=`echo $JAVA | sed -e 's;/bin/java$;;'`
+  fi
+  java_inclusion="possible";
+fi])
+
+AC_SUBST(ILUJAVA_S_INCLUDES)
+AC_SUBST(ILUJAVA_S_OLD_INCLUDES)
+AC_SUBST(ILUJAVA_S_MACH_DEP_INCLUDES)
+AC_SUBST(ILUJAVA_S_OLD_MACH_DEP_INCLUDES)
+if test "$java_inclusion" = "possible" ; then
+  AC_MSG_CHECKING(for good Java installation)
+  if test ! -x ${ILUJAVA_S_JH}/bin/javac ; then
+    AC_MSG_RESULT([no -- can't find javac executable.])
+    java_inclusion=""
+  elif test ! -x ${ILUJAVA_S_JH}/bin/javah ; then
+    AC_MSG_RESULT([no -- can't find javah executable.])
+    java_inclusion=""
+  else
+    AC_MSG_RESULT(found java executables in ${ILUJAVA_S_JH}...)
+  fi
+fi
+
+if test "$java_inclusion" = "possible" ; then
+ AC_MSG_CHECKING(Java version)
+ JAVAVERSION=`${ILUJAVA_S_JH}/bin/java -version 2>&1 | sed -e 's;^.*\"\(.*\)\".*$;\1;'`
+ case "$JAVAVERSION" in
+   1.0* | "kern:02/29/29-19:34" | "2.1 (Sun 1.0.2)" | "ism:09/19/19-17:51")
+	AC_MSG_RESULT([Java $JAVAVERSION is not supported by ilu; Java support will *not* be included])
+     ;;
+   1.2beta2)	AC_MSG_RESULT([$JAVAVERSION; Java 1.2beta2 support will be included])
+	AC_DEFINE(ILUJAVA_M_JDK12)
+	AC_DEFINE_UNQUOTED(ILUJAVA_H_JDK12BETA2, 1)
+	AC_DEFINE_UNQUOTED(ILUJAVA_M_MAJORVERSION,1)
+	AC_DEFINE_UNQUOTED(ILUJAVA_H_MAJORVERSION,1)
+	AC_DEFINE_UNQUOTED(ILUJAVA_M_MINORVERSION,2)
+	AC_DEFINE_UNQUOTED(ILUJAVA_H_MINORVERSION,2)
+	java_coreclasses=${ILUJAVA_S_JH}/lib/classes.zip
+	AC_DEFINE_UNQUOTED(ILUJAVA_M_CORECLASSES_INCP,1)
+	java_use_native_threads="yes"
+	AC_PATH_PROG(JAR, jar, [""])
+        java_version="jdk1.2"
+     ;;
+   1.2beta3)	AC_MSG_RESULT([$JAVAVERSION; Java 1.2beta3 support will be included])
+	AC_DEFINE(ILUJAVA_M_JDK12)
+	AC_DEFINE_UNQUOTED(ILUJAVA_H_JDK12BETA3,1)
+	AC_DEFINE_UNQUOTED(ILUJAVA_M_MAJORVERSION,1)
+	AC_DEFINE_UNQUOTED(ILUJAVA_H_MAJORVERSION,1)
+	AC_DEFINE_UNQUOTED(ILUJAVA_M_MINORVERSION,2)
+	AC_DEFINE_UNQUOTED(ILUJAVA_H_MINORVERSION,2)
+	java_coreclasses=${ILUJAVA_S_JH}/lib/classes.zip
+	AC_DEFINE_UNQUOTED(ILUJAVA_M_CORECLASSES_INCP,1)
+	java_use_native_threads="yes"
+	AC_PATH_PROG(JAR, jar, [""])
+        java_version="1.2"
+     ;;
+   1.2beta4)	AC_MSG_RESULT([$JAVAVERSION; Java 1.2beta4 support will be included])
+	AC_DEFINE(ILUJAVA_M_JDK12)
+	AC_DEFINE_UNQUOTED(ILUJAVA_H_JDK12BETA4)
+	AC_DEFINE_UNQUOTED(ILUJAVA_M_BOOTCLASSES_IN_JRE,defined)
+	AC_DEFINE_UNQUOTED(ILUJAVA_M_NEEDSOURCEPATH,defined)
+	AC_DEFINE_UNQUOTED(ILUJAVA_M_MAJORVERSION,1)
+	AC_DEFINE_UNQUOTED(ILUJAVA_H_MAJORVERSION,1)
+	AC_DEFINE_UNQUOTED(ILUJAVA_M_MINORVERSION,2)
+	AC_DEFINE_UNQUOTED(ILUJAVA_H_MINORVERSION,2)
+	AC_DEFINE_UNQUOTED(ILUJAVA_M_CORECLASSES_INBCP,1)
+	java_use_native_threads="yes"
+	AC_PATH_PROG(JAR, jar, [""])
+        java_version="1.2"
+     ;;
+   1.2fcs*)	AC_MSG_RESULT([$JAVAVERSION; Generic java 1.2 Fcs support will be included])
+	AC_DEFINE(ILUJAVA_M_JDK12)
+	AC_DEFINE_UNQUOTED(ILUJAVA_H_JDK12POSTBETA,1)
+	AC_DEFINE_UNQUOTED(ILUJAVA_M_JDK12POSTBETA,1)
+	AC_DEFINE_UNQUOTED(ILUJAVA_M_BOOTCLASSES_IN_JRE,defined)
+	AC_DEFINE_UNQUOTED(ILUJAVA_M_NEEDSOURCEPATH,defined)
+	AC_DEFINE_UNQUOTED(ILUJAVA_M_MAJORVERSION,1)
+	AC_DEFINE_UNQUOTED(ILUJAVA_H_MAJORVERSION,1)
+	AC_DEFINE_UNQUOTED(ILUJAVA_M_MINORVERSION,2)
+	AC_DEFINE_UNQUOTED(ILUJAVA_H_MINORVERSION,2)
+	AC_DEFINE_UNQUOTED(ILUJAVA_M_CORECLASSES_INBCP,1)
+	java_use_native_threads="yes"
+	AC_PATH_PROG(JAR, jar, [""])
+        java_version="1.2"
+     ;;
+   1.2* | java1.2*)	AC_MSG_RESULT([$JAVAVERSION; Generic java 1.2 support will be included])
+	AC_DEFINE(ILUJAVA_M_JDK12)
+	AC_DEFINE_UNQUOTED(ILUJAVA_H_JDK12POSTBETA,1)
+	AC_DEFINE_UNQUOTED(ILUJAVA_M_JDK12POSTBETA,1)
+	AC_DEFINE_UNQUOTED(ILUJAVA_M_BOOTCLASSES_IN_JRE,defined)
+	AC_DEFINE_UNQUOTED(ILUJAVA_M_NEEDSOURCEPATH,defined)
+	AC_DEFINE_UNQUOTED(ILUJAVA_M_MAJORVERSION,1)
+	AC_DEFINE_UNQUOTED(ILUJAVA_H_MAJORVERSION,1)
+	AC_DEFINE_UNQUOTED(ILUJAVA_M_MINORVERSION,2)
+	AC_DEFINE_UNQUOTED(ILUJAVA_H_MINORVERSION,2)
+	java_use_native_threads="yes"
+	AC_PATH_PROG(JAR, jar, [""])
+        java_version="1.2"
+     ;;
+   1.1*)	AC_MSG_RESULT([$JAVAVERSION; Generic java 1.1 support will be included])
+	AC_DEFINE_UNQUOTED(ILUJAVA_M_MAJORVERSION,1)
+	AC_DEFINE_UNQUOTED(ILUJAVA_H_MAJORVERSION,1)
+	AC_DEFINE_UNQUOTED(ILUJAVA_M_MINORVERSION,1)
+	AC_DEFINE_UNQUOTED(ILUJAVA_H_MINORVERSION,1)
+	java_use_native_threads="yes"
+	AC_DEFINE_UNQUOTED(ILUJAVA_M_GENERATE_OMG_CLASSES,defined)
+	AC_DEFINE_UNQUOTED(ILUJAVA_M_CORECLASSES_INCP,1)
+	AC_PATH_PROG(JAR, jar, [""])
+        java_version="1.1"
+     ;;
+   *)	AC_MSG_RESULT([$JAVAVERSION; Unrecognized java version; 1.1 support will be included])
+	AC_DEFINE_UNQUOTED(ILUJAVA_M_MAJORVERSION,1)
+	AC_DEFINE_UNQUOTED(ILUJAVA_H_MAJORVERSION,1)
+	AC_DEFINE_UNQUOTED(ILUJAVA_M_MINORVERSION,1)
+	AC_DEFINE_UNQUOTED(ILUJAVA_H_MINORVERSION,1)
+	java_use_native_threads="yes"
+	AC_DEFINE_UNQUOTED(ILUJAVA_M_CORECLASSES_INCP,1)
+	AC_DEFINE_UNQUOTED(ILUJAVA_M_GENERATE_OMG_CLASSES,defined)
+	AC_PATH_PROG(JAR, jar, [""])
+        java_version="1.1"
+     ;;
+ esac
+fi
+
+java_includebase=""
+
+if test -n "${java_version}"; then
+  AC_MSG_CHECKING(for java include directory)
+  if test "${ILUJAVA_S_JH}" != "/usr" ; then
+     if test -d ${ILUJAVA_S_JH}/include ; then
+        java_includebase=${ILUJAVA_S_JH}
+     fi
+  fi
+  if test "$java_includebase" != "" ; then
+     AC_MSG_RESULT(${java_includebase})
+  elif test "$java_version" = "1.1"; then
+     if test -d /usr/java1.1/include ; then
+        java_includebase="/usr/java1.1"
+        if test -f /usr/java1.1/lib/classes.zip ; then
+            java_coreclasses=/usr/java1.1/lib/classes.zip
+        fi
+        AC_MSG_RESULT(${java_includebase})
+     else
+        unset java_version
+        AC_MSG_ERROR([Can't configure Java 1.1 (didn't find include directory)])
+     fi
+  elif test "$java_version" = "1.2"; then
+     if test -d /usr/java1.2/include ; then
+        java_includebase="/usr/java1.2"
+        AC_MSG_RESULT(${java_includebase})
+     else
+        unset java_version
+        AC_MSG_ERROR([Can't configure Java 1.2 (didn't find include directory)])
+     fi
+  else
+     unset java_version
+     AC_MSG_ERROR([Can't configure unknown Java version])
+  fi
+fi
+
+if test -n "${java_version}"; then
+AC_MSG_CHECKING([which kind(s) of Java threads to use])
+AC_ARG_WITH(java-threads,
+[ --with-java-threads=KINDS   indicate which kind(s) of Java threading to use, where KINDS is green or native or both],
+[if test "$withval" = "green" ; then
+  AC_MSG_RESULT(green only)
+elif test "$withval" = "native" ; then
+  AC_MSG_RESULT(native only)
+  AC_DEFINE(ILUJAVA_M_NATIVE_THREADS_ONLY)
+elif test "$withval" = "both" ; then
+  AC_MSG_RESULT(both green and native)
+  AC_DEFINE(ILUJAVA_M_NATIVE_THREADS_EXTRA)
+else
+  AC_MSG_ERROR([Usage:  ./configure --with-java-threads=KINDS, where KINDS is green or native or both])
+fi
+java_thread_explicit_thread_kinds=yes
+],
+[if test "$java_version" = "1.1" ; then
+  java_incl_gr="${java_includebase}/include/green_threads"
+  java_incl_na="${java_includebase}/include/native_threads"
+  if test -d ${java_incl_gr} ; then
+    if test -d ${java_incl_na} ; then
+      AC_DEFINE(ILUJAVA_M_NATIVE_THREADS_EXTRA)
+      AC_MSG_RESULT([environment-specific default, to both green and native])
+    else
+      AC_MSG_RESULT([environment-specific default, to green only])
+    fi
+  else
+    if test -d ${java_incl_na} ; then
+      AC_DEFINE(ILUJAVA_M_NATIVE_THREADS_ONLY)
+      AC_MSG_RESULT([environment-specific default, to native only])
+    else
+      AC_MSG_ERROR([It appears that neither green nor native Java threads are available])
+    fi
+  fi
+else
+ if test -n "$java_use_native_threads" ; then
+  case "$host_os" in
+    irix* )
+      AC_MSG_RESULT([environment-specific default, to green only])
+      ;;
+    linux-gnu* )
+      AC_DEFINE(ILUJAVA_M_NATIVE_THREADS_EXTRA)
+      AC_MSG_RESULT([environment-specific default, to both green and native])
+      ;;
+    *)
+      AC_DEFINE(ILUJAVA_M_NATIVE_THREADS_EXTRA)
+      AC_MSG_RESULT([environment-specific default, to both green and native])
+      ;;
+  esac
+ fi
+fi
+])
+fi
+
+if test -n "${java_version}"; then
+    AC_MSG_CHECKING(existence of java include-old directory)
+    ILUJAVA_S_INCLUDES="${java_includebase}/include"
+    ILUJAVA_S_OLD_INCLUDES="${java_includebase}/include-old"
+    if test ! -d ${ILUJAVA_S_INCLUDES} ; then
+        unset java_version
+        AC_MSG_ERROR([Can't configure Java (didn't find include directory)])
+    elif test -d ${ILUJAVA_S_OLD_INCLUDES} ; then
+        AC_DEFINE_UNQUOTED(ILUJAVA_M_INCLUDEOLDEXISTS, 1)
+        AC_MSG_RESULT([yes, at ${ILUJAVA_S_OLD_INCLUDES}])
+    else
+        AC_MSG_RESULT(no)
+    fi
+fi
+
+if test -n "${java_version}"; then
+    AC_MSG_CHECKING([existence of java machine dependent include directory])
+    [os_name=`echo $host_os | sed -e 's/[0-9].*$//'`]
+    if test -d ${java_includebase}/include/${os_name} ; then
+        ILUJAVA_S_MACH_DEP_INCLUDES="${java_includebase}/include/${os_name}"
+        ILUJAVA_S_OLD_MACH_DEP_INCLUDES="${java_includebase}/include-old/${os_name}"
+        AC_MSG_RESULT([yes, at ${ILUJAVA_S_MACH_DEP_INCLUDES}])
+    elif test -d ${java_includebase}/include/genunix ; then
+        ILUJAVA_S_MACH_DEP_INCLUDES="${java_includebase}/include/genunix"
+        ILUJAVA_S_OLD_MACH_DEP_INCLUDES="${java_includebase}/include-old/genunix"
+        AC_MSG_RESULT([yes, at ${ILUJAVA_S_MACH_DEP_INCLUDES}])
+    else
+        unset java_version
+        AC_MSG_ERROR([Can't configure Java (no machine dependent include directory at ${java_includebase})])
+    fi
+fi
+
+if test -n "${java_version}"; then
+   AC_MSG_CHECKING(Java core classes)
+   if test -n "$java_coreclasses" ; then
+      AC_MSG_RESULT([already defined (maybe a beta version)])
+   else
+      if test "$java_version" = "1.1"; then
+         java_coreclasses=${ILUJAVA_S_JH}/lib/classes.zip
+      elif test "$java_version" = "1.2"; then
+         java_coreclasses=${ILUJAVA_S_JH}/jre/lib/rt.jar
+      else
+         unset java_version
+         AC_MSG_ERROR([bad java version])
+      fi
+   fi
+   if test -n "$java_coreclasses" ; then
+      if test -f $java_coreclasses ; then
+         ILUJAVA_S_CORECLASSES=$java_coreclasses
+         AC_MSG_RESULT($java_coreclasses)
+      else
+         unset java_version
+         AC_MSG_ERROR([Can't configure Java (classes file $java_coreclasses not found)])
+      fi
+   else
+      unset java_version
+      AC_MSG_ERROR([Can't configure Java (didn't find filename for core classes)])
+   fi
+fi
+
+
+if test -n "${java_version}"; then
+ AC_SUBST(ILUJAVA_M_DONTUSE_POLL)
+ AC_MSG_CHECKING(whether to avoid use of poll(2) in Java runtime)
+ AC_ARG_WITH(java-nopoll,
+ [  --with-java-nopoll   Forbid Java runtime to use poll(2)],
+ [
+  ILUJAVA_M_DONTUSE_POLL=1
+  AC_MSG_RESULT([yes -- java will use select])
+ ],
+ [if test "$cf_have_poll" = ""; then
+  ILUJAVA_M_DONTUSE_POLL=1
+  AC_MSG_RESULT([yes -- no poll])
+ else
+  case "$host_os" in
+    linux-gnu*)
+      ILUJAVA_M_DONTUSE_POLL=1
+      AC_MSG_RESULT([yes -- on Linux])
+      ;;
+    *)
+      AC_MSG_RESULT([no, by default])
+      ;;
+  esac
+ fi])
+
+ AC_MSG_CHECKING(whether to generate an ILU-specific version of the org.omg Java classes)
+ AC_ARG_ENABLE(java-with-omg,
+ [  --enable-java-with-omg      Generate ILU versions of org.omg classes],
+ [if test "$enableval" = yes; then
+   AC_MSG_RESULT(yes)
+   AC_DEFINE(ILUJAVA_M_GENERATE_OMG_CLASSES)
+  elif test "$enableval" = no; then
+   AC_MSG_RESULT(no)
+  else
+   AC_MSG_ERROR([can't understand specifier])
+  fi],
+ [if test "$java_version" = "1.2"; then
+   AC_MSG_RESULT([no, by default])
+  elif test "$java_version" = "1.1"; then
+   AC_MSG_RESULT([yes, by default])
+   AC_DEFINE(ILUJAVA_M_GENERATE_OMG_CLASSES)
+  else
+   AC_MSG_RESULT([no, by default])
+  fi])
+
+ AC_MSG_CHECKING(whether to use JNI for the native interface)
+ AC_ARG_ENABLE(java-jni,
+ [  --enable-java-jni         Force use of JNI for the native interface],
+ [if test "$enableval" = yes; then
+   AC_MSG_RESULT(yes)
+   AC_DEFINE(ILUJAVA_M_JNI)
+   java_use_jni=yes
+  elif test "$enableval" = no; then
+   AC_MSG_RESULT(no)
+  else
+   AC_MSG_ERROR([can't understand specifier])
+  fi],
+ [if test "$java_version" = "1.1"; then
+   AC_MSG_RESULT([no, by default])
+  elif test "$java_version" = "1.2"; then
+   if test -d ${java_includebase}/include-old ; then
+     AC_MSG_RESULT([no, by default])
+   else
+     AC_MSG_RESULT([yes, by default])
+     AC_DEFINE(ILUJAVA_M_JNI)
+     java_use_jni=yes
+   fi
+  else
+   AC_MSG_RESULT([no, by default])
+  fi])
+
+if test "$java_use_jni" = "yes" ; then
+  if test "$java_thread_explicit_thread_kinds" = "yes" ; then
+    AC_MSG_RESULT([WARNING: explicit Java threading spec is overridden by decision to use JNI!])
+  fi
+fi
+
+ AC_SUBST(ILUJAVA_M_COSNAMING_PREFIX)
+ AC_MSG_CHECKING(for an alternate Java CosNaming prefix)
+ AC_ARG_WITH(java-cosnaming-prefix,
+ [  --with-java-cosnaming-prefix    Force use of alternate CosNaming prefix for Java classes],
+ [if test "$withval" = "" ; then
+   AC_MSG_RESULT(no)
+  else
+   AC_MSG_RESULT([yes -- $withval])
+   AC_DEFINE(ILUJAVA_M_COSNAMING_PREFIX_DEFINED)
+   ILUJAVA_M_COSNAMING_PREFIX=$withval
+  fi],
+ [AC_MSG_RESULT([no, by default])])
+
+fi
+
+if test -n "${java_version}"; then
+    AC_DEFINE(ADD_JAVA_LANGUAGE)
+else
+    AC_MSG_RESULT(Java runtime will NOT be built)
+fi
+
+AC_MSG_CHECKING(whether to include support for use of ILU with Python)
+AC_SUBST(PYTHONHOME)
+AC_ARG_ENABLE(python-support,
+[  --enable-python-support     Include support for Python],
+[if test "$enableval" = yes; then
+  AC_MSG_RESULT(perhaps...)
+  if test "$PYTHON" = ""; then
+    AC_MSG_ERROR(*** Python home directory not discernible.  Use --with-python=PYTHONHOME.)
+  else
+    AC_MSG_CHECKING(proper value for PYTHON_EXEC_PREFIX)
+    PYTHONHOME=`echo $PYTHON | sed -e 's;/bin/python$;;'`
+    AC_MSG_RESULT($PYTHONHOME)
+  fi
+elif test "$enableval" = no; then
+  AC_MSG_RESULT(no)
+else
+  PYTHONHOME="$enableval"
+  AC_MSG_RESULT([perhaps -- PYTHON_EXEC_PREFIX is $PYTHONHOME])
+fi],
+[AC_MSG_RESULT([perhaps...])
+if test "$PYTHON" != ""; then
+  AC_MSG_CHECKING(proper value for PYTHON_EXEC_PREFIX)
+  PYTHONHOME=`echo $PYTHON | sed -e 's;/bin/python$;;'`
+  AC_MSG_RESULT($PYTHONHOME)
+fi])
+if test "x$PYTHONHOME" != "x"; then
+  AC_SUBST(PYTHON_PREFIX)
+dnl
+dnl	The PYTHON_*SUFFIX entries are required to provide compatibility
+dnl	between pre-1.4 and 1.4+ versions of Python.  Changes in the
+dnl	Python installation procedure require these distinctions be made here.
+dnl
+  AC_SUBST(PYTHON_SUFFIX)
+  AC_SUBST(PYTHON_EXEC_SUFFIX)
+  AC_SUBST(PYTHON_INCLUDE_SUFFIX)
+  AC_MSG_CHECKING(Python version)
+  PYTHONMAJORVERSION=[`$PYTHONHOME/bin/python -c "import sys; import string; print string.splitfields(string.split(sys.version)[0], '.')[0]"`]
+  PYTHONMINORVERSION=[`$PYTHONHOME/bin/python -c "import sys; import string; print string.splitfields(string.split(sys.version)[0], '.')[1][0]"`]
+  AC_MSG_RESULT([$PYTHONMAJORVERSION . $PYTHONMINORVERSION])
+  if test $PYTHONMAJORVERSION -gt 1 -o $PYTHONMINORVERSION -gt 3; then
+    PYTHON_SUFFIX=python$PYTHONMAJORVERSION.$PYTHONMINORVERSION
+    PYTHON_EXEC_SUFFIX=$PYTHON_SUFFIX/config
+    PYTHON_INCLUDE_SUFFIX=$PYTHON_SUFFIX
+  else
+    PYTHON_SUFFIX=python
+    PYTHON_EXEC_SUFFIX=$PYTHON_SUFFIX/lib
+    PYTHON_INCLUDE_SUFFIX=Py
+  fi
+  AC_DEFINE_UNQUOTED(PYTHON_SUFFIX,$PYTHON_SUFFIX)
+  AC_DEFINE_UNQUOTED(PYTHON_EXEC_SUFFIX,$PYTHON_EXEC_SUFFIX)
+  AC_DEFINE_UNQUOTED(PYTHON_INCLUDE_SUFFIX,$PYTHON_INCLUDE_SUFFIX)
+  AC_MSG_CHECKING(proper value for PYTHON_PREFIX)
+  PYTHON_PREFIX=`$PYTHONHOME/bin/python <./figpythonprefix`
+  AC_MSG_RESULT($PYTHON_PREFIX)
+  AC_MSG_CHECKING(whether required Python include files are installed)
+  if test -d ${PYTHON_PREFIX}/include/${PYTHON_INCLUDE_SUFFIX} -a -r ${PYTHON_PREFIX}/include/${PYTHON_INCLUDE_SUFFIX}/Python.h ; then
+    AC_MSG_RESULT([yes -- Python support will be included])
+    INCLUDE_PYTHON=t
+    AC_DEFINE(ADD_PYTHON_LANGUAGE)
+    AC_MSG_CHECKING(whether Python libraries are installed)
+    if test $PYTHONMAJORVERSION -gt 1 -o $PYTHONMINORVERSION -gt 4; then
+      if test -f "${PYTHONHOME}/lib/$PYTHON_EXEC_SUFFIX/libpython${PYTHONMAJORVERSION}.${PYTHONMINORVERSION}.a" ; then
+	AC_DEFINE(PYTHON_LIBRARIES_INSTALLED)
+	AC_MSG_RESULT(yes)
+      else
+	AC_MSG_RESULT(no)
+      fi
+    else
+      if test -f "${PYTHONHOME}/lib/$PYTHON_EXEC_SUFFIX/libPython.a" ; then
+	AC_DEFINE(PYTHON_LIBRARIES_INSTALLED)
+	AC_MSG_RESULT(yes)
+      else
+	AC_MSG_RESULT(no)
+      fi
+    fi
+    AC_DEFINE_UNQUOTED(PYTHON_MAJOR_VERSION, $PYTHONMAJORVERSION)
+    AC_DEFINE_UNQUOTED(PYTHON_MINOR_VERSION, $PYTHONMINORVERSION)
+    AC_MSG_CHECKING(whether Python supports threads)
+    PYTHON_THREADED=[`$PYTHONHOME/bin/python <./ispythonthreaded`]
+    if test "$PYTHON_THREADED" = "0"; then
+      AC_MSG_RESULT(no)
+    else
+      AC_MSG_RESULT(yes)
+      AC_DEFINE(ILU_PYTHON_HAS_THREADS)
+    fi
+  else
+    AC_MSG_RESULT([no -- Python support cannot be provided])
+  fi
+fi
+
+if test "x$INCLUDE_PYTHON" != "x" ; then
+  AC_MSG_CHECKING(whether to prevent Python ILU true objects from being GC'ed)
+  AC_ARG_ENABLE(old-python-gc-behavior,
+  [  --enable-old-python-gc-behavior  Prevent Python ILU true objects from being GC'ed],
+  [if test "$enableval" = yes; then
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(ILU_OLD_PYTHON_GC_BEHAVIOR)
+  elif test "$enableval" = no; then
+    AC_MSG_RESULT(no)
+  else
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(ILU_OLD_PYTHON_GC_BEHAVIOR)
+  fi],[AC_MSG_RESULT(no)])
+fi
+
+if test "x$INCLUDE_PYTHON" != "x" ; then
+  AC_MSG_CHECKING(whether to use new CORBA Python mapping)
+  AC_ARG_ENABLE(corba-python-mapping,
+  [  --enable-corba-python-mapping  Make Python language mapping conform to CORBA mapping standard],
+  [if test "$enableval" = yes; then
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(ILU_CORBA_PYTHON_MAPPING)
+  elif test "$enableval" = no; then
+    AC_MSG_RESULT(no)
+  else
+    AC_MSG_RESULT(no)
+  fi],[AC_MSG_RESULT(no)])
+fi
+
+if test "x$INCLUDE_PYTHON" != "x" ; then
+  AC_MSG_CHECKING(whether to map sequences of name-value pair records to Python dictionaries)
+  AC_ARG_ENABLE(python-dictionaries,
+  [  --enable-python-dictionaries  Map sequence types with name-value record base types to Python dictionaries],
+  [if test "$enableval" = yes; then
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(ILU_PYTHON_DICTIONARIES)
+  elif test "$enableval" = no; then
+    AC_MSG_RESULT(no)
+  else
+    AC_MSG_RESULT(no)
+  fi],[AC_MSG_RESULT(no)])
+fi
+
+AC_MSG_CHECKING([what Python to use for testing, if any])
+AC_SUBST(TESTING_PYTHON)
+AC_ARG_WITH(testing-python,
+[  --with-testing-python=PYTHON       Specify a Python to use for testing scripts],
+[if test "$withval" = no; then
+  AC_MSG_RESULT(none)
+elif test "$withval" = yes; then
+  AC_MSG_ERROR(Usage:  ./configure --with-testing-python=EXECUTABLE)
+else
+  PYTHONMAJORVERSION=[`$withval -c "import sys; import string; print string.splitfields(string.split(sys.version)[0], '.')[0]"`]
+  PYTHONMINORVERSION=[`$withval -c "import sys; import string; print string.splitfields(string.split(sys.version)[0], '.')[1][0]"`]
+  if test $PYTHONMAJORVERSION -gt 1 -o $PYTHONMINORVERSION -gt 4; then
+     TESTING_PYTHON="$withval"
+     AC_MSG_RESULT($withval)
+     AC_DEFINE(ILU_HAVE_TESTING_PYTHON)
+  else
+     AC_MSG_ERROR(Testing Python must be version 1.5 or later)
+  fi
+fi],
+[if test "x$INCLUDE_PYTHON" != "x"; then
+   if test $PYTHONMAJORVERSION -gt 1 -o $PYTHONMINORVERSION -gt 4 ; then
+     TESTING_PYTHON="$PYTHONHOME/bin/python"
+     AC_MSG_RESULT($TESTING_PYTHON)
+     AC_DEFINE(ILU_HAVE_TESTING_PYTHON)
+   fi
+fi
+if test "x$TESTING_PYTHON" = "x" -a "$PYTHON" != "" ; then
+   PYTHONMAJORVERSION=[`$PYTHON -c "import sys; import string; print string.splitfields(string.split(sys.version)[0], '.')[0]"`]
+   PYTHONMINORVERSION=[`$PYTHON -c "import sys; import string; print string.splitfields(string.split(sys.version)[0], '.')[1][0]"`]
+   if test $PYTHONMAJORVERSION -gt 1 -o $PYTHONMINORVERSION -gt 4; then
+     TESTING_PYTHON="$PYTHON"
+     AC_MSG_RESULT($PYTHON)
+     AC_DEFINE(ILU_HAVE_TESTING_PYTHON)
+   fi
+fi
+if test "x$TESTING_PYTHON" = "x"; then
+   AC_MSG_RESULT(none)
+fi])   
+
+AC_PATH_PROGS(FRANZ, franz cl lisp, "")
+AC_MSG_CHECKING(whether to include support for use of ILU with Franz Allegro Common Lisp)
+AC_SUBST(LISP_BATCH_COMMAND)
+AC_SUBST(LISP_BIN_EXT)
+AC_SUBST(LISP_C_BIN_EXT)
+AC_SUBST(LISP_HAS_THREADS)
+AC_SUBST(OLD_LISP_METHOD_NAMES)
+AC_SUBST(LISP_FLAG_BITS)
+AC_ARG_ENABLE(lisp-support,
+[  --enable-lisp-support       Include support for Common Lisp],
+[if test "$enableval" = yes; then
+  if test "$FRANZ" = ""; then
+    AC_MSG_ERROR([*** Franz Allegro Common Lisp not found.  Use --enable-lisp-support=FRANZ-COMMAND (specify full path).])
+  else
+    AC_MSG_RESULT(yes)
+    LISP_BATCH_COMMAND="$FRANZ -qq -batch"
+  fi
+elif test "$enableval" = no; then
+  AC_MSG_RESULT(no)
+else
+  AC_MSG_RESULT([yes, by default -- franz command is $enableval])
+  FRANZ=$enableval
+  LISP_BATCH_COMMAND="$enableval -qq -batch"
+fi],
+[if test "$FRANZ" != ""; then
+  LISP_BATCH_COMMAND="$FRANZ -qq -batch"
+  AC_MSG_RESULT(yes)
+else
+  AC_MSG_RESULT([no -- lisp executable not on PATH])
+fi])
+
+if test "$LISP_BATCH_COMMAND" != ""; then
+    AC_MSG_CHECKING(whether to include support for old-style Lisp method names)
+    AC_ARG_ENABLE(old-lisp-method-names,
+    [  --enable-old-lisp-method-names      Also generate Lisp methods using ILU 1.8 naming scheme],
+    [if test "$enableval" = yes; then
+      AC_MSG_RESULT(yes)
+      AC_DEFINE(OLD_LISP_METHOD_NAMES)
+    elif test "$enableval" = no; then
+      AC_MSG_RESULT(no)
+    else
+      AC_MSG_RESULT(yes)
+      AC_DEFINE(OLD_LISP_METHOD_NAMES)
+    fi],
+    [ AC_MSG_RESULT(no)])
+fi
+
+if test "$LISP_BATCH_COMMAND" != ""; then
+    AC_DEFINE(ADD_COMMONLISP_LANGUAGE)
+    AC_CACHE_CHECK([file extension for compiled lisp files],
+      ilu_cv_fileext_lisp_bin,
+      [$LISP_BATCH_COMMAND <./figlispext.lsp >/dev/null 2>&1
+       ilu_cv_fileext_lisp_bin=`cat conftestlispext`
+       ilu_cv_bool_lisp_has_threads=`cat conftestlispthreads`
+       ilu_cv_int_lisp_flag_bits=`cat conftestlispflagbits`
+       ilu_cv_fileext_lisp_c_bin=`cat conftestlispcext`])
+    AC_CACHE_CHECK([file extension for lisp-loadable object files],
+      ilu_cv_fileext_lisp_c_bin,
+      [$LISP_BATCH_COMMAND <./figlispext.lsp >/dev/null 2>&1
+       ilu_cv_fileext_lisp_c_bin=`cat conftestlispcext`])
+    AC_CACHE_CHECK([whether Lisp supports threads],
+      ilu_cv_bool_lisp_has_threads,
+      [$LISP_BATCH_COMMAND <./figlispext.lsp >/dev/null 2>&1
+       ilu_cv_bool_lisp_has_threads=`cat conftestlispthreads`])
+    AC_CACHE_CHECK([how many bits of a machine word this Lisp implementation uses for flags],
+      ilu_cv_int_lisp_flag_bits,
+      [$LISP_BATCH_COMMAND <./figlispext.lsp >/dev/null 2>&1
+       ilu_cv_int_lisp_flag_bits=`cat conftestlispflagbits`])
+    LISP_BIN_EXT="$ilu_cv_fileext_lisp_bin"
+    LISP_C_BIN_EXT="$ilu_cv_fileext_lisp_c_bin"
+    LISP_FLAG_BITS="$ilu_cv_int_lisp_flag_bits"
+    if test "$ilu_cv_bool_lisp_has_threads" = "yes"; then
+      AC_DEFINE(LISP_HAS_THREADS)
+    fi
+fi
+
+AC_PATH_PROGS(GUILE, guile, "")
+AC_MSG_CHECKING(whether to include support for use of ILU with Guile scheme)
+AC_SUBST(GUILE_INCLUDES)
+AC_SUBST(GUILE_LIB_DIR)
+AC_ARG_ENABLE(guile-support,
+[  --enable-guile-support         Include support for Guile scheme],
+[if test "$enableval" = no; then
+  AC_MSG_RESULT(no)
+elif test "$enableval" = yes; then
+  if test "x$GUILE" = "x" ; then
+    AC_MSG_RESULT([no -- guile interpreter not on path])
+  elif $GUILE -c '(use-modules #/ice-9/slib)' >/dev/null 2>&1 ; then
+    GUILE_LIB_DIR="`echo $GUILE | sed -e 's;bin/guile;lib;'`"
+    guile_base_includes="`$GUILE -c '(write-line (%package-data-dir))' | sed -e 's;/share/guile$;/include;'`"
+    GUILE_INCLUDES="-I${guile_base_includes} -I${guile_base_includes}/libguile"
+    AC_DEFINE(ADD_GUILE_LANGUAGE)
+    AC_MSG_RESULT([yes])
+    AC_MSG_RESULT([Guile includes are $GUILE_INCLUDES])
+    AC_MSG_RESULT([libguile.a is at $GUILE_LIB_DIR])
+  else
+    AC_MSG_RESULT([no -- SLIB not properly installed])
+  fi
+elif test "$enableval" != "" ; then
+  if [$enableval -c '(+ 3 3)'] ; then
+    GUILE=$enableval
+    if $GUILE -c '(use-modules #/ice-9/slib)' >/dev/null 2>&1 ; then
+        GUILE_LIB_DIR="`echo $GUILE | sed -e 's;bin/guile;lib;'`"
+	guile_base_includes="`$GUILE -c '(write-line (%package-data-dir))' | sed -e 's;/share/guile$;/include;'`"
+        GUILE_INCLUDES="-I${guile_base_includes} -I${guile_base_includes}/libguile"
+        AC_DEFINE(ADD_GUILE_LANGUAGE)
+        AC_MSG_RESULT([yes])
+        AC_MSG_RESULT([Guile includes are $GUILE_INCLUDES])
+        AC_MSG_RESULT([libguile.a is at $GUILE_LIB_DIR])
+    else
+        AC_MSG_RESULT([no -- SLIB not properly installed])
+    fi
+  else
+    AC_MSG_RESULT([no -- $enableval not a guile interpreter])
+  fi
+else
+  if test "x$GUILE" = "x" ; then
+    AC_MSG_RESULT([no -- guile interpreter not on path])
+  elif $GUILE -c '(use-modules #/ice-9/slib)' >/dev/null 2>&1 ; then
+    GUILE_LIB_DIR="`echo $GUILE | sed -e 's;bin/guile;lib;'`"
+    guile_base_includes="`$GUILE -c '(write-line (%package-data-dir))' | sed -e 's;/share/guile$;/include;'`"
+    GUILE_INCLUDES="-I${guile_base_includes} -I${guile_base_includes}/libguile"
+    AC_DEFINE(ADD_GUILE_LANGUAGE)
+    AC_MSG_RESULT([yes])
+    AC_MSG_RESULT([Guile includes are $GUILE_INCLUDES])
+    AC_MSG_RESULT([libguile.a is at $GUILE_LIB_DIR])
+  else
+    AC_MSG_RESULT([no -- SLIB not properly installed])
+  fi
+fi],
+[if test "x$GUILE" = "x" ; then
+    AC_MSG_RESULT([no -- guile interpreter not on path])
+ elif $GUILE -c '(use-modules #/ice-9/slib)' >/dev/null 2>&1 ; then
+    GUILE_LIB_DIR="`echo $GUILE | sed -e 's;bin/guile;lib;'`"
+    guile_base_includes="`$GUILE -c '(write-line (%package-data-dir))' | sed -e 's;/share/guile$;/include;'`"
+    GUILE_INCLUDES="-I${guile_base_includes} -I${guile_base_includes}/libguile"
+    AC_DEFINE(ADD_GUILE_LANGUAGE)
+    AC_MSG_RESULT([yes -- by default])
+    AC_MSG_RESULT([Guile includes are $GUILE_INCLUDES])
+    AC_MSG_RESULT([libguile.a is at $GUILE_LIB_DIR])
+ else
+    AC_MSG_RESULT([no -- SLIB not properly installed])
+ fi])
+
+AC_MSG_CHECKING(whether to include support for use of ILU with Perl)
+AC_SUBST(PERLHOME)
+AC_ARG_ENABLE(perl-support,
+[  --enable-perl-support     Include support for Perl],
+[if test "$enableval" = yes; then
+  if test "$PERL" = ""; then
+    AC_MSG_RESULT([no -- "perl" executable not on PATH])
+  elif test ! -r ${ILUSRC}/stubbers/perl/Imakefile ; then
+    AC_MSG_RESULT([no -- Perl support not present in source tree])
+  else
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(ADD_PERL_LANGUAGE)
+    AC_MSG_CHECKING(proper value for PERL_EXEC_PREFIX)
+    PERLHOME=`echo $PERL | sed -e 's;/bin/perl$;;'`
+    AC_MSG_RESULT($PERLHOME)
+  fi
+elif test "$enableval" = no; then
+  AC_MSG_RESULT(no)
+else
+  if test "$PERL" = ""; then
+    AC_MSG_RESULT([no -- "perl" executable not on PATH])
+  elif test ! -r ${ILUSRC}/stubbers/perl/Imakefile ; then
+    AC_MSG_RESULT([no -- Perl support not present in source tree])
+  else
+    AC_DEFINE(ADD_PERL_LANGUAGE)
+    AC_MSG_RESULT([yes, with PERL_EXEC_PREFIX=$enableval])
+    PERLHOME="$enableval"
+  fi
+fi],
+[if test "$PERL" != ""; then
+  if test ! -d "${ILUSRC}/stubbers/perl" ; then
+    AC_MSG_RESULT([no -- Perl support not present in source tree])
+  elif test ! -r "${ILUSRC}/stubbers/perl/Imakefile" ; then
+    AC_MSG_RESULT([no -- Perl support not present in source tree])
+  else
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(ADD_PERL_LANGUAGE)
+    AC_MSG_CHECKING(proper value for PERL_EXEC_PREFIX)
+    PERLHOME=`echo $PERL | sed -e 's;/bin/perl$;;'`
+    AC_MSG_RESULT($PERLHOME)
+  fi
+else
+  AC_MSG_RESULT([no -- "perl" executable not on PATH])
+fi])
+
+AC_ARG_ENABLE(perl-threads,
+[  --enable-perl-threads       Include support for Perl threads],
+[if test "$enableval" = yes; then
+  if test "x$PERLHOME" != "x"; then
+    AC_MSG_CHECKING(whether Perl supports threads)
+    if test -x ./islthreaded.pl -a $PERL ./isthreaded.pl ; then
+      AC_MSG_RESULT(yes)
+      AC_DEFINE(ILU_PERL_HAS_THREADS)
+    else
+      AC_MSG_RESULT(no)
+    fi
+   fi
+fi])
+
+dnl
+dnl **************************************************
+dnl
+dnl Security mechanisms and Authentication protocols
+dnl
+
+if test "$secure_transport" = "yes"; then
+  ssl_secmech="no"
+  AC_MSG_CHECKING(whether to include support for the SSL security protocols)
+  AC_ARG_ENABLE(ssl-security,
+  [  --enable-ssl-security       Add SSL security mechanism],
+  [if test "$enableval" = "yes"; then
+    if test "x$rsaref_library" = "x" -o "x$rsaref_parent_dir" = "x" -o "x$libdes_library" = "x" -o "x$libdes_include_dir" = "x" ; then
+      AC_MSG_RESULT([no -- can't find RSAREF and libdes libraries and/or directories])
+    else
+      AC_MSG_RESULT(yes)
+      AC_DEFINE(INCLUDE_SSL_SECMECH)
+      if test "$SSL_INCLUDE_DIR" = "" ; then
+        SSL_INCLUDE_DIR=$ILUSRC/GSS/ssl
+        SSL_LIBRARIES=$ILUSRC/GSS/ssl/libgss-ssl.a
+      fi
+      ssl_secmech="yes"
+    fi
+  else
+    AC_MSG_RESULT(no)
+  fi],[AC_MSG_RESULT([no, by default])])
+
+fi
+
+dnl
+dnl **************************************************
+dnl
+dnl Include support for OMG IDL?
+dnl
+
+AC_MSG_CHECKING(whether to include direct support for OMG IDL)
+AC_ARG_ENABLE(omg-idl-support,
+[  --enable-omg-idl-support   Add support to the ILU parser for OMG IDL],
+[if test "$enableval" = "yes"; then
+  AC_DEFINE(ADD_DIRECT_OMG_IDL_SUPPORT)
+  AC_MSG_RESULT(yes)
+else
+  AC_MSG_RESULT(no)
+fi],[
+  AC_DEFINE(ADD_DIRECT_OMG_IDL_SUPPORT)
+  AC_MSG_RESULT(yes)
+])
+
+AC_MSG_CHECKING(whether to include support for XML IDL)
+
+xmlidl_support=""
+AC_ARG_ENABLE(xmlidl-support,
+[  --enable-xmlidl-support   Add support to the ILU parser for XML IDL],
+[if test "$enableval" = "yes"; then
+  if test ! -d ${ILUSRC}/stubbers/xmlidl ; then
+    AC_MSG_RESULT([no -- sources not included])
+  elif test ! -r ${ILUSRC}/stubbers/xmlidl/Imakefile ; then
+    AC_MSG_RESULT([no -- sources not included])
+  else
+    AC_DEFINE(ILU_XMLIDL_SUPPORT)
+    xmlidl_support="yes"
+    AC_MSG_RESULT(yes)
+  fi
+else
+  AC_MSG_RESULT(no)
+fi],[
+  AC_MSG_RESULT(no)
+])
+
+AC_MSG_CHECKING(whether to include old support for OMG IDL to ILU ISL translation)
+[case "$host_os" in
+    sunos4*) IDL_CFE_OSV="SUNOS4" ;;
+    irix* | solaris2* | linux-gnu* | linux1.2.* | linux1.3.* | linux2.* | sysv4.* ) IDL_CFE_OSV="SOLARIS2" ;;
+    hpux*) IDL_CFE_OSV="'hpux'" ;;
+    apollo*) IDL_CFE_OSV="apollo" ;;
+    *) IDL_CFE_OSV="" ;;
+ esac
+]
+AC_SUBST(IDL_CFE_OSV)
+AC_ARG_ENABLE(idl2isl-support,
+[  --enable-idl2isl-support    Include Sun parser-based support for translating OMG IDL to ILU ISL],
+[if test "$enableval" = no; then
+  AC_MSG_RESULT(no)
+elif test "$CXX" = ""; then
+  AC_MSG_RESULT(no -- no C++ compiler)
+elif test "$enableval" = yes; then
+  if test "$IDL_CFE_OSV" = ""; then
+    AC_MSG_RESULT(no)
+    AC_MSG_WARN(*** Sorry: IDL support hasn't been ported to $host_os yet.)
+  elif test \! -s ${ILUSRC}/stubbers/idl2isl/Imakefile ; then
+    AC_MSG_RESULT(no -- no sources in stubbers/idl2isl/)
+    AC_MSG_WARN([*** You have to fetch and unpack the idl2isl support before building with it, from ftp://ftp.parc.xerox.com/pub/ilu/misc/old-idl2isl.tar.gz.])
+    AC_MSG_WARN([*** But it's obsolete anyway; use the `direct' IDL support that's provided instead.])
+  else
+    AC_DEFINE(ADD_IDL_SUPPORT)
+    AC_MSG_RESULT(yes: OSV is $IDL_CFE_OSV)
+    AC_MSG_WARN([*** Note:  idl2isl is obsolete; you should use the `direct' IDL support that's provided instead.])
+  fi
+else
+  IDL_CFE_OSV="$enableval"
+  if test \! -s ${ILUSRC}/stubbers/idl2isl/Imakefile ; then
+    AC_MSG_RESULT(no -- no sources in stubbers/idl2isl/)
+    AC_MSG_WARN([*** You have to fetch and unpack the idl2isl support before building with it, from ftp://ftp.parc.xerox.com/pub/ilu/misc/old-idl2isl.tar.gz.])
+    AC_MSG_WARN([*** But it's obsolete anyway; use the `direct' IDL support that's provided instead.])
+  else
+    AC_DEFINE(ADD_IDL_SUPPORT)
+    AC_MSG_RESULT(yes: OSV is $IDL_CFE_OSV)
+    AC_MSG_WARN([*** Note:  idl2isl is obsolete; you should use the `direct' IDL support that's provided instead.])
+  fi
+fi],[
+if test "$IDL_CFE_OSV" = ""; then
+    AC_MSG_RESULT(no - not supported on $host_os yet)
+else
+    AC_MSG_RESULT([no, by default])
+fi])
+
+AC_SUBST(IDL_CPP_COMMAND)
+if test "$IDL_CFE_OSV" != ""; then
+  IDL_CPP_COMMAND=`echo $CXX | sed -e 's/ .*$//'`
+fi
+
+dnl
+dnl **************************************************
+dnl
+dnl Support for the ILU Variant type (and CORBA `any')?
+dnl
+
+picklesupport=""
+AC_MSG_CHECKING(whether to include support for PICKLE)
+AC_ARG_ENABLE(pickle-support,
+[  --enable-pickle-support   Add support for ILU pickle (and CORBA any)],
+[if test "$enableval" = "yes"; then
+  picklesupport="yes"
+  AC_DEFINE(ADD_VARIANT_SUPPORT)
+  AC_MSG_RESULT(yes)
+else
+  AC_MSG_RESULT(no)
+fi],[
+  AC_DEFINE(ADD_VARIANT_SUPPORT)
+  picklesupport="yes"
+  AC_MSG_RESULT([yes, by default])
+])
+
+if test "x$picklesupport" != "x"; then
+AC_MSG_CHECKING(whether to include support for pickle format 2)
+AC_ARG_ENABLE(pickle-format-2,
+[  --enable-pickle-format-2   Add support for pickle format 2],
+[if test "$enableval" = "yes"; then
+  AC_DEFINE(ADD_PICKLE2_SUPPORT)
+  AC_MSG_RESULT(yes)
+else
+  AC_MSG_RESULT(no)
+fi],[
+  AC_DEFINE(ADD_PICKLE2_SUPPORT)
+  AC_MSG_RESULT([yes, by default])
+])
+fi
+
+if test "x$picklesupport" != "x"; then
+AC_MSG_CHECKING(whether to include support for pickle format 3)
+AC_ARG_ENABLE(pickle-format-3,
+[  --enable-pickle-format-3   Add support for pickle format 3],
+[if test "$enableval" = "yes"; then
+  AC_DEFINE(ADD_PICKLE3_SUPPORT)
+  AC_MSG_RESULT(yes)
+elif test "x$using_w3ng_protocol" != "x"; then
+  AC_DEFINE(ADD_PICKLE3_SUPPORT)
+  AC_MSG_RESULT([yes, to support w3ng protocol])
+else
+  AC_MSG_RESULT(no)
+fi],[
+  if test "x$using_w3ng_protocol" != "x"; then
+    AC_DEFINE(ADD_PICKLE3_SUPPORT)
+    AC_MSG_RESULT([yes, to support w3ng protocol])
+  else
+    AC_MSG_RESULT(no)
+  fi
+])
+fi
+
+AC_MSG_CHECKING(whether to include support for type registration)
+AC_ARG_ENABLE(type-support,
+[  --enable-type-support   Add support for internal type structure database],
+[if test "$enableval" = "yes"; then
+  AC_DEFINE(ADD_TYPE_REGISTRATION_SUPPORT)
+  AC_MSG_RESULT(yes)
+elif test "x$using_iiop_protocol" != "x"; then
+  AC_DEFINE(ADD_TYPE_REGISTRATION_SUPPORT)
+  AC_MSG_RESULT([yes, to support IIOP usage])
+elif test "x$using_w3ng_protocol" != "x"; then
+  AC_DEFINE(ADD_TYPE_REGISTRATION_SUPPORT)
+  AC_MSG_RESULT([yes, to support w3ng protocol])
+else
+  AC_MSG_RESULT(no)
+fi],[
+  AC_DEFINE(ADD_TYPE_REGISTRATION_SUPPORT)
+  AC_MSG_RESULT([yes, by default])
+])
+
+fixed_point=no
+AC_MSG_CHECKING(whether to include fixed-point support)
+AC_ARG_ENABLE(fixed-point-support,
+[  --enable-fixed-point-support   Add support for general fixed-point types],
+[if test "$enableval" = "yes"; then
+  AC_DEFINE(ILU_FIXED_POINT_SUPPORT)
+  AC_MSG_RESULT(yes)
+  fixed_point=yes
+else
+  AC_MSG_RESULT(no)
+fi],[
+  AC_MSG_RESULT([no, by default])
+])
+
+if test "$fixed_point" = "yes"; then
+  AC_MSG_CHECKING(whether to include C bignum library)
+  AC_ARG_ENABLE(bignum-library-support,
+  [  --enable-bignum-library-support   Build bignum library],
+  [if test "$enableval" = "yes"; then
+    AC_DEFINE(ILU_BIGNUM_LIBRARY_SUPPORT)
+    AC_MSG_RESULT(yes)
+  elif test "$enableval" = "no"; then
+    AC_MSG_RESULT(no)
+  else
+    AC_MSG_ERROR([bad value for --enable-bignum-library-support])
+  fi],
+  [
+  if test "x$needs_bignum_library" = "x"; then
+    AC_MSG_RESULT([no, by default])
+  else
+    AC_DEFINE(ILU_BIGNUM_LIBRARY_SUPPORT)
+    AC_MSG_RESULT([yes, to support the $needs_bignum_library LSR])
+  fi])
+fi
+
+AC_MSG_CHECKING(whether to include C runtime timing statistics code)
+AC_ARG_ENABLE(c-timing-statistics,
+[  --enable-c-timing-statistics   Add support for gathering call timing statistics in the C runtime],
+[if test "$enableval" = "yes"; then
+  AC_DEFINE(ILU_C_TIMING_STATISTICS)
+  AC_MSG_RESULT(yes)
+else
+  AC_MSG_RESULT(no)
+fi],[
+  AC_MSG_RESULT([no, by default])
+])
+
+AC_MSG_CHECKING(whether to use version 2 type UID hash algorithm)
+AC_ARG_ENABLE(version-2-type-uids,
+[  --enable-version-2-type-uids   Use a coherent algorithm for generating structural type UIDs],
+[if test "$enableval" = "yes"; then
+  AC_DEFINE(ILU_TYPEUID_V2)
+  AC_MSG_RESULT(yes)
+else
+  AC_MSG_RESULT(no)
+fi],[
+  AC_DEFINE(ILU_TYPEUID_V2)
+  AC_MSG_RESULT([yes, by default])
+])
+
+AC_MSG_CHECKING(whether to generate fake local object types for surrogates with multiple supertypes)
+AC_ARG_ENABLE(generate-subtypes,
+[  --enable-generate-subtypes   Generate fake local object types for surrogates with multiple supertypes],
+[if test "$enableval" = "yes"; then
+  AC_DEFINE(ILU_GENERATE_SUBTYPES)
+  AC_MSG_RESULT(yes)
+else
+  AC_MSG_RESULT(no)
+fi],[
+  AC_MSG_RESULT([no, by default])
+])
+
+AC_MSG_CHECKING(whether to add support for aliased/optional reference types)
+AC_ARG_ENABLE(reference-types,
+[  --enable-reference-types   Add support for aliased/optional reference types],
+[if test "$enableval" = "yes"; then
+  AC_DEFINE(ILU_REFERENCE_TYPES)
+  AC_MSG_RESULT(yes)
+else
+  AC_MSG_RESULT(no)
+fi],[
+  AC_MSG_RESULT([no, by default])
+])
+
+AC_MSG_CHECKING(whether to add support for objects-by-value)
+AC_ARG_ENABLE(objects-by-value,
+[  --enable-objects-by-value   Add support for passing of object types by value],
+[if test "$enableval" = "yes"; then
+  AC_DEFINE(ILU_HTTPNG_OBJECTS)
+  AC_MSG_RESULT(yes)
+else
+  AC_MSG_RESULT(no)
+fi],[
+  AC_MSG_RESULT([no, by default])
+])
+
+AC_MSG_CHECKING(whether to add support for the ILU testing scripts)
+AC_ARG_ENABLE(testing-scripts,
+[  --enable-testing-scripts   Add support for the various ILU testing scripts],
+[if test "$enableval" = "yes"; then
+  AC_DEFINE(ILU_TESTING_SCRIPTS)
+  AC_MSG_RESULT(yes)
+else
+  AC_MSG_RESULT(no)
+fi],[
+  AC_DEFINE(ILU_TESTING_SCRIPTS)
+  AC_MSG_RESULT([yes, by default])
+])
+
+AC_MSG_CHECKING(whether to include XML parser library)
+AC_ARG_ENABLE(xml-parser-library,
+[  --enable-xml-parser-library   Build XML parser library],
+[if test "$enableval" = "yes"; then
+  AC_DEFINE(ILU_XML_PARSER_LIBRARY)
+  AC_MSG_RESULT(yes)
+elif test "x$xmlidl_support" != "x"; then
+  AC_DEFINE(ILU_XML_PARSER_LIBRARY)
+  AC_MSG_RESULT([yes, to support xmlidl parsing])
+else
+  AC_MSG_RESULT(no)
+fi],
+[
+if test "x$xmlidl_support" != "x"; then
+  AC_DEFINE(ILU_XML_PARSER_LIBRARY)
+  AC_MSG_RESULT([yes, to support xmlidl parsing])
+else
+  AC_MSG_RESULT(no)
+fi
+])
+
+dnl
+dnl **************************************************
+dnl
+dnl UI toolkit support (for their main loops)
+dnl
+
+AC_MSG_CHECKING(whether to include support for XView)
+AC_SUBST(XVIEW_INCLUDES)
+AC_ARG_ENABLE(xview-support,
+[  --enable-xview-support      Include support for the XView GUI toolkit],
+[if test "$enableval" = no; then
+  AC_MSG_RESULT(no)
+elif test "$enableval" = yes; then
+  AC_MSG_RESULT(yes)
+  AC_PATH_X
+  if test "$x_includes" = "NONE"; then
+    AC_MSG_ERROR(*** Can't find X include files.  Must specify their location using --with-x=INCLUDEPATH.)
+  else
+    AC_DEFINE(ADD_XVIEW_SUPPORT)
+    XVIEW_INCLUDES="-I$x_includes"
+  fi
+else
+  AC_MSG_RESULT(yes)
+  AC_DEFINE(ADD_XVIEW_SUPPORT)
+  XVIEW_INCLUDES="$enableval"
+fi], [AC_MSG_RESULT(no)])
+
+AC_MSG_CHECKING(Tcl header files directory)
+AC_ARG_WITH(tcl-includes-dir,
+[  --with-tcl-includes-dir=DIR  Directory containing Tcl header files],
+[if test "$withval" = no; then
+  AC_MSG_RESULT(no)
+elif test "$withval" = yes; then
+  AC_MSG_RESULT(no -- no directory specified)
+elif test -d "$withval"; then
+  AC_MSG_RESULT($withval)
+  TCL_INCLUDE_DIR="$withval"
+else
+  AC_MSG_RESULT(no -- bad directory $withval specified)
+fi], [AC_MSG_RESULT(no)])
+
+AC_MSG_CHECKING(Tk header files directory)
+AC_ARG_WITH(tk-includes-dir,
+[  --with-tk-includes-dir=DIR  Directory containing Tk header files],
+[if test "$withval" = no; then
+  AC_MSG_RESULT(no)
+elif test "$withval" = yes; then
+  AC_MSG_RESULT(no -- no directory specified)
+elif test -d "$withval"; then
+  AC_MSG_RESULT($withval)
+  TK_INCLUDE_DIR="$withval"
+else
+  AC_MSG_RESULT(no -- bad directory $withval specified)
+fi], [AC_MSG_RESULT(no)])
+
+if test "$x_includes" = "NONE"; then
+  AC_PATH_X
+fi
+
+AC_MSG_CHECKING(whether to include support for Tk event loop)
+AC_SUBST(TK_INCLUDES)
+AC_ARG_ENABLE(tk-support,
+[  --enable-tk-support         Include support for the Tk GUI toolkit],
+[if test "$enableval" = no; then
+  AC_MSG_RESULT(no)
+else
+  if test "$x_includes" = "NONE"; then
+    AC_MSG_RESULT(no -- no path for X11 Window System header files)
+  elif test "$TK_INCLUDE_DIR" = ""; then
+    AC_MSG_RESULT(no -- no path for Tk header files)
+  elif test "$TCL_INCLUDE_DIR" = ""; then
+    AC_MSG_RESULT(no -- no path for Tcl header files)
+  else
+    AC_MSG_RESULT(yes)
+    TK_INCLUDES="-I$TCL_INCLUDE_DIR -I$TK_INCLUDE_DIR"
+    AC_DEFINE(ADD_TK_SUPPORT)
+  fi
+fi],[AC_MSG_RESULT([no, by default])])
+
+AC_MSG_CHECKING(whether to include support for Xt event loop)
+AC_SUBST(XT_INCLUDES)
+AC_ARG_ENABLE(xt-support,
+[  --enable-xt-support         Include support for the Xt toolkit API],
+[if test "$enableval" = no; then
+  AC_MSG_RESULT(no)
+else
+  if test "$x_includes" = "NONE"; then
+    AC_MSG_RESULT(no -- no path for X11 Window System header files)
+  else
+    AC_MSG_RESULT(yes)
+    XT_INCLUDES="-I$x_includes -I$x_includes/X11"
+    AC_DEFINE(ADD_XT_SUPPORT)
+  fi
+fi],[AC_MSG_RESULT([no, by default])])
+
+dnl
+dnl **************************************************
+dnl 
+dnl Where to put things
+dnl
+
+if test "x$prefix" = xNONE; then
+  if test "$ac_default_prefix" != "" ; then
+    prefix="$ac_default_prefix"
+  fi
+fi
+
+AC_SUBST(ILUHOME)
+AC_MSG_CHECKING(value of ILUHOME)
+AC_ARG_WITH(iluhome,
+[  --with-iluhome=PATH   Specify PATH to root of ILU installation],
+[if test "$withval" = no; then
+  AC_MSG_ERROR(Either a specified or default ($prefix) ILUHOME value must be provided.)
+elif test "$withval" = yes; then
+  AC_MSG_ERROR(Usage:  ./configure --with-iluhome=PATH)
+else
+  ILUHOME="$withval"
+fi],
+[ILUHOME="$prefix"])
+AC_DEFINE_UNQUOTED(ILUHOME, "$ILUHOME")
+AC_MSG_RESULT($ILUHOME)
+
+AC_SUBST(DESTDIR)
+AC_MSG_CHECKING(value of DESTDIR)
+AC_ARG_WITH(destdir,
+[  --with-destdir=PATH         Specify PATH to install ILU in],
+[if test "$withval" = no; then
+  AC_MSG_ERROR(Either a specified or default ($prefix) DESTDIR value must be provided.)
+elif test "$withval" = yes; then
+  AC_MSG_ERROR(Usage:  ./configure --with-destdir=PATH)
+else
+  DESTDIR="$withval"
+fi],
+[DESTDIR="$prefix"])
+AC_MSG_RESULT($DESTDIR)
+
+AC_SUBST(BINDINGDIR)
+AC_MSG_CHECKING(whether to use shared files for simple binding)
+AC_ARG_WITH(binding-dir,
+[  --with-binding-dir=PATH     Specify PATH for use as ILU simple binding directory],
+[if test "$withval" = no; then
+  AC_MSG_RESULT(no)
+elif test "$withval" = yes; then
+  AC_MSG_ERROR(Usage:  ./configure --with-binding-dir=PATH)
+else
+  BINDINGDIR="$withval"
+fi], [AC_MSG_RESULT(no)])
+
+if test "$BINDINGDIR" != "" ; then
+  AC_DEFINE_UNQUOTED(ILU_BINDING_DIRECTORY, "$BINDINGDIR")
+  AC_MSG_RESULT([yes, in $BINDINGDIR])
+fi
+
+AC_MSG_CHECKING(whether to use ILU service for simple binding)
+AC_ARG_WITH(binding-server,
+[  --with-binding-server=D:H:P Specify HOST and PORT for binding server (e.g. foo.bar.edu:123.4.92.68:10003)],
+[if test "$withval" = no; then
+  AC_MSG_RESULT(no)
+elif test "$withval" = yes; then
+  AC_MSG_ERROR(Usage:  ./configure --with-binding-server=HOST:PORT)
+else
+  BINDINGREALMHOSTPORT="$withval"
+fi], [AC_MSG_RESULT(no)])
+
+if test "$BINDINGREALMHOSTPORT" != ""; then
+  BINDINGREALM=`echo "$BINDINGREALMHOSTPORT" | sed -e 's/:.*$//'`
+  BINDINGHOST=`echo "$BINDINGREALMHOSTPORT" | sed -e 's/.*:\([[^:]]*\):.*/\1/'`
+  BINDINGPORT=`echo "$BINDINGREALMHOSTPORT" | sed -e 's/.*:.*://'`
+  AC_DEFINE_UNQUOTED(ILU_BINDING_REALM, "$BINDINGREALM")
+  AC_DEFINE_UNQUOTED(ILU_BINDING_HOST, "$BINDINGHOST")
+  AC_DEFINE_UNQUOTED(ILU_BINDING_PORT, $BINDINGPORT)
+  AC_MSG_RESULT([yes, for binding realm $BINDINGREALM, on host $BINDINGHOST, port $BINDINGPORT])
+fi
+
+BINDINGREALMHOSTPORT=""
+AC_SUBST(MULTICAST_INCLUDES)
+AC_MSG_CHECKING(whether to use multicast for simple binding)
+AC_ARG_WITH(binding-multicast,
+[  --with-binding-multicast=IPADDR:PORT Specify IPADDR and PORT for multicast (e.g. 238.4.92.68:10003)],
+[if test "$withval" = no; then
+  AC_MSG_RESULT(no)
+elif test "$withval" = yes; then
+  AC_MSG_ERROR(Usage:  ./configure --with-binding-multicast=IPADDR:PORT)
+else
+  AC_DEFINE_UNQUOTED(ILU_BINDING_MCASTADDR, "$withval")
+  AC_MSG_RESULT([yes, at $withval])
+  echo -n "*** Where are the multicast include files?  "
+  read MULTICAST_INCLUDES_1
+  MULTICAST_INCLUDES="-I$MULTICAST_INCLUDES_1"
+  echo "Multicast includes at $MULTICAST_INCLUDES"
+fi], [AC_MSG_RESULT(no)])
+
+if test "$MULTICAST_INCLUDES" = "" -a "$BINDINGDIR" = "" -a "$BINDINGHOST" = ""; then
+  BINDINGDIR="${ILUHOME}/lib/binding"
+  AC_DEFINE_UNQUOTED(ILU_BINDING_DIRECTORY, "$BINDINGDIR")
+  AC_MSG_RESULT([Using shared files in $BINDINGDIR for simple binding, by default.])
+fi
+
+dnl
+dnl define some symbols that are used by the kernel for debugging info
+dnl
+AC_DEFINE_UNQUOTED(ILU_MACHINE_TYPE, "$host")
+AC_DEFINE_UNQUOTED(ILU_COMPILE_COMMAND, "$CC")
+AC_DEFINE_UNQUOTED(ILU_ANSI_C_LIBRARY, "$ANSI_C_LIBRARY")
+AC_DEFINE_UNQUOTED(ILU_SYSAUX_LIBRARIES, "$LIBS")
+
+dnl
+dnl Build output files
+dnl
+dnl   ilugss_conf.h, ilujava_conf.h, iluconf.h, and iluchoices are automatically added to this
+dnl   list, as a result of the earlier AC_HEADER call
+dnl
+AC_OUTPUT(iludefs topmake ssllocations.cfg)
+
+dnl
+dnl Move iluconf.h to runtime/kernel
+dnl
+
+rm -f ../runtime/kernel/iluconf.h
+cp ./iluconf.h ../runtime/kernel/iluconf.h
+chmod 444 ../runtime/kernel/iluconf.h
+
+dnl
+dnl Move ilujava_conf.h to runtime/java/config
+dnl
+
+if test -f ../runtime/java/config/checkfile ; then
+  rm -f ../runtime/java/config/ilujava_conf.h
+  cp ./ilujava_conf.h ../runtime/java/config/ilujava_conf.h
+  chmod 444 ../runtime/java/config/ilujava_conf.h
+fi
+
+dnl
+dnl Move ilugss_conf.h to GSS/kernel/ilugss_conf.h
+dnl
+
+if test "$secure_transport" = "yes"; then
+  rm -f ../GSS/kernel/ilugss_conf.h
+  cp ./ilugss_conf.h ../GSS/kernel/ilugss_conf.h
+  chmod 444 ../GSS/kernel/ilugss_conf.h
+  if test -f ../GSS/kernel/makefile ; then
+    mv ../GSS/kernel/makefile ../GSS/kernel/makefile.unused
+  fi
+  if test -d ../GSS/ssl/ -a "$ssl_secmech" = "yes" ; then
+    rm -f ../GSS/ssl/locations.cfg
+    cp ssllocations.cfg ../GSS/ssl/locations.cfg
+    chmod 444 ../GSS/ssl/locations.cfg
+  fi
+fi
+
+dnl
+dnl Now concatenate the output files to build ilu.defs.new
+dnl
+
+AC_MSG_RESULT(creating ilu.defs.new...)
+rm -f ilu.defs.new
+cat iluchoices iludefs >ilu.defs.new
+chmod 444 ilu.defs.new
+rm -f iluchoices iludefs
+
+dnl
+dnl Now build the top-level makefile
+dnl
+
+AC_MSG_RESULT(creating top-level Makefile...)
+if test -f ../BootstrapMakefile ; then
+  rm -f ../BootstrapMakefile
+fi
+cat ./topmake >../BootstrapMakefile

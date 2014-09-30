@@ -1,0 +1,99 @@
+# BeginILUCopyright
+
+# Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+# Unlimited use, reproduction, modification, and distribution of this
+# software and modified versions thereof is permitted.  Permission is
+# granted to make derivative works from this software or a modified
+# version thereof.  Any copy of this software, a modified version
+# thereof, or a derivative work must include both the above copyright
+# notice of Xerox Corporation and this paragraph.  Any distribution of
+# this software, a modified version thereof, or a derivative work must
+# comply with all applicable United States export control laws.  This
+# software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+# WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+# PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+# LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+# EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+# NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+# OF THE POSSIBILITY OF SUCH DAMAGES.
+
+# EndILUCopyright
+
+
+This file describes how to use the tcl scripts in this directory
+to run canned regression tests, and also more selective tests,
+using the directory examples. 
+
+There are 2 top level tcl scripts: 
+
+   testload.tcl - for dynamic testing
+   testreg.tcl - for regression testing 
+
+Both of these set some necessary variables and establish the log
+files for the test in the /tmp directory (this selection can be
+easily changed by modifying these files).
+
+testreg.tcl then continues by invoking tests (a) on all combinations of
+client/server language pairs using default protocol, transport,
+and threading options, and (b) on fewer pairs using alternative
+options, via the procedures "run-basics" and "run-protocols" in testprocs.tcl.The progress of the test (servers started, clients started, etc) is
+reported on-line.  When tests are successful, logs are removed. 
+
+Using either of the scripts requires the sequence
+    ilumkmf
+    make
+    make Install
+
+See README for the environment variable settings needed to run commonlisp
+and java. Also, if commonlisp is included in the tests, the environment  
+variable LISPCMD should be set to the invocation name (e.g., franz). 
+Finally, on windows platforms, the environment variable ILUTESTWIN 
+should be set ... to anything, and not set otherwise.
+
+Then, to run the regression, just type "make test".  The regression
+will be run using all the languages specified in the configuration.
+except for scheme (to be added). 
+
+The regression can be run on a smaller set of languages by the
+sequence;
+
+%xx   tclsh        --- putting you in tcl
+%     source testreg.tcl  lang1 lang2 ... langn
+%     exit
+
+where each langi is one of C, CPP, CPP2, PYTHON, JAVA, LISP. 
+Tests will be restricted to the languages specified.
+
+To invoke tests more selectively, after the ilumkmf/make.. sequence, type 
+   
+%xx  tclsh        --- putting you in tcl
+%    source testload.tcl
+
+and then invoke the appropriate procedures in testprocs.tcl.  For example,
+to run a specific server/client pair using non-default server options, type 
+
+     run-server-client server-language client-language "server options"  
+
+where "server options" should have the format acceptable to
+the test code for the server language.  e.g.,
+
+   run-server-client C C "-p http_1_0 -mt"
+
+To run a server against a collection of clients, and/or to 
+vary client options, use combinations of the lower-level procedures:
+
+   start-server server-language "server options"
+
+   run-client client-language "client options"
+        or
+   run-clients "client-list"
+
+   stop-server
+      and if binding server used, also stop-binding-server
+
+NOTES:
+1. Scheme is not yet supported in the regressions.
+2. These scripts have so far been tested only on solaris2 and
+   may need extension for other platforms. 

@@ -1,0 +1,12 @@
+@c $Id: minors-suffix.tim,v 1.3 1999/07/15 22:04:22 spreitze Exp $
+
+@node NO_MEMORY,, TRANSIENT, ILU-Specific CORBA System Exception Minor Codes
+@section Minor Codes for System Exception NO_MEMORY
+
+The minor codes for system exception NO_MEMORY indicate how much
+memory was requested in the allocation operation that failed.  The exact correspondence between minor code and amount of memory requested can be read in the file @file{ILUHOME/doc/no_memory_minors.txt}.
+
+@ifclear largerdoc
+@unnumbered Index
+@printindex ft
+@end ifclear

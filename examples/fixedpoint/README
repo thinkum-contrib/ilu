@@ -1,0 +1,78 @@
+README for the "fixedpoint" interface example.
+[$Id: README,v 1.4 1999/08/03 01:59:08 janssen Exp $
+ BeginILUCopyright
+
+ Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+ Unlimited use, reproduction, modification, and distribution of this
+ software and modified versions thereof is permitted.  Permission is
+ granted to make derivative works from this software or a modified
+ version thereof.  Any copy of this software, a modified version
+ thereof, or a derivative work must include both the above copyright
+ notice of Xerox Corporation and this paragraph.  Any distribution of
+ this software, a modified version thereof, or a derivative work must
+ comply with all applicable United States export control laws.  This
+ software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+ WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+ LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+ EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+ NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+ OF THE POSSIBILITY OF SUCH DAMAGES.
+
+ EndILUCopyright ]
+
+"fixedpoint_example" is a simple test of fixedpoint capability.
+It takes a single value, denominated in thirds, from the client,
+multiplies it by 3 at the server, and returns the result as an
+unbounded integer value.
+
+To build the client(s) and server(s), use the following commands:
+
+  % ilumkmf
+  % make
+
+Run the C server with
+
+  % ./server &
+  exported fixedpoint_example_obj ilu:FixedPointTest/0;ilu%3AgIb-EXlQvC8aBZxPKGfUEXuUTj3;sunrpc@sunrpcrm=tcp_13.1.101.26_34724
+  %
+
+You may change the protocol and transport stack being used with
+"-p PINFO" and/or "-t TINFO" switches on the server.
+
+Then run the C client against the server, specifying a value:
+
+  % ./client -v 23
+
+You should see the following output from the server:
+
+  server_fixedpoint_example_obj_bounce:  a is 23/3
+
+and from the client:
+
+  fixedpoint_example_obj_bounce:  retval is 23/1
+
+The value "21" has special significance (for no special reason).  When 21
+is used by the client, the server will raise an exception "e1", with an
+associated fixed-point value denominated in threes.
+
+To run the Python server, use
+
+  % python server.py &
+  exported ilu:FixedPointTest/0;ilu%3AgIb-EXlQvC8aBZxPKGfUEXuUTj3;sunrpc@sunrpcrm=tcp_13.1.101.26_34724
+  %
+
+Again, pinfo and tinfo can be specified with "-p" and "-t" switches.
+To run the Python client, use
+
+  % python client.py 23
+
+Again, you should see from the server
+
+  value is 23L/3
+
+and from the client
+
+  bounce returns 23L/1

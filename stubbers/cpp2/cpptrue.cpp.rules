@@ -1,0 +1,1417 @@
+
+# BeginILUCopyright
+#
+# Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+#
+# Unlimited use, reproduction, modification, and distribution of this
+# software and modified versions thereof is permitted.  Permission is
+# granted to make derivative works from this software or a modified
+# version thereof.  Any copy of this software, a modified version
+# thereof, or a derivative work must include both the above copyright
+# notice of Xerox Corporation and this paragraph.  Any distribution of
+# this software, a modified version thereof, or a derivative work must
+# comply with all applicable United States export control laws.  This
+# software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+# WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+# PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+# LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+# EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+# NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+# OF THE POSSIBILITY OF SUCH DAMAGES.
+#
+# EndILUCopyright
+
+
+# TBD: OPTIONALS .. NO OPT ARRAYS DONE, REST QUESTIONABLE
+R_true_c(Interface i) (Object object, Exception ex)  -->
+
+  L_top(i.isl_name, F_vs_string())
+  R_true_exception:ex in i.exceptions:(ex)
+  R_true_c_module(i, i.module_str)
+.
+
+R_true_c_module(Interface i, Module m) (ContentElem ce) -->
+
+   R_true_c_classes_and_nested: ce in m.content_sequence: (i, m, ce) 
+.
+
+R_true_c_classes_and_nested(Interface i, Module m, ContentElem ce) --> 
+
+ { R_true_c_object(ce.content, i)
+     [ce.content_type == "type" 
+     F_ur_typename(ce.content) == "Object"
+      ce.content.supertype == NULL]
+ | R_true_c_module(i, ce.content)
+     [ce.content_type == "module"]
+ | TRUE
+ }
+.
+
+R_true_c_classes(Interface i, Module m, List types)
+  (Any t, Exception ex) -->
+    
+  R_true_c_object: t in types: (t, i) [t.supertype == NULL]  
+.
+
+L_top(iname, vs_string) -->
+
+// This file was automatically generated with ILU (version %vs_string%) tools
+// ILU is Copyright 1991-1999 Xerox Corporation, All Rights Reserved.
+// ILU information:  ftp://ftp.parc.xerox.com/pub/ilu/ilu.html.
+
+#include \"%iname%-cpptrue.hpp\"
+.
+
+===================================================================
+R_true_exception(Exception ex1) (Exception ex,
+    Any extype, extypename, us_ex_name, ext_ex_name, cpfx) -->
+
+    E_ [ [ ex1.importedfrom == NULL ex = ex1] |
+            ex = ex1.importedexception ]  
+    E_ [ us_ex_name = F_underscore_name(ex)
+         ext_ex_name = F_full_ref(ex) ]
+    E_ [ ex.type == NULL |
+         [ extype = F_ur_instance(ex.type)
+         extypename = F_ur_typename(ex.type) 
+         ]
+       ]
+
+   L_exception_begin(us_ex_name, ext_ex_name)         
+
+   L_exception_size_begin()
+
+  { 
+    E_ [ ex.type == NULL]  
+   |
+   {
+     L_() "         {"
+     { R_exception_field(extype, extypename, "_m_value", "_m_value",
+                      "+=", "size", "")
+          [ extypename != "Record" | F_idl_exception_prefix(ex.type.name) != 1]
+     | R_exception_record(extype, "+=", "size")
+      }
+     L_() "         }"
+    }
+  }
+
+   L_exception_send_begin()
+  { 
+    E_ [ ex.type == NULL]  
+   |
+   {
+    L_() "         {"
+    { R_exception_field(extype, extypename, "_m_value","_m_value", "<<", "output", "")
+          [ extypename != "Record" | F_idl_exception_prefix(ex.type.name) != 1]
+    | R_exception_record(extype, "<<", "output")
+    }
+    L_() "         }"
+   }
+  }
+
+   L_true_exception_end(us_ex_name, cpfx) [ cpfx = F_corba_pfx() ] 
+.
+
+
+R_exception_record(Record record, op, opname)
+   (Argument field, Any mtype, mtypename, mname, mpx)-->
+
+   R_exception_field:field in record.fields:
+           (mtype, mtypename, mname,  mpx, op, opname, "")
+      [ mtypename = F_ur_typename(field.type)
+        mtype = F_ur_instance(field.type)
+        mpx =  F_concat("_m_value_", field.name) 
+        mname = F_concat("_m_value.", field.name)]
+.
+
+# iterates for optional
+R_exception_field(Any mtype, mtypename, mname, mpx, op, opname, h) --> 
+
+ { R_optional_field(mtype, mtypename, mname, mpx, op, opname)
+            [mtypename == "Optional"]
+  | {  R_exception_wrap( mtype, mtypename, mname,mpx) 
+       R_exception_op(mtype, mtypename, mname, mpx, op, opname, h)
+    }
+ } 
+.
+    
+R_optional_field(Any mtype, mtypename, mname,  mpx, op, opname) 
+  (Any fof_type, fof_typename, Int fof_var, fof_kind, h) --> 
+
+   E_ [ fof_type = F_optional_ofurtype(mtype)  
+        fof_typename = F_full_mbr_typeref(fof_type)
+        fof_var = F_mbr_is_var(mtype)
+        fof_kind = F_ur_typename(fof_type) 
+         [  [fof_var == 0  h = "" ]
+          | [ fof_kind == "Array"  h = "[0]" ]
+          | [ [ fof_kind == "Object" | fof_kind == "Pickle" ] h = "" ] 
+          |  h = "->self()" 
+         ] 
+        ] 
+
+
+   { L_optional_wrap_var(mname, mpx, op) 
+         [  fof_var != 0]
+    |  L_optional_wrap(mname, mpx, op) } 
+    # repeat for optional ref
+    R_exception_field(fof_type, fof_typename, mname, mpx, op, opname, h) 
+    L_ () "        }"
+.
+
+# add object types
+R_exception_wrap(Any mtype, mtypename, mname, mpx) (chtype, wrtype) --> 
+
+  { L_enum_wrap(mname, mpx) [mtypename == "Enumeration"]
+   | L_boolean_wrap(mname, mpx) [mtypename == "Boolean"]
+   | L_character_wrap(mname,  mpx) [mtypename == "Character"]
+   | {E_ [chtype = F_string_chartype(mtype) chtype != NULL]
+      { L_string_wrapper(wrtype, mname, mpx)
+        [ [ chtype == "shortcharacter" wrtype = "CString"]
+          | [ chtype == "byte" wrtype = "Bytes" ]]
+       | L_wstring_wrapper(mname, mpx) 
+       }
+     }
+   | TRUE
+  }  
+.
+
+
+# TBD: add objects?
+R_exception_op(Any mtype, mtypename, mname,  mpx,op, opname, h)(fun_name) -->
+
+  {   L_(mpx, op)
+       [ mtypename == "Enumeration" | mtypename == "Boolean"
+         | mtypename == "Character"]
+       "                   _true_call %op%  %mpx%_wrap;"
+     | L_(mpx, op)
+        [F_string_chartype(mtype) ==  "shortcharacter" |
+         F_string_chartype(mtype) ==  "character" ]
+       "                   _true_call %op% %mpx%_wrap;"
+     | L_(fun_name, mname)
+         [ mtypename == "Array"
+           fun_name = F_ur_pfxd_name(opname, mtype)]
+          "                %fun_name%(_true_call, &_exception.%mname%[0]);"
+     | L_(mname, op )
+         [ mtypename == "Record"
+         | mtypename == "Union" | mtypename == "Sequence" ]
+        "                 _true_call %op% _exception.%mname%;"
+     | L_(mname, op, h)
+        "                 _true_call %op% _exception.%mname%%h%;"
+  }
+.
+
+
+L_enum_wrap(mname, mpx) -->
+          iluEnumWrapper %mpx%_wrap(
+              (iluDummyEnum &) _exception.%mname%);
+.
+L_boolean_wrap(mname, mpx) -->
+          iluBoolWrapper %mpx%_wrap( _exception.%mname%);
+.
+L_character_wrap(mname, mpx) -->
+          iluCharacterWrapper %mpx%_wrap( _exception.%mname%);
+.
+L_optional_wrap(mname, mpx, op) -->
+         iluOptionalWrapper %mpx%_opt_wrap(
+               (void *) _exception.%mname%);
+          _true_call %op% %mpx%_opt_wrap;
+          if(%mpx%_opt_wrap.m_present) {
+.
+L_optional_wrap_var(mname, mpx, op) -->
+          iluOptionalWrapper %mpx%_opt_wrap;
+          %mpx%_opt_wrap.m_present =
+              !(_exception.%mname%.iluIsNull());
+          _true_call %op% %mpx%_opt_wrap;
+          if(%mpx%_opt_wrap.m_present) {
+.
+
+L_string_wrapper(wrname, mname, mpx) -->
+          iluCardinal       %mpx%_length =
+               strlen(_exception.%mname%.iluStringVarReference());
+          ilu%wrname%Wrapper  %mpx%_wrap(
+                 _exception.%mname%.iluStringVarReference(),
+                 %mpx%_length);
+.
+L_wstring_wrapper(mname,mpx) -->
+           iluWStringWrapper  %mpx%_wrap(
+                    _exception.%mname%.iluStringVarReference(),
+                    iluCppRuntime::iluCharacterStringLength(
+                          _exception.%mname%.iluStringVarReference()));
+.
+
+L_exception_begin(us_ex_name, ext_ex_name) -->
+
+static void _send_%us_ex_name%(
+       iluTrueCall &_true_call, %ext_ex_name%& _exception, iluCardinal exi)
+{
+    try {
+.
+L_exception_size_begin() -->
+
+           // Size Return
+                 _true_call.iluSizeExceptionMode(exi+1);
+.
+L_exception_send_begin() -->
+           // Send Reply
+                 _true_call << iluSendExceptionMode;
+.
+           
+L_true_exception_end(us_ex_name, cpfx) -->
+    }
+     catch(%cpfx%SystemException& _exception) {
+           _true_call.iluSetErrorType(_exception.exception_kind());
+     }
+     catch(...) {
+        ILUCPP_WARN_UNEXPECTED_EXCEPTION(\"_send_%us_ex_name%\");
+                _true_call.iluSetErrorType(CORBA_ERRTYP(unknown));
+        }
+}
+.
+
+======================================================================
+
+R_true_c_object(Object object, Interface i)
+   (Method m, Int mi, true_obj_name, us_obj_name, obj_name,
+      ipfx, mpfx, com) --> 
+
+   E_ [ true_obj_name = F_full_side_name("true", object)
+        us_obj_name = F_underscore_name(object)   
+        obj_name = F_full_typeref(object)]  
+
+   L_true_obj_init0(true_obj_name, obj_name, us_obj_name)  
+
+   L_() "// Method Stubs" 
+
+   R_true_method: m(mi) in object.methods:
+            (m,mi,object,true_obj_name, obj_name)
+   R_true_obj_init1(i, object, true_obj_name, obj_name)
+.
+
+
+R_true_obj_init1(Interface i, Object object, true_obj_name, obj_name)
+        (com, ipfx, mpfx, Method m, Int m_ix, us_obj_name) --> 
+
+   E_ [ipfx = F_full_prefix(i.module_str, 1)
+         mpfx = F_side_prefix("true", object, 0)
+         [ [object.collectible == 1 com = "" ] | com = "//" ]     
+          us_obj_name = F_underscore_name(object)
+        ]
+   L_true_obj_init1(true_obj_name, obj_name, object.name,ipfx, mpfx)
+   L_true_obj_init2_begin(true_obj_name)
+   L_true_obj_init2_method:m(m_ix) in object.methods:
+           (obj_name, m_ix, us_obj_name, m.name) 
+   L_true_obj_init2_end(com) 
+.
+
+
+L_true_obj_init0(true_obj_name, obj_name, us_obj_name) -->
+
+// Globals and statics 
+
+int %true_obj_name%_initializer::initialized; 
+%true_obj_name%_initializer
+     %true_obj_name%_initializer::sm_the_true_%us_obj_name%_initializer;
+.
+
+L_true_obj_init1(true_obj_name, obj_name, s_obj_name,ipfx, mpfx) -->
+
+/////////////////////////////////////////////////////////////////////////////
+
+// Class Initializers
+
+%true_obj_name%_initializer::
+%mpfx%%s_obj_name%_initializer () {
+             ensure_instantiation();
+}
+
+void *
+%true_obj_name%_initializer::
+ensure_instantiation () {
+        iluCppInternal::iluAddInitializationFunction(
+                &%ipfx%p_initialization_function_list,
+                iluInitialize);
+        return this; 
+}
+.
+
+L_true_obj_init2_begin(true_obj_name) -->
+
+void
+%true_obj_name%_initializer::iluInitialize () {
+        if (initialized == 1)
+                return;
+.
+
+L_true_obj_init2_method(obj_name, Int m_ix, us_obj_name, mname) --> 
+         ilu_SetMethodStubProc(
+                %obj_name%::iluGetILUClassRecord()->cl_methods + %m_ix%,
+                REINTERPRET_CAST(ilu_StubProc, %us_obj_name%_%mname%_stub),
+                iluCppInternal::iluGetCppLanguageIndex()
+                );
+.
+
+
+L_true_obj_init2_end(com) -->
+
+        // for collectable objects, the following line is uncommented
+        // NOTE: no longer needed - done by runtime, but benign if called
+        // %com% iluCppInternal::iluEnsureGCNoter();
+
+        initialized = 1;
+}
+.
+=====================================================================
+
+R_true_method(Method method, Int mi, Object object,
+      true_obj_name, obj_name)
+      (Argument a, Argument a1, Argument a2, Argument a3, 
+       Argument a4, Argument a5, Argument a6, Argument a7,
+       Int ai2, chtype, mname, Int islast, us_obj_name, has_except,
+       m_ext_name) -->
+
+   E_ [mname = method.name
+       m_ext_name =F_external_method_name(method.name, method.isl_name)]  
+
+   #method begin,, to beginning of try block
+   L_method_begin(mname, us_obj_name, obj_name, has_except)
+       [ us_obj_name = F_underscore_name(object) 
+         [ [ method.exceptions == NULL has_except = "ILUCPP_FALSE" ]
+          | has_except = "ILUCPP_TRUE"]
+       ] 
+
+   # declare return value
+   {R_emit("arg_decl", F_ur_instance(method.returntype), "return_value",
+                          "Return", 0)  [method.returntype != NULL]
+   | TRUE }
+
+   # declare arguments
+   R_emit:a in method.arguments:("arg_decl", F_ur_instance(a.type), 
+                                      a.name, a.direction, 0)
+
+   L_read_discriminator(obj_name)
+
+   # read in arguments (In or InOut)
+   R_emit:a1 in method.arguments:("read_arg", F_ur_instance(a1.type),
+                                      a1.name, a1.direction, 0)
+         [ a1.direction == "In" | a1.direction == "InOut"]
+   L_end_read()          
+
+
+   # Invoke method  (pass return will generate LP_() "returnname ="
+   L_invoke_method()
+   {
+   R_emit("pass_return", F_ur_instance(method.returntype), "return_value",
+                           "Return", 0)
+         [method.returntype != NULL]
+   | LP_() "              " 
+   }
+   LP_(m_ext_name) "_true_object->%m_ext_name%("
+   L_() ""
+
+   #list arguments
+   R_emit:a2(ai2) in method.arguments:("pass_arg", F_ur_instance(a2.type), 
+                                      a2.name, a2.direction, islast)
+         [ [ai2 == F_last_index(method.arguments) islast = 1] | islast = 0] 
+   L_() "              );"  
+   L_() ""
+
+   # do any required fixups or conversions
+   {R_emit("fixup_arg", F_ur_instance(method.returntype), "return_value",
+                     "Return", 0)  [method.returntype != NULL] | TRUE }
+   R_emit:a3 in method.arguments:("fixup_arg", F_ur_instance(a3.type), 
+                                      a3.name, a3.direction, 0)
+
+   # do any output arg wrapping needed
+   {R_emit("output_wrap", F_ur_instance(method.returntype), "return_value",
+                     "Return", 0)  [method.returntype != NULL] | TRUE }
+   R_emit:a7 in method.arguments:("output_wrap", F_ur_instance(a7.type), 
+                                      a7.name, a7.direction, 0)
+          [ a7.direction != "In" ] 
+
+   # do sibling check for object output args
+   {R_emit:a6 in method.arguments:("sibling_check", F_ur_instance(a6.type),
+                                       a6.name, a6.direction, 0)
+        [ a6.sibling == 1  F_ur_typename(a6.type) == "Object"]
+   }
+
+   L_begin_size()  
+   {R_emit("size_arg", F_ur_instance(method.returntype), "return_value",
+                          "Return", 0)  [method.returntype != NULL] | TRUE }
+    R_emit:a4 in method.arguments:("size_arg", F_ur_instance(a4.type), 
+                                      a4.name, a4.direction, 0)
+         [ a4.direction != "In" ]
+    L_() "             };"
+
+   
+    L_begin_send()
+    {R_emit("send_arg", F_ur_instance(method.returntype), "return_value",
+                          "Return", 0)  [method.returntype != NULL] | TRUE }
+     R_emit:a5 in method.arguments:("send_arg", F_ur_instance(a5.type), 
+                                      a5.name, a5.direction, 0)
+         [ a5.direction != "In" ]
+
+    #end the try block
+     L_() "      }"            
+   
+    R_exception_proc(method, us_obj_name)
+.
+
+R_exception_proc(Method method, us_obj_name) 
+  ( Exception e, ext_ex_name, us_ex_name, cpfx, us_method_name, Int exi) -->
+
+  L_specific_exception:e(exi) in method.exceptions:
+       (ext_ex_name, us_ex_name, exi)  
+      [ ext_ex_name = F_full_ref(e) us_ex_name = F_underscore_name(e)] 
+  L_remaining_exceptions(us_obj_name, method.name, cpfx)
+      [ cpfx = F_corba_pfx() ] 
+.
+
+L_specific_exception(ext_ex_name, us_ex_name, Int exi) -->
+    catch(%ext_ex_name%& _exception) {
+          _send_%us_ex_name%(_true_call, _exception, %exi%);
+    }
+.
+
+
+L_remaining_exceptions(us_obj_name, mname, cpfx) -->
+     catch(%cpfx%SystemException& _exception) {
+           _true_call.iluSetErrorType(_exception.exception_kind());
+     }
+     catch(...) {
+        ILUCPP_WARN_UNEXPECTED_EXCEPTION(\"%us_obj_name%_%mname%\");
+                _true_call.iluSetErrorType(CORBA_ERRTYP(unknown));
+        }
+}
+.
+  
+
+L_method_begin(mname, us_obj_name, obj_name, has_ex) -->
+
+static void %us_obj_name%_%mname%_stub (iluCall _call) {
+
+       iluTrueCall _true_call(_call, %has_ex%); 
+
+       try {
+             %obj_name%_ptr     _true_object;
+             iluObjectWrapper  _discriminator(ILUCPP_TRUE, 
+                                   %obj_name%::iluGetILUClassRecord());
+.
+
+L_read_discriminator(obj_name) -->
+
+             // Read in discriminator 
+             _true_call >> _discriminator;
+             _true_object = (%obj_name%_ptr)(_discriminator.m_pv_iluobject);
+
+             //Read in arguments
+.
+L_end_read() -->         
+             _true_call << iluParametersFinishedMode;
+.
+L_invoke_method() -->
+
+             // Invoke actual method 
+.
+
+L_begin_size() -->
+
+             // Size return
+             if(_true_call.iluNeedsSizing()) {  
+             _true_call << iluSizeReplyMode;                      
+.
+
+L_begin_send() -->
+
+             // Send reply 
+             _true_call << iluSendReplyMode;                      
+.
+
+=======================================================================
+# check surrogate rules to see if provision for byte type is present
+R_emit(emit_type, Any arg_type, argname, arg_dir, Int islast) 
+   (arg_kind, chtype) --> 
+
+ E_ [arg_kind = F_ur_typename(arg_type)] 
+
+{
+  R_emit_enumeration(emit_type, arg_type, argname, arg_dir, islast)
+      [arg_kind == "Enumeration"]
+  |
+  R_emit_boolean(emit_type, arg_type, argname, arg_dir, islast)
+      [arg_kind == "Boolean"]
+  |
+  R_emit_character(emit_type, arg_type, argname, arg_dir, islast)
+      [arg_kind == "Character"]
+  |
+  { E_ [chtype = F_string_chartype(arg_type) chtype != NULL
+        chtype != "byte"]
+    {
+     R_emit_cstring(emit_type, arg_type, argname, arg_dir, islast)   
+            [ chtype == "shortcharacter"]
+    | R_emit_wstring(emit_type, arg_type, argname, arg_dir, islast)   
+            [ chtype == "character"] 
+    | R_emit_bytestring(emit_type, arg_type, argname, arg_dir, islast)   
+            [ chtype == "byte"] 
+    }
+  }
+  |
+  R_emit_object(emit_type, arg_type, argname, arg_dir, islast)
+      [arg_kind == "Object"]
+  |
+  R_emit_array(emit_type, arg_type, argname, arg_dir, islast)
+      [arg_kind == "Array"]
+  |
+  R_emit_optional(emit_type, arg_type, argname, arg_dir, islast)
+      [arg_kind == "Optional"]
+  |
+  R_emit_varlen(emit_type,arg_type, argname, arg_dir, islast)
+          [ F_varlen_type(arg_type) != 0  ]
+  |
+  R_emit_simple(emit_type, arg_type, argname, arg_dir, islast)
+}
+.
+
+===================================================================
+# shared
+L_wrap_op(argname, op) -->
+             _true_call %op% _%argname%_wr;
+.
+
+===================================================================
+L_simple_op(argname, op) -->
+             _true_call %op%  %argname%;
+.
+===================================================================
+L_pass_simple_arg(argname, comma) -->
+                  %argname%%comma%
+.
+
+===================================================================
+L_simple_decl(typename, argname) -->
+             %typename%    %argname%;      
+.
+===================================================================
+
+R_emit_simple(emit_type, Any arg_type, argname, arg_dir, Int islast) 
+     (op, comma, typename) -->
+
+ E_ [ typename = F_full_typeref(arg_type) ]
+ {
+      { E_ [emit_type == "arg_decl"]  L_simple_decl(typename,argname)}
+   | { E_ [emit_type == "pass_return" ]  
+       LP_(argname) "                         %argname%  = " } 
+   | { E_ [emit_type == "pass_arg"
+          [[ islast == 1 comma = "" ] | comma = "," ]] 
+       L_pass_simple_arg(argname,comma)
+      } 
+   | { E_ [emit_type == "read_arg" ] L_simple_op(argname, ">>")}
+   | { E_ [emit_type == "size_arg"] L_simple_op(argname, "+=") } 
+   | { E_ [emit_type == "send_arg"]  L_simple_op(argname, "<<") } 
+   | { E_ [emit_type == "set_opt_from_base"] L_set_opt(argname) }
+   | { E_ [emit_type == "get_base_from_opt"] L_get_base(argname)}
+   | TRUE     
+}
+.
+
+L_set_opt(argname) -->
+             opt_%argname% = &%argname%;
+.
+
+L_get_base(argname) -->
+             if(_opt_wrap_%argname%.m_present)
+                %argname% = *opt_%argname%; 
+.             
+
+=================================================================-
+R_emit_object(emit_type, Any arg_type, argname, arg_dir, Int islast) 
+     (op, comma, typename, cpfx) -->
+
+ E_ [ typename = F_full_typeref(arg_type) ]
+ {
+   {
+    E_ [emit_type == "arg_decl"]
+    { L_object_get_decl(typename, argname)
+      [ arg_dir == "In" | arg_dir == "InOut"]
+     |  L_object_put_decl(typename, argname)
+     }
+   }
+   | { E_ [emit_type == "read_arg" ] L_wrap_op(argname, ">>")}
+   | { E_ [emit_type == "size_arg"]  L_wrap_op(argname, "+=")}
+   | { E_ [emit_type == "send_arg"]  L_wrap_op(argname, "<<") }
+   | { E_ [emit_type == "pass_return" ]  
+       LP_(argname) "             p_%argname%  = "      
+     }
+   | {  E_ [emit_type == "pass_arg"  
+           [[ islast == 1 comma = "" ] | comma = "," ]] 
+     {L_object_pass_in_arg(typename, argname, comma) [ arg_dir == "In" ] 
+     |L_object_pass_inout_arg(typename, argname, comma) [ arg_dir == "InOut" ]
+     |L_object_pass_out_arg(argname, comma) [ arg_dir == "Out" ] }
+   }
+   | { E_ [emit_type == "fixup_arg"]
+       { L_object_revise_inout(typename, argname)
+         [ arg_dir == "InOut"]
+         | TRUE }
+   } |
+    { E_ [emit_type == "output_wrap" ]
+       { L_object_put_wrapper(typename, argname)
+         [ arg_dir == "Out" | arg_dir == "Return" ]
+         | TRUE }
+    } |      
+    # how can tell that return arg is declared a sibling? (per foo2 comments)
+    { E_ [emit_type == "sibling_check" 
+         [ arg_dir == "Out" |  arg_dir == "InOut"] 
+         cpfx = F_corba_pfx() ] 
+        L_sibling_check_begin()
+        { L_sibling_argname(argname) [arg_dir!="InOut"]
+          | L_sibling_inoutargname(typename, argname) 
+        }
+        L_sibling_check_end(cpfx)
+     } 
+   | { E_ [emit_type == "set_opt_from_base"]
+         {
+          L_set_opt_from_in(typename, argname) [ arg_dir == "In"] |
+          L_set_opt_from_inout(typename, argname) [arg_dir == "InOut"]
+         }
+     }
+   | { E_ [emit_type == "get_base_from_opt"]
+         { L_get_base(typename, argname) 
+            [ arg_dir == "Return" | arg_dir == "Out"]
+          | L_reset_base(typename, argname) 
+           [ arg_dir == "InOut" ]
+          | TRUE}
+       }
+    | TRUE
+   }
+.
+
+# get is for true input - in, inout
+L_object_get_decl(typename, argname) -->
+             iluObjectWrapper _%argname%_wr(ILUCPP_FALSE, %typename%::iluGetILUClassRecord()); 
+.
+
+# put is for true output - out, return
+L_object_put_decl(typename, argname) -->
+             %typename%_ptr   p_%argname%;
+.
+L_object_pass_in_arg(typename, argname, comma) -->
+                  (%typename%_ptr) _%argname%_wr.m_pv_iluobject%comma%
+.
+L_object_pass_inout_arg(typename, argname, comma) -->
+                  (%typename%_ptr&) _%argname%_wr.m_pv_iluobject%comma%
+.
+L_object_pass_out_arg(argname, comma) -->
+                  p_%argname%%comma%
+.
+L_object_revise_inout(typename, argname) -->
+
+             _%argname%_wr.iluReviseForObject(
+                 (%typename%_ptr) _%argname%_wr.m_pv_iluobject);
+.
+L_object_put_wrapper(typename, argname) -->
+             iluObjectWrapper _%argname%_wr(*p_%argname%, ILUCPP_FALSE);
+.
+L_sibling_check_begin() -->   
+            // check that parameter identified as SIBLING is in
+            // same server as the discriminant (i.e., this ) 
+            if(! _true_object->iluInSameServer(
+.
+L_sibling_argname(argname) -->
+               p_%argname%)) {
+.
+L_sibling_inoutargname(typename, argname) -->
+               %typename%_ptr  _%argname%_wr.m_pv.iluobject)) {
+.
+L_sibling_check_end(cpfx) -->
+                 // raise BAD_PARAM exception  
+                 %cpfx%BAD_PARAM bad_param_not_a sibling;
+                 throw(bad_param_not_a_sibling);
+           }
+.
+
+L_set_opt_from_in(typename, argname) -->
+             opt_%argname% = 
+                  (%typename%_ptr) _%argname%_wr.m_pv_iluobject;
+.
+L_set_opt_from_inout(typename, argname) -->
+             opt_%argname% = 
+                  (%typename%_ptr) _%argname%_wr.m_pv_iluobject;
+.
+
+L_get_base(typename, argname) -->
+             if(_opt_wrap_%argname%.m_present)
+                 p_%argname% = (%typename%_ptr) opt_%argname%; 
+.             
+L_reset_base(typename, argname) -->
+             if(_opt_wrap_%argname%.m_present)
+                  _%argname%_wr.m_pv_iluobject = (%typename%_ptr) opt_%argname%; 
+             else  _%argname%_wr.m_pv_iluobject = ILUCPP_NULL;
+.
+              
+=======================================================================
+
+R_emit_enumeration(emit_type, Any arg_type, argname, arg_dir, Int islast)
+  (typename, comma) -->
+
+ E_ [ typename = F_full_typeref(arg_type) ]
+ {
+   { E_ [emit_type == "arg_decl"]     L_enum_decl(typename, argname) }
+   | { E_ [emit_type == "read_arg" ]  L_wrap_op(argname, ">>")}
+   | { E_ [emit_type == "size_arg"]   L_wrap_op(argname, "+=") }
+   |   { E_ [emit_type == "send_arg"] L_wrap_op(argname, "<<") }
+   | { E_ [emit_type == "pass_return" ]  
+       L_enum_call_begin()
+       LP_(argname) "             %argname%  = "      
+   }
+   | {  E_ [emit_type == "pass_arg"  
+         [[ islast == 1 comma = "" ] | comma = "," ]] 
+         {  L_enum_pass_in_arg(typename, argname, comma) [ arg_dir == "In" ] 
+         | L_enum_pass_inout_out_arg(typename, argname, comma)
+              [ arg_dir == "InOut" | arg_dir == "Out"]
+          }
+      }
+   | { E_ [emit_type == "set_opt_from_base"] L_set_opt(argname) }
+   | { E_ [emit_type == "get_base_from_opt"]
+       { L_get_base(typename, argname)
+           [ arg_dir == "InOut" | arg_dir == "In"]
+        | L_get_base_return(typename, argname)
+        | TRUE}
+      }
+   | TRUE
+  }
+.
+
+L_enum_decl(typename, argname)  --> 
+             %typename%            %argname%;    
+             iluEnumWrapper       _%argname%_wr( (iluDummyEnum &) %argname%);
+.
+
+# just to add comment
+L_enum_call_begin() -->
+
+             // Note on G++ workaround  ..
+             // use void * trickery to work around G++'s (2.7.2) problems
+             // with enum casting.  This approach should work everywhere
+             // else, so we may just want to do this for the general case.
+
+.
+
+L_enum_pass_in_arg(typename, argname, comma) -->
+                    (%typename%) _%argname%_wr.m_r_enum%comma% 
+
+.
+L_enum_pass_inout_out_arg(typename, argname, comma) -->
+#ifdef OLDGNUC_WORKAROUND
+                    *((%typename%*)((void*)(&(_%argname%_wr.m_r_enum))))%comma% 
+#else
+                    (%typename%&) _%argname%_wr.m_r_enum%comma% 
+#endif
+.
+
+L_set_opt(argname) -->
+             opt_%argname% = &%argname%;
+.
+
+L_get_base(typename, argname) -->
+             if(_opt_wrap_%argname%.m_present) {
+                   %argname% = *((%typename%*) opt_%argname%); 
+#ifdef OLDGNUC_WORKAROUND
+            *((%typename%*)((void*)(&(_%argname%_wr.m_r_enum)))) =
+                      %argname%; 
+#else
+            (%typename%&) _%argname%_wr.m_r_enum = %argname%; 
+}
+.
+L_get_base_return(typename, argname) -->
+             if(_opt_wrap_%argname%.m_present)
+                 return_value = (void *) opt_%argname%;
+.
+
+
+=======================================================================
+
+R_emit_character(emit_type, Any arg_type, argname, arg_dir, Int islast)
+   (typename, comma) -->
+ E_ [ typename = F_full_typeref(arg_type) ]
+ {
+     { E_ [emit_type == "arg_decl"]  L_character_decl(typename, argname) }
+   | { E_ [emit_type == "read_arg" ] L_wrap_op(argname, ">>")}
+   | { E_ [emit_type == "size_arg"]  L_wrap_op(argname, "+=") }
+   |  { E_ [emit_type == "send_arg"] L_wrap_op(argname, "<<") }
+   | { E_ [emit_type == "pass_return" ]  
+       LP_(argname) "          %argname%  = " }
+   | {  E_ [emit_type == "pass_arg"  
+         [[ islast == 1 comma = "" ] | comma = "," ]] 
+         { L_char_pass_in_arg(typename, argname, comma) [ arg_dir == "In" ] 
+         | L_char_pass_inout_out_arg(typename, argname, comma)
+              [ arg_dir == "InOut" ]
+          }
+      }
+   | { E_ [emit_type == "set_opt_from_base"] L_set_opt(argname) }
+   | { E_ [emit_type == "get_base_from_opt"] L_get_base(typename, argname) }
+    | TRUE
+  }
+.
+
+L_character_decl(typename, argname)  --> 
+          %typename%           %argname%;    
+          iluCharacterWrapper  _%argname%_wr((iluShortCardinal& %argname%);
+.
+
+L_char_pass_in_arg(typename, argname, comma) -->
+                    (%typename%) _%argname%_wr.m_r_shortcardinal%comma% 
+.
+L_char_pass_inout_out_arg(typename, argname, comma) -->
+                    (%typename%&) _%argname%_wr.m_r_shortcardinal%comma% 
+.
+
+L_set_opt(argname) -->
+          opt_%argname% = (void *) &%argname%;
+.
+L_get_base(typename, argname) -->
+         if(opt_wrap_%argname%.m_present) 
+                    %argname% = *((typename*) opt_%argname%;
+                    (%typename%) _%argname%_wr.m_r_shortcardinal =
+                                   %argname%;
+.
+
+
+=======================================================================
+
+R_emit_boolean(emit_type, Any arg_type, argname, arg_dir, Int islast) 
+  (typename, comma) -->
+ E_ [ typename = F_full_typeref(arg_type) ]
+ {
+     { E_ [emit_type == "arg_decl"]  L_bool_decl(typename, argname) }
+   | { E_ [emit_type == "read_arg" ] L_wrap_op(argname, ">>")}
+   | { E_ [emit_type == "size_arg"]  L_wrap_op(argname, "+=") }
+   |  { E_ [emit_type == "send_arg"] L_wrap_op(argname, "<<") }
+   | { E_ [emit_type == "pass_return" ]  
+       LP_(argname) "          %argname%  = " }
+   | {  E_ [emit_type == "pass_arg"  
+         [[ islast == 1 comma = "" ] | comma = "," ]] 
+         { L_bool_pass_in_arg(typename, argname, comma) [ arg_dir == "In" ] 
+         | L_bool_pass_inout_out_arg(typename, argname, comma)
+              [ arg_dir == "InOut" ]
+          }
+      }
+   | { E_ [emit_type == "set_opt_from_base"] L_set_opt(argname) }
+   | { E_ [emit_type == "get_base_from_opt"] L_get_base(typename, argname) }
+    | TRUE
+  }
+.
+
+L_bool_decl(typename, argname)  --> 
+             %typename%        %argname%;    
+             iluBoolWrapper    _%argname%_wr(%argname%);
+.
+L_bool_pass_in_arg(typename, argname, comma) -->
+                    (%typename%) _%argname%_wr.m_r_bool%comma% 
+.
+L_bool_pass_inout_out_arg(typename, argname, comma) -->
+                    (%typename%&) _%argname%_wr.m_r_bool%comma% 
+.
+
+L_set_opt(argname) -->
+          opt_%argname% = (void *) &%argname%;
+.
+L_get_base(typename, argname) -->
+         if(opt_wrap_%argname%.m_present) 
+                    %argname% = *((typename*) opt_%argname%;
+                    _%argname%_wr.m_r_bool = %argname% 
+.
+
+
+
+=======================================================================
+
+R_emit_cstring(emit_type, Any arg_type, argname, arg_dir, Int islast) 
+     (op, comma, typename) -->
+ E_ [ typename = F_full_typeref(arg_type) ]
+
+ {
+     { E_ [emit_type == "arg_decl"]  L_cstring_decl(typename, argname) }
+   | { E_ [emit_type == "read_arg" ] L_wrap_op(argname, ">>")}
+   | { E_ [emit_type == "size_arg"]  L_wrap_op(argname, "+=")}
+   | { E_ [emit_type == "send_arg"]  L_wrap_op(argname, "<<") }
+   | { E_ [emit_type == "pass_return" ]  
+       LP_(argname) "             %argname%  = " } 
+   | { E_ [emit_type == "pass_arg" 
+        [[ islast == 1 comma = "" ] | comma = "," ]] 
+        { L_pass_string_in(typename, argname, comma) [ arg_dir == "In"]|
+          L_pass_string_inout_out(typename, argname, comma) }
+     }
+   | { E_ [emit_type == "output_wrap" ]
+       { L_set_cstring_wr_length(typename, argname)
+         [ arg_dir == "Out" | arg_dir == "InOut" ]
+        | L_set_cstring_return_wr(typename, argname)
+       | TRUE }
+    }
+   | { E_ [emit_type == "set_opt_from_base"] L_set_opt(argname) }
+   | { E_ [emit_type == "get_base_from_opt"] L_get_base(typename, argname) }
+   | TRUE     
+}
+.
+
+L_cstring_decl(typename, argname) -->
+             iluCardinal       _%argname%_length;
+             %typename%          %argname% = ILUCPP_NULL;
+             iluCStringWrapper _%argname%_wr(%argname%, _%argname%_length);
+.
+
+L_pass_string_in(typename, argname, comma) -->
+                 (%typename%) _%argname%_wr.m_r_cstring%comma%
+.
+L_pass_string_inout_out(typename, argname, comma) -->
+                 (%typename%&) _%argname%_wr.m_r_cstring%comma%
+.
+
+# for inout and out
+L_set_cstring_wr_length(typename, argname) -->
+            _%argname%_wr.m_r_card_length = 
+                   strlen(_%argname%_wr.m_r_cstring);
+.
+# for return
+L_set_cstring_return_wr(typename, argname) -->
+            _%argname%_wr.m_r_cstring = %argname%;
+            _%argname%_wr.m_r_card_length =
+                    strlen(_%argname%_wr.m_r_cstring);
+.
+
+L_set_opt(argname) -->
+          opt_%argname% = %argname%;
+.
+# this should be sufficient here
+L_get_base(typename, argname) -->
+          %argname% = (&%typename%) opt_%argname%;
+.
+
+=======================================================================
+R_emit_wstring(emit_type, Any arg_type, argname, arg_dir, Int islast) 
+     (op, comma, typename) -->
+
+ E_ [ typename = F_full_typeref(arg_type) ]
+ {
+      { E_ [emit_type == "arg_decl"] L_wstring_decl(typename, argname) }
+   | { E_ [emit_type == "read_arg" ] L_wrap_op(argname, ">>")}
+   | { E_ [emit_type == "size_arg"]  L_wrap_op(argname, "+=")}
+   | { E_ [emit_type == "send_arg"]  L_wrap_op(argname, "<<") }
+   | { E_ [emit_type == "pass_return" ]  
+       LP_(argname) "             %argname%  = " } 
+   | { E_ [emit_type == "pass_arg" 
+        [[ islast == 1 comma = "" ] | comma = "," ]] 
+       { L_pass_wstring_in(typename, argname, comma) [ arg_dir == "In"]|
+         L_pass_wstring_inout_out(typename, argname, comma) }
+     }
+   | { E_ [emit_type == "output_wrap" ]
+       { L_set_wstring_wr_length(typename, argname)
+         [ arg_dir == "Out" | arg_dir == "InOut" ]
+        | L_set_wstring_return_wr(typename, argname)
+        | TRUE }
+      }
+   | { E_ [emit_type == "set_opt_from_base"] L_set_opt(argname) }
+   | { E_ [emit_type == "get_base_from_opt"] L_get_base(typename, argname) }
+   | TRUE     
+}
+.
+
+L_wstring_decl(typename, argname) -->
+             iluCardinal        _%argname%_length;
+             %typename%         %argname%;
+             iluWStringWrapper  _%argname%_wr(%argname%, _%argname%_length,
+                                      ILUCPP_DELETE_ON_DESTRUCT);
+.
+L_pass_wstring_in(typename, argname, comma) -->
+                 (%typename%) _%argname%_wr.m_r_wstring%comma%
+.
+L_pass_wstring_inout_out(typename, argname, comma) -->
+                 (%typename%&) _%argname%_wr.m_r_wstring%comma%
+.
+# for inout and out
+L_set_wstring_wr_length(typename, argname) -->
+           _%argname%_wr.m_r_card_length = 
+                   iluCppRuntime::iluCharacterStringLength(
+                                       _%argname%_wr.m_r_wstring);
+.
+L_set_wstring_return_wr(typename, argname) -->
+          _%argname%_wr.m_r_wstring = %argname%;
+          _%argname%_wr.m_r_card_length = 
+                   iluCppRuntime::iluCharacterStringLength(
+                                       _%argname%_wr.m_r_wstring);
+.
+L_set_opt(argname) -->
+          opt_%argname% = %argname%;
+.
+L_get_base(typename, argname) -->
+          %argname% = (&%typename%) opt_%argname%;
+.
+
+===================================================================
+R_emit_bytestring(emit_type, Any arg_type, argname, arg_dir, Int islast) 
+     (op, comma, typename) -->
+
+ E_ [ typename = F_full_typeref(arg_type) ]
+ {
+      { E_ [emit_type == "arg_decl"] L_bstring_decl(typename, argname) }
+   | { E_ [emit_type == "read_arg" ] L_wrap_op(argname, ">>")}
+   | { E_ [emit_type == "size_arg"]  L_wrap_op(argname, "+=")}
+   | { E_ [emit_type == "send_arg"]  L_wrap_op(argname, "<<") }
+   | { E_ [emit_type == "pass_return" ]  
+       LP_(argname) "             %argname%  = " } 
+   | { E_ [emit_type == "pass_arg" 
+        [[ islast == 1 comma = "" ] | comma = "," ]] 
+       { L_pass_bstring_in(typename, argname, comma) [ arg_dir == "In"]|
+         L_pass_bstring_inout_out(typename, argname, comma) }
+     }
+   | { E_ [emit_type == "output_wrap" ]
+       { L_set_bstring_wr_length(typename, argname)
+         [ arg_dir == "Out" | arg_dir == "InOut" ]
+        | L_set_bstring_return_wr(typename, argname)
+     | TRUE }
+     }
+   | { E_ [emit_type == "set_opt_from_base"] L_set_opt(argname) }
+   | { E_ [emit_type == "get_base_from_opt"] L_get_base(typename, argname) }
+   | TRUE     
+}
+.
+
+L_bstring_decl(typename, argname) -->
+            iluCardinal      _%argname%_length;
+            %typename%       %argname% = ILUCPP_NULL;
+            iluBytesWrapper  _%argname%_wr(%argname%, _%argname%_length);
+.
+
+L_pass_bstring_in(typename, argname, comma) -->
+                 (%typename%) _%argname%_wr.m_r_pc_buffer%comma%
+.
+L_pass_bstring_inout_out(typename, argname, comma) -->
+                 (%typename%&) _%argname%_wr.m_r_pc_buffer%comma%
+.
+# for inout and out
+L_set_bstring_wr_length(typename, argname) -->
+           _%argname%_wr.m_r_card_length = 
+                   strlen(_%argname%_wr.m_r_card_length);
+.
+# for return
+L_set_bstring_return_wr(typename, argname) -->
+          _%argname%_wr.m_r_pc_buffer = %argname%;
+          _%argname%_wr.m_r_card_length =
+                    strlen(_%argname%_wr.m_r_cstring);
+.
+L_set_opt(argname) -->
+          opt_%argname% = %argname%;
+.
+L_get_base(typename, argname) -->
+          %argname% = (&%typename%) opt_%argname%;
+.
+
+===================================================================
+# modified inout to _var to cope with GNUC problem
+R_emit_array(emit_type, Any arg_type, argname, arg_dir, Int islast) 
+     (op, comma, Int is_varlen, typename, fun_name) -->
+
+  E_ [ [ [ F_varlen_type(arg_type)== 1 is_varlen = 1] | is_varlen = 0]
+       typename = F_full_typeref(arg_type) 
+      ]
+  {
+   {
+    E_ [emit_type == "arg_decl"]
+     { L_array_in_decl(typename, argname)  [arg_dir == "In"] 
+       | L_array_inout_out_decl(typename, argname)
+            [is_varlen == 0  [arg_dir == "InOut" |arg_dir == "Out"]] 
+       | L_varray_inout_decl(typename, argname)
+            [arg_dir == "InOut" ]
+       | L_varray_out_decl(typename, argname)
+            [ is_varlen == 1 arg_dir == "Out"] 
+       | L_array_return_decl(typename, argname)
+     } 
+   }
+   | { E_ [emit_type == "read_arg"  
+           fun_name = F_full_pfxd_name("input", arg_type)]
+       { L_get_array_in(fun_name,typename, argname) [ arg_dir == "In" ] |
+         | L_get_array_inout(fun_name, typename, argname)
+                [ arg_dir == "InOut" is_varlen == 0] 
+         | L_get_varray_inout(fun_name, typename, argname)
+                [ arg_dir == "InOut" ] 
+       }
+     }
+   | { E_ [emit_type == "pass_return" ] 
+          L_array_call(typename, argname) 
+          LP_() "            "
+     }  
+   | {  E_ [emit_type == "pass_arg"
+           [ [ islast == 1 comma = "" ] | comma = "," ] ] 
+         { L_pass_array_in(argname, comma)
+            [ arg_dir == "In" ] 
+         | L_pass_array_inout_out(argname, comma)
+            [is_varlen == 0  [arg_dir == "InOut" |arg_dir == "Out"]] 
+         | L_pass_varray_inout(argname, comma)
+            [arg_dir == "InOut" ]
+         | L_pass_varray_out(argname, comma)
+            [ is_varlen == 1 arg_dir == "Out"]
+         } 
+      }
+   | { E_ [emit_type == "fixup_arg"]
+       { L_build_gnuc_array_return_var(argname) 
+            [arg_dir == "Return"] 
+         | TRUE }
+        {L_build_varray_out_var(typename, argname)  
+            [ is_varlen == 1 arg_dir == "Out"]
+         | TRUE }
+      } 
+   |  { E_ [ [emit_type == "size_arg"
+               fun_name = F_full_pfxd_name("size_const", arg_type)]
+             | [ emit_type == "send_arg"
+               fun_name = F_full_pfxd_name("output_const", arg_type)] ] 
+         { L_array_size_put_return(fun_name, argname) 
+             [ arg_dir == "Return"] 
+           | L_array_size_put_arg(fun_name, argname)
+             [ is_varlen == 0 | [ arg_dir != "Out" arg_dir != "InOut" ] ]
+           | L_varray_size_put_inout(fun_name, argname)
+             [ arg_dir == "InOut" ] 
+           | L_varray_size_put_out(fun_name, argname)
+             [ is_varlen == 1 | arg_dir == "Out"]
+           | TRUE
+         }
+       }
+   | TRUE
+  }
+.
+
+
+L_array_in_decl(typename, argname) -->  
+              %typename%_slice* %argname%_slice = %typename%_alloc();
+.
+L_array_inout_out_decl(typename, argname) -->
+              %typename%    %argname%;
+.
+
+L_varray_inout_decl(typename, argname) -->
+              %typename%_slice* %argname%_slice = %typename%_alloc();
+.
+
+L_varray_out_decl(typename, argname) -->
+              %typename%_slice*    %argname%_slice;
+.
+
+L_array_return_decl(typename, argname) -->
+              %typename%_var   %argname%_var;
+.
+L_get_array_in(fun_name, typename, argname) -->
+              %fun_name%(_true_call, %argname%_slice); 
+              // make up var to take care of memory management
+              // and allow appropriate conversion for the inarg slice
+              %typename%_var    %argname%_var(%argname%_slice); 
+
+.
+L_get_array_inout(fun_name, typename, argname) -->
+              %fun_name%(_true_call, %argname%);
+.
+L_get_varray_inout(fun_name, typename, argname) -->
+              %fun_name%(_true_call, %argname%_slice);
+              // make up var to take care of memory management
+              %typename%_var    %argname%_var(%argname%_slice);
+.
+
+
+L_array_call(typename, argname) -->
+              %argname%_var = 
+.
+L_pass_array_in(argname, comma) -->
+                   %argname%_slice%comma%
+.
+L_pass_array_inout_out(argname, comma) -->
+                    %argname%%comma% 
+.
+L_pass_varray_inout(argname, comma) -->
+                    %argname%_slice%comma%
+.
+
+L_pass_varray_out(argname, comma) -->
+                    %argname%_slice%comma% 
+.
+
+L_build_gnuc_array_return_var(argname) -->
+.
+L_build_varray_out_var(typename,argname)--> 
+              // make up var to take care of memory management 
+              %typename%_var   %argname%_var(%argname%_slice);
+.
+
+#.in used for disambiguation
+L_array_size_put_return(fun_name, argname) -->
+                    %fun_name%(_true_call, %argname%_var.in());
+.
+
+L_array_size_put_arg(fun_name, argname) -->
+                    %fun_name%(_true_call, %argname%);
+.
+
+#.in used for disambiguation
+L_varray_size_put_inout(fun_name, argname) -->
+                    %fun_name%(_true_call, %argname%_var.in());
+.
+
+
+L_varray_size_put_out(fun_name, argname) -->
+                    %fun_name%(_true_call, %argname%_slice);
+.
+
+
+
+===================================================================
+R_emit_varlen(emit_type, Any arg_type, argname, arg_dir, Int islast) 
+     (op, comma, typename) -->
+
+  E_  [ typename = F_full_typeref(arg_type) ]
+ {
+      { E_ [emit_type == "arg_decl"] 
+        { L_simple_decl(typename,argname)
+           [ arg_dir == "In" | arg_dir == "InOut"]
+         | L_vstruct_out_return_decl(typename, argname)
+         }
+       }
+   | { E_ [emit_type == "pass_return" ]  
+       LP_(argname) "             p_%argname%  = " } 
+   | { E_ [emit_type == "pass_arg"
+           [[ islast == 1 comma = "" ] | comma = "," ]] 
+       { L_pass_vstruct_out(argname, comma) [arg_dir == "Out"]|
+         L_pass_simple_arg(argname, comma) }
+     }
+   | { E_ [emit_type == "read_arg" ] L_simple_op(argname, ">>")}
+   | { E_ [emit_type == "size_arg"] 
+       { L_vstruct_out_return_size(argname) 
+           [arg_dir == "Return" | arg_dir == "Out"]
+         | L_simple_op(argname, "+=") } 
+     }   
+   | { E_ [emit_type == "send_arg"] 
+       { L_vstruct_out_return_send(argname) 
+           [arg_dir == "Return" | arg_dir == "Out"]
+         | L_simple_op(argname, "<<") } 
+     }   
+   | { E_ [emit_type == "set_opt_from_base"]
+       { L_set_opt_in_inout(argname) 
+         [ arg_dir == "In" | arg_dir == "Out"]   
+       | TRUE }
+      }
+   | { E_ [emit_type == "get_base_from_opt"]
+       { L_get_base_out_return(typename, argname)
+         [ arg_dir == "Out" | arg_dir == "Return"]   
+       | TRUE
+       }
+     }
+   | TRUE     
+}
+.
+
+# use L_simple for in/inout decl, pass args, ops.
+L_vstruct_out_return_decl(typename, argname) -->
+             %typename%*   p_%argname%;
+.
+L_pass_vstruct_out(argname, comma) -->
+                  p_%argname%%comma%
+.
+L_vstruct_out_return_size(argname) -->
+             _true_call += *p_%argname%;      
+.
+L_vstruct_out_return_send(argname) -->
+             _true_call << *p_%argname%;      
+             delete p_%argname%; 
+.
+
+L_set_opt_in_inout(argname) -->
+          opt_%argname% = &%argname%;
+.
+
+L_get_base_out_return(typename, argname) -->
+         p_%argname% = opt_%argname%;
+.
+
+===================================================================
+# for optionals, generate code for optional args and
+# iterate for underlying types
+R_emit_optional(emit_type, Optional arg_type, argname, arg_dir, Int islast)
+   ( Any opt_type, Any arg_urtype, opt_kind, typename, comma,
+    holdext, holdint)
+    -->
+
+ E_  [ arg_urtype = F_ur_instance(arg_type)
+       opt_type = F_ur_instance(arg_urtype.oftype) 
+       opt_kind = F_ur_typename(arg_urtype.oftype)
+       typename = F_full_typeref(arg_type) 
+     ]
+   
+ {
+      { E_ [emit_type == "arg_decl"]  
+        # first produce decl for optional and wrapper
+        L_optional_arg_decl(typename, argname)
+        # then, for in/inout, if underlying not already ptr,  
+        # allocate actual.
+        { R_emit("arg_decl", opt_type, argname, arg_dir, 0)
+         | TRUE }
+       }  
+     | { E_ [emit_type == "read_arg" ] 
+          L_optwrap_op(argname, ">>")
+          L_mpresent_condition(argname)
+          R_emit("read_arg", opt_type, argname, arg_dir, 0)
+          R_emit("set_opt_from_base", opt_type, argname, arg_dir, 0)
+          L_read_mpresent_else(argname) 
+        }
+    | { E_ [emit_type == "pass_return" ]  
+        LP_(argname) "             opt_%argname%  = " }
+   | {  E_ [emit_type == "pass_arg"  
+         [[ islast == 1 comma = "" ] | comma = "," ] ]
+         L_pass_arg(argname, comma) 
+      }
+   | { E_ [ emit_type == "fixup_arg" ]
+       L_set_mpresent(argname)
+       R_emit("get_base_from_opt", opt_type, argname, arg_dir, 0) 
+       R_emit("fixup_arg", opt_type, argname, arg_dir, 0)
+       R_emit("output_wrap", opt_type, argname, arg_dir, 0)
+       }
+    | { E_ [emit_type == "size_arg"]
+        L_optwrap_op(argname, "+=")
+        L_mpresent_condition(argname)
+        R_emit("size_arg", opt_type, argname, arg_dir, 0)
+         L_() "             }"
+      }
+    | 
+      { E_ [emit_type == "send_arg"]
+        L_optwrap_op(argname, "<<")
+        L_mpresent_condition(argname)
+        R_emit("send_arg", opt_type, argname, arg_dir, 0)
+         L_() "             }"
+      }
+    | TRUE
+ }
+.
+
+
+L_optional_arg_decl(typename, argname)  -->
+
+             %typename%    opt_%argname%  = ILUCPP_NULL;
+             iluOptionalWrapper   _opt_wrap_%argname%;
+.
+
+L_optwrap_op(argname, op) -->
+
+             _true_call %op%  _opt_wrap_%argname%;
+.
+
+L_mpresent_condition(argname) -->
+             if(_opt_wrap_%argname%.m_present) {
+.
+L_read_mpresent_else(argname) -->
+             }
+             else opt_%argname% = ILUCPP_NULL;
+.
+
+L_pass_arg(argname, comma) -->
+                        opt_%argname%%comma%
+.
+
+L_set_mpresent(argname) -->
+
+             _opt_wrap_%argname%.iluSetFrom(opt_%argname%);
+.
+=======================================================================     
+

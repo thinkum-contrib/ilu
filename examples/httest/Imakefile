@@ -1,0 +1,83 @@
+/** $Id: Imakefile,v 1.11 1999/08/03 01:58:23 janssen Exp $
+ BeginILUCopyright
+
+ Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+ Unlimited use, reproduction, modification, and distribution of this
+ software and modified versions thereof is permitted.  Permission is
+ granted to make derivative works from this software or a modified
+ version thereof.  Any copy of this software, a modified version
+ thereof, or a derivative work must include both the above copyright
+ notice of Xerox Corporation and this paragraph.  Any distribution of
+ this software, a modified version thereof, or a derivative work must
+ comply with all applicable United States export control laws.  This
+ software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+ WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+ LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+ EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+ NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+ OF THE POSSIBILITY OF SUCH DAMAGES.
+
+ EndILUCopyright
+*/
+/* Last edited by Mike Spreitzer October 8, 1998 11:05 pm PDT */
+
+
+MkdirTarget($(DESTDIR)/examples)
+MkdirTarget($(DESTDIR)/examples/httest)
+
+InstallRO(httest.isl, $(DESTDIR)/examples/httest)
+InstallRO(htclient.c, $(DESTDIR)/examples/httest)
+InstallRO(htserver.c, $(DESTDIR)/examples/httest)
+InstallRO(webserver.c, $(DESTDIR)/examples/httest)
+InstallRO(ilugetbot.c, $(DESTDIR)/examples/httest)
+InstallRO(README, $(DESTDIR)/examples/httest)
+InstallFileToFile(runImakefile, $(INSTINCFLAGS), $(DESTDIR)/examples/httest/Imakefile)
+
+#ifdef ADD_PYTHON_LANGUAGE
+InstallRO(servlet.py, $(DESTDIR)/examples/httest)
+#endif /* def ADD_PYTHON_LANGUAGE */
+
+######################################################################
+######################################################################
+######################################################################
+##
+##  The following rules are included to test the build with...
+##
+
+#ifdef ADD_SECURE_TRANSPORT
+#ifdef INCLUDE_SSL_SECMECH
+SSL=../../GSS/ssl/libgss-ssl.a
+SSLINCL=-I../../GSS/ssl $(RSAINCL) $(DESINCL)
+#endif
+SECURITYLIBS = $(SSL) ../../GSS/kernel/libgss.a $(RSALIBS) $(DESLIBS)
+SECURITYINCLUDES = -I../../GSS/kernel $(SSLINCL)
+#endif
+
+ILUCINCLUDES = -I../../runtime/c -I../../runtime/kernel $(SECURITYINCLUDES)
+TESTCLIBS = ../../runtime/c/libilu-c.a ../../runtime/kernel/libilu.a $(SECURITYLIBS)
+C_STUBBER = ../../stubbers/c/c-stubber
+
+NormalObjectRule()
+
+iluhttp.h iluhttp-true.c iluhttp-surrogate.c iluhttp-common.c :  ../../stubbers/parser/iluhttp.isl ../../stubbers/c/c-stubber ../../stubbers/parser/ilu.isl
+	../../stubbers/c/c-stubber -I ../../stubbers/parser  ../../stubbers/parser/iluhttp.isl
+
+httest.h httest-true.c httest-surrogate.c httest-common.c : iluhttp.h httest.isl ../../stubbers/c/c-stubber ../../stubbers/parser/ilu.isl
+	../../stubbers/c/c-stubber -I ../../stubbers/parser httest.isl
+
+
+CleanTarget(httest.h httest-true.c httest-surrogate.c httest-common.c)
+CleanTarget(iluhttp.h iluhttp-true.c iluhttp-surrogate.c iluhttp-common.c)
+
+htclient.o : htclient.c iluhttp.h httest.h ../../runtime/kernel/iluxport.h ../../runtime/c/iluchdrs.h
+htserver.o : htserver.c iluhttp.h httest.h ../../runtime/kernel/iluxport.h ../../runtime/c/iluchdrs.h
+webserver.o : webserver.c iluhttp.h ../../runtime/kernel/iluxport.h ../../runtime/c/iluchdrs.h
+ilugetbot.o : ilugetbot.c iluhttp.h ../../runtime/kernel/iluxport.h ../../runtime/c/iluchdrs.h
+
+TestProgramTarget(htclient, htclient.o iluhttp-surrogate.o iluhttp-common.o httest-surrogate.o httest-common.o, $(TESTCLIBS),)
+TestProgramTarget(htserver, htserver.o iluhttp-true.o iluhttp-common.o httest-true.o httest-common.o, $(TESTCLIBS),)
+TestProgramTarget(webserver, webserver.o iluhttp-true.o iluhttp-common.o, $(TESTCLIBS),)
+TestProgramTarget(ilugetbot, ilugetbot.o iluhttp-surrogate.o iluhttp-common.o, $(TESTCLIBS),)

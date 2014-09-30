@@ -1,0 +1,79 @@
+/*
+ BeginILUCopyright
+ 
+ Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+ 
+ Unlimited use, reproduction, modification, and distribution of this
+ software and modified versions thereof is permitted.  Permission is
+ granted to make derivative works from this software or a modified
+ version thereof.  Any copy of this software, a modified version
+ thereof, or a derivative work must include both the above copyright
+ notice of Xerox Corporation and this paragraph.  Any distribution of
+ this software, a modified version thereof, or a derivative work must
+ comply with all applicable United States export control laws.  This
+ software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+ WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+ LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+ EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+ NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+ OF THE POSSIBILITY OF SUCH DAMAGES.
+ 
+ EndILUCopyright
+
+$Id:
+
+*/
+
+LOCALINCLUDES = -I../kernel -I../../stubbers/cpp2 $(BUILD_BIGNUM_INCLUDES) $(BUILD_SECURITY_INCLUDES)
+ILUCPLUSPLUSINCLUDES =
+
+NormalObjectRule()
+
+KERNEL_HEADERS=../kernel/iluxport.h ../kernel/iluconf.h ../kernel/iluerror.h ../kernel/ilubasic.h ../kernel/iluerrs.h ../kernel/iludebug.h ../kernel/iluhash.h ../kernel/iluntrnl.h ../kernel/ilutypes.h
+
+ILUCPP_HEADERS= ilu.hpp corba.hpp corba-templates.hpp
+
+iluactivation.o : iluactivation.cc $(ILUCPP_HEADERS) $(KERNEL_HEADERS)
+ilucall.o : ilucall.cc $(ILUCPP_HEADERS) $(KERNEL_HEADERS)
+ilucppruntime.o : ilucppruntime.cc $(ILUCPP_HEADERS) $(KERNEL_HEADERS)
+ilugarbagecollect.o : ilugarbagecollect.cc $(ILUCPP_HEADERS) $(KERNEL_HEADERS)
+ilumainloop.o : ilumainloop.cc $(ILUCPP_HEADERS) $(KERNEL_HEADERS)
+iluobject.o : iluobject.cc $(ILUCPP_HEADERS) $(KERNEL_HEADERS)
+iluobjecttable.o : iluobjecttable.cc $(ILUCPP_HEADERS) $(KERNEL_HEADERS)
+iluserver.o : iluserver.cc $(ILUCPP_HEADERS) $(KERNEL_HEADERS)
+ilusecurity.o : ilusecurity.cc $(ILUCPP_HEADERS) $(KERNEL_HEADERS)
+ilucppinternal.o : ilucppinternal.cc $(ILUCPP_HEADERS) $(KERNEL_HEADERS)
+corba.o : corba.cc $(ILUCPP_HEADERS) $(KERNEL_HEADERS)
+
+ObjectTarget(iluactivation.o)
+ObjectTarget(ilucall.o)
+ObjectTarget(ilucppruntime.o)
+ObjectTarget(ilugarbagecollect.o)
+ObjectTarget(ilumainloop.o)
+ObjectTarget(iluobject.o)
+ObjectTarget(iluobjecttable.o)
+ObjectTarget(iluserver.o)
+ObjectTarget(ilusecurity.o)
+ObjectTarget(ilucppinternal.o)
+ObjectTarget(corba.o)
+
+
+OBJS = iluactivation.o ilucall.o ilucppruntime.o ilugarbagecollect.o ilumainloop.o iluobject.o iluobjecttable.o iluserver.o ilusecurity.o ilucppinternal.o corba.o 
+
+LibraryTarget(libilu-cpp2.a, $(OBJS))
+
+InstallLibrary(libilu-cpp2.a, $(DESTDIR)/lib)
+InstallRO(ilu.hpp, $(DESTDIR)/include)
+InstallRO(corba.hpp, $(DESTDIR)/include)
+InstallRO(corba-templates.hpp, $(DESTDIR)/include)
+
+#ifdef ADD_CPLUSPLUS_SHARED_LIBRARY
+SharedLibrary(libilu-cpp2, $(OBJS),,)
+#endif /* def ADD_CPLUSPLUS_SHARED_LIBRARY */
+
+all:: libilu-cpp2.a
+
+clean::
+	rm -f *.cc

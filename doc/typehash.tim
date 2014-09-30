@@ -1,0 +1,434 @@
+@c $Id: typehash.tim,v 1.22 1999/08/03 01:57:00 janssen Exp $
+@setfilename typehash.info
+@settitle Algorithm for Generation of Structural-Hash Type IDs
+@ifset ilucopyright
+BeginILUCopyright
+
+Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+Unlimited use, reproduction, modification, and distribution of this
+software and modified versions thereof is permitted.  Permission is
+granted to make derivative works from this software or a modified
+version thereof.  Any copy of this software, a modified version
+thereof, or a derivative work must include both the above copyright
+notice of Xerox Corporation and this paragraph.  Any distribution of
+this software, a modified version thereof, or a derivative work must
+comply with all applicable United States export control laws.  This
+software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+OF THE POSSIBILITY OF SUCH DAMAGES.
+  
+EndILUCopyright
+@end ifset
+@ifclear largerdoc
+@include ilu-macros.tim
+@titlepage
+@title Algorithm for Generation of Structural-Hash Type IDs
+@author Mike Spreitzer
+@sp
+(typeset @today{})
+@sp
+($Id: typehash.tim,v 1.22 1999/08/03 01:57:00 janssen Exp $)
+@end titlepage
+@end ifclear
+
+The following type ID construction algorithm is used for automatic generation of type IDs
+for all types and exceptions in ILU that have no explicitly specified type ID.  The type ID
+is formed by (1) constructing a string
+containing all the salient information about the type or exception, in a
+standardized form, (2) taking the NIST Secure Hash Signature of that
+string, and (3) rendering the SHS in a string form as a 27-digit base-64
+number.
+
+@section Resolving Type Ambiguities
+
+There are some types that can be described in multiple ways, using more or less generalized constructions.  For example, the primitive integer types could also be described as fixed-point constructions.  Every type that can be described multiple ways is always considered to @emph{be} the one that uses the least general constructs.  In particular, the primitive integer types are indeed considered primitive --- not fixed-point constructions.
+
+@section Constructing the "salient information string"
+
+This string consists of 8-bit bytes.
+Many of those bytes are described here using characters, which are taken to be in the US-ASCII character code.
+
+@display
+<info string> ::= <self ref> <defn>*
+<self ref> ::= <typeref> | <exnref>
+@end display
+
+The salient information string consists of a reference to the @emph{initial item}
+(the type or exception being characterized),
+followed by the definitions of the interfaces, execeptions,
+and non-primitive non-explicitly-IDed types referenced directly or indirectly by the initial item.
+Each interface, exception, and non-primitive non-explicitly-IDed type that
+is referenced in the type string is defined exactly once in the type
+string, and these are the only definitions that appear in the type
+string.  In particular, the string includes no definition of any primitive type,
+nor of any type whose ID is explicitly specified in the source language
+(explicit IDs can optionally be given in @language{ISL} by appending a @kwd{TYPEID} clause to a type definition;
+in OMG @language{IDL} there is a defined ID for every named type).
+The definitions appear in the order of first appearance of
+the corresponding reference.  In other words, the definitions appear in breadth-first order.  In particular, if the initial item has a definition
+(note that primitive types do not), then it is the first definition.
+Every definition of an item is preceded by at least one reference to that item.
+This forbids adding definitions of types in irrelevant cycles.
+
+We could compress this a bit by making each definition immediately
+follow, and thus not duplicate, its first reference.  But this gains
+little, and type fingerprints are not computed at runtime anyway.  And
+it has this cost: it tempts an implementor to use a recursive strategy
+for generating the type string, and a recursive implementation will
+crash with a stack overflow when presented with hostile interface
+source code.  The structure given is amenable to a simple
+worklist-based generation strategy.
+
+@section References to Types, Interfaces, and Exceptions
+
+A type reference is a reference to either a primitive type or a
+constructed one, or an explicit type UID (if the type UID has been
+explicitly specified).
+
+@display
+<typeref> ::= <primitive> | <typeciteref> | <typeidref>
+<typeciteref> ::= "(ref" <sp> <type cite> ")"
+<typeidref> ::= "(id" <sp> <UID string> ")"
+<UID string> ::= <string>
+@end display
+
+The primitive types are:
+
+@display
+<primitive> ::=
+	  "byte"
+	| "shortcardinal"
+	| "cardinal"
+	| "longcardinal"
+	| "shortinteger"
+	| "integer"
+	| "longinteger"
+	| "shortreal"
+	| "real"
+	| "longreal"
+	| "shortcharacter"
+	| "character"
+	| "longcharacter"
+	| "boolean"
+	| "pickle"
+	| "void"
+@end display
+
+A reference to a constructed type cites two things: (1) the name of
+the interface in which the type is defined, and (2) the name given
+that type.  These are ultimately <id>s, as defined in ISL;
+ISL identifiers may not contain any characters (e.g., quotes, parentheses)
+that are treated specially in the syntax of salient information strings.  In a salient information string, <id>s are represented in US-ASCII (with no leading length nor trailing null).
+
+@display
+<type cite> ::= <ifc ref> <sp> <typename>
+<ifc ref> ::= <interfacename>
+<interfacename> ::= <id>
+<typename> ::= <id>
+<sp> ::= a single space character (i.e., code 32(decimal))
+@end display
+
+Exception references similarly have two forms, depending on whether an ID has been explicitly specified:
+
+@display
+<exnref> ::= "(exn" <sp> ( <exnciteref> | <exnidref> ) ")"
+<exnidref> ::= "(id" <sp> <UID string> ")"
+<exnciteref> ::= "(ref" <sp> <ifc ref> <sp> <exnname> ")"
+<exn cite> ::= <ifc ref> <sp> <exnname>
+<exnname> ::= <id>
+@end display
+
+@section Definitions of Types, Interfaces, and Exceptions
+
+There are three kinds of things that need to be defined: types,
+interfaces, and exceptions.
+
+@display
+<defn> ::= <type def> | <ifc def> | <exn def>
+@end display
+
+@subsection Types
+
+A definition of a type gives its compound name, brand, and what the type
+is defined to be.
+
+@display
+<type def> ::= "(type" <sp> <type cite> <sp> <brand> <sp> <type desc> ")"
+@end display
+
+A type can be defined either to be a primitive or a construction.
+
+@display
+<type desc> ::= <primitive> | <construction>
+@end display
+
+Constructed types have different forms, specific to their types.
+
+@display
+<construction> ::= <fixedpoint>
+		 | <stringt>
+		 | <array>
+		 | <record>
+		 | <optional>
+		 | <sequence>
+		 | <union>
+		 | <enumeration>
+		 | <object>
+@end display
+
+@subsubsection Alias Types
+
+For alias types that have an explicitly assigned type ID, we simply
+generate a <typeidref> when it's referenced.  For alias types that have
+the same type ID as their base type, we just use the base type in its place when
+constructing type info strings.
+
+@subsubsection Array Types
+
+This should be mostly obvious.  An integer is given as its shortest decimal representation; positive integers have no sign character.
+
+@display
+<array> ::= "(array" <sp> <typeref> (<sp> <dim>)+ ")"
+<dim> ::= "(fixed" <sp> <non-negative integer> ")"
+<integer> ::= "0" | ( ["-"] <non-zero-digit> <digit>* )
+<digit> ::= <non-zero-digit> | "0"
+<non-zero-digit> = "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
+@end display
+
+@subsubsection Record Types
+
+The field names are included on the grounds that they give clues to
+the semantics of the type, so different field names make different
+types.
+
+@display
+<record> ::= "(record" (<sp> <rfield>)+ ")"
+
+<rfield> ::= "(field" <sp> <fieldname> <sp> <typeref> ")"
+
+<fieldname> ::= <id>
+@end display
+
+@subsubsection Optional Types
+
+@display
+<optional> ::= "(optional" <sp> <typeref> ")"
+@end display
+
+@subsubsection Fixed-point Types
+
+The fixed-point constructor gives the minimum and maximum numerators, and the fixed denominator value.
+Note that <integer> may be arbitrarily long.
+
+@display
+<fixedpoint> ::= "(fixedpoint" <sp> <min-num> <sp> <max-num> <sp> <denom> ")"
+<min-num> ::= <integer>
+<max-num> ::= <integer>
+<denom> ::= <positive integer> | "1/" <positive integer>
+@end display
+
+@subsubsection Sequence Types
+
+@display
+<sequence> ::= "(sequence" <sp> <typeref> <sp> "(variable" <sp> <limit> "))"
+<limit> ::= <integer>
+@end display
+
+There is always some finite limit, 2^32-1 when not explicitly given in
+ISL.
+
+@subsubsection Union Types
+
+@display
+<union> ::= "(union" <sp> <typeref> (<sp> <uarm>)+ ")"
+
+<uarm> ::= "(arm" <sp> <typeref> <sp> [ "(name" <arm name> ")" <sp> ] "(" ["default"] ")"
+		(<sp> <discvalue>)* ")"
+
+<arm name> ::= <id>
+
+<discvalue> ::= "(val" <sp> ( <string> | <integer> | ( "TRUE" | "FALSE" ) ) ")"
+@end display
+
+The <typeref> at the top level of a UNION constructor is the type of
+the tag, which must be an integer type, a character type, an
+enumerated type, or boolean.
+The <discvalue> is an integer when the tag is a numeric type,
+a string when the tag is an enumerated or character type,
+and a boolean literal when the tag is boolean.
+
+@subsubsection Enumeration Types
+
+@display
+<enumeration> ::= "(enumeration" (<sp> <efield>)+ ")"
+
+<efield> ::= "(element" <sp> <id> <sp> <integer> ")"
+@end display
+
+Enumeration info includes the numeric codes assigned when not
+explicitly given.
+
+@subsubsection Object Types
+
+@display
+<object> ::= "(object"
+		 [ <sp> "(singleton" <sp> <singletoninfo> ")" ]
+		 [ <sp> "optional" ]
+		 [ <sp> "collectible" ]
+		 ( <sp> "(supertype" <sp> <typeref> ")" )*
+		 ( <sp> <method> )*
+
+<method> ::= "(method" <sp> <methodname>
+	[ <sp> "asynchronous" ]
+	[ <sp> "functional" ]
+	<sp> "(returns" <sp> <typeref> (<sp> <exnref>)* ")"
+	( <sp> <marg> )*
+        ")"
+
+<marg> ::= "(parameter" <sp> <name> <sp> ( "in" | "out" | "inout" ) <sp> <typeref>
+            [ <sp> "sibling" ] ")"
+
+@end display
+
+The form of object type constructions follows the features of the @language{ISL} fairly closely.  A method with no explicit return result is considered here to return "void".  The methods listed are only those introduced at the object type at hand --- the inherited methods are not listed.
+
+@display
+<singletoninfo> ::= <string>
+@end display
+
+The <singletoninfo> is the string
+given in the ISL (quoted, as all <string>s are).
+
+@subsection Interfaces
+
+The definition of an interface simply gives its brand.  We *could*
+make it also include a reference to everything defined in that
+interface, but I don't see any particular value in doing so.
+
+@display
+<ifc def> ::= "(interface" <sp> <interfacename> <sp> <interfacebrand> ")"
+<interfacebrand> ::= <string>
+@end display
+
+@subsection Exceptions
+
+The definition of an exception gives its compound name, its brand, and the
+associated datatype.  As exceptions are not yet branded in the rest of @system{ILU},
+the brand here is always the empty string.  If the exception has no associated datatype, it is given as "void" here.
+
+@display
+<exn def> ::= "(exception" <sp> <exn cite> <sp> <exnbrand> <sp> <typeref> ")"
+<exnbrand> ::= <string>
+@end display
+
+@subsection Brands
+
+@display
+<brand> ::= <string>
+@end display
+
+The string brand for a type, exception, or interface.  If not explicitly given in the ISL,
+the empty string.
+
+@subsection String Literals
+
+A <string> is encoded using US-ASCII and surrounded with double-quotes (US-ASCII code 34).
+If the double-quote character appears in the string,
+it is escaped with a leading backslash character.  If a backslash character appears in the string,
+it is escaped with an additional leading backslash character.  If a non-printing character
+(with a US-ASCII code less than 32(decimal) or greater than 126(decimal)) appears in the string,
+it appears as a 3-digit octal number containing the US-ASCII code for that character, preceded with a backslash character.
+
+@display
+<string> ::= <dquote> <string-char>* <dquote>
+<dquote> ::= the US-ASCII double-quote character (i.e., code 34(decimal))
+<string-char> ::= <simple-char> | <quoted-char>
+<simple-char> ::= any printing US-ASCII character (i.e., codes 32(decimal) to 126(decimal)),
+                  except double-quote (code 34(decimal)) or backslash (code 92(decimal))
+<quoted-char> ::= <quoted-backslash> | <quoted-double-quote> | <quoted-byte>
+<quoted-backslash> ::= <backslash> <backslash>
+<backslash> ::= the US-ASCII backslash character (i.e., code 92(decimal))
+<quoted-double-quote> ::= <backslash> <dquote>
+<quoted-byte> ::= <backslash> <octal-digit> <octal-digit> <octal-digit>
+<octal-digit> ::= "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7"
+@end display
+
+@subsection Example
+
+Consider the following interface:
+
+@codeexample
+INTERFACE Foo BRAND "13.2.116.14 October 26, 1998";
+
+EXCEPTION E;
+
+TYPE C1 = FIXEDPOINT
+	MIN-NUMERATOR 0
+	MAX-NUMERATOR 59
+        DENOMINATOR 1;
+
+TYPE I1 = FIXEDPOINT
+	MIN-NUMERATOR -2147483648
+	MAX-NUMERATOR 2147483647
+        DENOMINATOR 1 ;
+
+TYPE O-1 = OBJECT
+	METHODS m1(o:O-2, c:C1):I1 END;
+
+TYPE O-2 = OBJECT
+	SUPERTYPES O-1 END
+	METHODS m2() RAISES E END END
+	BRAND "13.2.116.14 October 26, 1998" ;
+
+TYPE O-1X = O-1;
+
+TYPE O-1Y = O-1X TYPEID "xyz:bad-idea";
+@end codeexample
+
+The salient information strings for types O-1 and O-1X are the same.  That string is:
+
+@codeexample
+(ref Foo O-1)
+(interface Foo "13.2.116.14 October 26, 1998")
+(type Foo O-1 "" (object (method m1 (returns integer) (parameter o in (ref Foo O-2)
+) (parameter c in (ref Foo C1)))))
+(type Foo O-2 "13.2.116.14 October 26, 1998" (object (supertype (ref Foo O-1)) (
+method m2 (returns void (exn (ref Foo E))))))
+(type Foo C1 "" (fixedpoint 0 59 1))
+(exception Foo E "" void)
+@end codeexample
+
+Line breaks have been introduced into the display above for readability; the actual salient information string contains none of those linebreaks nor any whitespace of any kind at their positions.
+
+The type ID (not salient information string) for O-1Y is "xyz:bad-idea".
+
+@section Calculation of the NIST SHS of the "salient information" String.
+
+See @url{FIPS PUB 180-1:  Secure Hash Standard, http://www.itl.nist.gov/div897/pubs/fip180-1.htm}.
+@sp 1
+@noindent
+Abstract:@*
+``This standard specifies a Secure Hash Algorithm (SHA-1) which can be used to generate a condensed
+representation of a message called a message digest. The SHA-1 is required for use with the Digital
+Signature Algorithm (DSA) as specified in the Digital Signature Standard (DSS) and whenever a secure hash
+algorithm is required for Federal applications. The SHA-1 is used by both the transmitter and intended
+receiver of a message in computing and verifying a digital signature.''
+
+@section Conversion of the SHS to a Base-64 Number.
+
+The SHS is converted to a string of length 32 bytes, each
+containing an ASCII character code.  First, two 0 bits are appended to
+the 160-bit SHS.  This 162-bit string is encoded as 27 6-bit digits,
+most significant digit first.  The encoding uses characters 'a' - 'z'
+to represent the values 0-25, the characters 'A' - 'Z' to represent
+the characters 26-51, the characters '0' - '9' to represent the values
+52-61, the character '-' to represent the value 62, and the character
+'+' to represent the value 63.  Finally the 5 bytes "ilut:" are
+prepended, giving the total of 32 bytes.
+

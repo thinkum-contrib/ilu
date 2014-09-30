@@ -1,0 +1,47 @@
+
+
+<!-- tests hash distribution, when debug print on -->
+<!DOCTYPE  unit [ <!ELEMENT unit (#PCDATA | unit2)* > 
+                  <!ELEMENT unit2 (#PCDATA)* >
+                  <!ATTLIST unit2 cdata CDATA "e3" 
+                                 id        ID    #REQUIRED 
+ >]>  
+
+<unit id "> This is unit chardata
+    <unit2 id = "What"> </unit2>
+    <unit2 id = "is"> </unit2>
+    <unit2 id = "the"> </unit2>
+    <unit2 id = "relation"> </unit2>
+    <unit2 id = "between"> </unit2>
+    <unit2 id = "distance"> </unit2>
+    <unit2 id = "and"> </unit2>
+    <unit2 id = "knowledge"> </unit2>
+    <unit2 id = "in"> </unit2>
+    <unit2 id = "context"> </unit2>
+    <unit2 id = "of"> </unit2>
+    <unit2 id = "technology"> </unit2>
+    <unit2 id = "As"> </unit2>
+    <unit2 id = "exemplified"> </unit2>
+    <unit2 id = "by"> </unit2>
+    <unit2 id = "telephone"> </unit2>
+    <unit2 id = "telescope"> </unit2>
+    <unit2 id = "television"> </unit2>
+    <unit2 id = "has"> </unit2>
+    <unit2 id = "often"> </unit2>
+    <unit2 id = "been"> </unit2>
+    <unit2 id = "used"> </unit2>
+    <unit2 id = "to"> </unit2>
+    <unit2 id = "bridge"> </unit2>
+    <unit2 id = "distances"> </unit2>
+    <unit2 id = "Recent"> </unit2>
+    <unit2 id = "examples"> </unit2>
+    <unit2 id = "include"> </unit2>
+    <unit2 id = "Mars"> </unit2>
+    <unit2 id = "Sojourner"> </unit2>
+    <unit2 id = "atomic"> </unit2>
+    <unit2 id = "force"> </unit2>
+    <unit2 id = "microscope"> </unit2>
+    <unit2 id = "lapariscopic"> </unit2>
+    <unit2 id = "surgery"> </unit2>
+  </unit>
+    

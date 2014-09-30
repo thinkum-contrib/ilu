@@ -1,0 +1,377 @@
+@setfilename ilu-debugging.info
+@settitle ILU Debugging
+@ifset ilucopyright
+BeginILUCopyright
+
+Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+Unlimited use, reproduction, modification, and distribution of this
+software and modified versions thereof is permitted.  Permission is
+granted to make derivative works from this software or a modified
+version thereof.  Any copy of this software, a modified version
+thereof, or a derivative work must include both the above copyright
+notice of Xerox Corporation and this paragraph.  Any distribution of
+this software, a modified version thereof, or a derivative work must
+comply with all applicable United States export control laws.  This
+software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+OF THE POSSIBILITY OF SUCH DAMAGES.
+  
+EndILUCopyright
+@end ifset
+@ifclear largerdoc
+@titlepage
+@title ILU Debugging
+@author Bill Janssen @code{<janssen@@parc.xerox.com>}
+@sp
+Typeset @today{}
+@sp
+Copyright @copyright{} 1993 Xerox Corporation@*
+All Rights Reserved.
+@end titlepage
+@end ifclear
+
+This document describes some of the common errors that occur with the use of ILU,
+and some techniques for dealing with them.
+
+@section ILU trace debugging
+
+ILU contains a number of trace statements that allow you to observe the progress of
+certain operations within the ILU kernel.  To enable these, you can set the environment
+variable @var{ILU_DEBUG}
+@vindex ILU_DEBUG
+with the command
+@command{setenv ILU_DEBUG "@metavar{xxx}:@metavar{yyy}:@metavar{zzz}:..."}
+where @metavar{xxx}, @metavar{yyy}, and @metavar{zzz} are the names of various trace classes.
+The classes are (as of December 1997) @kwd{packet}, @kwd{connection},
+@kwd{incoming}, @kwd{export},
+@kwd{authentication},
+@kwd{object}, @kwd{sunrpc}, @kwd{courier}, @kwd{dcerpc}, @kwd{call},
+@kwd{tcp}, @kwd{udp}, @kwd{xnsspp},
+@kwd{gc}, @kwd{lock}, @kwd{server}, @kwd{malloc}, @kwd{mainloop}, @kwd{iiop}, @kwd{http}, @kwd{error}, @kwd{sunrpcrm}, @kwd{inmem}, @kwd{security} @kwd{thread}, @kwd{lsr}, @kwd{type} and @kwd{binding}. The special class @kwd{ALL} will enable all trace statements:  @command{setenv ILU_DEBUG ALL}.  
+The special class @kwd{MOST} will enable all trace statements except @kwd{lock},  and @kwd{malloc}:  @command{setenv ILU_DEBUG MOST}.  
+The environment variable @var{ILU_DEBUG_FILE} 
+@vindex ILU_DEBUG_FILE 
+may be used to direct debugging output to a file; if the filename includes the string @kwd{*PID*}, the first occurrence is replaced by the process ID.
+The function @fn{ilu_SetDebugLevelViaString(char *trace_classes)}
+@findex ilu_SetDebugLevelViaString
+may also be called from
+an application program or debugger, to enable tracing.  The argument @parm{trace_classes}
+should be formatted as described above.
+
+@var{ILU_DEBUG} may also be set to an unsigned integer value, where each bit set in the binary
+version of the number corresponds to one of the above trace classes.  For a list of the
+various bit values, see the file @file{@metavar{ILUHOME}/include/iludebug.h}.  Again, you can
+also enable the tracing from a program or from a debugger, by calling the
+routine @fn{ilu_SetDebugLevel(unsigned long trace_bits)}
+@findex ilu_SetDebugLevel
+with an unsigned integer argument.
+
+The routine @fn{ilu_SetDebugMessageHandler} allows
+an application to specify an alternate routine to be called when an error
+or debugging message is to be printed.
+
+@deftypefn {[ILU kernel]} void ilu_SetDebugMessageHandler (void (*@metavar{handler}) (char *formatSpec, va_list args))
+
+Locking:  unconstrained
+
+Registers @metavar{handler} with the @system{ILU} kernel to be called
+whenever a debugging or error message is output via @C{@fn{ilu_DebugPrintf}}, instead
+of the default handler, which simply prints the message to @C{stderr}, using @C{@fn{vfprintf}}.
+Two special constant values for @metavar{handler} are defined, @C{@var{ILU_DEFAULT_DEBUG_MESSAGE_HANDLER}},
+which will cause the default behavior to be resumed, and
+@C{@var{ILU_NIL_DEBUG_MESSAGE_HANDLER}}, which will cause debugging and
+error messages to be simply, silently, discarded.
+
+@end deftypefn
+
+@b{Note for @system{Windows} users:}  Please refer to the chapter "Using ILU with Microsoft Windows" to see how ILU trace debugging is
+handled for @system{Windows} applications.
+
+@section Debugging ISL
+
+@subsection Use of @program{islscan}
+
+@pindex islscan
+The @program{islscan} program is supplied as part of the @system{ILU}
+release.  It runs the @language{ISL} parser against a file containing an
+interface, and prints a "report" on the interface to standard output.
+It can therefor be used to check the syntax of an interface before
+running any language stubbers.
+
+@subsection The ISLDEBUG environment variable
+
+@vindex ISLDEBUG
+Setting the environment variable @var{ISLDEBUG} to any value (say, "t"),
+before running any @system{ILU} stubber or the program @program{islscan},
+will cause @system{ILU}'s parser to print out its state transitions as
+it parses the @language{ISL} file.  If you're having a serious problem finding
+a bug in your @language{ISL} file, this might help.
+
+@section C++ static instance initialization
+
+Our support for @language{C++} currently depends on having the constructors for all
+static instances run before @C++{main()} is called.  If your compiler or interpreter
+doesn't support that, you will experience odd behavior.  The @language{C++} language
+does not strictly mandate that this initialization will be performed, but most compilers
+seem to arrange things that way.  We'd like to see how many compilers @emph{do not};
+if yours doesn't, please send a note to @code{ilu-bugs@@parc.xerox.com} telling us
+what the compiler is.
+
+@system{ILU} uses the static-object-with-constructor trick to effect per-compilation-unit startup code.  In certain cases you'll want to ensure that a certain compilation unit's initialization is run before another's.  While @language{C++} defines no standard way to do this, most compilers work like this: compilation units are initialized (static object construtors run) in the order in which they are given to the link-editor.  We (@code{ilu-bugs@@parc.xerox.com}) want to hear about any exceptions to this rule.
+
+@section Use of @program{gdb}
+
+When using ILU with C++ or C or even Common Lisp,
+running under the GNU debugger @program{gdb} can be helpful for
+finding segmentation violations and other system errors.
+
+ILU provides a debugging trace
+feature which can be set from @program{gdb}
+@pindex gdb
+with the following command:
+
+@transcript
+(gdb) @userinput{p ilu_SetDebugLevel(0x@metavar{XXX})}
+ilu_SetDebugLevel:  setting debug mask from 0x0 to 0x@metavar{XXX}
+$1 = void
+(gdb) 
+@end transcript
+
+@noindent
+The value @metavar{XXX} is an unsigned integer as discussed in section 3.
+The debugger @program{dbx}
+@pindex dbx
+should also work.
+
+We are in the midst of installing a consistent new way of handling rutime failures into the @system{ILU} runtime kernel.  This new way involves the kernel reporting the failure to its caller; the old way involves combinations of panicking, reporting to the user (not the caller) via a printed message, and fragmentary reporting to the caller.  Every time a runtime failure is noted the new way, the procedure @C{_ilu_NoteRaise} in @file{@metavar{ILUSRC}/runtime/kernel/error.c} is called; this procedure thus makes a good place to set a breakpoint when debugging.  Most runtime failures occur due to genuine problems; some occur during normal processing (e.g., end-of-file detection).
+
+
+@section Error handling
+
+Ideally, the @system{ILU} runtime would report all failures
+to the application, in the way most appropriate for the application's
+programming language.  Sadly, this is not yet the case.
+
+The @system{ILU} runtime kernel has three kinds of runtime failures:
+@enumerate
+@item
+memory allocation failures from which the kernel cannot proceed;
+@item
+internal consistency check failures, from which the kernel cannot proceed; and
+@item
+internal consistency check failures, which the kernel is prepared to report
+to the @system{ILU} language-specific runtime veneer (which, hopefully,
+would in turn report the failure to the applicaiton).
+@end enumerate
+
+The second kind is being eliminated.  The first kind is being reduced, and might also be eliminated.
+
+The application can specify how each of these three kinds of runtime failures is to be handled.  The choices are:
+@enumerate
+@item
+Print an explanatory message and then explicitly trigger a @kwd{SEGV} signal by attempting to write to protected memory.  This
+is useful for generating core dumps for later study of the error.
+@item
+Print an explanatory message and then exit the program with an application-specified exit code.
+@item
+Print an explanatory message and then enter an endless loop, which calls @C{sleep(3)} repeatedly.  This option is useful
+for keeping the process alive but dormant, so that a debugger can attach to it
+and examine its ``live'' state.  This is the default action for all three kinds of failures.
+@item
+Invoke an application-supplied procedure (without printing anything first).
+@item
+Report the failure out of the kernel, without printing anything first (this option is available only for the third kind of failure).
+@end enumerate
+
+An application can change the action taken on memory failures by
+calling @C{ilu_SetMemFailureAction} or @C{ilu_SetMemFailureConsumer}.
+
+@deftypefn {[ILU kernel]} void ilu_SetMemFailureAction ( int @metavar{mfa} )
+
+Locking:  unconstrained
+
+Calling this tells the @system{ILU} kernel which drastic action is to be
+performed when @C{ilu_must_malloc} fails.  -2 means to print an explanatory message on stderr and then coredump;
+-1 means to print an explanatory message on stderr and then loop forever in repeated calls to @C{sleep(3)}; positive numbers mean to print an explanatory message on stderr and then @code{exit(@metavar{mfa})}.
+The default is -1.  Note that the @language{Python} runtime will set this value automatically to the value specified by the environment variable @var{ILU_MEMORY_FAILURE_ACTION}, if it's set.
+
+@end deftypefn
+
+@deftypevr {[ILU kernel]} {typedef void (*) (const char *file, int line)} ilu_FailureConsumer
+A procedure that is called when the @system{ILU} kernel can't proceed.  This procedure must not return.
+@end deftypevr
+
+@deftypefn {[ILU kernel]} void ilu_SetMemFailureConsumer ( ilu_FailureConsumer @metavar{mfc} )
+
+Locking:  unconstrained
+
+An alternative to @C{ilu_SetMemFailureAction}: this causes @metavar{mfc} to be called when @C{ilu_must_malloc fails}.
+
+@end deftypefn
+
+Similarly, an application specifies how unrecoverable runtime consistency check failures are to be handled by calling @C{ilu_SetAssertionFailureAction} or @C{ilu_SetAssertionFailConsumer}, which are exactly analogous to the procedures for memory failure handling.  For recoverable consistency check failures, an application can call @C{ilu_SetCheckFailureAction} or @C{ilu_SetCheckFailureConsumer}.
+
+@deftypefn {[ILU kernel]} void ilu_SetCheckFailureAction ( int @metavar{cfa} )
+
+Locking:  unconstrained
+
+Calling this tells the runtime which action is to be performed
+ when an internal consistency check fails.  -3 means to raise an
+ error from the kernel (without necessarily printing anything); -2
+ means to print an explanatory message to stderr and then
+ coredump; -1 means to print and then loop forever; non-negative
+ numbers mean to print and then @code{exit(@metavar{cfa})}; others number reserved.
+ The default is -1.  The @language{Python} runtime will set this automatically to the value
+of the environment variable @var{ILU_CHECK_FAILURE_ACTION}, if it is set.
+
+
+@end deftypefn
+
+@deftypevr {[ILU kernel]} {typedef void (*) (const char *file, int line)} ilu_CheckFailureConsumer
+A procedure for handling an internal consistency check failure.
+ If this procedure returns, the consistency check failure will be
+ raised as an error from the kernel.
+ @end deftypevr
+
+@deftypefn {[ILU kernel]} void ilu_SetCheckFailureConsumer ( ilu_CheckFailureConsumer @metavar{cfc} )
+
+Locking:  unconstrained
+
+An alternative to @C{ilu_SetCheckFailureAction}: this causes @metavar{cfc} to
+ be called (and no printing); if @metavar{cfc} returns, an error will be
+ raised from the kernel.
+
+@end deftypefn
+
+@subsection Decoding reportable consistency check failures
+
+For language mappings consistent with @system{CORBA},
+the third kind of failure is reported as an occurrence of the @system{CORBA} system exception @code{internal},
+with a minor code that encodes the filename and line number where the consistency check occurs.
+The coding is this: 10,000*hash(filename, 32771) + linenum + 1,000.
+The directory part, if any, is stripped from the filename before hashing.
+To aid in decoding these minor codes, @system{ILU} includes the program @program{decoderr}, which is used like this:
+@transcript
+% decoderr 269211234
+269211234 = line 234, file $ILUSRC/runtime/kernel/call.c
+@end transcript
+
+If a reportable consistency check failure occurs in a file not anticipated in the construction of @program{decoderr}, you'll see something like this:
+@transcript
+% decoderr 60612345
+60612345 = line 1345 in unknown file (that hashes to 6061)
+@end transcript
+
+The program @program{iluhashm} can be used to hash given filenames, so you can search a set of candidates for the mysterious hash code:
+@transcript
+% iluhashm 32771 ../cpp/foobar.cpp ../cpp/barfoo.cpp
+/* Generated at Mon Dec 11 22:44:47 1995
+   with modulus 32771 */
+@{      6061, "../cpp/foobar.cpp"@},
+@{     13273, "../cpp/barfoo.cpp"@},
+@end transcript
+
+@section Common Problems - Questions
+
+Users often run into the same difficulties other users have had.  This section
+lists some of these common problems, and describes the possible cures.
+
+
+Problem: A server cannot publish an object or a client cannot lookup an object.
+
+Discussion: When using the shared file approach for simple binding, the
+machines on which the client and server programs run must have some shared
+filesystem.
+
+
+Problem:  It seems that ILU is contacting the wrong server, or if I look at
+the SBH's for objects that I know are coming from one source, ILU thinks
+they're from someplace else.
+
+Discussion:  This is usually caused by creating multiple ilu_Server's (e.g. 
+in C, the thing you get back from  ILU_C_InitializeServer (...)) that have the
+same server ID.  The server ID should be unique.  To understand why,
+consider what ILU does when an non-local object reference (an SBH) comes in 
+off the wire. ILU looks at the reference and checks to see if it has a surrogate ilu_Server
+with that name.  If not, ILU creates one, and (important point) stores away the contact 
+information for that ilu_Server. If it already has one with that name, ILU assumes 
+that that is the ilu_Server for the object - it doesn't check to see if the contact info 
+is different.  Thus, operations directed at objects who are served by that particular
+ilu_Server will always be directed at the ilu_Server that ILU saw first. [ILU could
+potentially keep track of multiple contact infos, but that still wouldn't help
+to disambiguate where operations should be directed.]  This is why in many of the
+example programs, you see server ID's being created using some combination of
+a fixed string, and a the name of the host the process is running.  Of course, 
+if you run multiple instances of the example on the same machine, you would want to 
+also incorporate some process or thread information.  You can also simple let ILU
+generate a server ID for you, that is unique with a high degree of probability.
+
+
+
+Problem:  My process 'A'  has an object reference to an object 'O' in process 'B'.
+Process 'B' exits, and then restarts.  Even though the server name and object 
+identifier for 'O' are the same as the first time around, process A is unable to 
+perform operations on 'O'.
+
+Discussion:  The answer here is similar to the answer to the "It seems that ILU is 
+contacting the wrong server... " problem.  You're probably letting ILU choose the
+server's port number by either letting ILU use it's defaults, or by specifying
+a 0 in the port field in the transport specification when creating the ilu_Server.
+ILU in process 'A' caches the contact information from the first process 'B'.  When 
+process 'B' comes back up, the port number is different.  You can specify what port
+should be used in the transport information to prevent this from happening.  For example,
+to always come up at port 1234, use "tcp_0_1234".
+
+
+
+Problem:  I'm having problems importing ILU into Python.
+
+Discussion:  (Where ILUHOME represents where you installed ILU)  
+You need to have the ILUHOME/lib directory on your PYTHONPATH
+environment variable. Also, ensure that ILUHOME/bin is also on your PATH
+environment variable.
+
+
+Problem: I'm in Windows, and trying to build some of the examples and I get
+complaints that it doesn't know how to make some of the files.
+
+Discussion:  The Windows make files are not set up to run the language stubbers.  You
+must run the stubbers manually before doing the make. e.g. c-stubber Test1.isl
+
+
+
+Problem: I'm on Unix (most probably Digital's), and my program sometimes
+exits unexpectedly.
+
+Discussion: You may be running into a problem where a PIPE signal is
+generated and the established action is to exit the program.  In the ILU
+source file runtime/kernel/bsdutils.c, the function _ilu_HandleSigPIPE
+tries to set up the process to ignore SIGPIPE.  However, it only does this
+if the initial SIGPIPE is not SIG_DFL.  (You should see an error message
+if _ilu_HandleSigPIPE can't setup to ignore SIGPIPE) On some systems it has
+been noticed that even though the application did not explicitly set up a
+SIGPIPE handler, the initial SIGPIPE is not SIG_DFL, and the handler that
+runs terminates the program.  A workaround to this problem is to either set
+the SIGPIPE handler to SIG_DFL yourself before the _ilu_HandleSigPIPE
+function runs, or set it to a handler that does nothing with the signal.
+
+@section Bug Reporting and Comments
+
+Report bugs (nah! -- couldn't be!) to the Internet address
+@code{ilu-bugs@@parc.xerox.com}, or to the XNS address
+@code{ILU-bugs:PARC:Xerox}.  Bug reports are more helpful with some
+information about the activity.  General comments and suggestions can be
+sent to either @code{ILU@@parc.xerox.com} or @code{ILU-bugs@@parc.xerox.com}.
+
+Often the our first reply to a bug report is a request for a typescript that shows
+the bug occurring, with all trace debugging turned on.  If that doesn't make it
+clear to us, our second reply may be a request for a stack trace, with printouts of
+relevant variables and data strutures.  Including these things in your bug report
+may speed the cycle of interactions.
+

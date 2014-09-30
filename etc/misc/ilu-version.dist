@@ -1,0 +1,3 @@
+#!/bin/sh
+
+strings -a yyDESTDIRyy/lib/libilu.a | grep "Id: ILU"

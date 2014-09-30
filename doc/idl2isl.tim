@@ -1,0 +1,171 @@
+@setfilename idl2isl.info
+@settitle IDL to ISL Translator
+@ifset ilucopyright
+BeginILUCopyright
+
+Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+Unlimited use, reproduction, modification, and distribution of this
+software and modified versions thereof is permitted.  Permission is
+granted to make derivative works from this software or a modified
+version thereof.  Any copy of this software, a modified version
+thereof, or a derivative work must include both the above copyright
+notice of Xerox Corporation and this paragraph.  Any distribution of
+this software, a modified version thereof, or a derivative work must
+comply with all applicable United States export control laws.  This
+software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+OF THE POSSIBILITY OF SUCH DAMAGES.
+  
+EndILUCopyright
+@end ifset
+@ifclear largerdoc
+@titlepage
+@title IDL to ISL Translator
+@author Denis Severson @code{<severson@@parc.xerox.com>}
+@sp
+@today{}
+@sp
+Copyright @copyright{} 1993 Xerox Corporation@*
+All Rights Reserved.
+@end titlepage
+@ifinfo
+@node Top, ,(dir),(dir)
+@top IDL to ISL Translator
+@end ifinfo
+@end ifclear
+
+The program @language{idl2isl} translates from @language{IDL} to @language{ISL}.
+@language{IDL} is the Interface Definition Language defined by the
+Object Management Group.
+@footnote{@language{IDL} is defined in:
+The Common Object Request Broker: Architecture and Specification,
+OMG Document Number 91.12.1, Revision 1.1}
+The program is derived from the
+Interface Definition Language Compiler Front End
+from SunSoft, Inc.
+@footnote{See the file @file{src/stubbers/idl2isl/Sun-parser/docs/COPYRIGHT}
+in the @system{ILU} distribution.}
+
+@section Invocation
+
+The program is run automatically as an intermediate step
+by any of the @system{ILU} tools that
+take @language{ISL} files (normally ending in @file{.isl})
+if the filename ends in @file{.idl}.
+
+The program may also be run directly, with the following arguments:
+@display
+@code{idl2isl} @{ @code{-Wb,@metavar{toggle}} | @code{-Wb,!@metavar{toggle}} @}* @code{@metavar{source}.idl}
+@end display
+In this case, it writes the @language{ISL} to its standard output.
+A toggle is set with an argument
+@code{-Wb,@metavar{toggle}}
+and cleared with an argument
+@code{-Wb,!@metavar{toggle}}.
+Toggle settings may also be effected by setting the environment variable
+@file{IDL2ISL_OPTS} to a comma-separated list of toggle names,
+each of which is either preceded by a @file{!} character (which clears it)
+or not (which sets it).
+Command-line arguments take precedence over the environment variable
+settings.
+
+The toggles are:
+@itemize @bullet
+@item
+@code{dump} (default off): produce a dump of the abstract syntax tree.
+Used for debugging the translator itself.
+@item
+@code{imports} (default on): set the @kwd{imports} mode on (explained below).
+@item
+@code{topmodules} (default on): set the @kwd{topmodules} mode on
+(explained below).
+@end itemize
+
+@section Translation
+
+On the whole, the translation from @language{IDL} to @language{ISL} is
+a straightforward change of syntax.
+There are a few cases, however, where a bit extra is needed.
+
+@subsection Anonymous types
+
+@language{IDL} allows type declarators to be used in certain places in the
+syntax (for example, struct members and operation parameters).
+@language{ISL} does not;
+it requires a type name in the corresponding situations.
+As a result, it is sometimes necessary for the translator to introduce
+a name in the @language{ISL} output for those types that are
+anonymous in the @language{IDL} input.
+These names are always of the form
+@code{AnonType-@metavar{nnn}-}, where @metavar{nnn} is an integer.
+
+For example, the @language{IDL} declaration
+
+@codeexample
+struct str @{
+	long	f1;
+	long	f2[5];
+@};
+@end codeexample
+is translated into the following @language{ISL}:
+@codeexample
+TYPE AnonType-1- = ARRAY OF 5 INTEGER;
+TYPE str = RECORD
+	f1 : INTEGER,
+	f2 : AnonType-1-
+	END;
+@end codeexample
+
+@subsection Topmodules mode
+When the translator is in this mode (which it is by default),
+only @kwd{module} declarations are allowed at the topmost level.
+Each @kwd{module} translates into an @kwd{INTERFACE} declaration
+in @language{ISL}, and the declarations inside each @kwd{module} go
+into the corresponding @language{ISL} @kwd{INTERFACE}.
+
+If the translator is not in this mode,
+all the declarations in the @language{IDL} file go into one
+@language{ISL} @kwd{INTERFACE} whose name is taken from the @language{IDL}
+input filename, less the @file{.idl} suffix.
+
+@subsection Imports mode
+When the translator is in this mode (which it is by default),
+@code{#include} preprocessor directives are, roughly speaking, turned into
+@language{ISL} @kwd{IMPORT} statements.
+This mode allows for separate compilation (stub generation) of interfaces.
+There are some restrictions:
+the @code{#include} directives must occur before any declarations in the
+file, and the files that are included must not be fragments.
+That is, each must consist of a sequence of whole declarations
+(more specifically, @kwd{module} declarations if in @code{topmodules} mode).
+The included files may in turn include other files.
+
+If the translator is not in this mode,
+the input is considered to be the result of preprocessing the file first
+and textually substituting the included files,
+following the usual behavior of @language{C} and @language{C++} compilers.
+
+@subsection Attribute names
+
+@language{OMG IDL} attributes are turned into pairs of methods; e.g., for an attribute with the name @omgidl{A},
+the corresponding methods would be @isl{ilu--prefix-idlAttribute--get-A} and
+@isl{ilu--prefix-idlAttribute--set-A}.  For @kwd{readonly} attributes, only
+the @isl{-get-} method is generated.
+
+@subsection Exception types
+
+@language{OMG IDL} does not distinguish between an exception and the type of the value
+associated with the exception, if any.  If an @language{OMG IDL} exception @omgidl{E} has any
+values associated with it, these values are packaged up into a new @language{ILU ISL} record
+type called @isl{ilu--prefix-idlExceptionType-E}.  The various @system{ILU} stubbers will
+recognize this name and deal with it properly.
+
+@subsection Unsupported constructs
+
+Use of @kwd{context} clauses on operations is prohibited.

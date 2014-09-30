@@ -1,0 +1,200 @@
+/** $Id: Imakefile,v 1.6 1999/08/03 01:56:19 janssen Exp $
+ BeginILUCopyright
+
+ Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+ Unlimited use, reproduction, modification, and distribution of this
+ software and modified versions thereof is permitted.  Permission is
+ granted to make derivative works from this software or a modified
+ version thereof.  Any copy of this software, a modified version
+ thereof, or a derivative work must include both the above copyright
+ notice of Xerox Corporation and this paragraph.  Any distribution of
+ this software, a modified version thereof, or a derivative work must
+ comply with all applicable United States export control laws.  This
+ software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+ WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+ LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+ EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+ NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+ OF THE POSSIBILITY OF SUCH DAMAGES.
+
+ EndILUCopyright
+*/
+/* Chris Jacobi, January 7, 1999 1:38 pm PST */
+
+#ifdef ADD_JAVA_LANGUAGE
+
+JAVA_CLASS_DIR = ./classes
+JAVA_STUB_DIR = ./javastubs
+JAVA_SRC_DIR = ./jsrc
+
+SYSTEM_CLASSES = $(ILUJAVA_M_CORECLASSES)
+BOOT_CLASSES_SWITCH = 
+
+
+#ifdef ILUJAVA_M_NEEDSOURCEPATH
+SOURCE_PATH_SWITCH = -sourcepath .:../../runtime/java/jsrc
+#else
+SOURCE_PATH_SWITCH = 
+#endif
+
+
+/* Note that this makefile is special in the sense that it runs at ilu-build
+ * time, before the ilu runtime has been installed
+ */
+
+#ifdef SpecialILUJavaCompTarget
+#undef SpecialILUJavaCompTarget
+#endif
+
+
+#define SpecialILUJavaCompTarget(touchtarget,allsources,fewsources,extrapendencies)	@@\
+all:: touchtarget 								@@\
+										@@\
+touchtarget: fewsources extrapendencies					@@\
+	$(JAVAC) -d "$(ILUJAVA_M_CLASSESDIR)"  $(SOURCE_PATH_SWITCH)  $(BOOT_CLASSES_SWITCH)  -classpath "$(JAVA_CLASS_DIR):$(ILUJAVA_M_ILUCLASSES):$(SYSTEM_CLASSES)" allsources @@\
+	touch touchtarget							@@\
+										@@\
+clean::									@@\
+	-rm -f touchtarget							@@\
+	-rm -rf $(JAVA_CLASS_DIR)*.class
+
+
+#ifdef SpecialILUJavaStubTarget
+#undef SpecialILUJavaStubTarget
+#endif
+
+
+#define SpecialILUJavaStubTarget(touchtarget,islfiles,fewjavafiles)	@@\
+										@@\
+all:: touchtarget								@@\
+										@@\
+fewjavafiles touchtarget: islfiles $(JAVA_STUBBER)			@@\
+	ILUPATH=.:../../stubbers/parser $(JAVA_STUBBER) $(JAVA_STUB_SWITCHES) islfiles	@@\
+	touch touchtarget							@@\
+										@@\
+clean::									@@\
+	-rm -f touchtarget
+
+
+BuildDir($(JAVA_CLASS_DIR))
+BuildDir($(JAVA_STUB_DIR))
+
+MANUAL_JAVA_SOURCES1 = \
+	$(JAVA_SRC_DIR)/xerox/ilujava/ClassAccessorImplFromJar.java \
+	$(JAVA_SRC_DIR)/xerox/ilujava/IluOBV.java \
+	$(JAVA_SRC_DIR)/xerox/ilujava/IluOBVClassLoaderGetter.java \
+	$(JAVA_SRC_DIR)/xerox/ilujava/IluOBVClassLoaderSetter.java \
+	$(JAVA_SRC_DIR)/xerox/ilujava/IluOBVSetter.java \
+	$(JAVA_SRC_DIR)/xerox/ilujava/IluOBVWireClassLoader.java 
+
+MANUAL_JAVA_SOURCES2 = \
+	$(JAVA_SRC_DIR)/xerox/ilujava/IluOBVURLClassLoader.java 
+
+
+
+#ifdef ILUJAVA_M_JDK12POSTBETA
+MANUAL_JAVA_SOURCES = $(MANUAL_JAVA_SOURCES1) $(MANUAL_JAVA_SOURCES2)
+#else
+MANUAL_JAVA_SOURCES = $(MANUAL_JAVA_SOURCES1)
+#endif
+
+/*******************************************************************************
+ *******************************************************************************
+    We need to make the ilujava.isl file from ilujava.isl.dist...
+ *******************************************************************************
+ ******************************************************************************/
+
+#ifdef ILU_USE_NEW_KEYWORDS
+
+ilujava.isl : ilujava.isl.dist
+	$(RM) ilujava.isl
+	$(SED) -e 's/ILUDIRECTIVE-EXPERIMENTAL/DIRECTIVE-EXPERIMENTAL/g' < ilujava.isl.dist > ilujava.isl
+
+#else
+
+ilujava.isl : ilujava.isl.dist
+	$(RM) ilujava.isl
+	$(CP) ilujava.isl.dist ilujava.isl
+
+
+#endif /* def ILU_USE_NEW_KEYWORDS */
+
+all:: ilujava.isl
+
+CleanTarget(ilujava.isl)
+
+
+ALL_JAVA_FILES = *java
+ALL_STUB_SOURCES = \
+	$(JAVA_STUB_DIR)/xerox/ilujava/$(ALL_JAVA_FILES) 
+FEW_STUB_SOURCES = \
+	$(JAVA_STUB_DIR)/xerox/ilujava/MarshalledObjectBase.java
+
+SpecialILUJavaStubTarget(make.java_has_been_stubbed, ilujava.isl, $(FEW_STUB_SOURCES))
+
+SpecialILUJavaCompTarget(make.java_stubs_compiled, $(ALL_STUB_SOURCES) $(MANUAL_JAVA_SOURCES), $(FEW_STUB_SOURCES),  make.java_has_been_stubbed)
+
+/*
+ * make a java jar file...
+ */
+
+CleanTarget(ilujavaobv.jar)
+
+all:: ilujavaobv.jar
+
+ilujavaobv.jar:
+	cd $(JAVA_CLASS_DIR); $(JAVAJAR) -0cf ../ilujavaobv.jar *
+
+InstallRO(ilujavaobv.jar, $(DESTDIR)/lib)
+
+CleanTarget(make.java_has_been_stubbed make.java_stubs_compiled ilujavaobv.jar)
+
+#endif
+
+
+InstallRO(ilujava.isl, $(DESTDIR)/interfaces)
+InstallRO(ilujava.map, $(DESTDIR)/interfaces)
+
+
+
+#ifdef dont000023456789_ADD_C_LANGUAGE
+
+ILUCINCLUDES = -I../../runtime/c -I../../runtime/kernel $(BUILD_SECURITY_INCLUDES) $(BUILD_BIGNUM_INCLUDES)
+ILUCLIBS = ../../runtime/c/libilu-c.a ../../runtime/kernel/libilu.a $(SECURITYLIBS) $(ILU_ZLIB_LIBRARY)
+
+NormalObjectRule()
+
+ILUHEADERFILES=../../runtime/kernel/iluxport.h ../../runtime/kernel/ilubasic.h ../../runtime/kernel/iludebug.h ../../runtime/kernel/iluconf.h ../../runtime/kernel/iluerror.h ../../runtime/kernel/iluerrs.h ../../runtime/kernel/iluhash.h
+
+
+ilujava.h ilujava-true.c ilujava-surrogate.c ilujava-common.c : ilujava.isl ../../stubbers/c/c-stubber ../../stubbers/parser/ilu.isl
+	ILUPATH=../../stubbers/parser:. ; export ILUPATH ; ../../stubbers/c/c-stubber ilujava.isl
+
+CleanTarget(ilujava.h ilujava-surrogate.c ilujava-common.c ilujava-true.c)
+
+ObjectTarget(ilujava-common.o)
+ObjectTarget(ilujava-surrogate.o)
+ObjectTarget(ilujava-true.o)
+
+LibraryTarget(libilujava-c.a, ilujava-surrogate.o ilujava-common.o)
+
+InstallLibrary(libilujava-c.a, $(DESTDIR)/lib)
+InstallRO(ilujava.h, $(DESTDIR)/include)
+
+#endif
+
+
+
+
+#ifdef ADD_PYTHON_LANGUAGE
+
+ilujava.py : ilujava.isl
+	ILUPATH=../../stubbers/parser:. ; export ILUPATH ; ../../stubbers/python/python-stubber ./ilujava.isl
+
+InstallRO(ilujava.py, $(DESTDIR)/lib)
+CleanTarget(ilujava.py ilujava__skel.py)
+
+#endif

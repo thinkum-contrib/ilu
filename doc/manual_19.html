@@ -1,0 +1,179 @@
+<!-- This HTML file has been created by timdif2html 1.11
+     from manual.dif on 20 September 1999 -->
+
+<TITLE>ILU Reference Manual - Multiple Languages In One Address Space</TITLE>
+<BODY TEXT=#000000 BGCOLOR=#ffffff>
+<P>Go to the <A HREF="manual_18.html">previous</A>, <A HREF="manual_20.html">next</A> section.<P>
+<H1><A NAME="SEC568" HREF="manual_toc.html#SEC568">Multiple Languages In One Address Space</A></H1>
+<P>
+With ILU version 2.0 or later, modules implemented in different programming
+languages can be mixed in the same address space, with ILU doing automatic
+translation between data representations.  <A NAME="FOOT14" HREF="manual_foot.html#FOOT14">(14)</A>  There are a number of things to consider
+when doing this; this section discusses some of them.
+<P>
+<H2><A NAME="SEC569" HREF="manual_toc.html#SEC569">Dueling Runtimes</A></H2>
+<P>
+Some languages simply cannot be mixed in the same address space because their
+runtimes will conflict.  ILU offers no solutions to this problem.  Typical
+examples are two languages like Franz Allegro Common Lisp and
+Java with "green threads".  They each implement a user-level threads package,
+and their implementations of threads probably cannot co-exist in the same address space.
+<P>
+A possible solution to this problem, called the POSIX Portable Common Runtime (PPCR),
+is available from Xerox PARC, as <A HREF="ftp://ftp.parc.xerox.com/pub/ppcr/"><TT>ftp://ftp.parc.xerox.com/pub/ppcr/</TT></A>.  It contains
+a basic runtime which can be used as the platform for a particular language implementation's
+runtime.  Languages which use PPCR will have a lower chance of having conflicting
+runtimes.
+<P>
+In general, the non-threaded languages C, C++, and Python
+are the best languages to construct libraries with; that is, code which is intended to be loaded
+into another language's address space.  Modules constructed with one of these languages can
+be loaded into any of the other ILU-supported languages' address spaces.
+<P>
+<H2><A NAME="SEC570" HREF="manual_toc.html#SEC570">Module Initialization and Binding</A></H2>
+<P>
+Module initialization really consists of two operations:  interface initialization
+and object instantiation.  The first operation initializes all the interfaces
+used or exported by the module; the second creates one or more true instances of
+objects to be used by other modules.  The act of binding is finding a true object
+in the surrogate space, so that client code can access the true module.
+<P>
+<H3><A NAME="SEC571" HREF="manual_toc.html#SEC571">Initialization</A></H3>
+<P>
+Generally, each ILU interface must be initialized.  The process of doing
+this initialization varies from programming language to programming language.
+In ANSI C, ILU requires explicit calls to <CODE><VAR>interface</VAR>__Initialize()</CODE>
+for interfaces being used, or <CODE><VAR>interface</VAR>__InitializeServer()</CODE> for interfaces
+being exported.
+In languages like C++ and Java, interface initialization is performed automatically,
+but at some indeterminate time before
+the first symbol from that interface is referenced from outside the interface.  When C++ code
+is used in a shared library, sometimes this initialization must be forced manually.
+In Python or Common Lisp, interface initialization is performed
+automatically by the language at the time the module describing the interface
+is "loaded" into the address space.
+<P>
+In addition to initializing all interfaces being used or exported, a module must create
+one or more true object instances, to allow other modules to access it.  Again, the specific
+way of doing this varies from programming language to programming language.  Once the
+true instance has been created, it can be <I>exported</I> from the module by either publishing it, via
+the ILU simple binding system, or taking its string binding handle, and passing that
+outside the module for other modules to use.
+<P>
+When multiple languages are used in the same address space, each must be initialized
+according to the standards used for that programming language.  This can be tricky when using
+both statically compiled and dynamically compiled languages together.  Consider the case
+where Python and ANSI C are linked together.  
+This use of Python may be as an extension language to a program written in C.
+In this case, the C code must do all initialization of modules written in
+C before calling into any Python module which might reference
+them.  Similarly, Python initialization (<CODE>import</CODE>) of modules must
+occur before the C code can use them.  See <TT>`<VAR>ILUSRC</VAR>/src/examples/multlang/'</TT>
+for an example of a situation of this sort.
+<P>
+In the other case,
+C true modules which are to be used from a Python program
+in the same address space must somehow be first loaded into that address space, then initialized.
+The loading is done by turning the C module into a Python <I>extension module</I>,
+and either linking it into the <CODE>python</CODE> image, or creating a dynamically loadable module
+from it.
+The initialization is done by then calling <CODE>import</CODE> on that module from within
+the Python interpreter.  The extension module's
+initialization routine initializes all of its interfaces,
+creates one or more true objects, and exports them.  After the <CODE>import</CODE> statement
+returns, the objects are available for finding (see next section)
+from within Python.
+<P>
+<H3><A NAME="SEC572" HREF="manual_toc.html#SEC572">Finding Objects (Binding)</A></H3>
+<P>
+Object instances may be located by calls on the variations of <CODE>LookupObject</CODE> and <CODE>ObjectOfSBH</CODE>
+that exist in the various language runtimes.  <CODE>LookupObject</CODE> is implemented so that it first
+looks to see if the true object for the specified object ID is available in the local address
+space.  If so, it returns a version of that object.  Only if the object is not locally available does it perform external
+lookups in an attempt to locate the object.  Note that for an object to be found via <CODE>LookupObject</CODE>,
+the true instance must first have been published via the implementation language ILU runtime's
+variant of <CODE>PublishObject</CODE>.  If you do not want your objects published outside your address space,
+you should use <CODE>ObjectOfSBH</CODE> to find them. 
+<P>
+<H3><A NAME="SEC573" HREF="manual_toc.html#SEC573">Suggested Modularization Strategies</A></H3>
+<P>
+One of the most effective ways of building a module to be loadable into another language's address space
+is to create a shared library containing the module.  The library can provide binding hooks in various ways,
+but a suggested strategy is to provide a, from the shared library, a C-callable function which
+returns the string binding handle of an object, and to make all the functionality of the module available
+through that object, possibly by getting other objects from that object.  There are then a handful of stylized
+ways of invoking that C procedure; we'll discuss them for each programming language.
+<P>
+<H4><A NAME="SEC574" HREF="manual_toc.html#SEC574">Building a Shared Library Around a C or C++ Module</A></H4>
+<P>
+This is typically quite simple.  You must implement the true module in either C or C++, leaving
+a C-callable hook into the implementation available.  Here's what a typical initialization
+procedure for a module called <CODE>testImpl</CODE>, providing the <CODE>test</CODE> interface, which
+implements the <CODE>Strlen</CODE> object type,
+might look like in C++ (using ILU's CORBA C++ mapping):
+<PRE>
+extern "C" {
+
+  ilu_string testImpl__initialize ()
+    {
+      iluServer *s;
+      test_Strlen_impl *i;
+
+      // in case static initializers weren't run,
+      // this will cause them to be run
+      ILU_INIT_test_SERVER_ONLY();
+      iluCppRuntime::iluInitialize();
+
+      // create a new ILU kernel server
+      s = new iluServer ();
+
+      // now create an instance of test.Strlen
+      // and return its SBH
+      i = new test_Strlen_impl((iluCString) NULL, *s);
+      return i-&#62;iluObjectToString();
+    }
+}
+</PRE>
+A C version would look quite similar.
+<P>
+ILU provide an Imake rule called <CODE>SharedLibrary</CODE>, which can be used to build a shared library
+from C code.  It also works in most cases for C++ code, though in this case
+you will need to explicitly specify your C++ library.  A better idea, with C++,
+is to use the C++ compile command to build the library.  Specifics of how to do this will
+differ from compiler to compiler.
+<P>
+<H4><A NAME="SEC575" HREF="manual_toc.html#SEC575">Building a Shared Library Around a Python Module</A></H4>
+<P>
+It may seem odd building a shared library around a Python implementation of a module, but
+that will allow it to be loaded into other languages that don't support Python bytecodes.
+To do this, one first implements the module in Python, providing an initialization function
+similar to that shown in the C++ case:
+<PRE>
+def init():
+
+	global inst
+
+	# we create the server carefully here.  We don't create
+	# a normal port, and it doesn't become the default server
+	# (though it could be)
+	server = ilu.CreateServer()
+
+	# now make an instance of Strlen with the server
+	inst = Strlen(None, server)
+
+	# and return its SBH
+	return inst.IluSBH()
+</PRE>
+<P>
+<H4><A NAME="SEC576" HREF="manual_toc.html#SEC576">Initializing a Shared Library from C or C++</A></H4>
+<P>
+For the C or C++ programming languages, accessing a shared library is trivial.  The client code
+simply loads in the shared library, then calls
+<P>
+<H4><A NAME="SEC577" HREF="manual_toc.html#SEC577">Initializing a Shared Library from Python</A></H4>
+<P>
+<H4><A NAME="SEC578" HREF="manual_toc.html#SEC578">Initializing a Shared Library from Java</A></H4>
+<P>
+<H4><A NAME="SEC579" HREF="manual_toc.html#SEC579">Initializing a Shared Library from Common Lisp</A></H4>
+<P>
+<P>Go to the <A HREF="manual_18.html">previous</A>, <A HREF="manual_20.html">next</A> section.<P>

@@ -1,0 +1,238 @@
+<!-- This HTML file has been created by timdif2html 1.11
+     from manual.dif on 20 September 1999 -->
+
+<TITLE>ILU Reference Manual - Testing Framework for ILU</TITLE>
+<BODY TEXT=#000000 BGCOLOR=#ffffff>
+<P>Go to the <A HREF="manual_27.html">previous</A>, <A HREF="manual_29.html">next</A> section.<P>
+<H1><A NAME="SEC690" HREF="manual_toc.html#SEC690">Testing Framework for ILU</A></H1>
+<P>
+This document describes a framework for testing ILU in various configurations, written in Python.
+<P>
+<H2><A NAME="SEC691" HREF="manual_toc.html#SEC691">Introduction</A></H2>
+<P>
+There are two components to this testing framework.  The first is the individual test script,
+written in Python.  Each script can make use of a set of Python classes which encapsulate standard
+testing behavior, and have access to the configuration information for ILU.  The classes provided
+encapsulate things like a <CODE>ClientServerTest</CODE>, which runs a server, then runs a client against
+the server, and looks for an error-free completion of the client.  The testing framework takes care
+of things like establishing a temporary binding directory, or running a temporary simple binding server.
+<P>
+The second major element is the automated framework that builds ILU and runs all the test
+scripts.  This component reads descriptions of ILU configurations from a configuration description
+file, then builds and installs an ILU tree, either from an ILU tar file, or from an RCS tree,
+then runs the test scripts in the various <TT>`example'</TT> subdirectories of the installed ILU, once
+for every configuration tested.
+<P>
+<H2><A NAME="SEC692" HREF="manual_toc.html#SEC692">Test Scripts</A></H2>
+<P>
+Typically, there are zero or one test scripts in each subdirectory of <TT>`<VAR>ILUSRC</VAR>/examples/'</TT>.
+However, there may be more than one in a directory.  These scripts are installed into the <TT>`<VAR>ILUHOME</VAR>'</TT>
+tree during the <CODE>make Install</CODE> step, and are used for testing the installed examples.
+<P>
+Each script is written in Python, and will be invoked as script input to the Python interpreter.
+Typically, a script creates one or more instances of a <I>test object</I>, an object which at its most
+typical binds together the running of a client and server.  After creating a number of instances,
+the script will <I>run</I> each test object, which causes the test to be run.  If all of the test
+objects run successfully, the script exits with a status of 0; if any of the tests exits unsuccessfully,
+it should exit with a non-zero status.
+<P>
+<H3><A NAME="SEC693" HREF="manual_toc.html#SEC693">Python Classes and Data Structures Provided</A></H3>
+<P>
+The test scripts may make use of a number of data structures and classes defined in the Python module <CODE><CODE>ILUTesting</CODE></CODE>.  The simplest way to access them in a testing script is to <CODE>import ILUTesting</CODE> at the top of your script.
+<P>
+A number of test classes are defined.  They are all subclasses of the abstract class <CODE>ILUTestingMachinery.Test</CODE>.  Each test should be defined by creating an instance of one of these classes.  The test can then be run by calling the <CODE>run</CODE> method on the test instance (though this is usually left to the function <CODE><CODE>run_tests</CODE></CODE>).  The following kinds of tests can be defined:
+<UL>
+<LI><B><CODE>SimpleClientServerTest (<VAR>testname</VAR>, <VAR>client command</VAR>, <VAR>server command</VAR>)</CODE></B> -- this object encapsulates the normal client server test.  The server is started by executing the <VAR>server command</VAR> in a subprocess; a pause then ensues, for the server to start up; the client is then run.  If the client exits with a zero status, the test is successful.  If it exits with a non-zero status, the test is unsuccessful, and the log files of both the server and client are written to standard output.  This object has two instance variables, <CODE>server_startup_delay</CODE>, which defaults to <CODE>5</CODE> (seconds), and <CODE>server_shutdown_delay</CODE>, which defaults to <CODE>0</CODE> seconds.  The first is tthe time after starting a server that the code will wait before attempting to run the client.  The second is the time that the system will wait after killing a server, before doing anything else.  Both values may be changed after the instantiation of the object if a longer delay is required for a specific test.
+<LI><B><CODE>ClientSBHServerTest (<VAR>testname</VAR>, <VAR>client command</VAR>, <VAR>server command</VAR>)</CODE></B> -- this class embodies a client-server test where the server explicitly outputs a string binding handle to standard output, and the client then uses this SBH to bind to the server.  The <VAR>client command</VAR> may use the string <CODE>"$SBH$"</CODE> in its arguments, and that string will be replaced by the generated SBH before the client command is executed.  This object type also supports the <CODE>server_startup_delay</CODE> and <CODE>server_shutdown_delay</CODE> instance variables, as described for <CODE>SimpleClientServerTest</CODE>.
+<LI><B><CODE>SimpleSingleProgramTest (<VAR>testname</VAR>, <VAR>command</VAR> [, <VAR>environment</VAR>])</CODE></B> -- this object type encapsulates a single program, which should run and exit with a zero status.  The command used to start the program is given with <VAR>command</VAR>; optionally, an environment may be specified which can be used to augment or override the default setting of various environment variables when the program is executed.
+<LI><B><CODE>MultiClientMultiServerTest (<VAR>testname</VAR>, <VAR>client commands</VAR>, <VAR>server commands</VAR>)</CODE></B> -- this object captures a test where several servers, or several clients, may have to be run.  It will start all of the servers, then run each of the clients sequentially.  If all clients complete successfully, the test terminates successfully.  If any client terminates unsuccessfully (exits with a non-zero status), the test itself terminates unsuccessfully.  This test also supports the <CODE>server_startup_delay</CODE> and <CODE>server_shutdown_delay</CODE> instance variables, but they apply to each of the servers of the test.
+</UL>
+<P>
+Several dictionaries of configuration information are also available to the test script:
+<UL>
+<LI><B><CODE>iluconf_dict</CODE></B> contains the contents of the file <TT>`<VAR>ILUHOME</VAR>/imake/iluconf.h'</TT>, which is mainly configuration options and settings for the C compilations.  Each macro defined in that file with a <CODE>#define</CODE> construct is mapped to a key-value pair, with the macro name being the key, and the macro expansion being the value.  This can be tested for various optional attributes; for example, you can check to see if a particular protocol has been configured into ILU.
+<LI><B><CODE>iludefs_dict</CODE></B> contains the contents of the file <TT>`<VAR>ILUHOME</VAR>/imake/ilu.defs.new'</TT>, mapped as for <CODE>ILUTesting.iluconf_dict</CODE>, with only those constructs defined as C macros, with <CODE>#define</CODE> statements, being mapped to key-value pairs.  Note that any constructs defined in <TT>`ilu.defs.new'</TT> with the form <CODE>KEY = VALUE</CODE> will <EM>not</EM> appear in <CODE>iludefs_dict</CODE>.  This can be used to test for configuration attributes which do not appear in the <TT>`iluconfs.h'</TT> file.
+<LI><B><CODE>makefile_dict</CODE></B> contains <EM>either</EM> the values defined in the <TT>`Makefile'</TT> in the current directory with the construct <CODE>KEY = VALUE</CODE>, <EM>or</EM> the values defined in in <TT>`<VAR>ILUHOME</VAR>/imake/ilu.defs.new'</TT>, if no <TT>`Makefile'</TT> exists in the current directory.  Note that the contents of the Makefile have already been passed through the C pre-processor, so the values here are the actual values used in the build phase of ILU.  This can be used to check for various values, such as the location of a particular library.
+</UL>
+<P>
+A number of strings, which abstract commands for running a particular scripting language interpreter, are exported:
+<UL>
+<LI><B>java_command</B> -- an invocation of the Java interpreter;
+<LI><B>python_command</B> -- an invocation of the Python interpreter;
+<LI><B>lisp_command</B> -- an invocation of the Common Lisp interpreter;
+<LI><B>guile_command</B> -- an invocation of the Guile interpreter
+</UL>
+<P>
+The boolean value <CODE>ilu_threaded</CODE> will be TRUE if ILU has been built with support for threads.
+<P>
+Finally, the function <CODE><CODE>run_tests</CODE></CODE>, which takes a list of test objects as an argument, will run through the tests one at a time, printing the name and completion status of the test to standard output.  If a test terminates unsuccessfully, the logs of the client and server will be copied to the standard output.
+<P>
+<H3><A NAME="SEC694" HREF="manual_toc.html#SEC694">Writing a Test Script</A></H3>
+<P>
+Most of the testing scripts simply create a list of test objects (instances of <CODE><CODE>ILUTesting.SimpleClientServerTest</CODE></CODE> or <CODE><CODE>ILUTesting.SimpleSingleProgramTest</CODE></CODE> or <CODE><CODE>ILUTesting.ClientSBHServerTest</CODE></CODE> or <CODE><CODE>ILUTesting.MultiClientMultiServerTest</CODE></CODE>), then call the Python routine <CODE><CODE>ILUTesting.run_tests</CODE></CODE>, which takes a list of test objects, and runs them, one after another.  When a test terminates unsuccessfully, the logs of the client and server are written to standard output.  Here's an example:
+<P>
+<PRE>
+# we import a number of symbols from ILUTesting, including
+# "run_tests", "iluconf_dict", "python_command",
+# and "SimpleClientServerTest"
+from ILUTesting import *
+
+tests = []
+
+if iluconf_dict.has_key("ILU_CORBA_PYTHON_MAPPING"):
+	tests.append(SimpleClientServerTest ("excn: Python (with CORBA mapping)",
+				             (python_command, "clientCORBA.py",),
+				             (python_command, "serverCORBA.py"))
+	tests.append(SimpleClientServerTest ("excn: Python (with CORBA mapping, threaded)",
+				             (python_command, "clientCORBA.py", "-mt",),
+				             (python_command, "serverCORBA.py", "-mt"))
+else:
+	# the ILU mapping has no provision for raising system exceptions, so
+	#  pass the -nosys flag to the client to tell it not to test them
+	tests.append(SimpleClientServerTest ("excn: Python (with ILU mapping) (no system exceptions)",
+				             (python_command, "client.py", "-nosys",),
+				             (python_command, "server.py"))
+
+if __name__ == "__main__":
+	run_tests(tests)
+</PRE>
+<P>
+The scripts may however execute arbitrarily complex Python code, if necessary.  An example of a more complicated testing script can be found in <TT>`<VAR>ILUSRC</VAR>/examples/test1/Test.py'</TT>; this defines and uses a Python function and relies heavily on configuration tests.
+<P>
+<H3><A NAME="SEC695" HREF="manual_toc.html#SEC695">Imake Considerations</A></H3>
+<P>
+The imake macro <CODE>PythonTestScript</CODE> is provided to define testing scripts.  It takes two arguments.  The first is the name of the file containing the test script.  The second is a list of dependencies; files that must exist or be brought up to date before the test script can be run.  The expansion of <CODE>PythonTestScript</CODE> will define the test script as a target for <CODE>"make ptest"</CODE>, which will cause the dependent files to be built, then run the Python interpreter on the test script.  So, suppose the testing script <TT>`Test.py'</TT> ran various combinations of the two programs <CODE>server</CODE> and <CODE>client</CODE>.  You would add a line to the <TT>`Imakefile'</TT> (or, in an <TT>`examples'</TT> subdirectory, the <TT>`runImakefile'</TT>), like this:
+<PRE>
+PythonTestScript(Test.py, client server)
+</PRE>
+which says that (1) the programs <CODE>client</CODE> and <CODE>server</CODE> must exist before running <TT>`Test.py'</TT>, and (2) that "make ptest" in this directory should run <TT>`Test.py'</TT>.
+<P>
+<H2><A NAME="SEC696" HREF="manual_toc.html#SEC696">The Automated Testing Framework</A></H2>
+<P>
+There are two major elements to this framework, the configurations file and the program <CODE>run-ilu-tests</CODE>.
+<CODE>run-ilu-tests</CODE> reads the configurations file, and then builds ILU and tests it with one or more configurations.
+<P>
+<H3><A NAME="SEC697" HREF="manual_toc.html#SEC697">Configurations Files</A></H3>
+<P>
+A configurations file has the general syntax of a sequence of Python dictionary literals.  That is, it consists
+of a left parenthesis, followed by zero or more comma-separated dictionary literals specifying testing configurations:
+<PRE>
+( <VAR>test-config-1</VAR>, <VAR>test-config-2</VAR>, ... )
+</PRE>
+Each dictionary literal begins with a left brace, ends with a right brace, and contains a number of key-value pairs, separated by commas.  A colon character separates each key from its associated value.  Each key must be a quoted string.  Each value
+is either a quoted string, a sequence of quoted strings, or another dictionary literal.  The following keys
+must be defined:
+<UL>
+<LI><B><CODE>"name"</CODE></B> -- the name of the testing configuration, as a quoted string
+</UL>
+The following keys may also be defined:
+<UL>
+<LI><B><CODE>"copy-ilu-tree"</CODE></B> -- specifies that the sources should be checked out of the PARC ILU source RCS tree using
+the program <CODE>/project/rpc/tools/copy-ilu-tree</CODE>.  The associated value for this key should be a quoted string giving
+the version argument for the <CODE>copy-ilu-tree</CODE> program, such as <CODE>"2.0alpha15"</CODE>.
+<LI><B><CODE>"enables"</CODE></B> -- in the PARC environment, <TT>`/import'</TT> or <TT>`/project'</TT> packages to enable
+before configuring the sources.  The value for this key should be a comma-separated, parenthesis-enclosed, list of quoted strings.
+<LI><B><CODE>"config-switches"</CODE></B> -- switches to pass to the <CODE><VAR>ILUSRC</VAR>/imake/configure</CODE> program when
+configuring the sources.  The value for this key should be a comma-separated, parenthesis-enclosed, list of quoted strings.
+<LI><B><CODE>"environment"</CODE></B> -- a python dictionary of key-value pairs, used to augment and override the default set of environment variable settings when the configuration of the sources is done.  Each key and value should be a quoted string.
+<LI><B><CODE>"tarfile"</CODE></B> -- file to unpack the ILU sources from.  This key cannot be used when the <B><CODE>copy-ilu-tree</CODE></B> key is used.  The value is a quoted string giving the file name.
+<LI><B><CODE>"patchfile"</CODE></B> -- used in conjunction with <CODE>tarfile</CODE>, this key indicates a patch file to be applied to the sources after unpacking them.  The value is a quoted string giving the file name.
+<LI><B><CODE>"directory"</CODE></B> -- specifies directory to build the ILU build in.  The value is a quoted string giving the name of the directory file.
+</UL>
+Here's an example of a configuration:
+<PRE>
+{"name" : "basic-solaris-2",
+  "copy-ilu-tree" : "2.0alpha15",
+  "enables" : ("sunpro-4.2",
+	       "python-1.5",
+	       "franz-4.3",
+	       "java/jdk-1.2",
+	       "texinfo-3.11",
+	       "bison-1.25",
+	       "flex-2.5.3",
+	       "ghostscript-5.03",
+	       "tex",
+	       "pbmplus",
+	       "guile-1.2"),
+  "config-switches" : ("--with-x=/usr/openwin/include",
+		       "--enable-http-protocol",
+		       "--enable-w3mux-transport",
+		       "--enable-cplusplus-support",
+		       "--with-cplusplus-libs=/project/sunpro-4.2/SUNWspro/lib/libC.so",
+		       "--enable-w3ng-protocol",
+		       "--enable-w3mux-transport",
+		       "--enable-fixed-point-support",
+		       "--enable-version-2-type-uids",
+		       "--enable-new-keywords-plain",
+		       "--enable-w3ng-relative-ih-passing"),
+  "environment" : {
+	  "CC" : "/project/sunpro-4.2/SUNWspro/bin/cc -xs -Xt -v",
+	  "PATH" : "/project/rpc/tools:/usr/ccs/bin:/usr/openwin/bin:/usr/bin:/bin" },
+  }
+</PRE>
+<P>
+<H3><A NAME="SEC698" HREF="manual_toc.html#SEC698">The <CODE>run-ilu-tests</CODE> Script</A></H3>
+<P>
+The program <CODE>run-ilu-tests</CODE> is used to invoke the automated test programs.  This program
+uses the testing script classes discussed in the previous section, and is installed in the <TT>`<VAR>ILUHOME</VAR>/bin'</TT>
+directory as part of the normal ILU installation process.  This creates a bit of a bootstrapping
+situation; you must have successfully built and installed ILU, with Python support,
+in order to have access to <CODE>run-ilu-tests</CODE>.
+<P>
+Basically, <CODE>run-ilu-tests</CODE> reads a configuration file, then builds and tests ILU one or more
+times, depending on the command-line options specified.  The syntax for the invocation of <CODE>run-ilu-tests</CODE> is
+<PRE>
+% run-ilu-tests <VAR>[command-line switches]</VAR>
+</PRE>
+Output from the tests, if any, will be sent to standard output.
+<P>
+The following command-line switches are available:
+<UL>
+<LI><B>-dir <VAR>DIRECTORY</VAR></B> -- Build ILU in <TT>`<VAR>DIRECTORY</VAR>/src'</TT>, and install in <TT>`<VAR>DIRECTORY</VAR>'</TT>.  If no directory is specified, the directory specified in the configuration will be used.  If no directory is specified in the configuration, a temporary directory will be used.
+<LI><B>-verbose</B> -- Send messages to standard output on what's happening periodically.
+<LI><B>-tarfile <VAR>TARFILE</VAR></B> -- Use the specified <VAR>TARFILE</VAR> as the source for ILU.  Automatically <CODE>ungzip</CODE> the file if the extension is <TT>`.tar.gz'</TT> instead of just <TT>`.tar'</TT>.  Overrides any configuration specification.
+<LI><B>-patchfile <VAR>FILE</VAR></B> -- Apply the specified <VAR>FILE</VAR> as a patch to the sources after unpacking them.  Can only be used in conjunction with <B>-tarfile</B>.  Overrides any configuration specification.
+<LI><B>-copy-ilu-tree <VAR>VERSION-STAMP</VAR></B> -- Unpack the sources using <CODE>/project/rpc/tools/copy-ilu-tree</CODE>, using <VAR>VERSION-STAMP</VAR> as the stamp for the command.  Only available at PARC.
+<LI><B>-configsfile <VAR>FILE</VAR></B> -- Read this file as the configuration file.
+<LI><B>-temproot <VAR>DIRECTORY</VAR></B> -- If no directory is specified, and a temporary directory is being used, create it under this <VAR>DIRECTORY</VAR>.
+<LI><B>-config <VAR>CONFIG-NAME</VAR></B> -- Test the configuration indicated by <VAR>CONFIG-NAME</VAR>, which specified one of the configurations defined in the configuration file specified by <B>-testfile</B>.  A number of configurations to test may be specified on the same command line; they will be tested in the order in which they are specified on the command line.  Each test will be against a fresh build and install of ILU.
+<LI><B>-doall</B> -- Test all of the configurations, even if one of them produces an error.  The default is to halt at the first error; specifying this switch will cause the erroring configuration to be passed over and for the other configurations to be tested.  <CODE>run-ilu-tests</CODE> will exit with a non-zero error status if any of the configurations revealed an error.
+<LI><B>-noremove</B> -- Leave the built and tested configuration or configurations in place.  Normally they are removed if the tests are all successful.
+</UL>
+<P>
+Here's an example of running <CODE>run-ilu-tests</CODE> successfully:
+<PRE>
+% <STRONG>run-ilu-tests -configsfile /project/rpc/miscdoc/ILU/ilu-testing-configs
+    -temproot /usr/tmp -config basic-solaris-2 -verbose</STRONG>
+Reading configuration file /project/rpc/miscdoc/ILU/ilu-testing-configs
++++ Configuration 'basic-solaris-2'
+Starting at Mon Jun  7 15:27:30 1999
+Unpacking sources into /usr/tmp/usr/tmp/@774.1...
+Using 'copy-ilu-tree -noconfirm 2.0alpha15' to unpack...
+Enabling sunpro-4.2 python-1.5 franz-4.3 java/jdk-1.2 texinfo-3.11
+ bison-1.25 flex-2.5.3 ghostscript-5.03 tex pbmplus guile-1.2...
+Configuring with
+  --with-x=/usr/openwin/include
+  --enable-http-protocol
+  --enable-w3mux-transport
+  --enable-cplusplus-support
+  --with-cplusplus-libs=/project/sunpro-4.2/SUNWspro/lib/libC.so
+  --enable-w3ng-protocol
+  --enable-w3mux-transport
+  --enable-fixed-point-support
+  --enable-version-2-type-uids
+  --enable-new-keywords-plain
+  --enable-w3ng-relative-ih-passing...
+deleting config script file /usr/tmp/@774.3...
+Doing make Install...
+Doing make Ptest in examples subdirectory...
+Done at Mon Jun  7 16:07:06 1999.
+%
+</PRE>
+<P>
+Each of the different steps here is done in a subprocess, with output,
+both regular and error, going to a log file.  If the step completes
+successfully, the log file is deleted.  If it completes abnormally, the
+log file is sent to standard output of the main process.
+<P>
+<P>Go to the <A HREF="manual_27.html">previous</A>, <A HREF="manual_29.html">next</A> section.<P>

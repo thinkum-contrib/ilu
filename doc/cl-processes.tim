@@ -1,0 +1,1189 @@
+@setfilename ilu-installation.info
+@settitle The ILU Common Lisp Process Interface 
+@ifset ilucopyright
+BeginILUCopyright
+
+Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+Unlimited use, reproduction, modification, and distribution of this
+software and modified versions thereof is permitted.  Permission is
+granted to make derivative works from this software or a modified
+version thereof.  Any copy of this software, a modified version
+thereof, or a derivative work must include both the above copyright
+notice of Xerox Corporation and this paragraph.  Any distribution of
+this software, a modified version thereof, or a derivative work must
+comply with all applicable United States export control laws.  This
+software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+OF THE POSSIBILITY OF SUCH DAMAGES.
+  
+EndILUCopyright
+@end ifset
+@ifclear largerdoc
+@titlepage
+@title The ILU Common Lisp Process Interface
+@author Frank Halasz
+@author Bill Janssen @code{<janssen@@parc.xerox.com>}
+@sp
+@today{}
+@sp
+Copyright @copyright{} 1994 Xerox Corporation@*
+All Rights Reserved.
+@end titlepage
+@end ifclear
+
+@section  Introduction
+
+
+Although it is not required by the specification, most Common Lisp 
+implementations include a facility for multiple, independent @dfn{threads} 
+of control (often called @dfn{lightweight processes}) within a single Lisp 
+environment.  Unfortunately, this facility is not standardized across the 
+various implementations.  Although the capabilities provided are very similar 
+across implementations, the details of lightweight processes and the interface 
+to them differ significantly.  This situation makes it difficult to write 
+programs that use lightweight processes and yet are portable across Common 
+Lisp implementations. 
+
+
+Common Lisp @system{ILU} does not requires lightweight processes in 
+order to function, but they are useful.  In particular, servers typically make 
+heavy use of lightweight process facilities.  The purpose of the 
+@system{ILU} CL Process Interface is to provide a standardized, portable 
+interface to lightweight processes for use within the @system{ILU} 
+environment.  This interface isolates @system{ILU} users from the 
+differences in the various lightweight process implementations and allows them 
+to write programs that are portable across all implementations to which the 
+@system{ILU} CL Process Interface has been ported.  At present, these 
+implementations include Franz Allegro CL 4.1, and Lucid Common Lisp 3.0 
+(a.k.a., Sun Common Lisp).
+
+
+This chapter explains how the @system{ILU} CL Process Interface works 
+for @system{ILU} users.  It begins with an overview that describes the 
+@system{ILU} CL Process model, followed by a listing of some functional 
+capabilities of this model.  After brief discussions of the implementation 
+architecture and general limitations of the @system{ILU} CL Process 
+Interface, the chapter presents an example of how to use the interface to 
+define a simple shared FIFO queue.  Next, it lists all of the functions and 
+macros necessary to use lightweight processes in the @system{ILU} 
+environment.  The chapter concludes with a brief list of references. 
+
+To use the information in this chapter, you should be familiar with Common 
+Lisp and with the notion of processes and threads in an operating system. 
+Familiarity with the UNIX process model would also be helpful.  (See 
+the References section for recommendations on further reading.) 
+
+
+
+@section  Overview Of The ILU CL Process Model
+
+
+
+The @system{ILU} CL Process Interface features an interface to 
+lightweight processes similar to that on the Symbolics Lisp machine.  In 
+particular, within a single Lisp environment (which on stock hardware runs as 
+a single heavyweight UNIX process) there are multiple threads of control that 
+can be scheduled independently.  These threads are called @dfn{lightweight 
+processes} (or sometimes just @dfn{processes}).  Each lightweight process 
+contains its own run-time control and binding stack, but it shares the global 
+data and program address space with all other processes in the Lisp 
+environment.  Note that this arrangement differs from that of the UNIX 
+heavyweight process facility, where each process has its own address space as 
+well as its own run-time stack. 
+
+
+
+@subsection  The Scheduler Process
+
+Each lightweight process represents an independent thread of control.  The 
+multiple threads within the Lisp environment are managed by a special 
+@dfn{scheduler} process.  The @system{ILU} CL Process Interface 
+makes no assumptions about the nature of this scheduler process.  However, 
+most implementations use a time-slice, priority-based scheduler.  In such a 
+scheduler, an interrupt occurs once every so often (called the scheduler's 
+@dfn{quantum}).  When the interrupt occurs, the process that is currently 
+running is stopped and its state is saved.  The scheduler then examines all 
+processes that are runnable (that is, waiting to run) and restarts the process 
+that has the highest priority.  This process runs until the next interrupt or 
+until it gives up control to the scheduler, whichever comes first.  At any 
+given time, the one process that is ``currently'' running is known as the 
+@dfn{current process}. 
+
+
+
+@subsection  States Of Processes
+
+In the @system{ILU} CL Process model, each lightweight process is 
+represented by a single Lisp object that maintains the information about that 
+process.  Also, each process is always in one of three states: 
+@dfn{active}, @dfn{inactive}, or @dfn{killed}.  A process 
+maintains two lists of objects called, respectively, the @dfn{run reasons} 
+and the @dfn{arrest reasons} for the process.  For a process to be active, 
+it must have at least one run reason and no arrest reasons. A process with no 
+run reasons or at least one arrest reason is considered inactive.  The 
+@system{ILU} CL Process Interface provides functions for adding and 
+removing run and arrest reasons for a process. Thus, the user (or a program) 
+can move a process between the active and inactive states. 
+
+The scheduler runs only active processes.  Until an inactive process is 
+reactivated, it cannot run.  A killed process is one that has been explicitly 
+killed (using the @fn{ilu-process:process-kill} function).  A killed 
+process can never be run again (that is, it can never be made active). 
+
+An active process can in turn be in one of two substates: @dfn{runnable} 
+and @dfn{waiting}.  A runnable process is ready to be restarted by the 
+scheduler, which determines whether and when a process will actually be 
+restarted based on its status (that is, priority) and the status of the other 
+runnable processes.  A waiting process is a process that has a @dfn{wait 
+function} and a list of @dfn{wait arguments}. These two items are supplied 
+to the process using the @fn{ilu-process:process-wait} function. 
+ Periodically, the scheduler will @fn{apply} the process's wait 
+function to its wait arguments (in the context of the scheduler).  If the 
+result is a non-@constant{nil} value, the wait function and wait arguments are 
+removed from the process, and the process thereby becomes runnable.  Usually, 
+the scheduler evaluates the wait functions for all waiting processes every 
+time around the scheduler loop.  Therefore, it is important that wait 
+functions be fast and very efficient. 
+
+
+
+@subsection  Removing Or Killing Processes
+
+You can reversably remove a process from a runnable state either by entering a 
+wait or by making it inactive.  In general, it is more efficient to make a 
+process inactive because this removes it from the scheduler's active process 
+list.  Thus, the scheduler does not incur the cost of periodically evaluating 
+its wait function.  However, an inactive process cannot make itself active. 
+ It must depend on some other process to recognize when it is ready to run 
+again and to reactivate it at that time.  Although a waiting process is 
+initially more costly than an inactive one, it is automatically returned to a 
+runnable state by the scheduler whenever its wait function returns 
+non-@constant{nil}.  Hence, no second process is needed to @emph{restart} 
+a waiting function.  Thus, the choice between waiting a process and rendering 
+it inactive depends on the architecture of the application being written. 
+
+When a process is first started, it is given a Lisp function and a set of 
+arguments to this function.  These are known as the process's 
+@dfn{initial-function} and @dfn{inital-arguments}, respectively.  A 
+newly created process, @fn{apply}s its initial-function to its 
+inital-arguments.  When the initial-function returns, the process is 
+automatically killed.  Once killed it can never be restarted.  You can also 
+kill the process before the inital-function returns using the 
+@fn{ilu-process:process-kill} function, which causes the process to 
+execute a @fn{throw} in its current context.  This @fn{throw} 
+causes the stack to unwind (executing unwind-protect forms along the way) and 
+the initial-function to return, thereby killing the process. 
+
+
+
+@subsection  Properties Of Processes
+
+Every process has a number of properties.  Specifically, a process has an 
+arbitrary @dfn{process name} that identifies it in displays and in certain 
+operations.  Process names need not be unique.  A process also has a 
+@dfn{priority} that the scheduler uses optionally to determine when to 
+schedule the process.  Priorities are small integers and default to zero (0). 
+ In most implementations, processes with higher priorities are given 
+scheduling preference.  Negatives are used to indicate that a process should 
+run as a background task when nothing else is running.  Finally, a process has 
+a @dfn{quantum}, which is the amount of time (measured in seconds) that 
+the process wishes to run each time before it is interrupted. In some 
+implementations, the scheduler uses a process's quantum to help determine the 
+actual length of the time-slice given to the process.  Many implementations 
+ignore the quantum altogether. 
+
+
+
+@subsection  Process Locks
+
+The @system{ILU} CL Process Interface also includes a facility called 
+@dfn{process locks} that supports exclusion-based sharing of a common 
+resource (that is, a common object or data structure) or a critical region of 
+code by two or more concurrent processes.  A process lock is an object that a 
+process can @dfn{lock} in order to claim exclusive access to the shared 
+resource corresponding to the lock.  Process locks are essentially a semaphore 
+mechanism specialized for use with the @system{ILU} CL Process 
+interface. 
+
+Each process lock has a name and a locker.  A lock's name is for display 
+purposes only.  Processes can ask to gain or relinquish exclusive rights to 
+the lock (called @dfn{locking} and @dfn{unlocking} the lock, 
+respectively).  While a process has rights to the lock, the lock's locker is 
+(generally) the process object for that process.  When a process asks to lock 
+a lock that is already locked, the asking process blocks and ``waits'' until 
+the lock is free.  Waiting does not necessarily use the standard wait 
+mechanism.  Some implementations use process deactivation to implement the 
+``wait'' in this case.  Some implementations may also maintain a queue of 
+processes waiting for a lock to be freed, thereby ensuring fair access to the 
+lock.  Other implementations may not maintain such a queue, and therefore fair 
+access to the lock is not guaranteed. 
+
+Process locks are contractual in nature.  The various processes sharing a 
+resource (or critical section of code) must all agree not to access the common 
+resource while the process lock corresponding to that resource is held by 
+another process.  Furthermore, they must agree to lock the process lock 
+whenever they need exclusive access to the resource, thereby notifying the 
+other processes of their intent. Moreover, the correspondence between a 
+process lock and the shared resource is a matter of agreement between the 
+cooperating processes. The system does not provide any direct support for this 
+correspondence (although it may be added on at a higher level built on top of 
+the basic process lock mechanism). 
+
+Process locks provide a code-centered ``sharing'' mechanism where the access 
+control is built into the programs that access the shared resource.  Process 
+locks are suited for closed, or non-extensible, applications where the shared 
+resource is a standard Lisp data structure (that is, not a @system{CLOS} 
+object) and where efficiency is a major concern.  For applications not meeting 
+these criteria, a mechanism in which a @system{CLOS} object itself 
+controls simultaneous access to its internal data structures may be more 
+appropriate. 
+
+
+
+@section  Functional Overview
+
+The @system{ILU} CL Process Interface provides all of the functions and 
+macros necessary to use lightweight processes in the @system{ILU} 
+environment.  The functionality provided by these functions and macros 
+includes:
+
+@itemize @bullet
+@item
+Starting new processes and killing processes
+
+@item
+Displaying status information, such as the current 
+process, all active processes, or all known processes
+
+@item
+Accessing and modifying the properties of a process 
+(for example, its name or priority)
+
+@item
+Adding/Removing arrest and run reasons for a process
+
+@item
+Allowing a process to give up control to the scheduler 
+or enter into a wait state
+
+@item
+Temporarily turning off the scheduler so that the 
+current process cannot be interrupted
+
+@item
+Creating, locking, unlocking, and modifying process 
+locks
+
+@end itemize
+
+@section  Implementation Architecture
+
+
+
+The @system{ILU} CL Process Interface is implemented as a veneer over 
+the existing process interfaces for a number of Common Lisp implementations 
+(currently Franz Allegro CL and Lucid Common Lisp).
+In many cases, the implementation's functions are simply imported 
+and then exported from the @module{ilu-process} package.
+In other cases, a new function is wrapped around the 
+implementation's native function to change the name, arguments, or semantics 
+of the function so that they match those required by the @system{ILU} CL 
+Process Interface specification.  In a few cases, whole new functions have 
+been written to achieve functionality not provided by the original 
+implementation. 
+
+The nature of the process object in the @system{ILU} CL Process 
+Interface is not specified.  The process object is inherited from the 
+underlying implementation and may therefore be a list, a structure, a flavor 
+object, or even a @system{CLOS} object.  Because of this lack of 
+specification, process objects cannot be specialized.  Moreover, they cannot 
+be accessed or modified in any way other than through the functional interface 
+described in this chapter. 
+
+
+
+@section  General Limitations
+
+
+
+The @system{ILU} CL Process Interface assumes that the scheduler is 
+loaded and running in the @system{ILU} environment.  Procedures for 
+starting the scheduler are not included in the @system{ILU} CL Process 
+Interface.  Some implementations, however, may require you to actually load 
+and start up the scheduler.  For example, in Franz Allegro CL, you need to 
+evaluate @cl{(mp:start-scheduler)} either at the top-level or in your 
+@file{.clinit.cl} file in order to load and start up the scheduler. 
+
+The @system{ILU} CL Process Interface is subject to all of the 
+limitations of its underlying implementations.  In particular, one problem 
+with most Common Lisp implementations on stock hardware is that the smallest 
+scheduler quantum possible is one second.  This means that each process gets 
+to run for one second uninterrupted.  For applications that involve real-time 
+response, waiting for one second before an event can be handled is 
+problematic.  In practice, this problem can be lessened if all processes 
+release control to the scheduler at regular, short intervals (that is, each 
+few times around a tight inner loop), thereby making the effective quantum 
+significantly less than one second.  Note that this practice effectively 
+reduces the scheduler to a prioritized, cooperative scheduler rather than the 
+preemptive scheduler intended.
+
+Most Common Lisp implementations build their process mechanism on top of a 
+very powerful mechanism called @dfn{stack groups}.  Stack groups provide 
+for alternative run-time stacks in the Lisp environment that can be used for 
+various purposes beyond implementing processes.  For example, stack groups are 
+an ideal substrate for implementing co-routines. Unfortunately, not all 
+implementations provide an interface to stack groups (if indeed they have 
+stack groups).  Hence, an interface to stack groups is not a part of the 
+@system{ILU} CL Process Interface. 
+
+
+
+@section  How To Use The ILU CL Process Interface
+
+The @system{ILU} CL Process Interface is intended as a programmer's 
+interface; the functions and macros provided should be used to implement 
+programs that run in the @system{ILU} environment.  Although you can use 
+any of the functions and macros directly from a Lisp listener, the interface 
+is not designed particularly well for interactive use.  The two exceptions to 
+this rule are the functions @fn{ilu-process:show-process} and 
+@fn{ilu-process:show-all-processes}, both of which are designed to 
+print out status information in the Lisp listener window.  Because it is a 
+user-oriented function, @fn{ilu-process:show-process} accepts either 
+the process name or a process object to identify the process whose status is 
+to be displayed. 
+
+Most implementations include an interactive interface to multiple processes 
+and the scheduler.  For example, Franz Allegro CL has a special top-level 
+command language that is operative in every Lisp listener. This command 
+language includes the following commands that deal specifically with 
+lightweight processes (see Chapter 4 of @cite{[Franz-92]} for more 
+information):
+
+@itemize @bullet
+
+@item
+@constant{:processes} 
+
+Lists all processes (see @macro{ilu-process:all-processes})
+
+@item
+@constant{:kill} 
+
+Kills a process (see @fn{ilu-process:process-kill})
+
+@item
+@constant{:arrest} 
+
+Adds an arrest reason to a process (see 
+@fn{ilu-process:add-arrest-reason})
+
+@item
+@constant{:unarrest} 
+
+Removes any arrest reason that was added to a process by @constant{:arrest} 
+(see @fn{ilu-process:process-revoke-arrest-reason})
+
+@item
+@constant{:focus} 
+
+Performs an @constant{:arrest} on a process and arranges for all user keyboard 
+input to be sent to the arrested process (usually to the debugger).
+
+@end itemize
+
+
+
+@section  How To Program The ILU CL Process Interface
+
+
+
+The following example illustrates how to use the @system{ILU} CL Process 
+Interface to define a shared FIFO queue.  Two processes will utilize this 
+queue.  A producer process will read input items from the user and place them 
+on the shared queue. A consumer process will wake up every five seconds and 
+read items from the shared queue, printing them on the standard output stream 
+as they are taken off the queue.  Access to the shared queue will be 
+controlled using a process lock associated with the queue. 
+
+@codeexample
+;;;________________________________________________
+;;; the shared queue, its process-lock, and its accessors/mutators
+;;;
+
+(defvar queue (list t) "The shared queue")
+
+(defvar queue-lock (ilu-process:make-process-lock :name "queue lock")
+  "process lock for queue")
+
+(defun queue-pop (queue)
+  "Pop an item off of the shared FIFO queue.
+   Use ilu-process:with-process-lock to prevent collisions between processes.
+  "
+  (ilu-process:with-process-lock (queue-lock)
+    (prog1
+	(cadr queue)
+      (rplacd queue (cddr queue)))
+    ))
+
+(defun queue-push (queue item)
+  "Push an item onto the shared FIFO queue.
+   Use ilu-process:with-process-lock to prevent collisions between processes.
+  "
+  (ilu-process:with-process-lock (queue-lock)
+    (nconc queue (list item))
+    ))
+
+(defun queue-empty-p (queue)
+  "Is queue empty?
+   Use ilu-process:with-process-lock to prevent collisions between processes.
+  "
+  (ilu-process:with-process-lock (queue-lock) (null (cdr queue)) ))
+
+;;;________________________________________________
+;;;  The producer function
+;;;
+
+(defun produce ()
+  "Loop reading an item from the user and pushing it onto the shared queue."
+  (let (Item)
+    (loop
+      ;; Wait until there is something on the input stream.
+      (ilu-process:process-wait "Waiting for input" #'listen *standard-input*)
+
+      ;; Read the input.
+      (setq Item (read *standard-input*))
+
+      ;; Check to see if it is the EOF marker and exit if so.
+      (when (eq Item :EOF) (return nil))
+
+      ;; Push the item onto the queue.
+      (queue-push queue Item)
+      )))
+
+;;;________________________________________________
+;;; The consumer function
+;;;
+
+(defun consume ()
+  "Wake up every five seconds and see if there is something on the shared
+   queue.  If there is, pop it off and print it on standard output.
+   If the queue is empty and the producer process is not alive, terminate.
+  "
+  (loop
+    ;; Check to see if there is anything on the queue.
+    (if (not (queue-empty-p queue))
+	;; There is an item on the queue; pop and print all items.
+	(do ()((queue-empty-p queue))
+	  (fresh-line t)
+	  (princ "Output: ")
+	  (prin1 (queue-pop queue))
+	  (fresh-line t)
+	  (finish-output t))
+
+      ;; Queue is empty; check to see if the producer is still alive.
+      (if (null (ilu-process:find-process "Producer Process"))
+
+	  ;; Producer not alive; terminate.
+	  (return nil)))
+
+    ;; Sleep for five seconds; this gives up control immediately
+    ;; so some other process can run.
+    (sleep 5)
+    ))
+
+;;;________________________________________________
+;;;   Main function; starts consumer and producer processes
+;;;
+
+(defun test-queue ()
+  "Start consumer and producer processes. Wait in an idle loop until
+   both the producer and the consumer processes die.  This function is
+   meant to be evaluated in the Lisp listener.  Waiting until both
+   processes die ensures that the Lisp listener does not interfere
+   with user input to the producer.
+  "
+  (let (Producer Consumer)
+    ;; Start the producer first; the consumer needs the producer to run.
+    (setq Producer (ilu-process:fork-process "Producer Process" #'produce))
+    ;; Start the consumer.
+    (setq Consumer (ilu-process:fork-process "Consumer Process" #'consume))
+    ;; Show processes on the standard ouput.
+    (ilu-process:show-all-processes)
+    ;; Wait until both consumer and producer are dead.
+    (ilu-process:process-wait "Waiting for godot"
+	#'(lambda (P1 P2)
+	    (not
+	     (or (ilu-process:process-alive-p P1)
+		 (ilu-process:process-alive-p P2))))
+	Consumer Producer)
+    ))
+@end codeexample
+
+The following is a transcript of this test program in operation: 
+
+@codeexample
+;;;________________________________________________
+#73: (test-queue)
+-------------Data on all processes follows---------
+Process: "Consumer Process"
+  Process-alive-p: T
+  Process-active-p: T
+  Process-quantum: 2
+  Process-priority: 0
+  Process-run-reasons: (:START :START)
+Process: "Producer Process"
+  Process-alive-p: T
+  Process-active-p: T
+  Process-quantum: 2
+  Process-priority: 0
+  Process-run-reasons: (:START :START)
+Process: "Initial Lisp Listener"
+  Process-alive-p: T
+  Process-active-p: T
+  Process-quantum: 2
+  Process-priority: 0
+  Process-run-reasons: (:ENABLE)
+123
+Output: 123
+456
+789
+Output: 456
+Output: 789
+444
+555
+666
+Output: 444
+Output: 555
+Output: 666
+:eof
+NIL
+#74:
+@end codeexample
+
+
+
+
+@section  The ILU CL Process Interface
+
+
+
+The following sections detail the functions and macros that make up the 
+@system{ILU} CL Process Interface.  All are assumed to be in the @kwd{ilu-process}
+package unless otherwise specified.  Arguments are shown with their type,
+if they have any restrictions on their type.  Return types are shown
+if the function returns a value.  Optional arguments are shown with their
+type and their default value.
+
+
+@subsection  The Process Object
+
+The following listings describe the object that is used to represent each 
+lightweight process. 
+
+@deftp {Type} ilu-process:process
+
+A Lisp object representing a single process.  This object is to be used only 
+as a handle for the process.  To alter the state or characteristics of a 
+process, use the external function interface defined below.  The exact nature 
+of the process object differs between implementations. In particular, it may 
+or may not be a flavor or a CLOS object.  Hence, it is not safe to specialize 
+processes. 
+@end deftp
+
+@defun find-process (NAME @type{string}) => @type{process}
+
+Returns the process object whose name is @metavar{NAME}.  Only 
+@fn{ilu-process:process-alive-p} processes (that is, processes on the 
+list returned from @fn{ilu-process:all-processes}) are searched.  This 
+function returns @constant{nil} if there is no matching process.
+
+@end defun
+
+@defun processp OBJECT => @type{boolean}
+
+Returns non-@constant{nil} if @metavar{OBJECT} is an object of type 
+@type{process} for this implementation.  This function returns 
+@constant{nil} otherwise.
+@end defun
+
+@subsection  Querying The Status Of The Scheduler And All Processes
+
+The following functions and macros provide status information about the 
+general state of processes and the scheduler in the Lisp environment. 
+
+
+@defmac active-processes => @type{list}
+
+Returns a list of all active processes; that is, processes that have at least 
+one run reason and no arrest reasons.  Note, however, that these processes are 
+not necessarily runnable because they may be in a process-wait.
+@end defmac
+
+@defmac all-processes => @type{list}
+
+Returns a list of all processes currently known by the scheduler, including 
+active and inactive processes but not processes that have been killed.
+@end defmac
+
+@defmac current-process => @type{process}
+
+Returns the process object for the current thread of control.
+@end defmac
+
+@defun show-all-processes &optional (STREAM @type{streamp} @constant{cl:*standard-output*}) (VERBOSE @type{boolean} @constant{nil})
+
+Displays information about all processes known by the scheduler (that is, the 
+processes returned by @macro{ilu-process:all-processes}). Output is to 
+@metavar{STREAM}, which defaults to the value of @var{cl:*standard-output*}. 
+This function shows only non-@constant{nil} fields unless @metavar{VERBOSE} is 
+non-@constant{nil}; the default is @constant{nil}.
+@end defun
+
+
+@subsection  Starting And Killing Processes
+
+
+
+@defun fork-process (NAME-OR-KEY-LIST @type{(or string proplist)} (FUNCTION @type{function}) &rest ARGS => @type{process}
+
+Creates a new process and returns the @type{process} object for this 
+process.  In this process, @metavar{FUNCTION} is @fn{apply}ed to 
+@metavar{ARGS}.  If @metavar{FUNCTION} ever returns, the process is 
+automatically killed.  The @metavar{FUNCTION} is known as the initial-function 
+of the process (see @fn{ilu-process:process-initial-form}). 
+
+The new process is activated by default, although you can create it in a 
+deactivated state by giving it a run reasons list with a value of 
+@constant{nil} or by giving it one or more arrest reasons as detailed below. 
+
+@metavar{NAME-OR-KEY-LIST} is either a string, in which case it serves as the 
+name of the process, or it is a property list with one or more of the 
+following property-value pairs:
+
+@itemize @bullet
+
+@item
+@constant{:name} (@type{string})
+
+A string to be used as the name of the process.
+
+@item
+@constant{:priority} (@type{integer})
+
+Sets the priority of the process to the given value (see 
+@fn{ilu-process:process-priority}).
+
+@item
+@constant{:quantum} (@type{(or numberp nil)})
+
+Sets the quantum of the process to the given value (see 
+@fn{ilu-process:process-quantum}).  Defaults to @constant{1}.
+
+@item
+@constant{:stack-size} (@type{fixnum})
+
+Sets the stack-size of the process (if possible in this implementation).
+
+@item
+@constant{:run-reasons} (@type{list})
+
+Sets the run reasons of this process to the given list. Unless run-reasons is 
+non-@constant{nil}, the forked process does not run until a 
+@fn{ilu-process:process-add-run-reason} is done.  This property 
+defaults to @cl{(quote (:start))}.
+
+@item
+@constant{:arrest-reasons} (@type{list})
+
+Sets the arrest reasons of this process to the given list.  If arrest-reasons 
+is non-@constant{nil}, the forked process does not run until a 
+@fn{ilu-process:process-revoke-arrest-reason} is done.  This property 
+defaults to @constant{nil}.
+
+@item
+@constant{:bindings} (@type{list})
+
+A list of bindings (as in let) that are done in the context of the forked 
+process before the function is run.  This property defaults to 
+@var{ilu-process:*default-process-bindings*}.
+
+@end itemize
+
+@end defun
+
+@defun process-kill (PROCESS @type{process})
+
+Terminates @metavar{PROCESS} and removes it from the scheduler's consideration 
+altogether.  It is an error if @metavar{PROCESS} is not 
+@fn{ilu-process:processp} and 
+@fn{ilu-process:process-alive-p}.
+
+A process may not terminate immediately.  In particular, the process is first 
+activated and scheduled.  It is then forced to @fn{throw} out of its 
+initial-function, thereby properly unwinding and executing any unwind forms. 
+
+A killed process cannot be reactivated.
+@end defun
+
+
+
+@subsection  Waiting A Process
+
+
+
+@defun process-wait (WHOSTATE @type{string}) (FUNCTION @type{function}) &rest ARGS
+
+The current process is suspended until @metavar{FUNCTION} applied to 
+@metavar{ARGS} returns non-@constant{nil}.  During this time, the process's 
+whostate (see @fn{ilu-process:process-whostate}) is set to 
+@metavar{WHOSTATE}. 
+
+Note that the current process is not deactivated.  It is simply not scheduled 
+to run until its wait-function returns non-@constant{nil}.  The scheduler 
+re-evaluates the wait-function periodically.  In general, the re-evaluation 
+occurs whenever the waited process would be scheduled to run if it were not 
+suspended. However, in some implementations it is run during every scheduler 
+break.
+@end defun
+
+
+@subsection  Activating And Deactivating Processes
+
+
+
+@defun process-add-arrest-reason (PROCESS @type{process}) OBJECT
+
+Adds @metavar{OBJECT} to the list of arrest reasons for @metavar{PROCESS}. 
+The @metavar{OBJECT} argument can be any Lisp object.  It is an error if 
+@metavar{PROCESS} is not @fn{ilu-process:processp}. 
+
+Adding an arrest reason may cause a process to become deactivated.  In 
+particular, if this is the first arrest reason, then the process  becomes 
+deactivated (if it was previously activated).
+@end defun
+
+@defun process-add-run-reason (PROCESS @type{process}) OBJECT
+
+Adds @metavar{OBJECT} to the list of run reasons for @metavar{PROCESS}.  The 
+@metavar{OBJECT} argument can be any Lisp object.  It is an error if 
+@metavar{PROCESS} is not @fn{ilu-process:processp}. 
+
+Adding a run reason may cause a process to become activated.  In particular, 
+if there are no arrest reasons and the added run reason is first, the process 
+goes from a deactivated state to an activated state.
+@end defun
+
+@defun process-arrest-reasons (PROCESS @type{process}) => @type{list}
+
+Returns the list of arrest reasons for @metavar{PROCESS}.  It is an error if
+@metavar{PROCESS} is not @fn{ilu-process:processp}.
+@end defun
+
+@defun process-disable (PROCESS @type{process})
+
+Causes @metavar{PROCESS} to become inactive by removing all of its arrest 
+reasons and all of its run reasons.  It is an error if @metavar{PROCESS} is 
+not @fn{ilu-process:processp}.
+@end defun
+
+@defun process-enable (PROCESS @type{process})
+
+Causes @metavar{PROCESS} to become active by removing all of its arrest 
+reasons and all of its run reasons and then giving it a single run reason 
+(usually @constant{:enable}).  It is an error if @metavar{PROCESS} is not 
+@fn{ilu-process:processp}.
+@end defun
+
+@defun process-revoke-arrest-reason (PROCESS @type{process}) OBJECT
+
+Removes @metavar{OBJECT} from the list of arrest reasons for 
+@metavar{PROCESS}.  It is an error if @metavar{PROCESS} is not 
+@fn{ilu-process:processp}.  @metavar{OBJECT} is compared to the 
+existing arrest reasons using an @fn{eq} test. 
+
+Revoking an arrest reason may cause a process to become activated.  In 
+particular, when the last arrest reason for a process is removed, the process 
+is (re-)activated if it has at least one run reason.
+@end defun
+
+@defun process-revoke-run-reason (PROCESS @type{process}) OBJECT
+
+Removes @metavar{OBJECT} from the list of run reasons for @metavar{PROCESS}. 
+It is an error if @metavar{PROCESS} is not @fn{ilu-process:processp}. 
+The @metavar{OBJECT} argument is compared to the existing run reasons using an 
+@fn{eq} test. 
+
+Revoking a run reason may cause a process to become inactive.  In particular, 
+when the last run reason for a process is removed, the process is made 
+inactive (if it was previously activate).
+@end defun
+
+@defun process-run-reasons (PROCESS @type{process})
+
+Returns the list of run reasons for @metavar{PROCESS}.  It is an error if 
+@metavar{PROCESS} is not @fn{ilu-process:processp}.
+@end defun
+
+@subsection  Accessing And Modifying The Properties Of A Process
+
+
+
+@defun process-active-p (PROCESS @type{process}) => @type{boolean}
+
+Returns non-@constant{nil} if @metavar{PROCESS} is an active process object; 
+that is, a process with no arrest reasons and at least one run reason. 
+Otherwise, this function returns @constant{nil}.  It is an error if 
+@metavar{PROCESS} is not @fn{ilu-process:processp}.
+@end defun
+
+@defun process-alive-p (PROCESS @type{process}) => @type{boolean}
+
+Returns non-@constant{nil} if @metavar{PROCESS} is alive (that is, has been 
+created but has not been killed).  Essentially, a process is alive if it is on 
+the list returned by @macro{ilu-process:all-processes}.  It is an error if 
+@metavar{PROCESS} is not @fn{ilu-process:processp}.
+@end defun
+
+@defun process-initial-form (PROCESS @type{process}) => @type{consp}
+
+Returns the initial-form of the @type{process} object @metavar{PROCESS}. It 
+is an error if @metavar{PROCESS} is not @fn{ilu-process:processp}. 
+ Note that the returned value is not an @fn{eval}able form.  It is 
+merely the @fn{cons} of the process's intial function onto a list of 
+the initial arguments passed to the function.  (See 
+@fn{ilu-process:fork-process}.)
+@end defun
+
+@defun process-name (PROCESS @type{process}) => @type{string}
+
+Returns the name of the @type{process} object @metavar{PROCESS}.  It is an 
+error if @metavar{PROCESS} is not @fn{ilu-process:processp}. The 
+@fn{ilu-process:process-active-p} function can be used with 
+@macro{setf} to change the name of a process.
+@end defun
+
+@defun process-priority (PROCESS @type{process}) => @type{integer}
+
+Returns the scheduling priority for the @type{process} object 
+@metavar{PROCESS}.  It is an error if @metavar{PROCESS} is not 
+@fn{ilu-process:processp}. The 
+@fn{ilu-process:process-priority} function can be used with 
+@macro{setf} to change the priority of a process. 
+
+When the priorities are set, a small integer is generally used.  Process 
+priorities default to zero (0).  Processes with higher priorities are given 
+scheduling preference.  Priorities can be negative if a process should run as 
+a background task when nothing else is running. 
+
+Note that an implementation is free to ignore process priorities. Setting a 
+process's priority is merely advisory.  For this reason, the value returned by 
+@fn{ilu-process:process-priority} may not match the most recent 
+@macro{setf} on @fn{ilu-process:process-priority}.
+@end defun
+
+@defun process-quantum (PROCESS @type{process}) => @type{(or numberp nil)}
+
+Returns the quantum, which is the amount of time the scheduler allows a 
+process to run each time its is rescheduled, for the @type{process} object 
+@metavar{PROCESS}.  It is an error if @metavar{PROCESS} is not 
+@fn{ilu-process:processp}.  The 
+@fn{ilu-process:process-quantum} function can be used with 
+@macro{setf} to change the quantum of a process. 
+
+The quantum is measured in seconds (not necessarily integral). 
+
+Note that an implementation is free to ignore process quantums.  Setting a 
+quantum is merely advisory.  For this reason, the value returned by 
+@fn{ilu-process:process-quantum} may not match the most recent 
+@macro{setf} on @fn{ilu-process:process-quantum}. 
+
+The default process quantum is 1.
+@end defun
+
+@defun process-wait-args (PROCESS @type{process}) => @type{list}
+
+Returns a list of the arguments being passed to the wait-function of the 
+@type{process} object @metavar{PROCESS}. It is an error if @metavar{PROCESS} 
+is not @fn{ilu-process:processp}.  (See 
+@fn{ilu-process:process-wait}.)
+@end defun
+
+@defun process-wait-function (PROCESS @type{process}) => @type{(or functionp nil)}
+
+Returns the wait-function of the @type{process} object @metavar{PROCESS}. 
+It is an error if @metavar{PROCESS} is not @fn{ilu-process:processp}. 
+ (See @fn{ilu-process:process-wait}.)
+@end defun
+
+@defun process-whostate (PROCESS @type{process}) => @type{string}
+
+Returns the whostate of the @type{process} object @metavar{PROCESS}.  It is 
+an error if @metavar{PROCESS} is not @fn{ilu-process:processp}.  The 
+@fn{ilu-process:process-whostate} function can be used with 
+@macro{setf} to change the whostate of a process. (See also 
+@fn{ilu-process:fork-process} and 
+@fn{ilu-process:process-wait}.)
+@end defun
+
+@defun show-process &optional (PROCESS @type{process}) (STREAM @type{streamp} @constant{cl:*standard-output*}) (VERBOSE @type{boolean} @constant{nil})
+
+Displays information about process @metavar{PROCESS}, which may be a 
+@type{process} object or the name of a process known to the scheduler. If 
+@metavar{PROCESS} is a symbol, it is downcased and converted to a string. 
+ @metavar{PROCESS} defaults to the current process.  Output is is to 
+@metavar{STREAM}, which defaults to the value of @var{cl:*standard-output*}. 
+ If @metavar{VERBOSE} is @constant{nil} (defaults to non-@constant{nil}), then 
+only non-@constant{nil} fields are displayed and the process's initial-form is 
+not shown.
+@end defun
+
+
+
+@subsection  Miscellaneous Process/Scheduler Functions And Macros
+
+
+@defun process-allow-schedule
+
+Suspends the current process and returns to the scheduler.  All other 
+processes of equal or higher priority have a chance to run before control 
+returns to the current process.
+@end defun
+
+@defun process-interrupt (PROCESS @type{process}) (FUNCTION @type{function}) &rest ARGS
+
+Forces @metavar{PROCESS} to apply @metavar{FUNCTION} to @metavar{ARGS} when it 
+is next scheduled.  When @metavar{FUNCTION} returns, @metavar{PROCESS} resumes 
+execution where it was interrupted. 
+
+In general, @fn{ilu-process:process-interrupt} is run immediately 
+(that is, when @metavar{PROCESS} is next scheduled) if @metavar{PROCESS} is 
+active, even if @metavar{PROCESS} is a process-wait.  If @metavar{PROCESS} is 
+not active, @fn{ilu-process:process-interrupt} may wait until 
+@metavar{PROCESS} is reactivated before @metavar{FUNCTION} is executed.
+@end defun
+
+@defmac without-scheduling &body BODY
+
+Evaluates the forms in @metavar{BODY} with scheduling turned off.  While the 
+current-process is within the scope of 
+@macro{ilu-process:without-scheduling}, no other process will run. 
+ However, scheduling may be resumed if a @fn{ilu-process:process-wait} 
+or @fn{ilu-process:process-allow-schedule} is executed within the 
+scope of @macro{ilu-process:without-scheduling}.  Most Common Lisp I/O 
+functions as well as the function @fn{sleep} usually call some form 
+of @fn{ilu-process:process-allow-scheduling} and hence will resume 
+scheduling if called within the scope of a @macro{ilu-process:without-scheduling}.
+@end defmac
+
+
+
+@subsection  Process Locks Interface
+
+
+
+@deftp {Type} ilu-process:process-lock
+
+The process lock object.  You should access fields of this lock using only the 
+functional interface listed in this section. 
+@end deftp
+
+@defun make-process-lock &key (NAME @type{(or nil string)} @constant{nil}) => @type{process-lock}
+
+Creates and returns a @type{process-lock} object with @metavar{NAME} as the 
+name of the lock.
+@end defun
+
+
+@defun process-lock (LOCK @type{ilu-process:process-lock}) &optional (LOCK-VALUE @type{process} @cl{(ilu-process:current-process)}) (WHOSTATE @type{(or nil string)} @constant{<undefined>})
+
+Grabs @metavar{LOCK}, entering @metavar{LOCK-VALUE} as the lock's locker. 
+@metavar{LOCK-VALUE} defaults to the current process.  It is an error if 
+@metavar{LOCK} is not @fn{ilu-process:process-lock-p}. 
+
+If @metavar{LOCK} is already locked, then the current process waits until it 
+is unlocked.  The waiting is done using 
+@fn{ilu-process:process-wait}. The @metavar{WHOSTATE} argument is a 
+string that is used as the whostate of the process if the process is forced to 
+wait; defaults to an implementation-dependent string.
+@end defun
+
+
+@defun process-lock-locker (LOCK @type{ilu-process:process-lock}) => @type{t}
+
+Returns the current locker of @metavar{LOCK}.  It is an error if @metavar{LOCK} 
+is not @fn{ilu-process:process-lock-p}.  This function returns 
+@constant{nil} if @metavar{LOCK} is currently unlocked, that is, has no 
+locker.  This value is @emph{not} setfable.  You should use 
+@fn{ilu-process:process-lock} to set the locker.
+@end defun
+
+@deffn {Setf-able Function} process-lock-name (LOCK @type{ilu-process:process-lock}) => @type{(or nil string)}
+
+Returns the name associated with @metavar{LOCK}.  It is an error if 
+@metavar{LOCK} is not @fn{ilu-process:process-lock-p}.  The 
+@fn{ilu-process:process-lock-locker} function can be used with 
+@macro{setf} to change the name of a process lock.
+@end deffn
+
+@defun process-lock-p OBJECT => @type{boolean}
+
+Returns non-@constant{nil} if @metavar{OBJECT} is a 
+@type{ilu-process:process-lock}. Otherwise, this function returns 
+@constant{nil}.
+@end defun
+
+@defun process-unlock (LOCK @type{ilu-process:process-lock}) &optional (LOCK-VALUE @type{t} @cl{(ilu-process:current-process)}) (ERROR-P @type{boolean} @constant{nil})
+
+Releases @metavar{LOCK}.  It is an error if @metavar{LOCK} is not 
+@fn{ilu-process:process-lock-p}. 
+
+If @metavar{LOCK}'s locker is not @fn{eq} to @metavar{LOCK-VALUE}, 
+which defaults to the current process, then an error is signalled unless 
+@metavar{ERROR-P} is @constant{nil} (it defaults to @constant{t}).
+@end defun
+
+@defmac with-process-lock (LOCK @type{ilu-process:process-lock}) &key (NORECURSIVE @type{boolean} @constant{nil}) &body BODY
+
+Locks @metavar{LOCK} for the current process and evaluates the forms in 
+@metavar{BODY}.  It is an error if @metavar{LOCK} is not 
+@fn{ilu-process:process-lock-p}. 
+
+If @metavar{NORECURSIVE} is @constant{t} (the default), and if the current 
+process already owns the lock (determined dynamically), then no action is 
+taken.  If @metavar{NORECURSIVE} is non-@constant{nil}, then an error is 
+signalled if the current process already owns @metavar{LOCK}. 
+
+If @metavar{LOCK} is held by another process, then the current process waits 
+as in @fn{ilu-process:process-lock}, which is described earlier in this 
+section.
+@end defmac
+
+
+
+@section  Handling Errors
+
+
+
+Errors in most of the process functions will cause a break.  There are no 
+special tricks to handling these errors.
+
+The @constant{:focus} command is an important tool for using the Allegro CL 
+debugger in a multiple-process environment.  In particular, in Allegro CL a 
+new process by default shares its standard input/output (I/O) stream with the 
+Lisp listener.  Generally, this is not a problem because the process runs in 
+the background and does no I/O.  However, if the process enters a break, the 
+debugger needs to use the process's standard I/O stream to interact with the 
+user.  This could lead to a problem because the debugger I/O from the broken 
+process will be interleaved with the Lisp listener's normal I/O. Specifically, 
+the system will not be able to determine to which process user input is 
+directed. 
+
+To avoid this situation, Allegro CL has the notion of a @dfn{focus 
+process}. Input coming from the shared Lisp listener I/O stream is always sent 
+to the focused process.  Usually this is the Lisp listener process.  However, 
+if a background process breaks, you can use the @constant{:focus} command to 
+focus on the broken process and allow you to send input to the debugger 
+running in that process.  When the debugging is complete, @constant{:focus} is 
+automatically returned to the Lisp listener process. 
+
+The following transcript illustrates the use of the @constant{:focus} command 
+in Allegro CL: 
+
+@codeexample
+;;;_______________________________________________________________________
+;;; Start out focused on the Lisp listener process. List all processes.
+<cl 71> :processes
+"Initial Lisp Listener" is active.
+;;;_______________________________________________________________________
+;;; Second, start a test process that will enter a break immediately.
+<cl 72> (ilu-process:fork-process "test" #'error "test break")
+#<process test @ #x13e92b1>
+<cl 73>
+;;;________________________________________________
+;;; Process test enters a break.
+
+Error: test break
+
+;;; Still speaking to the Lisp listener process, list the processes.
+[1] <cl 1> :processes
+"test" is waiting for terminal input.
+"Initial Lisp Listener" is active.
+<cl 74>
+;;;________________________________________________
+;;; Now refocus on the test process.
+<cl 74> :focus "test"
+Focus is now on the "test" process.
+;;;  Look at stack of test process.
+<cl 75> :zoom
+Evaluation stack of process "test":
+ ->(EXCL::STM-SY-READ-CHAR #<synonym stream for *TERMINAL-IO* @ #x13e9619>)
+   (PEEK-CHAR NIL #<synonym stream for *TERMINAL-IO* @ #x13e9619> NIL :EOF NIL)
+   (ERROR "test break")
+   (ILU-PROCESS::PROCESS-INITIALIZATION-FUNCTION NIL
+      #<Function ERROR @ #x219ab9> ("test break"))
+;;;________________________________________________
+;;; Kill the test process (which is the current process).
+<cl 76> :kill
+Do you really want to kill process "test" [n]? y
+
+;;; Automatic refocus to Lisp listener. Ask listener to list all processes.
+Focus is now on the "listener" process.
+<cl 77> :processes
+"Initial Lisp Listener" is active.
+@end codeexample
+
+For more information on the Lisp listener interface and the Lisp debugger, see 
+the manual for the implementation of Common Lisp that you are using. For 
+Allegro CL, refer to chapters 4 and 5 of @cite{[Franz-92]}. 
+
+
+
+@section  Notes
+
+
+
+It is possible for a process to do a non-blocking attempt to lock a process 
+lock using the following idiom: 
+
+@codeexample
+ (ilu-process:without-scheduling    ; Make sure this is not interrupted.
+  (if (ilu-process:process-lock-locker LOCK) ; Is lock free?
+      (ilu-process:process-lock LOCK)))      ; Lock is free, grab it.
+ (if (eq                            ; Did we get the lock for this process?
+      (ilu-process:process-lock-locker LOCK)
+      (ilu-process:current-process))
+     (prog1                         ; Yes, do A, releasing lock on way out.
+       ...A...
+       (ilu-process:process-unlock LOCK))
+   ...B...                          ; No, do B, which does not depend on lock.
+   )
+@end codeexample
+
+
+
+
+@section  References
+
+
+
+@cite{[Franz-92]}:  @b{Allegro Common Lisp User Guide}. Release 4.1. Berkeley, CA: Franz 
+Incorporated, March 1992.
+
+@i{Bach, M.J.}, @b{The Design of the UNIX Operating System}. Englewood 
+Cliffs, NJ: Prentice-Hall, 1986.  Especially read Chapters 6, 7, and 8. 
+
+@i{Deitel, H.M.} @b{An Introduction to Operating Systems}. Reading, MA: 
+Addison-Wesley, 1984.  Especially read Part 2. 
+
+@i{Kernighan, B.W. and R. Pike.}, @b{The UNIX Programming Environment}. 
+Englewood Cliffs, NJ: Prentice-Hall, 1984.  Especially read Sections 1.4 and 
+7.4. 
+
+@i{Tanenbaum, A.S.} @b{Operating Systems: Design and Implementation}. 
+Englewood Cliffs, NJ: Prentice-Hall, 1987.  Especially read Chapter 2.

@@ -1,0 +1,72 @@
+/** 
+ BeginILUCopyright
+
+ Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+ Unlimited use, reproduction, modification, and distribution of this
+ software and modified versions thereof is permitted.  Permission is
+ granted to make derivative works from this software or a modified
+ version thereof.  Any copy of this software, a modified version
+ thereof, or a derivative work must include both the above copyright
+ notice of Xerox Corporation and this paragraph.  Any distribution of
+ this software, a modified version thereof, or a derivative work must
+ comply with all applicable United States export control laws.  This
+ software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+ WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+ LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+ EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+ NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+ OF THE POSSIBILITY OF SUCH DAMAGES.
+  
+ EndILUCopyright
+*/
+
+Overview of the mapping:
+
+Let's see, from what I remember:
+objects map to "yasos" objects.  which is slib's OO package.
+   (the slib directory under guile has some emacs info files which give a 
+    very sketchy description of yasos and other slib features.  There are
+    also some info files for guile in there somewhere too).
+   (optional objects are represented by #f when not present)
+arrays map to vectors
+sequences map to lists
+most of the integral types just map to scheme integers regardless of size
+long integers and long cardinals map to pairs (high word . low word)
+most floating point types just map to the scheme floating point type
+long doubles also map to the lower precision scheme float
+strings map to scheme strings
+characters map to scheme characters
+records map to vectors which have the same number of members as the record.
+unions map to pairs (discriminator . value)
+booleans are just #t or #f
+typedef A B is basically just accomplished with (define B A) which is probably
+bad but I couldn't think of a better way (maybe macros?)
+Is that it....?
+
+Note: I know some of the type mappings are kind of a hack but since our
+project has no need for long types and scheme doesn't have any nice 
+counterparts I kind of punted on that issue for the moment.
+
+all names are basically "module-name:thing-name".  All underscores are
+turned into hyphens (I think) and case is preserved from the ISL file.
+I am pretty sure records and unions have accessor functions automatically
+generated for them but I forget the format off the top of my head.
+
+The "status" is a vector which basically mimics the C++ status struct
+except there is really only one type of status struct for all modules
+(even though I generated one with a different name, they are all the same).
+I kind of forget the exact details of that part.
+
+One major bad feature is that I have yet to fix is that fact that when a
+scheme/ILU object is gc'd there is no nice way to notify the kernel.  So
+at present each ILU object has a "destroy" which needs to be called to
+get rid of it (ugly!).  Hooking into guile-iii's garbage collector is not
+real easy.  Hopefully, the newer versions of guile will make this easier.
+
+Oops, I made a mistake in my last message.  Records are also mapped to
+yasos objects with getter and setter methods.  I think I had some problems
+when I tried making them vectors.
+

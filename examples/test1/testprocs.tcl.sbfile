@@ -1,0 +1,477 @@
+
+# BeginILUCopyright
+
+# Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+# Unlimited use, reproduction, modification, and distribution of this
+# software and modified versions thereof is permitted.  Permission is
+# granted to make derivative works from this software or a modified
+# version thereof.  Any copy of this software, a modified version
+# thereof, or a derivative work must include both the above copyright
+# notice of Xerox Corporation and this paragraph.  Any distribution of
+# this software, a modified version thereof, or a derivative work must
+# comply with all applicable United States export control laws.  This
+# software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+# WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+# PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+# LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+# EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+# NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+# OF THE POSSIBILITY OF SUCH DAMAGES.
+
+# EndILUCopyright
+
+proc get-config-vals {} { 
+  global iluthreads ilubindingserver bindingdir
+
+  set configfile [open test1.configvals r]
+  if {$configfile == ""} {
+    puts "Couldn't read configuration variables"
+    return 0
+  }
+ 
+  #skip first line
+  gets $configfile nothing
+ 
+  set iluthreads 0
+  set ilubindingserver 0
+  set theval 0
+  while {[gets $configfile line] >= 0} {
+     set thedef [split $line]
+     set thename [lindex $thedef 0]
+     if {[llength $thedef]  > 1} {
+       set theval [lindex $thedef 1]
+     }
+#    puts [format "line %s def %s name %s val %s" $line $thedef $thename $theval] 
+     switch -exact $thename {
+        ILU_OS_THREADED {
+           set iluthreads 1
+           puts "Assuming os threads present"
+        }  
+       ILU_BINDING_HOST {
+          set ilubindingserver 1
+          set iluhost $theval
+          puts "Assuming binding server to be used"
+       }  
+       ILU_BINDING_REALM {
+          set ilurealm $theval
+       }
+       ILU_BINDING_PORT {
+           set iluport $theval
+     }
+     default {}
+    }
+  }
+#  puts [format "ilub %s realm %s host %s port %s"  $ilubindingserver $ilurealm $iluhost $iluport]
+ 
+  if {$ilubindingserver == 0} {
+     set bindingdir [format "/tmp/binding%d" [pid]]
+     set env(ILU_BINDING_DIRECTORY) $bindingdir
+  } else {
+       set bindingservice [format "%s:%s:%s" ilurealm iluhost iluport]
+       set env(ILU_BINDING_SERVICE) $bindingservice
+  }
+  return 1
+}
+
+
+
+proc run-client {clientlang {args {}} } {
+   global serverlog  serverPID  clientlog  testlog  iserror 
+   global iluhome javahome bindingdir serverlang lispcmd ilubindingserver
+   global sblog ilusb
+
+  puts "Running $clientlang client against $serverlang server..."
+  exec echo "" >>& $clientlog 
+  exec echo "Running $clientlang $args client" >>& $clientlog 
+  switch -exact $clientlang {
+    C  {
+        set cmd "exec ./client $args >>& $clientlog"
+        set cmd [join $cmd]  
+        set cstatus [catch {eval $cmd} ]
+       }
+    CPP {
+        set cmd "exec ./cppclient $args >>& $clientlog"
+        set cmd [join $cmd]  
+        set cstatus [catch {eval $cmd} ]
+      }
+    PYTHON {
+      set cmd "exec python pyClient.py $args >>& $clientlog"
+      set cmd [join $cmd]  
+      set cstatus [catch {eval $cmd} ]
+      }
+    JAVA {
+      set jarlib [format "%s/lib/ilu.jar" $iluhome]
+      set javaclasses [format "%s/lib/classes.zip" $javahome] 
+      set classp [format "./classes:%s:%s" $jarlib $javaclasses]
+      set cmd "exec java -classpath $classp test01.TestClient >>& $clientlog"
+      set cmd [join $cmd]  
+      set cstatus [catch {eval $cmd} ]
+     }
+    LISP {
+     set lispinput "(load \"load-lisp-example\")\n (test-server)\n (exit)" 
+     set cstatus [catch {exec $lispcmd << $lispinput >>& $clientlog} ]
+     }
+    CPP2 {
+        set cmd "exec ./cpp2client $args >>& $clientlog"
+        set cmd [join $cmd]  
+        set cstatus [catch {eval $cmd} ]
+      } 
+    default {
+       puts [format "unknown lang %s given to run-client-internal" $clientlang]
+       set iserror 1
+    }
+  }
+  if {$cstatus == 0} {  
+    puts "$clientlang client program successful"   
+  } else { 
+    set iserror 1
+    puts "$clientlang client program reports errors:"
+    puts "   logs are $testlog client server"
+    if { $ilubindingserver } {
+       puts " and  $ilusb $sblog"
+    } else {
+    puts "and $bindingdir"
+    }
+  }
+}
+
+
+proc run-clients {thelangs } {
+   global serverlog  serverPID  clientlog  testlog  iserror serverlang
+   global ilubindingserver
+
+  foreach lang $thelangs {
+    set fc [string index $lang 0]
+    if { $fc != [string index "  " 0] &&  $fc != 0 } {
+      switch -exact $lang {
+        C {} 
+        CPP {}
+        CPP2 {} 
+        PYTHON {}
+        JAVA {}
+        LISP {}
+        default {
+          puts "Error in arguments to run-basics" 
+          puts "Languages must be in C CPP CPP2 PYTHON JAVA  LISP"
+          return 1
+        }
+     }
+     run-client $lang
+    }
+  }
+}
+
+
+proc stop-binding-server {} {
+  global sbPID killsignal sbexists 
+
+  # should never happend
+  if { ![info exists sbexists] } {
+       return
+  }
+
+  set cmd  "exec kill $killsignal $sbPID"
+  set catchres [catch {eval $cmd} dummy ] 
+  if {$catchres} {
+       puts "Binding server error"
+       set iserror 1
+   } 
+   puts "Deleting binding server"
+   exec sleep 2
+   unset sbexists
+ } 
+
+
+proc stop-server {} {
+ global serverlog serverPID clientlog testlog iserror bindingdir
+ global serverlang killsignal 
+ global ilubindingserver bindingservice sblog ilusb sbPID inmulti 
+
+ set cmd  "exec kill $killsignal $serverPID"
+ set catchres [catch {eval $cmd} dummy ] 
+
+ if {$catchres} {
+     puts "$serverlang Server error"
+     set iserror 1
+     puts "   logs are $testlog client server"
+    if { $ilubindingserver } {
+       puts " and  $ilusb $sblog"
+    } else {
+    puts "and $bindingdir"
+    }
+ }
+
+ if {$iserror==0} {
+     exec rm  -f $clientlog
+     exec rm -f $serverlog
+     if { $ilubindingserver} {
+          exec rm -r -f $sblog $ilusb
+     } else { 
+          exec rm -r -f $bindingdir
+     }
+  }
+
+}
+
+# The variable sbexists is used to avoid starting the binding
+# binding server more than necessary.  At the same time,
+# the testprocs routines try to ensure that all but the lowest level
+# calls (such as separate start-server run-client) leave with binding
+# server # killed
+
+proc start-binding-server {} {
+  global bindingservice sblog ilusb sbPID sbexists
+
+  # Dont start binding server if already started 
+
+  if {[info exists sbexists] } {
+         return
+  }
+
+  if [file exists ../../src/etc/sbserver/ilusb] { 
+        puts  "Starting simple binding service"
+        puts  "(and waiting a bit for it to start up)..."
+        set cmd "exec ../../src/etc/sbserver/ilusb -f $sblog >>$ilusb &"
+        set cmd [join $cmd] 
+        set bstatus [ catch {eval $cmd} sbPID]
+    } else {
+        puts "No simple binding server executable.  Failed test."
+        exit 1
+    } 
+   if {$bstatus == 0} {   
+      set sbexists 1
+      exec sleep 10 
+   } else { 
+     puts "Could not start binding server"
+     exit 1
+   } 
+
+}
+
+
+proc start-server {language {args {}} } {
+ global serverlog  serverPID  clientlog  testlog  iserror 
+ global iluhome javahome bindingdir serverlang lispcmd
+ global ilubindingserver bindingservice sblog ilusb sbPID 
+
+ if { $ilubindingserver == 0} {
+    exec rm -r -f $bindingdir
+    exec mkdir $bindingdir
+ } else { 
+     start-binding-server
+ }
+    
+ set serverlang $language
+ puts "Starting $language server for $args (waiting a bit for it to start up)..."
+ exec echo " " >>& $clientlog
+ exec echo "Next clients are of $serverlang $args" >>& $clientlog
+ switch -exact $language {
+    C  {
+        set cmd "exec ./server $args >>& $serverlog &"
+        set cmd [join $cmd]
+        set sstatus [ catch {eval $cmd} serverPID]
+       }
+  CPP {set cmd "exec ./cppserver $args >>& $serverlog &"
+        set cmd [join $cmd]
+        set sstatus [ catch {eval $cmd} serverPID]
+       }
+  PYTHON {set cmd "exec python pyServer.py $args >>& $serverlog &"
+        set cmd [join $cmd]
+        set sstatus [ catch {eval $cmd} serverPID]
+       }
+  JAVA {
+      set jarlib [format "%s/lib/ilu.jar" $iluhome]
+      set javaclasses [format "%s/lib/classes.zip" $javahome] 
+      set classp [format "./classes:%s:%s" $jarlib $javaclasses]
+      set cmd \
+        "exec java -classpath $classp test01.TestServer $args >>& $serverlog &"
+        set cmd [join $cmd]
+        set sstatus [ catch {eval $cmd} serverPID]
+       }
+ LISP {
+     set lispinput "(load \"load-lisp-example\")\n (test1-server:start-server)\n (ilu-process:process-disable (ilu-process:current-process))"
+     set sstatus [catch {exec $lispcmd << $lispinput >>& $serverlog &} serverPID]
+     exec sleep 10
+     }
+ CPP2 {set cmd "exec ./cpp2server $args >>& $serverlog &"
+        set cmd [join $cmd]
+        set sstatus [ catch {eval $cmd} serverPID]
+      }
+ default {
+         puts "Unknown server language specified to start-server"
+         set sstatus 1
+    }
+  }
+ if {$sstatus == 0} {  
+    exec sleep 10
+    return 1
+ } else { 
+    set iserror 1
+    puts "Couldn't start server"
+    puts "   logs are $testlog client server"
+    return 0
+  }
+
+}
+
+
+proc run-server-client {language clntlang {srvrargs {}} } {
+
+ global serverlog  serverPID  clientlog  testlog  iserror 
+ global iluhome javahome bindingdir ilubindingserver in-multi-sc 
+
+   if [start-server $language $srvrargs]  { 
+     run-client $clntlang 
+     stop-server 
+  } 
+
+  if {$ilubindingserver && ![info exists in-multi-sc] } {
+          stop-binding-server
+  } 
+}
+
+
+#languages can be either a blank-separated list-of-languages,
+#e.g. "LISP PYTHON" or "default"
+
+proc run-basics { {langs "default"}} {
+ global serverlog  serverPID  clientlog  testlog  iserror 
+ global iluhome javahome bindingdir in-multi-sc ilubindingserver
+
+ set in-multi-sc 1 
+ if {$ilubindingserver != 0} {
+     start-binding-server 
+ }
+
+ if {$langs == "default"} {
+    set thelangs "C CPP PYTHON JAVA LISP"
+  } else {
+   set thelangs $langs
+  }
+
+ foreach lang $thelangs {
+   set fc [string index $lang 0]
+   if { $fc != [string index "  " 0] &&  $fc != 0 } {
+     switch -exact $lang {
+        C {} 
+        CPP {}
+        CPP2 {} 
+        PYTHON {}
+        JAVA {}
+        LISP {}
+        default {
+          puts "Error in arguments to run-basics" 
+          puts "Languages must be in C CPP CPP2 PYTHON JAVA  LISP"
+          return 1
+        }
+     }
+          
+     if [start-server $lang] {
+       run-clients $thelangs 
+       stop-server
+      }
+   }
+ }
+
+ if {$ilubindingserver != 0} {
+    stop-binding-server
+  }
+  unset in-multi-sc
+
+  return $iserror
+}
+
+# from Dan Larner's list of standard pre-release tests
+proc run-protocols { {langs "default"}} {
+  global iserror in-multi-sc ilubindingserver iluthreads
+
+ set in-multi-sc 1 
+
+  if {$langs == "default"} {
+     set strlangs "C CPP PYTHON JAVA LISP"
+  } else {
+    set strlangs $langs
+  }
+
+  set thelangs [split $strlangs]
+
+  run-server-client C  C "-p sunrpc"
+  run-server-client C C "-p http_1_0"
+  run-server-client C C "-p http_1_0p"
+  run-server-client C C "-p http_1_1"
+  run-server-client C C "-p iiop"
+  run-server-client C C "-p courier"
+
+  if {$iluthreads} {  
+     run-server-client C C "-p csunrpc -mt"
+     run-server-client C C "-p http_1_0 -mt" 
+     run-server-client C C "-p http_1_0p -mt" 
+     run-server-client C C "-p http_1_1 -mt"
+     run-server-client C C "-p iiop -mt"
+  }
+    
+  if { [lsearch -exact $thelangs CPP2] != -1} {
+  
+    run-server-client CPP2 C "-p sunrpc"
+    run-server-client CPP2 C "-p http_1_x"
+    run-server-client CPP2 C "-p iiop"
+
+    if {$iluthreads} {  
+       run-server-client CPP2 C "-p sunrpc -mt"
+       run-server-client CPP2 C "-p http_1_x -mt"
+       run-server-client CPP2 C "-p iiop -mt"
+    }
+ }
+    
+  if { [lsearch -exact $thelangs PYTHON] != -1} {
+
+     run-server-client PYTHON C "-p sunrpc"
+
+    if {$iluthreads} {  
+       run-server-client PYTHON C "-mt -p sunrpc"
+    }
+  }
+    
+# run-server-client JAVA sunrpc??
+    
+    
+# run some protocols with multiple clients
+
+ if { [lsearch -exact $thelangs CPP2 ] >= 0} {
+    lappend theclients CPP2 
+ }
+ if { [lsearch -exact $thelangs PYTHON] >= 0} {
+    lappend theclients PYTHON 
+ }
+ if { [lsearch -exact $thelangs JAVA] >= 0} {
+    lappend theclients JAVA 
+ }
+ if { [lsearch -exact $thelangs CPP ] >= 0} {
+    lappend theclients CPP 
+ }
+  
+ if [start-server C "-p sunrpc"] { 
+   run-clients $theclients
+   stop-server
+ }
+    
+ if [start-server C "-p http_1_0p"] {
+   run-clients $theclients 
+   stop-server
+ }
+    
+ if [start-server C "-p iiop"] {
+   run-clients $theclients
+   stop-server
+  }
+
+ if { $ilubindingserver != 0} {
+    stop-binding-server
+  }
+  unset in-multi-sc
+
+  return $iserror
+}
+

@@ -1,0 +1,254 @@
+/** $Id: Imakefile,v 1.18 1999/08/03 01:58:10 janssen Exp $
+ BeginILUCopyright
+
+ Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+ Unlimited use, reproduction, modification, and distribution of this
+ software and modified versions thereof is permitted.  Permission is
+ granted to make derivative works from this software or a modified
+ version thereof.  Any copy of this software, a modified version
+ thereof, or a derivative work must include both the above copyright
+ notice of Xerox Corporation and this paragraph.  Any distribution of
+ this software, a modified version thereof, or a derivative work must
+ comply with all applicable United States export control laws.  This
+ software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+ WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+ LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+ EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+ NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+ OF THE POSSIBILITY OF SUCH DAMAGES.
+
+ EndILUCopyright
+*/
+/* Last edited by Mike Spreitzer October 9, 1998 10:12 am PDT */
+
+###############################################################################
+# Installation
+
+MkdirTarget($(DESTDIR)/examples)
+MkdirTarget($(DESTDIR)/examples/ngtest)
+
+###############################################################################
+# Create the Python scripts which cooperate to drive the automated running
+#  of the tests
+
+client-test-driver : client-test-driver.dist
+	$(SED) -e "s;PYTHON_EXECUTABLE;$(PYTHON_EXEC_PREFIX)/bin/python;" -e "s;ILUHOME_DIR;$(ILUHOME);" < client-test-driver.dist > client-test-driver
+
+test-server-daemon : test-server-daemon.dist
+	$(SED) -e "s;PYTHON_EXECUTABLE;$(PYTHON_EXEC_PREFIX)/bin/python;" -e "s;ILUHOME_DIR;$(ILUHOME);" < test-server-daemon.dist > test-server-daemon
+
+tcpdump-daemon : tcpdump-daemon.dist
+	$(SED) -e "s;PYTHON_EXECUTABLE;$(PYTHON_EXEC_PREFIX)/bin/python;" -e "s;ILUHOME_DIR;$(ILUHOME);" < tcpdump-daemon.dist > tcpdump-daemon
+
+apache_wrapper.py : apache_wrapper.py.dist
+	$(SED) -e "s;PYTHON_EXECUTABLE;$(PYTHON_EXEC_PREFIX)/bin/python;" -e "s;ILUHOME_DIR;$(ILUHOME);" < apache_wrapper.py.dist > apache_wrapper.py
+
+all:: client-test-driver test-server-daemon tcpdump-daemon apache_wrapper.py
+
+InstallPrograms(client-test-driver test-server-daemon tcpdump-daemon apache_wrapper.py, $(DESTDIR)/examples/ngtest)
+InstallRO(test-server.isl test_schema.py, $(DESTDIR)/examples/ngtest)
+InstallRO(Test.py, $(DESTDIR)/examples/ngtest)
+
+CleanTarget(client-test-driver test-server-daemon tcpdump-daemon apache_wrapper.py)
+
+#ifdef ILU_TESTING_SCRIPTS
+#define IHaveSubdirs
+SUBDIRS = url-test-material
+#endif
+
+InstallRO(README, $(DESTDIR)/examples/ngtest)
+
+# isl sources
+InstallRO(ianacharsets.isl, $(DESTDIR)/examples/ngtest)
+InstallRO(iluhttp.isl, $(DESTDIR)/examples/ngtest)
+InstallRO(ngbasic.isl, $(DESTDIR)/examples/ngtest)
+InstallRO(ngcache.isl, $(DESTDIR)/examples/ngtest)
+InstallRO(ngdocument.isl, $(DESTDIR)/examples/ngtest)
+InstallRO(ngform.isl, $(DESTDIR)/examples/ngtest)
+InstallRO(ngproperty.isl, $(DESTDIR)/examples/ngtest)
+InstallRO(ngrendering.isl, $(DESTDIR)/examples/ngtest)
+InstallRO(ngstream.isl, $(DESTDIR)/examples/ngtest)
+
+# nggetbot c sources
+InstallRO(nggetbot.c, $(DESTDIR)/examples/ngtest)
+InstallRO(ngrendering_getbot_impl.c, $(DESTDIR)/examples/ngtest)
+InstallRO(ngbasic_getbot_impl.c, $(DESTDIR)/examples/ngtest)
+InstallRO(ngstream_getbot_impl.c, $(DESTDIR)/examples/ngtest)
+
+# nggetbot c headers
+InstallRO(ngrendering_getbot_impl.h, $(DESTDIR)/examples/ngtest)
+InstallRO(nggetbot.h, $(DESTDIR)/examples/ngtest)
+
+# ngwebserver c sources
+InstallRO(ngdocument_webserv_impl.c, $(DESTDIR)/examples/ngtest)
+InstallRO(ngformprocessor_webserv_impl.c, $(DESTDIR)/examples/ngtest)
+InstallRO(ngproperty_webserv_impl.c, $(DESTDIR)/examples/ngtest)
+InstallRO(ngrendering_webserv_impl.c, $(DESTDIR)/examples/ngtest)
+InstallRO(ngstream_webserv_impl.c, $(DESTDIR)/examples/ngtest)
+InstallRO(ngwebserver.c, $(DESTDIR)/examples/ngtest)
+InstallRO(iluhttp_webserv_impl.c, $(DESTDIR)/examples/ngtest)
+InstallRO(ngbasic_webserv_impl.c, $(DESTDIR)/examples/ngtest)
+
+# ngwebserver c headers
+InstallRO(ngwebserver.h, $(DESTDIR)/examples/ngtest)
+InstallRO(ngstream_webserv_impl.h, $(DESTDIR)/examples/ngtest)
+
+# shared c sources and headers
+InstallRO(nglib.c, $(DESTDIR)/examples/ngtest)
+InstallRO(nglib.h, $(DESTDIR)/examples/ngtest)
+
+# Imakefile
+InstallFileToFile(runImakefile, $(INSTINCFLAGS), $(DESTDIR)/examples/ngtest/Imakefile)
+
+#ifdef ILU_TESTING_SCRIPTS
+# automated test scripts
+InstallFileToFile(testprocs.tcl, $(INSTPROGFLAGS), $(DESTDIR)/examples/ngtest/testprocs.tcl)
+InstallFileToFile(testload.tcl, $(INSTPROGFLAGS), $(DESTDIR)/examples/ngtest/testload.tcl)
+InstallFileToFile(testreg.tcl, $(INSTPROGFLAGS), $(DESTDIR)/examples/ngtest/testreg.tcl)
+InstallFileToFile(xform-testurls.tcl, $(INSTPROGFLAGS), $(DESTDIR)/examples/ngtest/xform-testurls.tcl)
+InstallRO(AUTOTEST.README, $(DESTDIR)/examples/ngtest)
+#endif
+
+
+###############################################################################
+##
+##  The following rules are included to test the build with...
+##
+
+#ifdef ADD_SECURE_TRANSPORT
+#ifdef INCLUDE_SSL_SECMECH
+SSL=../../GSS/ssl/libgss-ssl.a
+SSLINCL=-I../../GSS/ssl $(RSAINCL) $(DESINCL)
+#endif
+SECURITYLIBS = $(SSL) ../../GSS/kernel/libgss.a $(RSALIBS) $(DESLIBS)
+SECURITYINCLUDES = -I../../GSS/kernel $(SSLINCL)
+#endif
+
+ILUCINCLUDES = -I../../runtime/c -I../../runtime/kernel $(SECURITYINCLUDES)
+C_STUBBER = ../../stubbers/c/c-stubber
+
+#ifdef ADD_KERNEL_SHARED_LIBRARY 
+#ifdef ADD_C_SHARED_LIBRARY
+TESTCLIBS = ../../runtime/c/libilu-c.so ../../runtime/kernel/libilu.so $(SECURITYLIBS)
+#endif
+#else
+TESTCLIBS = ../../runtime/c/libilu-c.a ../../runtime/kernel/libilu.a $(SECURITYLIBS)
+#endif
+
+NormalObjectRule()
+
+
+
+###############################################################################
+# Stub creation
+
+# ianacharsets
+IANA_Charsets_Registry.h IANA_Charsets_Registry-true.c IANA_Charsets_Registry-surrogate.c IANA_Charsets_Registry-common.c :  ianacharsets.isl ../../stubbers/c/c-stubber ../../stubbers/parser/ilu.isl
+	../../stubbers/c/c-stubber -I ../../stubbers/parser ianacharsets.isl
+
+# iluhttp
+iluhttp.h iluhttp-true.c iluhttp-surrogate.c iluhttp-common.c :  iluhttp.isl ../../stubbers/c/c-stubber ../../stubbers/parser/ilu.isl
+	../../stubbers/c/c-stubber -I ../../stubbers/parser iluhttp.isl
+
+# ngbasic
+NgBasic.h NgBasic-true.c NgBasic-surrogate.c NgBasic-common.c :  ngbasic.isl ../../stubbers/c/c-stubber ../../stubbers/parser/ilu.isl
+	../../stubbers/c/c-stubber -I ../../stubbers/parser ngbasic.isl
+
+# ngcache
+NgCache.h NgCache-true.c NgCache-surrogate.c NgCache-common.c :  ngcache.isl ngbasic.isl ../../stubbers/c/c-stubber ../../stubbers/parser/ilu.isl
+	../../stubbers/c/c-stubber -I ../../stubbers/parser ngcache.isl
+
+# ngdocument
+NgDocument.h NgDocument-true.c NgDocument-surrogate.c NgDocument-common.c : ngdocument.isl ianacharsets.isl iluhttp.isl ngbasic.isl ngcache.isl ngproperty.isl ngrendering.isl ngstream.isl ../../stubbers/c/c-stubber ../../stubbers/parser/ilu.isl
+	../../stubbers/c/c-stubber -I ../../stubbers/parser ngdocument.isl
+
+# ngform
+NgFormProcessor.h NgFormProcessor-true.c NgFormProcessor-surrogate.c NgFormProcessor-common.c : ngform.isl ianacharsets.isl iluhttp.isl ngbasic.isl ngcache.isl ngproperty.isl ngrendering.isl ngstream.isl ../../stubbers/c/c-stubber ../../stubbers/parser/ilu.isl
+	../../stubbers/c/c-stubber -I ../../stubbers/parser ngform.isl
+
+# ngproperty
+NgProperty.h NgProperty-true.c NgProperty-surrogate.c NgProperty-common.c : ngproperty.isl ngbasic.isl  ../../stubbers/c/c-stubber ../../stubbers/parser/ilu.isl
+	../../stubbers/c/c-stubber -I ../../stubbers/parser ngproperty.isl
+
+# ngrendering
+NgRendering.h NgRendering-true.c NgRendering-surrogate.c NgRendering-common.c : ngrendering.isl ianacharsets.isl ngbasic.isl ngcache.isl ngstream.isl  ../../stubbers/c/c-stubber ../../stubbers/parser/ilu.isl
+	../../stubbers/c/c-stubber -I ../../stubbers/parser ngrendering.isl
+
+
+# ngstream
+NgStream.h NgStream-true.c NgStream-surrogate.c NgStream-common.c : ngstream.isl ngbasic.isl   ../../stubbers/c/c-stubber ../../stubbers/parser/ilu.isl
+	../../stubbers/c/c-stubber -I ../../stubbers/parser ngstream.isl
+
+
+
+###############################################################################
+# object files    
+
+# note: probably more dependencies expressed than need be
+
+
+# nggetbot     
+
+ngbasic_getbot_impl.o : ngbasic_getbot_impl.c nglib.h IANA_Charsets_Registry.h iluhttp.h NgBasic.h NgCache.h NgDocument.h NgFormProcessor.h NgProperty.h NgRendering.h NgStream.h ../../runtime/kernel/iluxport.h ../../runtime/c/iluchdrs.h
+
+nggetbot.o : nggetbot.c ngrendering_getbot_impl.h nggetbot.h nglib.h IANA_Charsets_Registry.h iluhttp.h NgBasic.h NgCache.h NgDocument.h NgFormProcessor.h NgProperty.h NgRendering.h NgStream.h ../../runtime/kernel/iluxport.h ../../runtime/c/iluchdrs.h
+
+ngrendering_getbot_impl.o : ngrendering_getbot_impl.c ngrendering_getbot_impl.h nggetbot.h nglib.h IANA_Charsets_Registry.h iluhttp.h NgBasic.h NgCache.h NgDocument.h NgFormProcessor.h NgProperty.h NgRendering.h NgStream.h ../../runtime/kernel/iluxport.h ../../runtime/c/iluchdrs.h
+
+ngstream_getbot_impl.o : ngstream_getbot_impl.c nggetbot.h nglib.h IANA_Charsets_Registry.h iluhttp.h NgBasic.h NgCache.h NgDocument.h NgFormProcessor.h NgProperty.h NgRendering.h NgStream.h ../../runtime/kernel/iluxport.h ../../runtime/c/iluchdrs.h
+
+
+# ngwebserver
+
+iluhttp_webserv_impl.o : iluhttp_webserv_impl.c ngwebserver.h nglib.h IANA_Charsets_Registry.h iluhttp.h NgBasic.h NgCache.h NgDocument.h NgFormProcessor.h NgProperty.h NgRendering.h NgStream.h ../../runtime/kernel/iluxport.h ../../runtime/c/iluchdrs.h
+
+ngbasic_webserv_impl.o : ngbasic_webserv_impl.c nglib.h IANA_Charsets_Registry.h iluhttp.h NgBasic.h NgCache.h NgDocument.h NgFormProcessor.h NgProperty.h NgRendering.h NgStream.h ../../runtime/kernel/iluxport.h ../../runtime/c/iluchdrs.h
+
+ngdocument_webserv_impl.o : ngdocument_webserv_impl.c ngwebserver.h nglib.h IANA_Charsets_Registry.h iluhttp.h NgBasic.h NgCache.h NgDocument.h NgFormProcessor.h NgProperty.h NgRendering.h NgStream.h ../../runtime/kernel/iluxport.h ../../runtime/c/iluchdrs.h
+
+ngformprocessor_webserv_impl.o : ngformprocessor_webserv_impl.c ngwebserver.h nglib.h IANA_Charsets_Registry.h iluhttp.h NgBasic.h NgCache.h NgDocument.h NgFormProcessor.h NgProperty.h NgRendering.h NgStream.h ../../runtime/kernel/iluxport.h
+
+ngproperty_webserv_impl.o : ngproperty_webserv_impl.c ngwebserver.h nglib.h IANA_Charsets_Registry.h iluhttp.h NgBasic.h NgCache.h NgDocument.h NgFormProcessor.h NgProperty.h NgRendering.h NgStream.h ../../runtime/kernel/iluxport.h
+
+ngrendering_webserv_impl.o : ngrendering_webserv_impl.c nglib.h IANA_Charsets_Registry.h iluhttp.h NgBasic.h NgCache.h NgDocument.h NgFormProcessor.h NgProperty.h NgRendering.h NgStream.h ../../runtime/kernel/iluxport.h
+
+ngstream_webserv_impl.o : ngstream_webserv_impl.c ngstream_webserv_impl.h ngwebserver.h nglib.h IANA_Charsets_Registry.h iluhttp.h NgBasic.h NgCache.h NgDocument.h NgFormProcessor.h NgProperty.h NgRendering.h NgStream.h ../../runtime/kernel/iluxport.h
+
+ngwebserver.o : ngwebserver.c ngwebserver.h nglib.h IANA_Charsets_Registry.h iluhttp.h NgBasic.h NgCache.h NgDocument.h NgFormProcessor.h NgProperty.h NgRendering.h NgStream.h ../../runtime/kernel/iluxport.h ../../runtime/c/iluchdrs.h
+
+
+# shared    
+nglib.o : nglib.c nglib.h IANA_Charsets_Registry.h iluhttp.h NgBasic.h NgCache.h NgDocument.h NgFormProcessor.h NgProperty.h NgRendering.h NgStream.h ../../runtime/kernel/iluxport.h ../../runtime/c/iluchdrs.h
+
+###############################################################################
+# Program targets
+
+#ifdef ILU_NEEDS_POSIX4_FOR_NANOSLEEP
+NANOSLEEP_LIB = -lposix4
+#else
+NANOSLEEP_LIB =
+#endif
+
+TestProgramTarget(nggetbot, IANA_Charsets_Registry-common.o IANA_Charsets_Registry-surrogate.o iluhttp-common.o iluhttp-surrogate.o NgBasic-common.o NgBasic-surrogate.o NgBasic-true.o ngbasic_getbot_impl.o NgCache-common.o NgCache-surrogate.o NgDocument-common.o NgDocument-surrogate.o NgFormProcessor-common.o NgFormProcessor-surrogate.o nggetbot.o nglib.o NgProperty-common.o NgProperty-surrogate.o NgRendering-common.o NgRendering-surrogate.o NgRendering-true.o ngrendering_getbot_impl.o NgStream-common.o NgStream-surrogate.o NgStream-true.o ngstream_getbot_impl.o, $(TESTCLIBS), $(NANOSLEEP_LIB))
+
+
+TestProgramTarget(ngwebserver, IANA_Charsets_Registry-common.o IANA_Charsets_Registry-surrogate.o IANA_Charsets_Registry-true.o iluhttp-common.o iluhttp-true.o iluhttp_webserv_impl.o NgBasic-common.o NgBasic-surrogate.o NgBasic-true.o ngbasic_webserv_impl.o NgCache-common.o NgCache-surrogate.o NgCache-true.o NgDocument-common.o NgDocument-true.o ngdocument_webserv_impl.o NgFormProcessor-common.o NgFormProcessor-true.o ngformprocessor_webserv_impl.o nglib.o NgProperty-common.o NgProperty-true.o ngproperty_webserv_impl.o NgRendering-common.o NgRendering-surrogate.o NgRendering-true.o ngrendering_webserv_impl.o NgStream-common.o NgStream-surrogate.o NgStream-true.o ngstream_webserv_impl.o ngwebserver.o, $(TESTCLIBS), $(NANOSLEEP_LIB))
+
+
+
+###############################################################################
+# cleaning
+
+CleanTarget(IANA_Charsets_Registry.h IANA_Charsets_Registry-true.c IANA_Charsets_Registry-surrogate.c IANA_Charsets_Registry-common.c)
+CleanTarget(iluhttp.h iluhttp-true.c iluhttp-surrogate.c iluhttp-common.c)
+CleanTarget(NgBasic.h NgBasic-true.c NgBasic-surrogate.c NgBasic-common.c)
+CleanTarget(NgCache.h NgCache-true.c NgCache-surrogate.c NgCache-common.c)
+CleanTarget(NgDocument.h NgDocument-true.c NgDocument-surrogate.c NgDocument-common.c)
+CleanTarget(NgFormProcessor.h NgFormProcessor-true.c NgFormProcessor-surrogate.c NgFormProcessor-common.c)
+CleanTarget(NgProperty.h NgProperty-true.c NgProperty-surrogate.c NgProperty-common.c)
+CleanTarget(NgRendering.h NgRendering-true.c NgRendering-surrogate.c NgRendering-common.c)
+CleanTarget(NgStream.h NgStream-true.c NgStream-surrogate.c NgStream-common.c)
+

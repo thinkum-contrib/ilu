@@ -1,0 +1,706 @@
+
+------
+test1
+------
+
+
+Document Tree
+
+Element:  type = unit1
+   attribute name = id             value = e1
+   Data:  This is an unit 
+   Element:  type = unit2
+      Data:  And another one 
+
+------
+test2
+------
+
+Document Tree
+
+Element:  type = unit1
+   Data:  This is an unit 
+   Element:  type = unit2
+      Element:  type = unit3
+      Element:  type = unit3
+      Element:  type = unit4
+      Data: 
+And another one 
+
+------
+test3
+------
+
+Syntax Error: Invalid char or other error in quoted string
+  in file /home/ilu/src/stubbers/XML-parser/test/test3, line 27, near char 13
+
+Document Tree
+
+Element:  type = unit1
+   attribute name = id             value = e1'> This is an unit 
+   Data:  This is an unit 
+   Element:  type = unit2
+      Data:  And another one 
+
+------
+test4
+------
+
+Validation Error: Content of element 'optional' inconsistent with declaration
+  in file /home/ilu/src/stubbers/XML-parser/test/test4, line 153, near char 7
+
+Validation Error: Element type 'asynchronous' not defined
+  in file /home/ilu/src/stubbers/XML-parser/test/test4, line 165, near char 14
+
+Validation Error: Element type 'returntype' not defined
+  in file /home/ilu/src/stubbers/XML-parser/test/test4, line 166, near char 14
+
+Validation Error: Element type 'isproc' not defined
+  in file /home/ilu/src/stubbers/XML-parser/test/test4, line 167, near char 14
+
+Validation Error: Content of element 'method' inconsistent with declaration
+  in file /home/ilu/src/stubbers/XML-parser/test/test4, line 162, near char 12
+
+Validation Error: Content of element 'type' inconsistent with declaration
+  in file /home/ilu/src/stubbers/XML-parser/test/test4, line 149, near char 5
+
+Document Tree
+
+Element:  type = interface
+   Element:  type = uname
+      attribute name = validity       value = UNIQUE
+      attribute name = sc_type        value = NAME
+      Data: UNAME
+   Element:  type = brand
+      attribute name = sc_type        value = NAME
+      Data: BRAND
+   Element:  type = imports
+      Element:  type = import
+         Element:  type = uname
+            attribute name = validity       value = UNIQUE
+            attribute name = sc_type        value = NAME
+            Data: UNAME
+         Element:  type = fromfile
+            attribute name = validity       value = UNIQUE
+            attribute name = sc_type        value = FILENAME
+            Data: FILENAME
+   Element:  type = types
+      Element:  type = type
+         Element:  type = uname
+            attribute name = validity       value = UNIQUE
+            attribute name = sc_type        value = NAME
+            Data: UNAME
+         Element:  type = typeid
+            attribute name = sc_type        value = MSTID
+            Data:  TYPEID 
+         Element:  type = array
+            Element:  type = typeref
+               attribute name = validity       value = TYPENAME
+               attribute name = sc_type        value = NAME
+               Data:  TYPEREF 
+            Element:  type = dims
+               Element:  type = dim
+                  attribute name = sc_type        value = POSINT
+                  Data:  INTEGER 
+      Element:  type = type
+         Element:  type = object
+            Element:  type = doc
+               attribute name = sc_type        value = QSTRING
+               Data: QSTRING
+            Element:  type = collectible
+            Element:  type = optional
+            Element:  type = typeid
+               attribute name = sc_type        value = MSTID
+               Data: TYPEID 
+            Element:  type = brand
+               attribute name = sc_type        value = NAME
+               Data: BRAND
+            Element:  type = supertypes
+               Element:  type = supertype
+                  Element:  type = typeref
+                     attribute name = validity       value = TYPENAME
+                     attribute name = sc_type        value = NAME
+                     Data: TYPEREF
+            Element:  type = methods
+               Element:  type = method
+                  Element:  type = lname
+                     attribute name = validity       value = LOCALLYUNIQUE
+                     attribute name = sc_type        value = NAME
+                     Data: LNAME
+                  Element:  type = functional
+                  Element:  type = asynchronous
+                  Element:  type = returntype
+                     Data: TYPE-REF
+                  Element:  type = isproc
+                     Data: PROC-ID
+                  Element:  type = doc
+                     attribute name = sc_type        value = QSTRING
+                     Data: QSTRING>
+                  Element:  type = args
+                     Element:  type = arg
+                        Element:  type = lname
+                           attribute name = validity       value = LOCALLYUNIQUE
+                           attribute name = sc_type        value = NAME
+                           Data: LNAME
+                        Element:  type = typeref
+                           attribute name = validity       value = TYPENAME
+                           attribute name = sc_type        value = NAME
+                           Data: TYPE-REF
+                        Element:  type = direction
+                           attribute name = validity       value = INOUT
+                           attribute name = sc_type        value = NAME
+                           Data: INOUT
+                        Element:  type = sibling
+            Element:  type = exceptions
+               Element:  type = exception
+                  Element:  type = lname
+                     attribute name = validity       value = LOCALLYUNIQUE
+                     attribute name = sc_type        value = NAME
+                     Data: NAME
+                  Element:  type = typeref
+                     attribute name = validity       value = TYPENAME
+                     attribute name = sc_type        value = NAME
+                     Data: TYPE-REF
+                  Element:  type = doc
+                     attribute name = sc_type        value = QSTRING
+                     Data: QSTG
+
+------
+test5
+------
+
+Error: WARNING: built-in entity redefined, redefinition ignored
+
+Error: WARNING: built-in entity redefined, redefinition ignored
+
+Error: WARNING: built-in entity redefined, redefinition ignored
+
+Error: WARNING: built-in entity redefined, redefinition ignored
+
+Error: WARNING: built-in entity redefined, redefinition ignored
+
+Document Tree
+
+Element:  type = unit1
+   attribute name = id             value = e1
+   Data:  This is an unit 
+   Element:  type = unit2
+      Data:  And another one 
+   Element:  type = unit2
+      Data:   & another > the last 
+   Element:  type = unit2
+      Data:  & still another
+
+------
+test6
+------
+
+Validation Error: Illegal mixed content specified
+  in file /home/ilu/src/stubbers/XML-parser/test/test6, line 26, near char 28
+
+Document Tree
+
+Element:  type = unit1
+   attribute name = id             value = e1
+   Data:  This is an unit 
+   Element:  type = unit2
+      Data:  And another one 
+
+------
+test7
+------
+
+Error: WARNING: built-in entity redefined, redefinition ignored
+
+Error: WARNING: built-in entity redefined, redefinition ignored
+
+Error: WARNING: built-in entity redefined, redefinition ignored
+
+Error: WARNING: built-in entity redefined, redefinition ignored
+
+Error: WARNING: built-in entity redefined, redefinition ignored
+
+Document Tree
+
+Element:  type = p
+   Data: An ampersand(&) may be escaped numerically
+    (&#38;) or with a general entity (&amp;).
+
+------
+test8
+------
+
+Document Tree
+
+Element:  type = test
+   Data: This sample shows a error_prone method. 
+
+------
+test9
+------
+
+Document Tree
+
+Element:  type = unit1
+   Data:  This is an unit 
+   Element:  type = unit2
+      Data:  And another one 
+
+------
+test10
+------
+
+Validation Error: Content of element 'optional' inconsistent with declaration
+  in file /home/ilu/src/stubbers/XML-parser/test/test10, line 57, near char 7
+
+Validation Error: Element type 'returntype' not defined
+  in file /home/ilu/src/stubbers/XML-parser/test/test10, line 70, near char 14
+
+Validation Error: Element type 'isproc' not defined
+  in file /home/ilu/src/stubbers/XML-parser/test/test10, line 71, near char 14
+
+Validation Error: Content of element 'method' inconsistent with declaration
+  in file /home/ilu/src/stubbers/XML-parser/test/test10, line 66, near char 12
+
+Validation Error: Content of element 'object' inconsistent with declaration
+  in file /home/ilu/src/stubbers/XML-parser/test/test10, line 54, near char 7
+
+Validation Error: Content of element 'type' inconsistent with declaration
+  in file /home/ilu/src/stubbers/XML-parser/test/test10, line 53, near char 5
+
+Document Tree
+
+Element:  type = interface
+   Element:  type = uname
+      attribute name = validity       value = UNIQUE
+      attribute name = sc_type        value = NAME
+      Data: UNAME
+   Element:  type = brand
+      attribute name = sc_type        value = NAME
+      Data: BRAND
+   Element:  type = imports
+      Element:  type = import
+         Element:  type = uname
+            attribute name = validity       value = UNIQUE
+            attribute name = sc_type        value = NAME
+            Data: UNAME
+         Element:  type = fromfile
+            attribute name = validity       value = UNIQUE
+            attribute name = sc_type        value = FILENAME
+            Data: FILENAME
+   Element:  type = types
+      Element:  type = type
+         Element:  type = uname
+            attribute name = validity       value = UNIQUE
+            attribute name = sc_type        value = NAME
+            Data: UNAME
+         Element:  type = typeid
+            attribute name = sc_type        value = MSTID
+            Data:  TYPEID 
+         Element:  type = array
+            Element:  type = typeref
+               attribute name = validity       value = TYPENAME
+               attribute name = sc_type        value = NAME
+               Data:  TYPEREF 
+            Element:  type = dims
+               Element:  type = dim
+                  attribute name = sc_type        value = POSINT
+                  Data:  INTEGER 
+      Element:  type = type
+         Element:  type = object
+            Element:  type = doc
+               attribute name = sc_type        value = QSTRING
+               Data: QSTRING
+            Element:  type = collectible
+            Element:  type = optional
+            Element:  type = typeid
+               attribute name = sc_type        value = MSTID
+               Data: TYPEID 
+            Element:  type = brand
+               attribute name = sc_type        value = NAME
+               Data: BRAND
+            Element:  type = supertypes
+               Element:  type = supertype
+                  Element:  type = typeref
+                     attribute name = validity       value = TYPENAME
+                     attribute name = sc_type        value = NAME
+                     Data: TYPEREF
+            Element:  type = methods
+               Element:  type = method
+                  Element:  type = lname
+                     attribute name = validity       value = LOCALLYUNIQUE
+                     attribute name = sc_type        value = NAME
+                     Data: LNAME
+                  Element:  type = functional
+                  Element:  type = asynchronous
+                  Element:  type = returntype
+                     Data: TYPE-REF
+                  Element:  type = isproc
+                     Data: PROC-ID
+                  Element:  type = doc
+                     attribute name = sc_type        value = QSTRING
+                     Data: QSTRING>
+                  Element:  type = args
+                     Element:  type = arg
+                        Element:  type = lname
+                           attribute name = validity       value = LOCALLYUNIQUE
+                           attribute name = sc_type        value = NAME
+                           Data: LNAME
+                        Element:  type = typeref
+                           attribute name = validity       value = TYPENAME
+                           attribute name = sc_type        value = NAME
+                           Data: TYPE-REF
+                        Element:  type = direction
+                           attribute name = validity       value = INOUT
+                           attribute name = sc_type        value = NAME
+                           Data: INOUT
+                        Element:  type = sibling
+            Element:  type = exceptions
+               Element:  type = exception
+                  Element:  type = lname
+                     attribute name = validity       value = LOCALLYUNIQUE
+                     attribute name = sc_type        value = NAME
+                     Data: NAME
+                  Element:  type = typeref
+                     attribute name = validity       value = TYPENAME
+                     attribute name = sc_type        value = NAME
+                     Data: TYPE-REF
+                  Element:  type = doc
+                     attribute name = sc_type        value = QSTRING
+                     Data: QSTG
+
+------
+test11
+------
+
+Warning: Improperly nested entity references
+  in file /home/ilu/src/stubbers/XML-parser/test/test11, line 1, near char 16
+    embedded in file /home/ilu/src/stubbers/XML-parser/test/test11, line 30, near char 8
+
+Document Tree
+
+Element:  type = unit1
+   Data:  This is an unit 
+   Element:  type = unit2
+      Data:  And another one 
+
+------
+test12
+------
+
+(SGML) Compatibility Error:  '--' in comment not at end
+  in file /home/ilu/src/stubbers/XML-parser/test/test12, line 26, near char 3
+
+Syntax Error: Processing target xml invalid outside xmldecl or textdecl
+  in file /home/ilu/src/stubbers/XML-parser/test/test12, line 29, near char 2
+
+-- After syntax or formation error validation will be bypassed --
+
+
+-- Dtd syntax error(s), validation will be bypassed --
+
+Document Tree
+
+Element:  type = unit1
+   Data:  This is an unit 
+   Element:  type = unit2
+      Data:  And another one 
+   Data:  <greeting> Hello &#37; </greeting>
+
+------
+test13
+------
+
+Document Tree
+
+Element:  type = unit1
+   Data:  This is an unit 
+   Element:  type = unit2
+      Data:  And another one 
+   Element:  type = unit2
+      Data:  And a third 
+   Data:  And then some more data  
+
+------
+test14
+------
+
+Syntax Error: Invalid char or other error in quoted string
+  in file /home/ilu/src/stubbers/XML-parser/test/test14dtd, line 3, near char 18
+
+-- After syntax or formation error validation will be bypassed --
+
+
+-- Dtd syntax error(s), validation will be bypassed --
+
+Syntax Error:  '&'  or '<' in cdata and not in entity reference
+  in file /home/ilu/src/stubbers/XML-parser/test/test14, line 29, near char 7
+
+Document Tree
+
+Element:  type = unit1
+   Data:  &replace; 
+   Element:  type = unit2
+      Data:  And another one 
+
+------
+test15
+------
+
+Formation Error: Improperly nested elements or need /> (empty element)
+  in file /home/ilu/src/stubbers/XML-parser/test/test15, line 31, near char 44
+
+-- After syntax or formation error validation will be bypassed --
+
+
+NonRecoverable Error: Unexpected end of document
+  in file /home/ilu/src/stubbers/XML-parser/test/test15, line 31, near char 44
+
+------
+test16
+------
+
+Warning: Improperly nested entity references
+  in file /home/ilu/src/stubbers/XML-parser/test/test16ent, line 4, near char 17
+
+Document Tree
+
+Element:  type = unit1
+   Data:  
+
+This is an entity  
+   Element:  type = unit2
+      Data: 
+ And another one 
+
+------
+test17
+------
+
+Document Tree
+
+Element:  type = unit1
+   Element:  type = unit3
+      Data:   This is an unit  
+   Element:  type = unit2
+      Data:  And another one 
+
+------
+test18
+------
+
+Document Tree
+
+Element:  type = unit
+   attribute name = id             value = e1
+   Data:  This is unit chardata
+    
+   Element:  type = unit2
+      attribute name = nmtokens       value = abc def
+      attribute name = entity         value = abc
+      attribute name = cdata          value = e3
+      attribute name = enum           value = enum1
+      attribute name = notation       value = not2
+      attribute name = nmtoken        value = _fixed
+      attribute name = entities       value = abc  def
+      attribute name = idref          value = e1
+      Data: 
+           This is unit2 chardata 
+
+------
+test19
+------
+
+Validation Error: Required attribute 'idref' missing from element
+  in file /home/ilu/src/stubbers/XML-parser/test/test19, line 47, near char 5
+
+Validation Error: Value of entity attribute 'entities' either not defined or not unparsed entity
+  in file /home/ilu/src/stubbers/XML-parser/test/test19, line 48, near char 30
+
+Validation Error: Attribute 'nmtoken' value must be same as fixed value of declaration
+  in file /home/ilu/src/stubbers/XML-parser/test/test19, line 47, near char 45
+
+Validation Error: Value of attribute 'enum' not in declared list
+  in file /home/ilu/src/stubbers/XML-parser/test/test19, line 47, near char 10
+
+Document Tree
+
+Element:  type = unit
+   attribute name = id             value = e1
+   Data:  This is unit chardata
+    
+   Element:  type = unit2
+      attribute name = nmtokens       value = abc def
+      attribute name = entity         value = abc
+      attribute name = cdata          value = e3
+      attribute name = enum           value = enum3
+      attribute name = notation       value = not2
+      attribute name = nmtoken        value = fixed
+      attribute name = entities       value = abc  def
+      Data: 
+           This is unit2 chardata 
+
+------
+test20
+------
+
+Validation Error: First reference to undefined id value 'e3'
+  in file /home/ilu/src/stubbers/XML-parser/test/test20, line 55, near char 57
+
+Document Tree
+
+Element:  type = unit
+   attribute name = id             value = e1
+   Data:  This is unit chardata
+    
+   Element:  type = unit2
+      attribute name = nmtokens       value = abc def
+      attribute name = entity         value = abc
+      attribute name = cdata          value = e3
+      attribute name = enum           value = enum1
+      attribute name = notation       value = not2
+      attribute name = nmtoken        value = _fixed
+      attribute name = entities       value = abc  def
+      attribute name = idref          value = e3
+      Data: 
+           This is a unit2 chardata 
+   Element:  type = unit2
+      attribute name = nmtokens       value = abc def
+      attribute name = entity         value = abc
+      attribute name = cdata          value = e3
+      attribute name = enum           value = enum1
+      attribute name = notation       value = not2
+      attribute name = nmtoken        value = _fixed
+      attribute name = entities       value = abc  def
+      attribute name = idref          value = e1
+      Data: 
+           This is another unit2 chardata 
+   Element:  type = unit2
+      attribute name = nmtokens       value = abc def
+      attribute name = entity         value = abc
+      attribute name = cdata          value = e3
+      attribute name = enum           value = enum1
+      attribute name = notation       value = not2
+      attribute name = nmtoken        value = _fixed
+      attribute name = entities       value = abc  def
+      attribute name = idref          value = e3
+      Data: 
+           And another unit2 chardata 
+
+------
+test21
+------
+
+Formation Error: Attribute appears more than once in same element tag
+  in file /home/ilu/src/stubbers/XML-parser/test/test21, line 34, near char 29
+
+-- After syntax or formation error validation will be bypassed --
+
+
+Document Tree
+
+Element:  type = unit
+   attribute name = att1           value = a1
+   attribute name = att2           value = a2
+   attribute name = att1           value = a11
+   Data:  This is unit chardata
+    
+   Element:  type = unit2
+      attribute name = att1           value = a3
+      Data:  This is a unit2 chardata 
+
+------
+test22
+------
+
+Formation Error: Reference to parameter entity in internal subset not as first character in markup decl
+  in file /home/ilu/src/stubbers/XML-parser/test/test22, line 36, near char 28
+
+-- After syntax or formation error validation will be bypassed --
+
+
+-- Dtd syntax error(s), validation will be bypassed --
+
+Formation Error: Attribute appears more than once in same element tag
+  in file /home/ilu/src/stubbers/XML-parser/test/test22, line 39, near char 29
+
+Document Tree
+
+Element:  type = unit
+   attribute name = att1           value = a1
+   attribute name = att2           value = a2
+   attribute name = att1           value = a11
+   Data:  This is unit chardata
+    
+   Element:  type = unit2
+      attribute name = att1           value = a3
+      Data:  This is a unit2 chardata 
+------
+test26
+------
+
+Validation Error: Content of element 'unit2' inconsistent with declaration
+  in file /home/ilu/src/stubbers/XML-parser/test/test26, line 33, near char 10
+
+Document Tree
+
+Element:  type = unit1
+   Element:  type = unit3
+      Data:   This is an unit  
+   Element:  type = unit2
+      Element:  type = unit3
+         Data:   This is another unit  
+------
+test27
+------
+
+Document Tree
+
+Element:  type = unit
+   attribute name = id             value = e1
+   Data:  This is unit chardata
+    
+   Element:  type = unit2
+      attribute name = nmtokens       value = abc def
+      attribute name = entity         value = abc
+      attribute name = cdata          value = e3
+      attribute name = enum           value = enum1
+      attribute name = notation       value = not2
+      attribute name = nmtoken        value = _fixed
+      attribute name = idref          value = e1
+      Data: 
+           This is unit2 chardata 
+------
+test28
+------
+
+Validation Error: Reference to undefined entity, entity name substituted containing illegal character &
+  in file /home/ilu/src/stubbers/XML-parser/test/test28, line 44, near char 53
+
+Validation Error: Attribute 'undef1' value must contain only name chars
+  in file /home/ilu/src/stubbers/XML-parser/test/test28, line 44, near char 53
+
+Validation Error: Circular entity reference
+  in file /home/ilu/src/stubbers/XML-parser/test/test28, line 45, near char 53
+
+Validation Error: Attribute 'circatt' value must contain only name chars
+  in file /home/ilu/src/stubbers/XML-parser/test/test28, line 45, near char 53
+
+Document Tree
+
+Element:  type = unit
+   attribute name = id             value = e1
+   Data:  This is unit chardata
+    
+   Element:  type = unit2
+      attribute name = circatt        value = &circ1;
+      attribute name = undef1         value = &undef1;
+      attribute name = nmtokens       value = abc def
+      attribute name = entity         value = abc
+      attribute name = cdata          value = e3
+      attribute name = enum           value = enum1
+      attribute name = notation       value = not2
+      attribute name = nmtoken        value = _fixed
+      attribute name = idref          value = e1
+      Data: 
+           This is unit2 chardata 

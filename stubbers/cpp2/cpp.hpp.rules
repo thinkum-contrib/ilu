@@ -1,0 +1,2160 @@
+
+# BeginILUCopyright
+#
+# Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+#
+# Unlimited use, reproduction, modification, and distribution of this
+# software and modified versions thereof is permitted.  Permission is
+# granted to make derivative works from this software or a modified
+# version thereof.  Any copy of this software, a modified version
+# thereof, or a derivative work must include both the above copyright
+# notice of Xerox Corporation and this paragraph.  Any distribution of
+# this software, a modified version thereof, or a derivative work must
+# comply with all applicable United States export control laws.  This
+# software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+# WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+# PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+# LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+# EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+# NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+# OF THE POSSIBILITY OF SUCH DAMAGES.
+#
+# EndILUCopyright
+
+
+# fix sequence material to treat all structured types like objs
+# Modify cppp to retain gnu/sunpro conditionals, and restor elsewhere 
+# Add global exceptions numbers/ restructure for this (was this done?) 
+# complete type token stuff
+# cache function call results
+# completea "automatically generated" message
+# Code and add D_, A_ definitions of user-defined instance content
+
+F_use_namespace() return Int.
+F_use_classes() return Int.
+F_module_prefix(Any t, Int ismodule) return String. 
+#like F_module_prefix except that returns "" if prefix is that of CORBA intf 
+F_noninterface_prefix(Any t, Int ismodule) return String. 
+F_full_side_name(String side, Any t) return String.
+F_rel_side_name(Module m, String side, Any t) return String.
+F_full_pfxd_name(String pfx, Any t) return String.
+F_rel_pfxd_name(String pfx, Module m, Any t) return String.
+F_ur_pfxd_name(String pfx, Any t) return String.
+F_ur_side_name(String side, Any t) return String.
+F_side_prefix(String side, Any t, Int ismodule) return String.
+F_corba_pfx() return String.
+F_full_prefix(Any t, Int ismodule) return String.
+F_underscore_prefix(Any t) return String.
+F_underscore_name(Any t) return String.
+F_dotted_reg_name(Any t) return String.
+F_rel_typeref(Module m, Any t, String sfx) return String.
+F_full_rel_typeref(Any t, String sfx) return String.
+# like f_rel_typeref but for optionals. return * or _ptr for objs for oftype
+F_ref_typeref(Module m, Any t) return String.
+F_full_ref_typeref(Any t) return String.
+# type reference relative to given module, use _var if variable length
+F_mbr_typeref(Module m, Any t) return String.
+# like F_mbr_typeref but not relative
+F_full_mbr_typeref(Any t) return String.
+F_mbr_seqbuf(Module m, Any t) return String.
+F_full_mbr_seqbuf(Any t) return String.
+# return all but interface qualifier
+F_reg_name(Any t) return String.
+F_full_typeref(Any t) return String.
+F_full_ur_typeref(Any t) return String.
+# for non types (e.g., exceptions, constants)
+F_full_ref(Any t) return String.
+F_concat(String pfx, String name) return String.
+F_varlen_type(Any t) return Int.
+F_dims(Array t, String dimtype, Int slice) return String.
+F_named_dims(Array t, String prefix) return String.
+F_ur_builtin(Any t) return Int. 
+# is typename of instance structure, i.e.,like typekind
+F_ur_typename(Any t) return String.
+# typekind for non types
+F_instance_kind(Any t) return String.
+F_ur_property(Any t, String p1) return String.
+F_string_chartype(Any s) return String.
+F_contains_object(Any t) return Int. 
+F_arg_pfx( Any t, String direction) return String. 
+F_arg_sfx( Any t, String direction) return String. 
+F_last_index( List list) return Int.
+F_list_ct(List l) return Int.
+F_list_match_ix(List list, Any instance) return Int. 
+F_constant_value(Any t) return String.
+F_vs_string() return String.
+F_mult_blanks(Int i, Int j) return String.
+F_add(Int i, Int j) return Int.
+F_longint_to_str(LongInt i) return String.
+F_lowercase_name(String) return String.
+F_get_union_default(Union u) return String.
+F_ur_instance(Any t) return Any.
+F_build_arm_name(Any t) return String.
+F_optional_ofurtype(Any t) return Any.
+F_mbr_is_var(Any t) return Int.
+# returns (iluLong..) if long type, else ""  
+F_ilu_long_name(Any t, Int paren) return String.
+F_optional_vartype(Any t) return Any.
+F_escape_string(String s) return String.
+F_idl_exception_prefix(String s) return Int.
+F_external_method_name(String mname, String islname) return String.
+F_convert_underscores(String s) return String.
+# debug
+F_print_labelled_name(String s1, String s2) return Int.
+F_print_module_call(Any t) return Int.
+
+
+R_cpp_h (Interface i) (ns_extern, Interface inc)-->  
+  L_top (i.isl_name, F_vs_string())
+  # for test cases and cpp2 includes that use the portability macros
+  L_scoping_macros(i.name)
+  L_interface_include:inc in i.imports: (inc.isl_name) 
+             [inc.isl_name != "ilu"]
+  # ?? 
+  L_ns_extern(ns_extern)
+    [[F_use_classes() == 1 ns_extern = "static"] | ns_extern = "extern"]
+  R_cpp_h_module(i.module_str, 1) 
+  R_interface_init(i) 
+  R_insert_extract_ops(i)
+  R_any_insert_extract_ops(i)
+  L_ () "\n#endif"
+.
+
+L_top (isl_name, vs_string) -->
+
+// This file was automatically generated with ILU (version %vs_string%) tools
+// ILU is Copyright 1991-1999 Xerox Corporation, All Rights Reserved.
+// ILU information:  ftp://ftp.parc.xerox.com/pub/ilu/ilu.html.
+
+#ifndef __%isl_name%_H_
+  #define __%isl_name%_H_
+  
+//Note corba.hpp includes ilu.hpp, corba-templates.hpp, cppportability.hpp
+#include <corba.hpp>
+
+.
+
+L_scoping_macros(iname) --> 
+
+#ifndef CORBA_
+  #define CORBA_(name) NAME_INSIDE_SCOPE(CORBA, name)
+#endif
+#ifndef CORBA
+  #define CORBA(name) NAME_OUTSIDE_SCOPE(CORBA, name)
+#endif
+#ifndef ADD_VARIANT_SUPPORT
+  #define ADD_VARIANT_SUPPORT
+#endif
+#ifndef %iname%_
+  #define %iname%_(name) NAME_INSIDE_SCOPE(%iname%,name)
+#endif
+#ifndef %iname%
+  #define %iname%(name) NAME_OUTSIDE_SCOPE(%iname%,name)
+#endif
+.
+
+
+
+L_interface_include(inc_name) -->
+  #include \"%inc_name%-cpp.hpp\" 
+.
+
+L_ns_extern(ns_extern) -->
+
+  #ifndef NS_EXTERN
+      #define NS_EXTERN %ns_extern% 
+  #endif
+
+.
+
+=====================================================================
+# processes external or nested modules.  The defs for nested
+# modules are always a single block, to conform to cpp2 restriction 
+# on reopening classes.
+R_cpp_h_module (Module m, Int first) (ContentElem ce, mname, mpfx,us_pfx) -->
+
+  E_ [ mname = m.simple_name   mpfx = F_module_prefix(m, 1)]
+
+  L_ (mname) "// start the scope for %mname% "
+
+  { L_ (mname) [F_use_namespace() == 1] "namespace %mname% {"  |
+    L_ (mname) [F_use_classes() == 1] "class %mname% { public:" |
+        TRUE }
+
+  # don't expand module here if represents CORBA IDL object
+  R_module_content (m, mpfx, first) [m.module_object == NULL]
+
+  { L_initializer(mpfx, us_pfx)
+    [[ first == 1 ] us_pfx = F_underscore_prefix(m)] 
+    | TRUE } 
+
+ L_(mname) "// End the scope for %mname%"
+ {  L_() [ F_use_namespace() == 1] " }" 
+   | L_() [ F_use_classes() == 1 ]  " };"
+   | TRUE }
+.
+
+L_initializer(mpfx, us_pfx) -->
+
+//////////////////////////////////////////////////////////////////////// 
+// Initialization related
+
+ // %mpfx%initializer class is used to create a single instance that puts the
+ // %mpfx%iluInitialize onto the iluCppInternal::sm_p_initialization_function_list
+
+  class %mpfx%initializer {
+    public:
+      %mpfx%initializer ();
+      void * ensure_instantiation ();
+      static %mpfx%initializer sm_the_%us_pfx%_initializer;
+  };
+.
+
+=======================================================================
+R_module_content(Module m, mpfx, Int first) (ContentElem ce) -->
+
+  R_consts(m, mpfx,  m.contained_constants)
+
+  R_except_fwd(mpfx, m.contained_exceptions) 
+
+  { L_initializers(mpfx) [ first == 1] | TRUE }
+
+  R_cpp_h_fwd_and_nested :ce in m.content_sequence: (mpfx, m, ce) 
+
+  R_cpp_h_exceptions(mpfx, m, m.contained_exceptions)
+.
+
+
+# define class only for non-imported exceptions.
+# define indexes for all referenced
+R_except_fwd (mpfx, List exceptions)
+    (Exception ex, Exception ex1, us_ex_name, Int exi, Int exj) -->
+    L_()" "
+    L_except_fwd_class: ex(exi) in exceptions: (mpfx, ex.name)
+         [ ex.importedfrom == NULL]
+    L_()" "
+    L_except_index :ex1(exj) in exceptions: (mpfx, us_ex_name, exj)
+         [ us_ex_name = F_underscore_name(ex1) ]
+.
+
+L_except_fwd_class(mpfx, exname) -->
+    class %mpfx%%exname%;
+.
+
+L_except_index (mpfx, us_ex_name, Int exj) -->
+    #define g_%us_ex_name%_index     %exj%
+.
+
+# Orders segments of fwd defs and defs 
+# for sublist of immediately contained types 
+R_cpp_h_fwd_and_nested(mpfx, Module m, ContentElem ce) --> 
+
+  { R_cpp_h_fwd(mpfx, m, ce.content)
+      [ce.content_type == "fwd_type"]
+   |
+    R_cpp_h_def(mpfx, m, ce.content)
+      [ce.content_type == "type"]
+   |
+   R_cpp_h_module (ce.content, 0)
+      [ce.content_type == "module" ce.content.module_object == NULL ]
+  }
+.
+
+L_initializers (mpfx) -->
+     // Declarations for initialization
+     NS_EXTERN void %mpfx%iluInitialize();
+     NS_EXTERN int %mpfx%g_i_initialized;
+     NS_EXTERN iluInitializationFunctionNode* 
+               %mpfx%p_initialization_function_list;
+
+.
+
+===============================================================
+
+R_consts(Module m, mpfx, List constants) (Any c) -->
+
+ {
+  { E_ [constants != NULL ]
+   L_() ""
+   L_() " // Constants"
+   R_const :c in constants:(m, mpfx, c)
+  }
+  | TRUE }
+.
+
+R_const(Module m, mpfx, Constant c) 
+   (Any urtype, typename, cname, valname, const) -->  
+
+  #start with declaration part. Common to all namespace handling.     
+  LP_(typename, mpfx, cname, const)
+   [urtype = F_ur_instance(c.type) 
+    cname = c.name 
+    typename = F_rel_typeref(m, urtype, "") 
+    valname = F_instance_kind(c.value) 
+    [ [ valname ==  "ILUCStringConstantValue" const = "const "] | const = ""] 
+   ]
+   "   static %const%%typename% %mpfx%%cname%"     
+
+  # use value if not nested classes (where just allocate here,
+  # then initialize later.  Initialization for statics in classes 
+  # permitted in current cpp standard, but not implemented by
+  # many compilers 
+
+  { { E_[ F_use_classes() == 1] 
+      LP_() "  ;" 
+      L_() ""
+    }
+    | { LP_() " = "
+         R_const_value(c, c.value, valname)
+        L_() ""
+      }  
+  } 
+.
+
+R_const_value(Constant c, Any constvalue, valname)
+    (LongInt intvalue, sign, boolvalue,
+     realwhole,  fraction, LongInt exp, suffix, stgvalue, f)  -->
+  { 
+   # integer constant
+    LP_(sign, intvalue) 
+     [ valname == "IntConstantValue" 
+       intvalue = constvalue.value
+       [ [ constvalue.positive  == 1  sign = ""] | sign = "-"]
+     ]
+     " %sign%%intvalue%;" 
+
+   # boolean constant
+   | LP_(boolvalue) 	
+     [ valname == "BoolConstantValue" 
+       [ [ constvalue.value  == 0 boolvalue = "ilu_FALSE" ]
+         | boolvalue = "ilu_TRUE" ]
+     ]
+    " %boolvalue%;"
+
+   # real constant 
+   | { E_ [valname == "RealConstantValue"
+           realwhole = constvalue.value
+           [ [ constvalue.positive  == 1  sign = ""] | sign = "-"]
+            fraction = constvalue.fraction
+           [ [ F_ur_typename(c.type) == "ShortReal" f = "F"] | f = "" ]
+          ]
+        { LP_(sign, realwhole, fraction, exp, f) 
+               [ constvalue.exponent != 0 exp = constvalue.exponent] 
+           " %sign%%realwhole%.%fraction%E%exp%%f%;"
+         | LP_(sign, realwhole, fraction, f)
+           " %sign%%realwhole%.%fraction%%f%;"
+        } 
+      }
+
+   # string constant
+   | LP_(stgvalue)
+     [ valname == "ILUCStringConstantValue"
+       stgvalue = F_escape_string(constvalue.value) ]
+     " \%quote%%stgvalue%\%quote%;"
+
+   | LP_()
+    "ERROR_ERROR_ERROR"
+  }
+.
+  
+===================================================================
+
+R_cpp_h_fwd (String mpfx, Module m, Any t) (typekind) -->
+   E_ [ typekind = F_ur_typename(t) ] 
+   { R_cpp_h_alias(mpfx, m, t) [ t.supertype  != NULL ]
+    | R_cpp_h_fwd_object(mpfx, t) [ typekind == "Object"]
+    | R_cpp_h_fwd_record(mpfx, t) [ typekind == "Record"]
+    | R_cpp_h_fwd_array(mpfx, m, t) [ typekind == "Array"]
+    | R_cpp_h_fwd_sequence(mpfx, m,  t) [ typekind == "Sequence"]
+    | R_cpp_h_fwd_union(mpfx, t) [ typekind == "Union"]
+    | R_cpp_h_fwd_enum(mpfx, t) [ typekind == "Enumeration"]
+    | R_cpp_h_fwd_optional(mpfx, m, t)
+   }
+.
+
+===============================================================
+
+# map alias into all types that supertype maps into
+R_cpp_h_alias(mpfx, Module m, Any t) (Any st, tname, stname) -->
+
+   E_ [t.supertype  != NULL
+       st = F_ur_instance(t)  
+       tname = F_concat(mpfx, t.name)
+       stname = F_rel_typeref(m, st,"") ]
+
+   R_cpp_h_alias1(m, tname, stname, t, st, 1)
+.
+
+===============================================================
+# Separation from R_cpp_h_alias to allow alias treatment of 
+# optionals represented as pointers
+R_cpp_h_alias1(Module m, tname, stname, Any t, Any st, Int foranys) -->
+  {
+      L_cpp_h_alias_onlytype(tname, stname) [F_ur_builtin(st) == 1] 
+    | R_cpp_h_alias_string(m, st, tname, stname)
+    | R_cpp_h_alias_sequence(st, tname, stname)
+    | R_cpp_h_alias_object(st, tname, stname) 
+    | R_cpp_h_alias_record(st, tname, stname)
+    | R_cpp_h_alias_array(st, tname, stname, foranys)
+    | R_cpp_h_alias_union(st, tname, stname)
+    | R_cpp_h_alias_enum(st, tname, stname)
+    | R_cpp_h_alias_pickle(st, tname, stname)
+    | R_cpp_h_alias_optional(t, st, tname, stname)
+ }
+.
+
+
+R_cpp_h_alias_object(Object t, tname, t1name) -->
+
+  L_cpp_h_alias_object(tname, t1name) 
+.
+
+L_cpp_h_alias_object(tname, t1name) -->
+     typedef %t1name%     %tname%;  
+     typedef %t1name%_var %tname%_var;  
+     typedef %t1name%_ptr %tname%_ptr;  
+
+.
+  
+# doesn't use foranys if used from optional decl
+R_cpp_h_alias_array(Array t, tname, t1name, Int foranys) --> 
+  L_cpp_h_alias_array(tname, t1name) 
+
+  { L_cpp_h_alias_array_forany(tname, t1name)   
+     [ foranys == 1]
+  | TRUE }
+.
+
+
+L_cpp_h_alias_array(tname, t1name) --> 
+     typedef %t1name%         %tname%;  
+     typedef %t1name%_slice   %tname%_slice;  
+     typedef %t1name%_var     %tname%_var;  
+
+.
+L_cpp_h_alias_array_forany(tname, t1name) -->
+     typedef %t1name%_forany  %tname%_forany;  
+
+.
+
+R_cpp_h_alias_record(Record t, tname, t1name) --> 
+  L_cpp_h_alias_typeandvar(tname, t1name) 
+.
+
+R_cpp_h_alias_string(Module m, Any st, tname, stname) (mname) -->
+
+   E_ [ F_string_chartype(st) != NULL
+         mname = F_mbr_typeref(m, st)
+      ]
+   L_cpp_h_alias_string(tname, stname, mname)
+.
+
+R_cpp_h_alias_sequence(Sequence t, tname, t1name) --> 
+  L_cpp_h_alias_typeandvar(tname, t1name) 
+.
+
+R_cpp_h_alias_union(Union t, tname, t1name) --> 
+  L_cpp_h_alias_typeandvar(tname, t1name) 
+.
+
+R_cpp_h_alias_enum(Enumeration t, tname, t1name) --> 
+  L_cpp_h_alias_onlytype(tname, t1name) 
+.
+
+R_cpp_h_alias_pickle(Pickle t, tname, t1name) --> 
+  L_cpp_h_alias_typeandvar(tname, t1name) 
+.
+
+# add mfpx-const- part if necessary
+R_cpp_h_alias_optional(Optional t, Optional st, tname, stname)
+  (Any uroftype, typekind) -->
+
+   E_ [typekind = F_ur_typename(st.oftype)
+       uroftype = F_ur_instance(st.oftype) ]
+
+  { L_cpp_h_alias_array( tname, stname) 
+      [ typekind == "Array" ]
+  | L_cpp_h_alias_optional_object(tname, stname)  
+      [ typekind == "Object" ]
+  | L_cpp_h_alias_string(tname, stname, stname)   
+      [  F_string_chartype(uroftype) != NULL 
+         F_string_chartype(uroftype) != "byte" ]
+  | L_cpp_h_alias_optional_other(tname, stname)
+  }
+
+ L_cpp_h_alias_optional_forany(tname, stname)
+.
+     
+L_cpp_h_alias_onlytype(tname, t1name) -->
+     typedef %t1name%         %tname%;  
+
+.
+L_cpp_h_alias_optional_object(tname, stname) -->
+     typedef %stname%              %tname%;  
+.
+L_cpp_h_alias_optional_other(tname, t1name) -->
+     typedef %t1name%         %tname%;  
+.
+L_cpp_h_alias_optional_forany(tname, t1name) -->
+     typedef %t1name%_forany  %tname%_forany;  
+
+.
+L_cpp_h_alias_typeandvar(tname, t1name) --> 
+     typedef %t1name%     %tname%;  
+     typedef %t1name%_var %tname%_var;  
+
+.
+L_cpp_h_alias_string(tname, t1name, mname) --> 
+     typedef %t1name%     %tname%;  
+     typedef %mname%     %tname%_var;  
+.
+        
+
+=================================================================
+R_cpp_h_fwd_object(String mpfx, Object object) --> 
+   L_objects (mpfx, object.name)
+.
+
+
+L_objects (mpfx, obj) -->
+     class %mpfx%%obj%;
+     typedef %mpfx%%obj%* %mpfx%%obj%_ptr;
+     typedef iluTemplatableObject_var<%mpfx%%obj%> %mpfx%%obj%_var;
+
+.
+
+=================================================================
+
+R_cpp_h_fwd_record (String mpfx, Record rcd) -->
+    L_records(mpfx, rcd.name)
+.
+
+L_records (mpfx, rcd) -->
+     struct %mpfx%%rcd%;
+     typedef iluTemplatableT_var<%mpfx%%rcd%> %mpfx%%rcd%_var;
+
+.
+
+======================================================================
+
+
+# if sequence of optionals, and non primitive, use vars 
+# check on anomaly wrt object members
+R_cpp_h_fwd_sequence (String mpfx, Module m,  Sequence seq)
+      (chtype, Any oftype,  Any of_of, seq_base) -->
+   
+  E_ [ chtype = F_string_chartype(seq)] 
+   
+  {
+   R_cpp_h_fwd_string(mpfx, seq, chtype)
+      [ chtype != NULL  chtype != "byte"]
+   |
+   L_sequence (mpfx, seq.name, seq_base)
+       [ oftype = seq.oftype 
+         seq_base = F_mbr_typeref(m, oftype) 
+       ]
+  }
+.
+
+L_sequence (mpfx, seq, seq_base) -->
+      class %mpfx%%seq%;
+      typedef iluTemplatableSequence_var<%mpfx%%seq%, %seq_base%> %mpfx%%seq%_var; 
+
+.
+
+=======================================================================
+
+R_cpp_h_fwd_union (String mpfx, Union union) -->
+    L_cpp_h_fwd_union(mpfx, union.name)
+ .
+
+L_cpp_h_fwd_union (mpfx, union) -->
+     class %mpfx%%union%; 
+     typedef iluTemplatableT_var<%mpfx%%union%> %mpfx%%union%_var;
+
+.
+=========================================================================.
+
+
+R_cpp_h_fwd_enum (String mpfx, Enumeration enum)
+     (EnumField ev, Int evi, Int id,  ename, evname, pre) -->
+    E_ [ename = enum.name]
+    LP_ (mpfx, ename) "     enum %mpfx%%ename% {" 
+    LP_ : ev(evi) in enum.values: (mpfx, evname, pre, id) 
+         [ evname = ev.name id = ev.id
+         [ [evi == 0 pre = " "] | pre = ", " ] ]
+         "%pre%%mpfx%%evname% = %id%"
+    L_() " };"
+    R_typecode_decl(mpfx, enum.name)
+.
+             
+============================================================================
+
+
+R_cpp_h_fwd_string(String mpfx, Sequence seq, String chtype) ( iluch) -->
+
+  E_ [ [ chtype==  "shortcharacter" iluch ="iluShortCharacter*"] | 
+       [ chtype == "character"      iluch = "iluCharacter*"]  ] 
+    L_string (mpfx, seq.name, iluch)
+.
+        	
+L_string (mpfx, stg, iluch) -->  
+     typedef %iluch% %mpfx%%stg%;
+     typedef const %iluch% %mpfx%const_%stg%;
+
+.
+
+============================================================================
+
+R_cpp_h_fwd_optional(String mpfx, Module m, Optional opt)
+      (oftypename, typekind, Any uroftype, tname, stname) -->
+   
+   E_ [ typekind = F_ur_typename(opt.oftype)
+        uroftype = F_ur_instance(opt.oftype)
+        oftypename = F_rel_typeref(m, uroftype, "") 
+      ]
+
+  {
+    R_cpp_h_alias1(m, tname, stname, opt, uroftype, 0) 	   
+     [  F_string_chartype(uroftype) != NULL 
+        F_string_chartype(uroftype) != "byte" 
+        tname = F_concat(mpfx, opt.name)
+        stname = F_rel_typeref(m, uroftype,"") 
+     ]
+   |
+   {
+    {  L_optional_object(mpfx, opt.name, oftypename) [typekind == "Object"]
+      
+      | L_optional_array(mpfx, opt.name, oftypename) [typekind == "Array"]
+      | L_optional(mpfx, opt.name, oftypename) }
+    }
+   }
+
+    L_optional_forany(mpfx, opt.name)
+.
+
+L_optional_array(mpfx, opt, oftype) -->
+    typedef %oftype%*           %mpfx%%opt%;
+.
+
+L_optional_object(mpfx, opt, oftype) -->
+
+     typedef %oftype%_ptr         %mpfx%%opt%; 
+     typedef const %oftype%_ptr  %mpfx%const_%opt%; 
+     typedef %oftype%_var        %mpfx%%opt%_var; 
+
+.
+L_optional(mpfx, opt, oftype) -->
+     typedef %oftype%*            %mpfx%%opt%; 
+     typedef const %oftype%*      %mpfx%const_%opt%; 
+.
+L_optional_forany(mpfx, opt) -->
+     struct %mpfx%%opt%_forany; 
+
+.
+
+============================================================================
+
+R_cpp_h_fwd_array (String mpfx, Module m, Array array)
+   (Int dim, String aelem, String aname, Any opt_of_vartype ) -->
+
+   # treat nonprimitive optional members  as vars    
+    E_ [
+        aname   = array.name 
+        aelem   = F_mbr_typeref(m, array.oftype) 
+      ]
+    R_array_decl (mpfx, aelem, array, aname)
+    R_slice_decl(mpfx, aelem, array, aname) 
+.
+
+
+R_array_decl (String mpfx, String aelem, Array array, String aname)
+     (DimInteger d, Int dim) -->
+    L_ (mpfx, aname) "     class %mpfx%%aname%_var;"
+    L_ (mpfx, aname) "     class %mpfx%%aname%_forany;"
+    LP_ (mpfx, aelem, aname) "     typedef %aelem% %mpfx%%aname%"
+    LP_ :d in array.dimensions: (dim) [ dim = d.intvalue] "[%dim%]"
+    LP_ () ";\n"
+.
+ 
+R_slice_decl (String mpfx, String aelem, Array array, String aname)
+    (DimInteger d, Int dim, Int di) -->
+    LP_ (mpfx, aelem, aname) "     typedef %aelem% %mpfx%%aname%_slice"
+    LP_ :d(di) in array.dimensions: (dim)
+          [ dim = d.intvalue di != 0]
+          "[%dim%]"
+    LP_ () ";\n"
+    L_slice_decl(mpfx, aname)
+    { L_slice_cleanup (mpfx, aname) [ F_contains_object(array.oftype) == 1]
+        |  TRUE} 
+. 
+          
+ 
+L_slice_decl (mpfx, aname) -->
+     NS_EXTERN %mpfx%%aname%_slice* %mpfx%%aname%_alloc();
+     NS_EXTERN %mpfx%%aname%_slice*  %mpfx%%aname%_dup
+             (const %mpfx%%aname%_slice* p_%aname%_slice);
+     NS_EXTERN void %mpfx%%aname%_free
+             (%mpfx%%aname%_slice* p_%aname%_slice);
+     NS_EXTERN void %mpfx%%aname%_copy(
+             %mpfx%%aname%_slice *p_to_%aname%_slice, 
+             const %mpfx%%aname%_slice *p_from_%aname%_slice);
+
+.
+ 
+L_slice_cleanup (mpfx, aname) -->
+     NS_EXTERN void %mpfx%%aname%_iluSurrogateSideCleanup
+             (%mpfx%%aname%_slice* p_%aname%_slice);
+     NS_EXTERN void %mpfx%const_%aname%_iluSurrogateSideCleanup
+             (const %mpfx%%aname%_slice* p_%aname%_slice);
+
+.
+
+============================================================================
+
+R_typecode_decl (mpfx, name) (cpfx) -->
+     E_ [cpfx = F_corba_pfx()] 
+     L_typecode_decl(mpfx, name, cpfx)
+.
+
+L_typecode_decl(mpfx, name, cpfx) -->
+
+     // declare the typecode instance for %name%
+     NS_EXTERN const %cpfx%TypeCode_ptr %mpfx%tc_%name%;
+
+. 
+============================================================================
+
+R_cpp_h_def(String mpfx, Module m, Any t) (typekind) -->
+  {
+    E_ [ typekind  = F_ur_typename(t) ] 
+
+   { R_cpp_h_record(mpfx,m,  t) [ typekind == "Record" ]
+    | R_cpp_h_array(mpfx, m, t) [ typekind == "Array" ]
+    | R_cpp_h_sequence(mpfx, m, t) [ typekind == "Sequence" ]
+    | R_cpp_h_union(mpfx,m,  t) [ typekind == "Union" ]
+    | R_cpp_h_object(mpfx,m,  t) [ typekind == "Object" ]
+    | R_cpp_h_optional(mpfx, m, t)
+   }
+ }
+.
+
+=======================================================================
+# _var is in forward defs
+R_cpp_h_record(String mpfx, Module m, Record record) 
+   (rcdname, Argument mbr ) -->
+
+   E_ [ rcdname = F_concat(mpfx, record.name)]
+   L_record_begin(mpfx, record.name, rcdname )
+   {L_cleanup() [F_contains_object(record) == 1]  | TRUE}
+   L_member_comment()
+   R_member :mbr in record.fields: (mpfx, m, mbr)
+   L_()  "     };\n"
+   R_typecode_decl(mpfx, record.name)  
+.
+
+L_record_begin(mpfx, rname, rcdname) -->
+
+
+   ////////////////////////////////////////////////////////////////
+   // structure %rcdname%
+
+   struct %rcdname% {    
+    /* Can leave out - and would then allow aggregate inits */
+
+         // default constructor
+         %rcdname%();    
+         // copy constructor
+         %rcdname%(const %rcdname%&  r_a_%rname%);   
+         // destructor
+         ~%rcdname%();
+         //assignment operator
+         %rcdname%& operator= (const %rcdname%& r_a_%rname%);
+   /* end of omissible */
+
+        // workaround for insertion, sizing, extraction overload  
+        // problem.  May be needed only for sunpro
+          %rcdname%& self();
+.
+
+L_cleanup() -->
+         // for ilustub use only - should be called before the
+         // surrogate side stub returns
+         void iluSurrogateSideCleanup() const;
+.
+
+L_member_comment()-->
+
+         //member vars
+.
+
+R_member (String mpfx, Module m, Argument arg)
+        (Any optvartype, atypename) -->
+
+   L_member(atypename, arg.name)
+       [ atypename = F_mbr_typeref(m, arg.type) ]
+.
+
+L_member(atypename, mbrname) -->
+           %atypename% %mbrname%;
+.
+
+===============================================================
+# treatment of optional members may be incomplete
+R_cpp_h_array(String mpfx, Module m, Array array) 
+   (Any opt_var_type, arrayname, cpfx, aelem, slicedims ) -->
+
+
+   E_ [ arrayname = F_concat(mpfx, array.name) 
+        aelem   = F_mbr_typeref(m, array.oftype) 
+        cpfx = F_corba_pfx()
+       ]
+    
+   L_array_var_begin(arrayname) 
+
+   L_array_common(arrayname, "var")
+
+   L_array_var_end(arrayname, cpfx) 
+
+   L_array_forany_begin (arrayname, cpfx)
+
+   L_array_common(arrayname, "forany")
+
+   L_array_forany_end(arrayname, cpfx) 
+
+   E_ [slicedims = F_dims(array, "square", 1) ]
+
+   L_array_last(mpfx, arrayname, array.name, cpfx, aelem, slicedims)
+
+.
+
+
+L_array_var_begin(array) -->
+
+
+   ////////////////////////////////////////////////////////////////
+   // array %array%
+    
+   class %array%_var : public ilu_var {
+		
+   public:
+
+    // default constructor
+    // Added alloc.. inefficient but sunpro error otherwise
+    %array%_var() : m_b_release(ILUCPP_TRUE) { 
+                m_p_slice = %array%_alloc();
+                m_set = ILUCPP_FALSE;
+    }
+
+   // construct from slice
+   %array%_var(%array%_slice* p_a_%array%_slice) : m_b_release(ILUCPP_TRUE) {
+        m_p_slice = p_a_%array%_slice;
+      // not completely reliable 
+       m_set = m_p_slice ? ILUCPP_TRUE : ILUCPP_FALSE;
+    }
+
+   // copy constructor
+   %array%_var(const %array%_var& r_a_%array%) : m_b_release(ILUCPP_TRUE) {
+      m_p_slice = %array%_dup((const %array%_slice*) r_a_%array%.m_p_slice);
+      m_set = r_a_%array%.m_set;
+   }
+
+.
+
+L_array_forany_begin(array, cpfx) -->
+
+  // %array%_forany class to support use of arrays with anys
+  class %array%_forany : public ilu_var {
+
+   public:
+
+      // default constructor
+      %array%_forany() : m_p_slice(ILUCPP_NULL), m_b_release(ILUCPP_TRUE), m_b_nocopy(ILUCPP_FALSE) { m_set = ILUCPP_FALSE;}
+
+     // construct from slice
+    %array%_forany(%array%_slice* p_a_%array%_slice, %cpfx%Boolean b_nocopy = ILUCPP_FALSE) 
+        :  m_p_slice(p_a_%array%_slice), m_b_release(ILUCPP_TRUE), m_b_nocopy(b_nocopy) { m_set = m_p_slice ? ILUCPP_TRUE : ILUCPP_FALSE; }
+
+    // copy constructor
+    %array%_forany(const %array%_forany& r_a_%array%) : m_b_release(ILUCPP_TRUE), m_b_nocopy(ILUCPP_FALSE) {
+    m_p_slice = %array%_dup((const %array%_slice *) r_a_%array%.m_p_slice);
+     m_set = r_a_%array%.m_set;
+    }
+.
+
+
+#wh is var or forany
+L_array_common(array, wh) -->
+
+   // destructor
+   ~%array%_%wh%() {
+       if (m_b_release) 
+            %array%_free(m_p_slice);
+       m_set = ILUCPP_FALSE;
+         
+    }
+
+   // assign from slice
+   %array%_%wh%& operator=(%array%_slice* p_a_%array%_slice) {
+       if (m_p_slice != p_a_%array%_slice)
+          if (m_b_release)
+             %array%_free (m_p_slice);
+           m_p_slice = p_a_%array%_slice;
+           m_set = ILUCPP_TRUE;
+           return *this;			
+   }	
+
+   // assign from another array_var
+   %array%_%wh%& operator=(const %array%_%wh%& r_a_%array%) {
+        if ((&r_a_%array% != this) && 
+            (m_p_slice != r_a_%array%.m_p_slice)) {
+            if (m_b_release)
+               %array%_free(m_p_slice);
+            // const spec for parameter needed for win32 long ints  
+            m_p_slice = %array%_dup((const %array%_slice *) r_a_%array%.m_p_slice);
+            m_set = r_a_%array%.m_set;
+         }	
+         return (*this);
+    }
+
+    // conversion operations to allow parameter passing per
+    // Corba Spec chap 16, Table 16.2
+    operator const %array%& () const {	// in parameters
+            return *((const %array%*)m_p_slice);
+     }
+
+    // additional explicit disambiguation operators for parameters 
+    const %array%_slice* in() const { 
+            return *((const %array%*)m_p_slice);
+     }
+
+    %array%_slice* out() const { 
+            return *((%array%*)m_p_slice);
+     }
+
+#ifndef OLDGNUC_WORKAROUND
+    operator %array%& () const  {  // inout and fixed out parameters
+
+        return *((%array%*)m_p_slice);
+    }
+#endif
+
+    
+
+    // accessors on the m_b_release member
+    void iluSetRelease(ILUCPP_BOOL b_release_on_destruct) const {
+        // cast around constness
+        ILUCPP_BOOL* p_release = CONST_CAST(ILUCPP_BOOL*, &m_b_release);
+        *p_release = b_release_on_destruct;
+     }
+
+    ILUCPP_BOOL iluGetRelease() const { return m_b_release; }
+
+    ILUCPP_BOOL iluIsNull() const { return (!m_set); }
+
+.
+
+L_array_var_end(array, cpfx) -->
+    /* Note: the [] operators here have caused operator overloading problems 
+     A user workaround is to do something like
+     xarray& my_array = my_array_var;
+     long temp = my_array_var[i][j]
+    */
+
+     // element operator - returns the index'th slice
+      %array%_slice& operator[](%cpfx%ULong index) {
+                 return *(m_p_slice + index);
+       }
+
+     const %array%_slice& operator[](%cpfx%ULong index) const {
+                return ((*this).in())[index];
+      }
+
+ protected:
+    %array%_slice* m_p_slice;
+
+    // whether or not a delete should be done when the var destructs
+    ILUCPP_BOOL m_b_release;
+
+    // for use of corresponding optional as member of structured type
+    ILUCPP_BOOL    m_set; 
+		
+ private:
+    %array%_var &operator= (const ilu_var&);
+    %array%_var (const ilu_var&);
+ };
+
+.
+
+L_array_forany_end(array, cpfx) -->
+
+     // accessors on the m_b_nocopy member
+     void iluSetNoCopy(ILUCPP_BOOL b_nocopy) const {
+          // cast around constness
+           ILUCPP_BOOL* p_nocopy = CONST_CAST(ILUCPP_BOOL*, &m_b_nocopy);
+           *p_nocopy = b_nocopy;
+     }
+
+    // used by ilu when we transfer ownership of the content to the any 
+    %cpfx%Boolean iluShouldCopy() const {
+         return (m_b_nocopy ? ILUCPP_FALSE : ILUCPP_TRUE);}
+    %array%_slice* iluGetSlice() const {return m_p_slice;}		
+
+ protected:
+      %array%_slice* m_p_slice;
+
+     // whether or not a delete should be done when the var destructs
+      ILUCPP_BOOL m_b_release;
+
+     // for use of corresponding optional as member of structured type
+     ILUCPP_BOOL    m_set; 
+		
+ private:
+    %array%_forany &operator= (const ilu_var&);
+    %array%_forany (const ilu_var&);
+
+    %cpfx%Boolean m_b_nocopy;
+ };
+   
+.
+   
+
+#aname is simple name
+L_array_last(mpfx, array, aname, cpfx, aelem, slicedims) -->
+
+   // declare the typecode instance for %array%
+   NS_EXTERN const %cpfx%TypeCode_ptr %mpfx%tc_%aname%;
+
+   // insertion, extraction, and sizing functions for %mpfx%%array%
+   // Note we cant use overloaded operators since arrays map to arrays, and
+   // simple typedefs do not distinguish among overloaded functions
+	
+   NS_EXTERN iluBaseCall& %mpfx%size_const_%aname% (
+        iluBaseCall& r_call, const %aelem% a_%array%[] %slicedims%);
+   NS_EXTERN  iluBaseCall& %mpfx%size_%aname% (
+         iluBaseCall& r_call, %aelem% a_%array%[]%slicedims%);
+   NS_EXTERN iluBaseCall& %mpfx%output_const_%aname%(
+         iluBaseCall& r_call, const %aelem% a_%array%[]%slicedims%);
+   NS_EXTERN iluBaseCall& %mpfx%output_%aname%(
+         iluBaseCall& r_call, %aelem% a_%array%[]%slicedims%);
+   NS_EXTERN iluBaseCall& %mpfx%input_%aname%(
+         iluBaseCall& r_call, %aelem% a_%array%[]%slicedims%);
+
+.
+
+=========================================================
+
+# ignore sequence if just string
+# treatment of optional members may be incomplete
+R_cpp_h_sequence(String mpfx, Module m, Sequence sequence)
+  (mpfx, seq, cpfx, dataptr, datavar, Any of_type, Any of_of,
+   typeref, dvsfx, chtype) --> 
+
+ {  
+   E_ [ chtype = F_string_chartype(sequence)  
+        [ chtype != NULL chtype != "byte"]
+      ] 
+
+   | {
+     E_ [ seq = F_concat(mpfx, sequence.name) 
+          cpfx = F_corba_pfx() 
+          of_type = sequence.oftype  
+          datavar = F_mbr_typeref(m, sequence.oftype)
+          dataptr = F_mbr_seqbuf(m, sequence.oftype) 
+          dvsfx = "*"
+         ]
+
+     L_seq_comment(seq)
+
+     { L_bounded_begin (seq, sequence.name, dataptr, cpfx) 
+             [ sequence.limit != 0]
+      |
+      L_unbounded_begin(seq, sequence.name, dataptr, cpfx) 
+     }
+
+     L_continue(seq, sequence.name, dataptr, datavar, cpfx) 
+
+     {L_cleanup() [F_contains_object(of_type) == 1] | TRUE } 
+
+     L_private_begin(cpfx, dataptr) 
+
+     # if array, dataptr may be slice ptr
+     { L_(datavar, dvsfx)
+          [ dataptr != datavar  F_ur_typename(of_type) != "Array"]
+          "          %datavar%%dvsfx% m_varbuffer;"
+      | TRUE }
+
+     L_seq_end(mpfx, sequence.name, cpfx) 
+
+     # replaced by use of seq var constructor. still tentative
+     # L_seq_var_decl(seq, datavar, cpfx)
+ 
+   } 
+ }
+.
+
+L_seq_comment(seq) -->
+
+
+   ////////////////////////////////////////////////////////////////
+   // sequence %seq%
+.
+
+L_unbounded_begin(seq, sname, dataptr, cpfx) --> 
+
+   class %seq% {
+
+    public:
+
+       // constructors & destructor
+        %seq% ();
+        %seq% (%cpfx%ULong max);
+        %seq% (%cpfx%ULong max, %cpfx%ULong length,
+              %dataptr%* data, %cpfx%Boolean release = ILUCPP_FALSE);
+.
+
+L_bounded_begin(seq, sname, dataptr, cpfx) --> 
+
+   class %seq% {
+
+    public:
+
+       // constructors & destructor
+        %seq% ();
+        %seq% (%cpfx%ULong length,
+              %dataptr%* data, %cpfx%Boolean release = ILUCPP_FALSE);
+.
+
+
+L_continue(seq, sname, dataptr, datavar, cpfx) --> 
+        %seq% (const %seq%& r_%sname%);
+       ~%seq%();
+
+        // assignment
+        %seq%& operator= (const %seq%& r_%sname%);
+
+        // accessors
+        %cpfx%ULong maximum() const;
+        %cpfx%ULong length() const;
+        void length (%cpfx%ULong len);
+
+        // [] operators
+        %datavar%& operator [] (%cpfx%ULong index);
+        const %datavar%& operator [] (%cpfx%ULong index) const;
+
+        // memory management
+         static %dataptr%* allocbuf(%cpfx%ULong num_elements);
+         static void freebuf(%dataptr%* p_buf);
+
+        // workaround for insertion, sizing, extraction overload  
+        // problem.  May be needed only for sunpro
+          %seq%& self();
+.
+
+L_private_begin(cpfx, dataptr)-->
+
+    private:
+
+          %cpfx%ULong m_maximum;
+          %cpfx%ULong m_length;
+          %cpfx%Boolean m_release;
+          %dataptr%* m_buffer;
+.
+
+L_seq_end(mpfx, sname, cpfx) -->  
+
+  };
+
+  // declare the typecode instance for %sname%
+  NS_EXTERN const %cpfx%TypeCode_ptr %mpfx%tc_%sname%;
+
+.
+
+L_seq_var_decl(seq, datavar, cpfx) -->
+
+  class %seq%_var : public iluTemplatableT_var<%seq%> {
+
+     public:
+         const %datavar%& operator[] (%cpfx%ULong index) const {
+             return (*m_ptr) [index];
+         }
+         %datavar%& operator[] ( %cpfx%ULong index) {
+               return (*m_ptr) [index];
+        }
+
+   };
+
+.
+
+=================================================================
+
+L_cleanup() -->
+         // for ilustub use only - should be called before the
+         // surrogate side stub returns
+         void iluSurrogateSideCleanup() const;
+.
+
+=================================================================
+
+# _var is in forward defs
+R_cpp_h_union(String mpfx, Module m, Union uniontype) 
+       (union, uname, refunion, discrim, cpfx, Arm a) -->
+
+  E_ [ union = F_concat(mpfx, uniontype.name)
+       uname = uniontype.name
+       refunion = F_rel_typeref(m, uniontype, "") 
+       discrim = F_rel_typeref(m, uniontype.discrim_type, "")
+       cpfx = F_corba_pfx() ]
+
+  L_union_begin(union, uname, refunion)  
+
+  # removed declaration of insert/extract operators
+  # as "friends" here, and use of private storage for
+  # union arm values, because use of friends here
+  # causes problems for namespaces in current compilers 
+  # so references to private, below, actually contain public material 
+  #L_union_friends(union, uname, refunion)  
+       
+  L_union_continue(union, uname, refunion)  
+
+  L_accessor_begin(discrim)
+      [discrim = F_rel_typeref(m, uniontype.discrim_type, "")] 
+
+  R_arm_accessor :a in uniontype.arms: (m, a)
+
+  { L_cleanup() [F_contains_object(uniontype) == 1] | TRUE}
+
+  #L_union_private_spec()
+
+  L_union_private_begin()
+  R_union_private_member :a in uniontype.arms: (m, a) 
+
+  L_union_private_end(discrim, cpfx)
+
+  R_typecode_decl (mpfx, uname)
+.
+   
+
+R_arm_accessor(Module m, Arm a)
+ (a_name1, a_name, a_typeref, Any optof, Any atype, chtype ) -->
+
+# for optionals: arrays, objects, and strings return same.
+# for others, return pointers to type
+
+  E_ [ optof = F_optional_ofurtype(a.type) ]
+
+  E_ [ [  optof != NULL  
+          chtype = F_string_chartype(optof) 
+          [ F_ur_typename(optof) == "Object" | 
+            F_ur_typename(optof) == "Array" |
+            [chtype != NULL chtype != "byte"]
+           ] 
+           atype = optof
+        ]
+        | atype = a.type
+      ]
+       
+  E_ [ a_typeref = F_rel_typeref(m, atype, "") 
+       [ [a.name == NULL  a_name = F_build_arm_name(a.type)] |
+          a_name = a.name ] 
+      ]
+
+  { L_builtin_arm(a_name, a_typeref) [F_ur_builtin(a.type) == 1] 
+   | R_seq_arm  (a_name, a_typeref, atype)
+   | R_array_arm(a_name, a_typeref, atype)
+   | R_obj_arm  (a_name, a_typeref, atype)
+   | L_optional_arm (a_name, a_typeref)
+           [ F_ur_typename(atype) == "Optional"] 
+   | L_structured_arm(a_name, a_typeref)
+  } 
+.
+
+
+R_seq_arm(armname, armtype, Sequence t) (chartype, chtype, cpfx, svar) --> 
+
+   E_ [ chartype = F_string_chartype(t)] 
+
+  {
+   L_string_arm (armname, chtype, cpfx, svar) 
+       [ chtype != NULL  cpfx = F_corba_pfx()
+        [[chartype == "shortcharacter" chtype ="iluShortCharacter"
+                 svar = F_concat(cpfx, "String_var")] 
+        |[ chartype == "character"  chtype = "iluCharacter"
+                 svar = "iluWString_var" ] ]
+      ]
+   | L_structured_arm(armname, armtype)
+ }
+.
+
+R_array_arm(armname, armtype, Array t) --> 
+   L_array_arm(armname, armtype)
+.
+   
+
+R_obj_arm(armname, armtype, Object t) --> 
+   L_obj_arm(armname, armtype)
+.
+
+# optionals of primitives represented as optionals
+# optionals of arrays represented internally as the arrays,
+# since reference by pointer, delete [] used to remove
+# optionals of other types represented as pointers to vars
+# other types represented as pointers to the member type
+R_union_private_member (Module m, Arm arm)
+ (Any atype, Any optoftype, Any aurtype,atypename, arm_name, akind, sfx)
+     -->
+
+  E_ [  atype = arm.type
+        aurtype = F_ur_instance(atype)
+        akind = F_ur_typename(atype)
+        [ [ akind == "Optional" optoftype = F_ur_instance(aurtype.oftype)]
+           | optoftype = NULL]
+        [ [ akind == "Optional"
+            F_ur_builtin(optoftype) == 1 
+            F_ur_typename(optoftype) != "Pickle" 
+            sfx = "" 
+           ]
+       | [ F_ur_builtin(atype) == 1
+           F_ur_typename(atype) != "Pickle" 
+            sfx = "" 
+          ]
+       | [ akind == "Array" 
+           sfx = "_slice*"
+          ]
+       | sfx = "*" ]
+       atypename = F_mbr_typeref(m, atype) 
+      ] 
+   E_ [ [arm.name == NULL  arm_name = F_build_arm_name(arm.type)] |
+          arm_name = arm.name ] 
+   
+   # experiment with treating optional array members like underlying
+  { 
+   L_union_private_member(atypename, arm_name, sfx)
+      [ akind != "Optional" | F_ur_typename(optoftype)!= "Array" ]
+   | L_union_private_member( F_mbr_typeref(m, optoftype), arm_name, "_slice*")
+  }
+.
+        
+L_union_begin(union, uname, refunion) -->
+
+
+ class %union% {
+                
+         // insertion, extraction, and sizing operators for %refunion%
+         // Note: private storage and friends not currently used for
+         // unions, as use with namespaces create problems whose solutions not
+         //  uniformly accepted among compilers
+.
+
+# not currently used
+L_union_friends(union, uname, refunion) -->
+                   
+         friend iluBaseCall&
+              operator+=(iluBaseCall& r_call, const %refunion%& r_%uname%);
+         friend iluBaseCall& 
+             operator<<(iluBaseCall& r_call, const %refunion%& r_%uname%);
+         friend iluBaseCall& 
+             operator>>(iluBaseCall& r_call, %refunion%& r_%uname%);
+.
+
+L_union_continue(union, uname, refunion) -->
+                   
+               
+    public:
+                
+        // constructors & destructor
+        %union%();
+        %union%(const %union%& r_%uname%);                   
+        ~%union%();
+                   
+        // assignment
+        %union%& operator= (const %union%& r_%uname%);
+
+        // workaround for insertion, sizing, extraction overload  
+        // problem.  May be needed only for sunpro
+         %union%& self();
+.
+
+L_accessor_begin(discrim) -->
+                   
+        // accessors and modifiers
+        %discrim% _d () const;
+        void _d (%discrim% new_d);
+
+.
+ 
+L_builtin_arm(armname, armtype) -->
+        void %armname% (%armtype% an_%armname%);
+        %armtype% %armname% () const;
+
+.
+
+L_string_arm(armname, chtype, cpfx, svar) -->
+        void %armname%(%chtype% *an_%armname%);
+        void %armname%(const %chtype% *an_%armname% );
+        void %armname%(const %svar%& an_%armname% );
+        const %chtype% *%armname%() const;  
+
+.
+       
+L_array_arm(armname, armtype) -->
+        void %armname%(%armtype%);
+        %armtype%_slice *%armname%() const;
+
+.
+
+L_obj_arm(armname, armtype) -->
+        void %armname%(%armtype%_ptr an_%armname%);   
+        %armtype%_ptr %armname%() const;
+
+.
+
+# type is by def a pointer here
+L_optional_arm(armname, armtype) -->
+        void %armname%(%armtype% an_%armname%);   
+        %armtype% %armname%() const;
+.
+
+L_structured_arm(armname, armtype) -->
+       void %armname%(const %armtype% & an_%armname%); 
+       const %armtype%& %armname%() const;
+       %armtype%& %armname%();
+.
+
+L_union_private_spec() -->
+      private: 
+.
+L_union_private_begin() -->
+         void unset();
+         union {
+.
+
+L_union_private_member(atypename, mbrname, sfx) -->
+                 %atypename%%sfx% m_%mbrname%;    
+.
+
+L_union_private_end(discrim, cpfx) -->
+        };
+                
+        %discrim%    m_discriminator;
+        %cpfx%Boolean     m_b_beenset;
+                   
+ };
+
+.
+        
+====================================================================
+
+R_cpp_h_object(String mpfx, Module m, Object object)
+    (cpfx, Method op, oname, Module dummymod, Module xmod, ContentElem ce) -->
+   E_ [cpfx = F_corba_pfx()
+       dummymod = object.equiv_module
+       oname = F_concat(mpfx, object.name) ]
+   R_obj_begin(cpfx, mpfx, oname, m, object) 
+
+   # for CORBA IDL nested types and exceptions
+   { { E_ [dummymod != NULL]
+      # set ns_extern to static within module
+      L_mod_ns_extern()
+      # generate the nested types and exceptions
+      R_module_content (dummymod, "", 0) 
+      # reset ns_extern to whatever it was before
+      L_unmod_ns_extern()
+     }
+    | TRUE }
+
+   R_method :op in object.methods: (mpfx, xmod, op)
+     [ [ dummymod != NULL xmod = dummymod] | xmod = m]
+
+   L_obj_end(cpfx, oname, mpfx, object.name)
+.
+
+R_obj_begin(cpfx,mpfx, oname,  Module m, Object object)  
+    (Any supertype, Any supertype1, stname, stname1, Int i, spunct) -->
+
+  L_obj_begin(oname)
+
+  LP_(oname)"   class %oname%" 
+
+ { {
+   E_ [ object.superclasses != NULL ]  
+   LP_:supertype(i) in object.superclasses: (stname, spunct)
+     [ stname =  F_rel_typeref(m, supertype,"")  
+     [ [  i == 0  spunct = " :" ] | spunct = "," ] ]
+     "%spunct% public virtual %stname%"
+   LP_() " { "
+   }
+
+   | LP_()
+     " : public virtual iluObject {" 
+  }
+
+  L_obj_continue1(cpfx, oname)
+
+  # if name CORBA_Object narrow code already emitted
+  L_obj_narrow:supertype1 in object.superclasses: (oname, stname1)
+     [ stname1 =  F_rel_typeref(m, supertype1,"")  
+       supertype1.name != "CORBA_Object" ]
+  L_obj_continue2(oname)
+.  
+
+
+#uses the base type for optional instead of optional
+#because don't have relative reference for const 
+#F_ref_typeref returns base_type * or base_type_ptr for obj
+R_method(mpfx, Module m, Method op)
+     (Int i, Argument arg, Int lastix, Any tt1, Any tt2,
+      rtntype, rtnsfx, argtype, argpfx, argsfx, enditem, opname) --> 
+
+  E_ [opname = F_external_method_name(op.name, op.isl_name) ]
+  {
+   L_noreturn_begin (opname)
+    [op.returntype == NULL lastix = F_last_index(op.arguments) ]
+   |
+   L_method_begin(rtntype, rtnsfx, opname)
+     [ [ [F_ur_typename(op.returntype) != "Optional" 
+           rtntype = F_rel_typeref(m, op.returntype, "")] | 
+          rtntype = F_ref_typeref(m, op.returntype) ]
+         rtnsfx =  F_arg_sfx(op.returntype, "Return")  
+         lastix = F_last_index(op.arguments) ]
+  }
+
+   R_method_arg: arg(i) in op.arguments:(m, arg, i, lastix) 
+
+   L_method_end()
+.        
+
+R_method_arg(Module m, Argument arg, Int i, Int lastix)
+   (argpfx, argtype, Any urtype, Any opttype, argsfx, enditem,
+    const_str_name, chtype) -->
+
+     E_ [
+         argpfx = F_arg_pfx(arg.type, arg.direction)
+         argsfx = F_arg_sfx(arg.type, arg.direction)
+         argtype = F_rel_typeref(m, arg.type, "")
+         chtype = F_string_chartype(arg.type)
+         urtype = F_ur_instance(arg.type)
+         [ [ i != lastix  enditem = ","] | enditem = "" ]
+         ]
+
+     {
+      # fix to exclude user-defined CStrings
+      L_arg_stringin (const_str_name, arg.name, enditem)
+      [
+         [  [ chtype != NULL chtype != "byte" urtype.name != "CString" ]
+          | [ F_ur_typename(arg.type) == "Optional"
+               urtype = F_ur_instance(arg.type) 
+               F_ur_typename(urtype.oftype) != "Object" ]
+          ]
+         arg.direction == "In"
+         const_str_name = F_rel_pfxd_name("const",m, arg.type)
+       ]
+      | L_method_arg(argpfx, argtype, argsfx, arg.name, enditem)
+    }
+.
+
+
+L_noreturn_begin(opname) -->
+
+       virtual void %opname%(
+.
+
+L_method_begin(rtntype, rtnsfx, opname) -->
+   
+       virtual %rtntype%%rtnsfx% %opname%(
+.
+
+L_arg_stringin(const_str_name, argname, enditem) -->
+          %const_str_name%    %argname%%enditem%
+.
+
+L_method_arg (argpfx, argtype, argsfx, argname, enditem) -->  
+          %argpfx%%argtype%%argsfx%  %argname%%enditem%
+.
+
+L_method_end() -->
+       ) = 0;
+.
+
+
+L_obj_begin(oname) -->
+
+//////////////////////////////////////////////////////////////////////
+// class %oname% 
+//
+// For Clients, instances of _surrogate subclasses of this class will function
+// as surrogates - that is, their IDL specified member functions will forward
+// calls to the true object. Servers will subclass from this class, and supply
+// the IDL specified member functions to provide the true object's implementations
+.
+
+L_obj_continue1(cpfx, object) -->
+
+      public:
+        // Constructs a new %object% using pc_instance_handle as the instance
+        // identifier, and puts the object under the specified iluServer.
+        // If an_iluserver is NULL, the default server will be used.
+        %object%(char *pc_instance_handle, iluServer& r_an_ilu_server = iluServer::iluGetDefaultServer(),
+             %cpfx%Boolean b_within_object_table = ILUCPP_FALSE) :
+               iluObject(%object%::m_ILUClassRecord, pc_instance_handle, r_an_ilu_server, b_within_object_table) {}
+
+        // CORBA object reference operations
+        static %object%_ptr _duplicate(%object%_ptr a_ptr);
+
+        static %object%_ptr _narrow(%cpfx%Object_ptr an_object_ptr) {
+          return (%object%_ptr (an_object_ptr->iluDowncast(m_ILUClassRecord)));
+        }
+
+        static %object%_ptr _narrow(iluObject* an_object_ptr) {
+          return (%object%_ptr (an_object_ptr->iluDowncast(m_ILUClassRecord)));
+        }
+
+.
+L_obj_narrow(object, super) -->
+
+        static %object%_ptr _narrow(%super%_ptr an_object_ptr) {
+          return (%object%_ptr (an_object_ptr->iluDowncast(m_ILUClassRecord)));
+        }
+.
+
+L_obj_continue2(object) -->
+        static %object%_ptr _nil();
+        %object%_ptr _this() { return _duplicate((%object%_ptr) this); }
+
+        // IDL specified methods
+.
+
+L_obj_end(cpfx, object, mpfx, simplename) -->
+
+
+        // initialize to use of this class of objects - called by (Interface)::initialize
+        static void iluInitialize();
+
+        // Simple Object Lookup
+        static %object%_ptr iluLookup(char *pc_server_id, char *pc_instance_handle);
+
+        // For ILU C++ runtime - stub use only - returns the m_ILUClassRecord member variable
+        static ilu_Class iluGetILUClassRecord() {
+          return m_ILUClassRecord;
+        }
+
+        // for use in narrowing
+        virtual void *iluDowncast(iluClass class_to_cast_down_to);
+
+       // used to get around msvc problems calling super's
+       // virtual member functions
+       static void* iluDowncast_super(%object%_ptr p_some_derived,
+                 iluClass class_to_cast_down_to) {
+            return p_some_derived->%object%::iluDowncast(class_to_cast_down_to);
+      }
+
+   protected:
+
+        // Holds the kernel class for this kind of object
+        static ilu_Class m_ILUClassRecord;
+
+        %object%();	// default constructor
+        virtual ~%object%();	 // destructor
+
+   private:
+        %object%(const %object%&);	// copy constructor
+        void operator=(const %object%&);	// assignment operator
+
+      };
+
+  // declare the typecode instance for %object%
+  NS_EXTERN const %cpfx%TypeCode_ptr %mpfx%tc_%simplename%;
+
+.
+L_mod_ns_extern() -->
+
+  #undef NS_EXTERN
+  #define NS_EXTERN static
+
+.
+
+L_unmod_ns_extern() -->
+
+  #ifndef CPLUSPLUSMAPPING_NESTEDCLASSES
+      #undef NS_EXTERN
+      #define NS_EXTERN extern
+  #endif
+
+.
+
+===============================================================
+
+# very squishy.. 
+R_cpp_h_optional( String mpfx, Module m, Optional opt) 
+       (cpfx,optional, base, baseptr, oname, typekind) -->
+
+   E_ [ base = F_rel_typeref(m, opt.oftype, "") 
+        oname = opt.name
+        optional = F_concat(mpfx, oname)
+        cpfx = F_corba_pfx()
+        typekind = F_ur_typename(opt.oftype)
+       ]
+
+   L_optional_begin(cpfx, mpfx, optional, oname)
+
+   {
+    L_optional_object(optional, base, oname)
+         [typekind == "Object"]
+    |
+    L_optional_array(optional, base, oname)
+         [ typekind  == "Array"]
+    |
+    L_optional_string(optional, base, oname)
+         [F_string_chartype(opt.oftype) != NULL
+          F_string_chartype(opt.oftype) != "Byte"]
+    |
+    L_optional_other(optional, base, oname)
+  }
+
+.
+
+L_optional_begin(cpfx, mpfx, optional, oname) -->
+
+////////////////////////////////////////////////////////////////////////
+// optional %oname%
+
+  // declare the typecode instance 
+  NS_EXTERN const %cpfx%TypeCode_ptr %mpfx%tc_%oname%;
+ 
+  // used to insert and extract %optional%s from Anys
+  struct %optional%_forany {
+.
+
+
+L_optional_other(optional, base, oname) -->
+
+      %optional%_forany( %base%* p_value = NULL) : m_p_value(p_value) {}
+
+      ~%optional%_forany() { delete m_p_value; }
+ 
+      // assignment operator
+       %optional%_forany& operator=
+         (const %optional%_forany& r_a_%oname%_forany) {
+             if (this != &r_a_%oname%_forany) {
+                   m_p_value = new %base%;
+                  *m_p_value = *(r_a_%oname%_forany.m_p_value);
+              }
+              return *this;
+          }   
+
+      %base%* m_p_value;
+  };
+.
+
+L_optional_string(optional, base, oname) -->
+
+      %optional%_forany( %base% p_value = NULL) : m_p_value(p_value) {}
+
+      ~%optional%_forany() { delete m_p_value; }
+ 
+      // assignment operator
+       %optional%_forany& operator=
+         (const %optional%_forany& r_a_%oname%_forany) {
+             if (this != &r_a_%oname%_forany) {
+                  m_p_value = r_a_%oname%_forany.m_p_value;
+              }
+              return *this;
+          }   
+      %base% m_p_value;
+  };
+.
+
+
+L_optional_object(optional,  base, oname) -->
+ 
+      %optional%_forany( %base%_ptr p_value = NULL) : m_p_value(p_value) {}
+
+      ~%optional%_forany() { if (m_p_value) m_p_value->_release(); }
+ 
+       // assignment operator
+       %optional%_forany& operator=
+         (const %optional%_forany& r_a_%oname%_forany) {
+           if (this != &r_a_%oname%_forany) {
+               if (r_a_%oname%_forany.m_p_value)
+                   m_p_value =    
+                       %base%::_duplicate(r_a_%oname%_forany.m_p_value);
+               else m_p_value = NULL;
+            }  
+          return *this;
+       } 
+
+      %base%_ptr m_p_value;
+   };
+.
+
+#TBD: TEST THIS
+L_optional_array(optional,  base, oname) -->
+ 
+      %optional%_forany( %base%* p_value = NULL)  {
+         if(p_value == NULL) m_p_value = NULL;
+         else m_p_value = *p_value;
+     }
+ 
+
+      ~%optional%_forany() { if(m_p_value) delete [] m_p_value; }
+
+      // assignment operator
+       %optional%_forany& operator=
+         (const %optional%_forany& r_a_%oname%_forany) {
+             if (this != &r_a_%oname%_forany) {
+                   m_p_value = new %base%;
+                   m_p_value = r_a_%oname%_forany.m_p_value;
+              }
+              return *this;
+          }   
+
+       %base%_slice* m_p_value;
+   };
+.
+ 
+========================================================================
+
+R_cpp_h_exceptions(String mpfx, Module m, List exceptions)
+    (Exception ex, Int exi) -->
+    R_cpp_h_exception :ex(exi) in exceptions: (mpfx, m, ex)
+.
+
+R_cpp_h_exception(mpfx, Module m, Exception ex)
+    (cpfx, exception, Any member, mtypename, mstoretype, asfx)  -->
+
+  E_ [ exception = F_concat(mpfx, ex.name) 
+      cpfx = F_corba_pfx()  ]
+
+  L_exception_begin(cpfx, exception, ex.name)
+
+ {
+  L_() [ex.type == NULL]  "  };"
+  |
+  {
+    E_  [ member = F_ur_instance(ex.type)  
+         [ [F_ur_typename(member) == "Object" asfx = "_ptr"]
+          |  [[ [F_string_chartype(member) != NULL 
+               F_string_chartype(member) != "Byte"] |
+               F_ur_typename(member) == "Optional"|
+               F_ur_typename(member) == "Array" ] 
+            asfx = ""]
+          | asfx = "&" ]
+          mtypename = F_rel_typeref(m, member,asfx) 
+          mstoretype =F_mbr_typeref(m, member)  
+        ]
+     L_common_exception(mtypename, mstoretype, exception) 
+    { R_record_exception(mpfx, m, member, exception)
+      [F_ur_typename(member) == "Record" ] 
+      | TRUE 
+    }
+    L_() "  };"    
+   }
+ }
+.
+
+   
+# This may need more work.
+R_record_exception (mpfx, Module m, Record record, exception) 
+  (Argument field,  Argument field2, Int i, 
+   Any ftype,  Any ftype2, ftname, ftname2, sfx, asfx, const )
+   --> 
+
+  L_() ""         
+  L_()           "      //constructor with member values"
+  L_(exception)  "      %exception%("
+
+  L_const_field: field(i) in record.fields:(ftname, field.name, sfx, const)
+       [  ftype = field.type 
+         [ [F_ur_typename(ftype) == "Object" asfx = "_ptr"]
+          |  [[ [F_string_chartype(ftype) != NULL 
+               F_string_chartype(ftype) != "Byte"] |
+               F_ur_typename(ftype) == "Optional"|
+               F_ur_typename(ftype) == "Array" ] 
+            asfx = ""]
+          | asfx = "&" ]
+         const = "const"
+         ftname = F_rel_typeref(m, ftype, asfx) 
+         [[ i == F_last_index(record.fields) sfx = ""] | sfx = "," ]
+       ]
+   L_() "       ) ;"
+
+   L_access_field: field2 in record.fields :(ftname2, field2.name)  
+        [ ftype2 = field2.type  ftname2 = F_mbr_typeref(m, ftype2)] 
+
+.
+
+
+L_exception_begin(cpfx, exception, ename) -->
+
+///////////////////////////////////////////////////////////////////
+// Exception %exception% 
+ 
+  class %exception% : public %cpfx%UserException{
+    public:
+      // constructors and destructors
+      %exception%() { };
+      %exception%(const %exception%& a_%ename%);
+      ~%exception%();
+
+      void _raise() { throw *this; };
+
+      // assignment operator
+      %exception%& operator=(const %exception%& a_%ename%);
+.
+
+L_common_exception1(mbrtype, mstoretype, exception)  --> 
+
+      // constructor with member value
+      %exception%(const %mbrtype% value);
+ 
+      // Member
+      const %mbrtype%& _value() const { return (_m_value->self()); }
+      %mstoretype% _m_value;
+.
+L_common_exception(mbrtype, mstoretype, exception)  --> 
+
+      // constructor with member value
+      %exception%(const %mbrtype% value);
+ 
+      // Member
+      const %mstoretype%& _value() const { return _m_value; }
+      %mstoretype% _m_value;
+.
+
+L_const_field(fieldtype, fieldname, sfx, const) -->
+            %const% %fieldtype% _a_%fieldname%%sfx% 
+.
+L_set_field(fieldtype, fieldname, sfx) -->
+               _m_%fieldname%_value(_mparm_%fieldname%)%sfx%
+.
+
+L_access_field(mbrtype, mbrname) --> 
+      
+      const %mbrtype%& %mbrname%() const
+                   { return _m_value.%mbrname%; };
+.
+
+=========================================================================         
+R_interface_init(Interface i)
+  (String iname, String mpfx, String ipfx) -->
+
+  E_ [ iname = i.name 
+       ipfx = F_full_prefix(i.module_str, 1)] 
+
+  L_init_macros_comment() 
+
+  R_init_macro(i, ipfx, iname, "CLIENT_ONLY")   
+  R_init_macro(i, ipfx, iname, "SERVER_ONLY")
+  R_init_macro(i, ipfx, iname, "CLIENT_SERVER")
+.
+
+R_init_macro(Interface i, String ipfx, String iname, String mactype) 
+  (Object c, Module m,  spfx, uname) -->
+
+  L_macro_side_begin(ipfx, iname, mactype)
+
+  L_scope_init(ipfx, iname)
+
+ # if use classes for namespaces, initialize all classes
+ # { 
+ #  { E_ [F_use_classes() == 1]
+ #    L_scope_init: m in i.module_str.contained_modules:(spfx, uname)      
+ #      [ spfx = F_full_prefix(m, 1)  uname = F_underscore_name(m) ] 
+ #   }
+ # | TRUE }
+
+  R_class_init: c in i.classes: (c, ipfx, iname, mactype)  
+      [ c.importedfromname == NULL]
+       
+  L_() "   }" 
+.
+
+
+R_class_init(Object c, ipfx, iname, mactype)
+        (us_name, side_n1, side_n2) -->
+   E_ [us_name = F_underscore_name(c)] 
+       
+  { L_class_init_part (side_n1, "surrogate", us_name)   
+      [ [ mactype == "CLIENT_ONLY" | mactype == "CLIENT_SERVER" ] 
+          side_n1= F_full_side_name("surrogate", c) ]
+  | TRUE }
+
+  { L_class_init_part (side_n2, "true", us_name)   
+      [  [ mactype == "SERVER_ONLY" | mactype == "CLIENT_SERVER" ] 
+           side_n2= F_full_side_name("true", c) ]
+  | TRUE }
+.   
+
+L_init_macros_comment() -->
+
+//////////////////////////////////////////////////////////////////////// 
+// Initialization macros
+
+  // If you're using a C++ compiler which does not initialize all non-local
+  // statics before running main() (or you're doing something else which
+  // could cause an unusual initialization order), you should use
+  // one of the following macros to perform your initialization
+  // before calling iluCppRuntime::iluInitialize()
+.
+
+L_macro_side_begin(ipfx, iname, mactype) -->
+
+  #define ILU_INIT_%iname%_%mactype%() { \\
+.
+
+L_scope_init(spfx, sname) -->
+     %spfx%initializer::sm_the_%sname%_initializer.ensure_instantiation();\\
+.
+
+L_class_init_part(sidename, side, uname) --> 
+     %sidename%_initializer::sm_the_%side%_%uname%_initializer.ensure_instantiation(); \\
+.
+
+=====================================================================
+
+# TBD: gets operators for object even if not mbr of structured type 
+# (Not necessarily problem, but possibly should refine)
+# defines insertion, etc for _vars and normal
+R_insert_extract_ops(Interface i) (Any t,  tk) -->
+
+   L_insert_extract_begin()
+    
+   # Further constraints on decl in R_insert_extract 
+   R_insert_extract : t in i.types : (t, tk)
+       [ t.importedfromname == NULL
+         t.supertype == NULL 
+         tk = F_ur_typename(t) 
+         [ tk == "Record" | tk == "Sequence" |
+           tk == "Union" | tk == "Object" ]
+        ]
+.
+
+# note: added decl of union ops here.. previously declared 
+# as friends in union decl
+R_insert_extract(Any t, tk) (tname, uname) -->
+
+
+ {  L_insert_extract(tname, uname)
+    [ [ tk == "Record" |  tk == "Union" |
+      [ tk == "Sequence" [F_string_chartype(t) == NULL 
+                           | F_string_chartype(t) == "byte" ]] ]
+       tname = F_full_typeref(t) 
+       uname = F_underscore_name(t)
+     ]
+   | L_insert_extract(tname, uname)
+      [  tk =="Object" 
+         tname = F_concat(F_full_typeref(t), "_var") 
+         uname = F_concat(F_underscore_name(t), "_var")
+       ] 
+ }
+.
+
+
+L_insert_extract_begin() -->
+
+///////////////////////////////////////////////////////////////////////////
+// insertion & extraction operators
+// (Note: ops really needed for objects only if members of structured type)
+.
+
+L_insert_extract(tname, uname) -->
+
+  // insertion, extraction, and sizing operators for %tname%
+  iluBaseCall& operator+=(iluBaseCall& r_call,
+               const %tname%& r_%uname%);
+  iluBaseCall& operator<< (iluBaseCall& r_call,
+               const %tname%& r_%uname%);
+  iluBaseCall& operator>>(iluBaseCall& r_call,
+               %tname%& r_%uname%);
+.
+
+==========================================================================
+
+# arrays use _ptr here, not in model
+R_any_insert_extract_ops(Interface i) (Any t, cpfx) -->
+
+   E_ [cpfx = F_corba_pfx()]
+   L_any_ie_head()
+
+   R_any_ie : t in i.types : (cpfx, t)
+       [ t.importedfromname == NULL
+         t.supertype == NULL
+         F_ur_builtin(t) == 0  
+         [F_string_chartype(t) == NULL | F_string_chartype(t) == "byte"]
+       ]
+.
+
+R_any_ie (cpfx, Any t)
+    (tname, uname,  ttype, tktype, obj) -->
+
+   E_ [ tname = F_full_typeref(t) 
+        uname = F_underscore_name(t) 
+        ttype = F_ur_typename(t) 
+        tktype = F_lowercase_name(ttype)
+       ]
+
+       
+   L_any_ie_common(uname, tname, t.uid, tktype, obj) 
+       [[ ttype == "Object" obj = "_OBJECT"] |
+          obj = "" ]
+         
+   {  L_any_ie_enum(cpfx, uname, tname)
+        [ ttype == "Enumeration"] 
+   |  L_any_ie_array(cpfx, uname, tname) 
+        [ ttype == "Array" ]
+   |  L_any_ie_opt(cpfx, uname, tname) 
+        [ ttype == "Optional" ]
+   |  L_any_ie_object(cpfx, uname, tname) 
+        [ ttype == "Object"]
+   |  L_any_ie_other(cpfx, uname, tname) 
+   }
+.
+
+L_any_ie_head() -->
+
+///////////////////////////////////////////////////////////////////////////
+// insertion & extraction from anys
+.
+
+L_any_ie_common(uname, tname, uid, tktype, obj) -->
+
+
+  // define the typecode class for %uname%
+  ILUCPP_DEFINE_STUB_TYPE_CODE%obj%_CLASS(%uname%, ilu_%tktype%_tk,
+        \"%uid%\");
+
+  // declare the Any insert and extract operators for %tname%
+.
+
+L_any_ie_enum(cpfx, uname, tname) -->
+  void operator<<=(%cpfx%Any& r_any,  const %tname%& r_%uname%);
+  %cpfx%Boolean operator>>=(const %cpfx%Any& r_any,
+                %tname%& r_%uname%);
+.
+
+L_any_ie_array(cpfx, uname, tname) -->
+  void operator<<=(%cpfx%Any& r_any, const %tname%_forany& r_%uname%_forany);
+  %cpfx%Boolean operator>>=(const %cpfx%Any& r_any,
+                %tname%_forany& r_%uname%_forany);
+.
+
+L_any_ie_opt(cpfx, uname, tname)-->
+  void operator<<=(%cpfx%Any& r_any, const %tname%_forany& r_%uname%_forany);
+  void operator<<=(%cpfx%Any& r_any, %tname%_forany* p_%uname%_forany);
+  %cpfx%Boolean operator>>=(const %cpfx%Any& r_any,
+                %tname%_forany*& rp_%uname%);
+.
+
+L_any_ie_object(cpfx, uname, tname) -->
+  void operator<<=(%cpfx%Any& r_any, %tname%_ptr p_%uname%);
+  %cpfx%Boolean operator>>=(const %cpfx%Any& r_any, %tname%_ptr& rp_%uname%);
+.
+
+L_any_ie_other(cpfx, uname, tname) -->
+  void operator<<=(%cpfx%Any& r_any, const %tname%& r_%uname%);
+  void operator<<=(%cpfx%Any& r_any, %tname%* p_%uname%);
+  %cpfx%Boolean operator>>=(const %cpfx%Any& r_any,
+                %tname%*& rp_%uname%);
+.
+

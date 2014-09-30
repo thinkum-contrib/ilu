@@ -1,0 +1,306 @@
+
+# BeginILUCopyright
+#
+# Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+#
+# Unlimited use, reproduction, modification, and distribution of this
+# software and modified versions thereof is permitted.  Permission is
+# granted to make derivative works from this software or a modified
+# version thereof.  Any copy of this software, a modified version
+# thereof, or a derivative work must include both the above copyright
+# notice of Xerox Corporation and this paragraph.  Any distribution of
+# this software, a modified version thereof, or a derivative work must
+# comply with all applicable United States export control laws.  This
+# software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+# WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+# PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+# LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+# EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+# NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+# OF THE POSSIBILITY OF SUCH DAMAGES.
+#
+# EndILUCopyright
+
+
+R_surr_h(Interface i) (Interface inc) -->
+  L_top(i.isl_name, F_vs_string())
+  L_scoping_macros(i.name)
+  L_interface_include: inc in i.imports: (inc.isl_name) 
+         [inc.isl_name != "ilu"]
+  R_surr_h_module(i.module_str, 1)
+  L_() " "
+  L_() "#endif"  
+
+.
+
+R_surr_h_module(Module m, Int first)
+     (ContentElem ce, mname, mname1, mpfx) -->
+
+  E_ [ mname1 = m.simple_name
+       [[ first == 1   mname = F_concat(mname1, "_surrogate")]
+          | mname = mname1]
+       mpfx = F_side_prefix("surrogate", m, 1)
+     ]
+
+  L_() ""
+  L_ (mname) " // start the scope for %mname% "
+
+  { L_ (mname) [F_use_namespace() == 1] "namespace %mname% {"  |
+    L_ (mname) [F_use_classes() == 1] "class %mname% { public:" |
+        TRUE }
+
+  R_surr_h_classes_and_nested: ce in m.content_sequence: (mpfx, m, ce)  
+  
+  L_()  " " 
+  L_ (mname) "// end the scope for %mname% "
+
+  {   L_() [F_use_namespace() == 1] " }"
+    | L_() [F_use_classes() == 1 ]  " };"
+    | TRUE
+  }
+.
+
+R_surr_h_classes_and_nested(mpfx, Module m, ContentElem ce) -->
+  { R_surr_h_class( m, ce.content)
+      [ce.content_type == "type"
+       ce.content.supertype == NULL
+       F_ur_typename(ce.content) == "Object" ] 
+    |   
+   R_surr_h_module (ce.content, 0)
+      [ce.content_type == "module" ce.content.module_object == NULL ]
+   | TRUE
+  }
+.
+
+
+R_surr_h_class(Module m, Object object) 
+     (Method method, Method method1, obj_name, spfx, us_obj_name,
+       stpfx, stname, Any superclass, Any ur_superclass, oname) -->
+
+   E_ [ obj_name = F_full_typeref(object)
+        spfx =  F_side_prefix("surrogate", object, 0)
+        us_obj_name = F_underscore_name(object) 
+        oname = object.name ]
+
+   LP_(spfx, oname)
+      "  class %spfx%%oname% :" 
+
+   LP_:superclass in object.superclasses: (stpfx, stname)
+     [ur_superclass = F_ur_instance(superclass) 
+      stname =  F_rel_side_name(m, "surrogate", ur_superclass)
+      stname != "CORBA::Object" stname != "CORBA_Object"]
+     " public virtual %stname%, " 
+
+   LP_(obj_name) "public virtual %obj_name% {" 
+   
+   L_class_begin()
+
+   R_surr_h_method: method in object.methods: (method)
+
+   L_init_for_class(obj_name)
+
+   L_castdown(obj_name)
+
+   L_except_forwarding_begin()
+
+   R_forward_exceptions:method1 in object.methods:(method1) 
+           [method1.exceptions != NULL]
+
+   L_class_end() 
+
+   L_class_initializer(spfx, object.name, us_obj_name)
+.
+
+R_forward_exceptions(Method op) (cpfx, Exception ex, ex_name) -->
+
+   L_forward_exception_begin (op.name)
+
+   LP_(cpfx) [cpfx = F_corba_pfx()] 
+     "          throw (%cpfx%SystemException" 
+
+   LP_:ex in op.exceptions:(ex_name) [ex_name = F_full_ref(ex) ]
+         ", %ex_name%" 
+
+   LP_() ");"
+.
+
+
+# in args, uses ur types of latinstring, unicode strings??
+# essentially same as in cpp.hpp.rules, but with references to
+# argument types not relative toany module. 
+R_surr_h_method(Method op)
+   (Int i, Argument arg, Int lastix, Any tt1, any tt2,
+   rtntype, rtnsfx, argtype, argpfx, argsfx, enditem, cpfx, ex_name,
+   Exception ex, opname) -->
+ 
+  E_ [opname = F_external_method_name(op.name, op.isl_name) ] 
+  {
+   L_noreturn_begin (opname) 
+        [ op.returntype == NULL lastix = F_last_index(op.arguments) ]
+   |
+   L_method_begin(rtntype, rtnsfx, opname)
+     [ [ [F_ur_typename(op.returntype) != "Optional"
+           rtntype = F_full_rel_typeref(op.returntype, "")] |
+          rtntype = F_full_ref_typeref(op.returntype) ]
+         rtnsfx =  F_arg_sfx(op.returntype, "Return")
+         lastix = F_last_index(op.arguments) ]
+  }
+
+  R_method_arg :arg(i) in op.arguments: (arg, i, lastix)
+ 
+   LP_(cpfx) [cpfx = F_corba_pfx()] 
+     "             ) throw (%cpfx%SystemException" 
+
+   LP_:ex in op.exceptions:(ex_name) [ex_name = F_full_ref(ex) ]
+         ", %ex_name%" 
+
+   LP_() ");"
+.  
+
+#           [ [ chtype = F_string_chartype(arg.type)
+#               chtype != NULL chtype != "byte" ]
+R_method_arg(Argument arg, Int i, Int lastix)
+   (argpfx, argtype, Any opttype, Any urtype, argsfx, enditem,
+      const_str_name, chtype) -->
+
+     E_ [
+         argpfx = F_arg_pfx(arg.type, arg.direction)
+         argsfx = F_arg_sfx(arg.type, arg.direction)
+         argtype = F_full_rel_typeref(arg.type, "")
+         urtype = F_ur_instance(arg.type)
+         [ [ i != lastix  enditem = ","] | enditem = "" ]
+         ]
+ 
+     {
+      L_arg_stringin (const_str_name, arg.name, enditem)
+        [ 
+           [ [chtype = F_string_chartype(arg.type)
+              chtype != NULL chtype != "byte" 
+              urtype.name != "CString"]
+             | [ F_ur_typename(arg.type) == "Optional"
+                urtype = F_ur_instance(arg.type)  
+                 F_ur_typename(urtype.oftype) != "Object" ]   
+            ]
+            arg.direction == "In"
+            const_str_name = F_full_pfxd_name("const", arg.type)
+         ] |
+      L_method_arg(argpfx, argtype, argsfx, arg.name, enditem)
+      }  
+.
+
+L_top(isl_name, vs_string) -->
+
+
+// This file was automatically generated with ILU (version %vs_string%) tools
+// ILU is Copyright 1991-1999 Xerox Corporation, All Rights Reserved.
+// ILU information:  ftp://ftp.parc.xerox.com/pub/ilu/ilu.html.
+
+#ifndef __%isl_name%_cppsurrogate_H_
+#define __%isl_name%_cppsurrogate_H_
+
+#include \"%isl_name%-cpp.hpp\"
+.
+
+L_scoping_macros(iname) -->
+
+#ifndef CORBA_
+#define CORBA_(name) NAME_INSIDE_SCOPE(CORBA,name)
+#endif
+#ifndef CORBA
+#define CORBA(name) NAME_OUTSIDE_SCOPE(CORBA,name)
+#endif
+#ifndef %iname%_surrogate_
+#define %iname%_surrogate_(name) NAME_INSIDE_SCOPE(%iname%_surrogate,name)
+#endif
+#ifndef %iname%_surrogate
+#define %iname%_surrogate(name) NAME_OUTSIDE_SCOPE(%iname%_surrogate,name)
+#endif
+.
+
+L_interface_include(inc_name) -->
+#include \"%inc_name%-cppsurrogate.hpp\"
+.
+
+L_class_begin() --> 
+
+    public:
+
+     //ISL specified methods
+.
+
+L_noreturn_begin(opname) -->
+
+
+      virtual void
+         %opname%(
+.
+
+L_method_begin(rtntype, rtnsfx, opname) -->
+
+
+      virtual %rtntype%%rtnsfx% 
+         %opname%(
+.
+
+L_arg_stringin(const_str_name, argname, enditem) -->
+             %const_str_name%    %argname%%enditem%
+.
+
+# CHECK  optional scalars 
+L_method_arg (argpfx, argtype, argsfx, argname, enditem) -->
+             %argpfx%%argtype%%argsfx%  %argname%%enditem%
+.
+
+L_init_for_class(obj_name) -->
+
+
+      // Initialize this class
+
+      static void iluInitialize();
+
+      // Function to create a surrogate for a %obj_name% object
+
+      static iluObject* create_surrogate(iluKernelObject);
+.
+
+L_castdown(obj_name) -->
+
+      virtual void * iluDowncast(iluClass class_to_cast_down_to) {
+             return %obj_name%::iluDowncast_super(this, class_to_cast_down_to);
+ };
+.
+
+L_except_forwarding_begin() -->
+
+    private:
+
+      // Exception forwarding (if any)
+
+.
+
+L_forward_exception_begin(method_name) -->
+ 
+      static void _throw_%method_name%_exception
+          (iluCardinal exception_index, iluSurrogateCall&)
+.
+
+L_class_end() --> 
+
+
+      static int _initialized;
+
+  };
+.
+
+L_class_initializer(mpfx, s_obj_name,  us_obj_name) -->
+
+  // class initializer
+  class %mpfx%%s_obj_name%_initializer {
+    public:
+      %mpfx%%s_obj_name%_initializer ();
+      void * ensure_instantiation ();
+      static %mpfx%%s_obj_name%_initializer sm_the_surrogate_%us_obj_name%_initializer;
+  };
+.
+

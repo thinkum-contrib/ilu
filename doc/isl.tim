@@ -1,0 +1,1172 @@
+@c $Id: isl.tim,v 1.54 1999/08/03 01:56:51 janssen Exp $
+@setfilename ilu-ISL.info
+@settitle Defining Interfaces
+@ifset ilucopyright
+BeginILUCopyright
+
+Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+Unlimited use, reproduction, modification, and distribution of this
+software and modified versions thereof is permitted.  Permission is
+granted to make derivative works from this software or a modified
+version thereof.  Any copy of this software, a modified version
+thereof, or a derivative work must include both the above copyright
+notice of Xerox Corporation and this paragraph.  Any distribution of
+this software, a modified version thereof, or a derivative work must
+comply with all applicable United States export control laws.  This
+software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+OF THE POSSIBILITY OF SUCH DAMAGES.
+  
+EndILUCopyright
+@end ifset
+@c $Id: isl.tim,v 1.54 1999/08/03 01:56:51 janssen Exp $
+@ifclear largerdoc
+@titlepage
+@title Defining Interfaces
+@author Bill Janssen @code{<janssen@@parc.xerox.com>}
+@author Mike Spreitzer @code{<spreitzer.parc@@xerox.com>}
+@sp
+Formatted @today{}.
+@sp
+Copyright @copyright{} 1995 Xerox Corporation@*
+All Rights Reserved.
+@end titlepage
+@ifinfo
+@node Top, ,(dir),(dir)
+@top Defining Interfaces
+@end ifinfo
+@end ifclear
+
+Module interfaces may be defined in either the Object Management Group's @system{CORBA}
+@language{OMG IDL}, or in @system{ILU}'s native @language{Interface Specification
+Language} (aka @language{ISL}).  This document describes the syntax and
+semantics of @language{ISL}, and how to translate @language{OMG IDL} interfaces
+into @language{ISL}; see @cite{CORBA 2.0} for a specification of the syntax and semantics
+of @language{OMG IDL}.
+
+@section General Syntax of ISL
+
+The conventional file suffix for @language{ISL} files is @file{.isl}.  Some of the
+@system{ILU} tools rely on the name of the file being the same as the name of the
+interface defined in it, and rely on having only one interface defined in each
+@file{.isl} file.
+
+An @language{ISL} interface contains four kinds of statements:  the interface header,
+type declarations, exception declarations, and constant declarations.  Each
+statement is terminated with a semi-colon.
+
+Many statements in @language{ISL} contain lists:  lists of the fields in a record,
+the types in a union, the methods in an object type.  All lists in @language{ISL} are
+terminated with an @kwd{END} keyword, and the items in the list are separated by commas.
+
+Comments may be placed in an @language{ISL} file.  They are introduced with the character sequence
+@kwd{(*}, and terminated with @kwd{*)}.  Comments nest.
+
+@subsection Identifiers
+
+All identifiers that appear in ISL are alphanumeric, begin with an
+alphabetic character, and may contain hyphens.@footnote{We might forbid two consecutive hyphens or add other restrictions.}  Differences in case are not sufficient to distinguish between two identifiers; however, the case of an identifier may be preserved in its mapping to a specific programming language.
+
+All @language{ILU} type names, exception names, and constant names have two parts, an interface identifier and a local identifier.  When writing the full name, the interface identifier comes first, followed by a period, followed by the local identifier.  If the interface identifier is ommitted in a name, it defaults to the interface identifier of the most recently encountered interface header.
+
+Interface names, type names, exception names, and constant names occur in different name spaces.  Thus is is possible to have a type and an exception with the same name.@footnote{We may change this.}
+
+@subsection Reserved Words
+
+The following words are reserved words in @language{ISL}:
+@kwd{[ILU]ALIASED},
+@kwd{ALLOWS},
+@kwd{ARRAY},
+@kwd{ASYNCHRONOUS},
+@kwd{AUTHENTICATION},
+@kwd{BOOLEAN},
+@kwd{BRAND},
+@kwd{BYTE},
+@kwd{CARDINAL},
+@kwd{CHARACTER},
+@kwd{[ILU]CHARSET},
+@kwd{CLASS},
+@kwd{COLLECTIBLE},
+@kwd{CONSTANT},
+@kwd{DEFAULT},
+@kwd{[ILU]DENOMINATOR},
+@kwd{[ILU]DIRECTIVE},
+@kwd{[ILU]DIRECTIVE-EXPERIMENTAL},
+@kwd{DOCUMENTATION},
+@kwd{END},
+@kwd{ENUMERATION},
+@kwd{EXCEPTION},
+@kwd{EXTENSIBLE},
+@kwd{FALSE},
+@kwd{[ILU]FIXED},
+@kwd{[ILU]FIXEDPOINT},
+@kwd{FROM},
+@kwd{FUNCTIONAL},
+@kwd{ILUSTRING},
+@kwd{IMPORTS},
+@kwd{IN},
+@kwd{INOUT},
+@kwd{INTEGER},
+@kwd{INTERFACE},
+@kwd{LATIN1-CHARSET},
+@kwd{[ILU]LANGUAGE},
+@kwd{LIMIT},
+@kwd{[ILU]LOCAL},
+@kwd{LONG},
+@kwd{METHODS},
+@kwd{MAX-NUMERATOR},
+@kwd{MIN-NUMERATOR},
+@kwd{OBJECT},
+@kwd{OF},
+@kwd{OPTIONAL},
+@kwd{OTHERS},
+@kwd{OUT},
+@kwd{PICKLE},
+@kwd{RAISES},
+@kwd{REAL},
+@kwd{RECORD},
+@kwd{[ILU]REFERENCE},
+@kwd{[ILU]SEALED},
+@kwd{SEQUENCE},
+@kwd{SHORT},
+@kwd{SIBLING},
+@kwd{SINGLETON},
+@kwd{SINK},
+@kwd{SOURCE},
+@kwd{[ILU]STATE},
+@kwd{[ILU]STRING},
+@kwd{SUPERCLASS},
+@kwd{SUPERCLASSES},
+@kwd{SUPERTYPES},
+@kwd{TRUE},
+@kwd{TYPE},
+@kwd{TYPEID},
+@kwd{UNICODE-CHARSET},
+@kwd{UNION}.
+
+Those words prefixed with @kwd{[ILU]} will begin with the three characters @code{ILU}
+unless the configuration option @switch{--enable-new-keywords-plain} has been specified
+in configuring your @system{ILU} distribution, in which case
+the @code{ILU} prefix will be omitted.
+
+Reserved words may be used as identifiers, by placing them in double quotes,
+but may not be used as identifiers without quoting.
+
+Other identifiers are worth avoiding, as they may cause problems with
+specific language implementations.  The identifier @kwd{t} or @kwd{T},
+for instance, causes problems with @language{Common Lisp}.
+Language-specific mappings of @language{ISL} should try to avoid these
+problems.
+
+@section Statement Syntax
+
+@subsection The Interface Header
+
+Each interface is introduced with exactly one interface header of the form
+
+@display
+@kwd{INTERFACE} @metavar{interface-name} [ @kwd{BRAND} @metavar{brand} ] [ @kwd{IMPORTS} @metavar{list-of-imported-interfaces} @kwd{END} ] @code{;}
+@end display
+
+The @metavar{interface-name} is used by various language-specific productions to
+create name spaces in which the types, exceptions, and constants defined in the
+interface are declared.
+
+The optional @metavar{brand} is a quoted string of printable US-ASCII characters (using the codes
+from 0x20 to 0x7E, inclusive).  It is included into the type UID hash for types and exceptions defined
+in the interface, and can be used to make the type UIDs for otherwise-identical interfaces distinct.
+
+The optional
+@metavar{list-of-imported-interfaces} is a comma-separated list of fields, each of the
+form
+@display
+@metavar{interface-name} [ @kwd{FROM} @metavar{interface-file} ]
+@end display
+@noindent
+where @metavar{interface-file} is the name of the file containing the interface definition.
+Importing an interface allows
+the current interface to mention the types, exceptions, and constants
+defined in the imported interface, by referring to them as
+@display
+@metavar{interface-name}@code{.}@metavar{type-or-value-name}
+@end display
+@noindent
+The graph of imported interfaces must be acyclic; that is, interfaces may
+not mutually refer to each other, either directly or through some other
+interfaces.  If the optional "FROM @metavar{interface-file}" is not specified for an imported
+interface, a sensible site-dependent search policy is followed in an attempt
+to locate that interface, typically looking down a path (environment variable @command{ILUPATH} on @system{POSIX} systems) of
+directories for a file with the name @file{@metavar{interface-name}.isl}.
+
+@subsection Interface Directives
+
+
+Interface directives are experimental and might be changed in the next release.
+
+
+After the header and before the types, an interface can have  
+an arbitrary list of interface directives of the form
+
+@display
+@kwd{DIRECTIVE-EXPERIMENTAL} @metavar{list-of-directives} @code{;}
+@end display
+
+where @metavar{list-of-directives} is a comma separated list of quoted strings. 
+
+In certain stubbers the  @metavar{list-of-directives} of some directive
+statements may contain language specific instructions about the mapping.  Tools which
+convey special meaning to directive statements currently ignore directive statements
+which are not recognized by their first quoted string.   It is typical that each 
+directive statement is
+recognized only by tools in a few of the ILU languages; Directive statements
+influence mapping within one address space but unless understood by all languages
+don't change the inter address space interfaces.     
+
+
+@subsection Type Declarations
+
+In general, a type is defined with a statement of the form
+
+@display
+@kwd{TYPE} @metavar{type-name} @code{=} @metavar{type-reference} | @metavar{construction} [ @kwd{TYPEID} @metavar{type-id-string} ] @code{;}
+@end display
+
+The form @code{TYPE @metavar{type-name} = @metavar{type-reference}} is used when you want
+to rename an existing type to make its usage clear or give it a name in the current interface.  A @metavar{type-reference} is
+just a @metavar{type-name}, or a reference to a type name defined in another
+interface: @metavar{interface-name}.@metavar{type-name}.  The new name is then a `nickname' for the previously
+defined type.
+
+The optional @kwd{TYPEID} attribute is provided for use with @system{CORBA} interfaces, which allow
+specification of type ID information.  Type IDs should conform to the syntax for URIs.
+It's probably safest @strong{not} to use @kwd{TYPEID}, as @system{ILU}
+will automatically generate unique type ID's for your types.
+
+@subsubsection Primitive types
+
+The following type ``names'' are pre-defined:
+
+@itemize @bullet
+@item
+@kwd{INTEGER,} a 32-bit signed integer value;
+@item
+@kwd{SHORT INTEGER,} a 16-bit signed integer value;
+@item
+@kwd{LONG INTEGER,} a 64-bit signed integer value;
+@item
+@kwd{CARDINAL,} a 32-bit unsigned integer value;
+@item
+@kwd{SHORT CARDINAL}, a 16-bit unsigned integer value;
+@item
+@kwd{LONG CARDINAL}, a 64-bit unsigned integer value;
+@item
+@kwd{BYTE}, an unsigned 8-bit byte value;
+@item
+@kwd{BOOLEAN}, a logical value either True or False;
+@item
+@kwd{REAL}, an IEEE 64-bit double-precision floating-point value;
+@item
+@kwd{SHORT REAL}, an IEEE 32-bit single-precision floating-point value;
+@item
+@kwd{LONG REAL}, a 128-bit quadruple-precision floating-point value;
+@item
+@kwd{CHARACTER}, a 16-bit UNICODE/IS-10646 character; and
+@item
+@kwd{SHORT CHARACTER}, an 8-bit ISO 8859-1 character code (but excluding the octet 8_000).
+@item
+@kwd{PICKLE}, an opaque value containing some other value (see below).
+@end itemize
+
+There is also a special type @kwd{NULL}, which cannot be used
+directly; it has a single value, NULL.
+
+@isl{@kwd{PICKLE}} is an abstract type, values of which contain a `pickled' or `frozen' value
+of any other @language{ISL} type, and is thus used when a dynamically typed
+element is needed in an interface.  Functionally, it is quite similar to the
+@system{CORBA} @omgidl{@kwd{any}} type, but has more efficient semantics.  @isl{@kwd{PICKLE}}
+is only available if @system{ILU} has been configured with VARIANT support.
+
+@subsubsection Constructor overview
+
+The form @code{@kwd{TYPE} @metavar{type-name} = @metavar{construction}} is used when a user needs to
+define a new type.  Several simple constructors for more complex data types
+are specified:
+
+@itemize @bullet
+@item
+@kwd{ARRAY}, a fixed-length N-dimensional array of some specified type;
+@item
+@kwd{SEQUENCE}, a variable-length one-dimensional array of some specified type;
+@item
+@kwd{RECORD}, a sequence of typed fields, each of which may be of a different type;
+@item
+@kwd{UNION}, one of a set of specified types;
+@item
+@kwd{OPTIONAL}, a union with @kwd{NULL};
+@ignore
+@item
+@kwd{PIPE}, a uni-directional stream of some single type for bulk-data transfer (@emph{not yet implemented});
+@end ignore
+@item
+@kwd{ENUMERATION}, a type consisting of an explicitly enumerated set of values;
+@item
+@kwd{OBJECT}, an @system{ILU} object type.
+@item
+@kwd{FIXEDPOINT}, a rational type with a fixed denominator value (@emph{not yet implemented});
+@end itemize
+
+In addition, the automatically-imported interface @system{ILU} defines the
+short sequence @type{CString} of short character.
+
+@subsubsection Array Declarations
+
+An @kwd{ARRAY} is a fixed-length N-dimensional array of some type.  It is defined
+with a declaration of the form
+
+@display
+@kwd{TYPE} @metavar{type-name} @code{=} @kwd{ARRAY} @kwd{OF} @metavar{dimension-list} @metavar{base-type-reference} @code{;}
+@end display
+
+where @metavar{dimension-list} is a comma-separated list of non-negative integers,
+each integer specifying the size of a dimension of the array, and
+@metavar{base-type-reference} is a @metavar{type-reference} to some other @system{ILU} type.  For example,
+
+@codeexample
+TYPE SymbolTable = ARRAY OF 400 Symbol;
+TYPE Matrix3030 = ARRAY OF 30, 30 REAL;
+@end codeexample
+
+The total number of elements in the array may not exceed 4294967295 (2^32-1).
+
+@subsubsection Sequence Declarations
+
+A sequence is a variable-length one-dimensional array of some type.  It is
+defined with a declaration of the form
+
+@display
+@kwd{TYPE} @metavar{type-name} @code{=} [ @kwd{SHORT} ] @kwd{SEQUENCE} @kwd{OF} @metavar{base-type-reference} [ @kwd{LIMIT} @metavar{size} ] @code{;}
+@end display
+
+where @metavar{base-type-reference} is a @metavar{type-reference} to some other @system{ILU} type.  If the @kwd{LIMIT}
+parameter @metavar{size} is used, it limits the sequences to having at most @metavar{size} elements; otherwise the sequences are limited to having at most 4294967295 (2^32-1) elements.
+Use of the @kwd{SHORT} modifier is shorthand for a @kwd{LIMIT} of 65535 (2^16-1).  Use of the @kwd{LONG}
+modifier is not defined for sequences.
+
+@subsubsection Generalized Array Declarations
+
+This is a proposed language change, not yet accepted.  @emph{It is not supported in any of the language bindings.}
+
+The existing language has a weakness: it cannot express coordinated multidimensional variable-length arrays.  Coordinated means that there is only one length per dimension, regardless of how many arrays there are at that level.  An example is a bitmap of variable height and width: all rows are the same length, and all columns are the same length.
+
+A generalized array type is defined with a declaration of the form
+
+@display
+@kwd{TYPE} @metavar{type-name} @code{=} @kwd{ARRAY} @metavar{dim} , ... @metavar{dim} @kwd{OF} @metavar{base-type-reference} @code{;}
+@end display
+where each @metavar{dim} is of the form
+@display
+@metavar{length} | [ @kwd{LIMIT} @metavar{maxlen} | @kwd{SHORT} ]
+@end display
+
+A dimension can be given a fixed length by simply specifying that length.  A variable-length dimension is either left blank (meaning the maximum length is 2**32-1), specified as @kwd{SHORT} (meaning the maximum length is 2**16-1), or given an explicit maximum length.
+
+Note that putting the dimensions after the @kwd{OF} would create a syntactic ambiguity in some cases, concerning grouping of a @kwd{SHORT}.
+ 
+@subsubsection Record Declarations
+
+@display
+@kwd{TYPE} @metavar{type-name} @code{= }@kwd{RECORD} @metavar{fields...} @kwd{END}@code{ ;}
+@end display
+
+where @metavar{fields} is a comma-separated list of @metavar{field}, which has the form
+
+@display
+@metavar{field-name} @code{:} @metavar{field-type-reference}
+@end display
+
+A sample record declaration:
+
+@codeexample
+TYPE Symbol = RECORD
+  name : string,
+  ltype : TypeInfo,
+  address : cardinal
+END;
+@end codeexample
+
+@subsubsection Union Declarations
+
+A union is a type which may take on values of several different types.  To be compliant
+with the @system{CORBA} notion of unions, the union declaration is much more baroque and complicated
+than it really should be.  The declaration has the form:
+
+@display
+@kwd{TYPE} @metavar{type-name} @code{=} [ @metavar{tag-type} ] @kwd{UNION} @metavar{arm-list} @kwd{END} [ @kwd{OTHERS} ] @code{;}
+@end display
+
+where @metavar{arm-list} is a comma-separated list of @metavar{arm}, each of the form:
+
+@display
+[ @metavar{union-case-name} @kwd{:} ] @metavar{type-name} [ @metavar{arm-valuator} ]
+@end display
+
+where each @metavar{arm-valuator} is either of the form
+@display
+@kwd{=} @kwd{DEFAULT}
+@end display
+or of the form
+@display
+@kwd{=} @metavar{value-list} @kwd{END}
+@end display
+and where a @metavar{value-list} is a comma-separated list of constant values of the tag type.  The tag type must be one of: @kwd{SHORT INTEGER}, @kwd{SHORT CARDINAL}, @kwd{INTEGER}, @kwd{CARDINAL}, @kwd{BYTE}, @kwd{BOOLEAN}, or an enumerated type.  (We should also allow @kwd{SHORT CHARACTER} and @kwd{CHARACTER}.)  The tag type is @kwd{SHORT INTEGER} if not explicitly specified.
+
+A @metavar{arm-valuator} must be given for either all or none of the @metavar{arm}s; if none, the @metavar{arm}s are assigned single integral values, starting with 0.  @metavar{arm-valuator}s must be given if the tag type isn't numeric.  All the values appearing in the @metavar{value-list}s of a union must be different from one another.  @kwd{DEFAULT} can appear in at most one arm of a union type construction.  @kwd{DEFAULT} and @kwd{OTHERS} cannot both appear in the same union.
+
+A union value consists of a tag value, possibly paired with a second value.  When the tag value is one that appears in, or is implicitly assigned to, an arm of the union type construction, the second value is of the type named in that arm.  Otherwise, the union value is well-formed only if @kwd{DEFAULT} or @kwd{OTHERS} appears in the union type construction.  If an arm is valued with @kwd{DEFAULT}, the second value is of that arm's type.  If @kwd{OTHERS} appears, there is no second value; it is as if there were a default arm of some trivial type (like @language{C}'s @code{void} or @language{ML}'s @code{unit}).
+
+A simple example:
+@codeexample
+TYPE StringOrInt = UNION ilu.CString, CARDINAL END;
+@end codeexample
+
+A more complex example, that uses an explicit tag type, union case names, and a default arm:
+@codeexample
+TYPE ColorType = ENUMERATION RGB, CMY, HSV, YIQ, HLS END;
+TYPE U2 = ColorType
+  UNION
+    rgb-field : RGBObject = RGB END,
+    others : COLORObject = DEFAULT
+  END;
+@end codeexample
+
+The union case name is not guaranteed to be present in language-specific mappings.
+
+@language{ISL} unions are logically (and sometimes actually, depending on the programming language)
+tagged.  There is a difference between
+@codeexample
+TYPE T1 = UNION Bar, Baz END;
+TYPE T2 = UNION Foo, T1 END;
+@end codeexample
+and
+@codeexample
+TYPE T1 = UNION Bar, Baz END;
+TYPE T2 = UNION Foo, Bar, Baz END;
+@end codeexample
+
+@subsubsection Optional Declarations
+
+A variable of type @code{@kwd{OPTIONAL} Foo} can have either a value of @type{Foo} or of type @type{NULL}.  It is declared with the form
+
+@display
+@kwd{TYPE} @metavar{type-name} @code{= }@kwd{OPTIONAL} @metavar{base-type-reference} @code{;}
+@end display
+
+This should be thought of as roughly equivalent to the declaration
+
+@display
+@kwd{TYPE} @metavar{type-name} @code{=} @kwd{BOOLEAN} @kwd{UNION} @metavar{base-type-reference} @code{= TRUE} @kwd{END} @kwd{END} @kwd{OTHERS} @code{;}
+@end display
+
+The difference is that @kwd{OPTIONAL} types are logically un-tagged.  An optional value is not a pair of (@kwd{BOOLEAN}, @metavar{base-type-reference}); rather it is a single value, either a special, distinguished, "null" value or a value of the @metavar{base-type-reference}.  There is thus no difference between
+@codeexample
+TYPE Bar = OPTIONAL Foo;
+TYPE Baz = OPTIONAL Bar;
+@end codeexample
+and
+@codeexample
+TYPE Bar = OPTIONAL Foo;
+TYPE Baz = OPTIONAL Foo;
+@end codeexample
+
+@ignore
+@subsubsection Pipe Declarations
+
+A @dfn{pipe} is a queue of some @system{ILU} type, implemented on a reliable
+byte-stream.  It has only two ends, one of which is a @dfn{source}, the
+other of which is a @dfn{sink}.  Instances of the pipe's type can be
+written to the sink, and read from the source.  It allows two modules to pass
+information in a stream-like manner without blocking an RPC channel.
+
+Pipes are implemented in @system{ILU} as pseudo-types of the following types:
+
+@display
+SOURCE OF @metavar{element-type} = OBJECT
+  METHODS
+    Get() : @metavar{element-type},
+    WillBlock() : BOOLEAN,      (* true if Get() will block *)
+    EndOfFile() : BOOLEAN,      (* true if no more elements coming *)
+    Type() : string                 (* name of element type as "@metavar{interface-name}:@metavar{type-name}" *)
+  END;
+
+SINK OF @metavar{element-type} = OBJECT
+  METHODS
+    Put(@metavar{element-type});
+    WillBlock() : BOOLEAN,      (* true if Put() will block *)
+    ConsumerGone() : BOOLEAN,   (* true if consumer has departed *)
+    Type() : string                 (* name of element type as "@metavar{interface-name}:@metavar{type-name}" *)
+  END;
+@end display
+
+A pipe side type is specified with a declaration of the form
+
+@display
+@kwd{TYPE} @metavar{type-name} = @kwd{SOURCE} @kwd{OF} @metavar{element-type-reference};
+@end display
+
+or
+
+@display
+@kwd{TYPE} @metavar{type-name} = @kwd{SINK} @kwd{OF} @metavar{element-type-reference};
+@end display
+
+where @metavar{element-type-reference} is any @system{ILU} type-reference.
+@end ignore
+
+@emph{This type is not yet implemented.}
+
+@subsubsection Enumeration Declarations
+
+An enumeration is an abstract type whose values are explicitly enumerated.  It is declared with the form
+
+@display
+@kwd{TYPE} @metavar{type-name} @code{=} @kwd{ENUMERATION} @metavar{values...} @kwd{END} @code{;}
+@end display
+
+where @metavar{values} is a comma-separated list of value names, with optional value
+ID's that are constants of type @kwd{SHORT CARDINAL} that
+specify the value used to represent the enumeration value
+"on the wire".@footnote{Same integer in all protocols?  Yep -- for now.}  @emph{Use of value ID's is deprecated.}
+
+@display
+@metavar{value-name} [ @code{=} @metavar{value-id} ]
+@end display
+
+For example,
+
+@codeexample
+TYPE TapeAction = ENUMERATION
+  SkipRecord = 1,
+  Rewind = 23,
+  Backspace = 49,
+  WriteEOF = 0
+END;
+@end codeexample
+
+All @metavar{value-name}s and @metavar{value-ID}s must be unique within an enumeration.  If
+@metavar{value-ID}s are not assigned explicitly, appropriate values will be assigned
+automatically in some unspecified way.  An enumeration may have at most 65535 (2^16-1) values.
+
+@subsubsection Object Type Declarations
+
+Object types are described in the following way:
+
+@display
+@kwd{TYPE} @metavar{type-name} @code{=} @kwd{OBJECT}
+                        [ @kwd{SINGLETON} @metavar{protocol-description-string} ]
+                        [ @kwd{DOCUMENTATION} @metavar{documentation-string} ]
+                        [ @kwd{COLLECTIBLE} ]
+                        [ @kwd{OPTIONAL} ]
+                        [ @kwd{TYPEID} @metavar{type-id-string} ]
+                        [ @kwd{SUPERTYPES} @metavar{supertype-list} @kwd{END} ]
+                        [ @kwd{METHODS} @metavar{method-list...} @kwd{END} ]
+                        [ @kwd{BRAND} @metavar{brand-string} ] @code{;}
+@end display
+
+The keyword @kwd{CLASS} is a deprecated synonym for @kwd{OBJECT}, and @kwd{SUPERCLASSES} is a deprecated synonym for @kwd{SUPERTYPES}.  Also,
+@display
+                        [ @kwd{SUPERCLASS} @metavar{supertype-name} ]
+@end display
+is a deprecated equivalent to
+@display
+                        [ @kwd{SUPERTYPES} @metavar{supertype-name} @kwd{END} ]
+@end display
+
+The @kwd{SINGLETON} keyword specifies that instances of this type are
+singleton servers, and implies that the discriminator object (the
+subject of the call) should not be implicitly marshalled as the first
+argument in an RPC.  This is typically used in describing an instance of
+an existing RPC service, which is to be modelled in @system{ILU}.  The
+argument to @kwd{SINGLETON} is a string in the form of @system{ILU}
+``protocol-info'', which specifies particular protocol-specific
+parameters to be used in implementing this object type `on the wire'.  For
+example, the @system{Sun RPC} calendar manager would use a
+@metavar{protocol-description-string} of @code{"sunrpc_2_100068_3"},
+indicating that it uses a @system{Sun RPC} program number of 100068 and
+a @system{Sun RPC} version of 3.
+
+The optional @metavar{documentation-string} is a quoted string, which is passed
+on to language-specific bindings where possible, such as with the doc-string
+capability in @language{Common Lisp}.
+
+The @kwd{COLLECTIBLE} keyword specifies that instances of this type are meant to
+be garbage collectible, and that methods necessary for this should be
+automatically added to its method suite.  For an object type to be collectible,
+all ancestor object types must also be collectible.
+
+The @kwd{OPTIONAL} keyword specifies that the language-specific @code{nil} value
+may be passed, instead of an instance of this object type, anywhere this object type is used.
+@emph{This is a @system{CORBA} mis-feature, and its use is strongly deprecated.  Better
+to explicitly use a different type constructed with the @system{ILU} @kwd{OPTIONAL} keyword.}
+
+The optional @metavar{supertype-list} defines an inheritance relationship between the object
+types named in the list and the type @metavar{type-name}.
+
+The optional @metavar{type-id-string} can be used to explicitly assign an MSTID
+for an object type.  Doing so effectively @dfn{seal}s the object type; that is,
+changes to the structure of the object type will not be reflected in the MSTID,
+so version mismatches will not be caught automatically by @system{ILU}.  This is
+a dangerous feature (mandated by @system{CORBA}).
+
+The @metavar{brand-string} in the @kwd{BRAND} clause, if any, contributes an arbitrary
+tag to the structure of the type; omitting the @kwd{BRAND} clause is equivalent to
+giving one with the empty string.  The brand is included in the type UID hash of the
+type, and thus gives the programmer a way to make
+two types distinct despite their otherwise having the same structure.  The @metavar{brand-string}
+should be a quoted string of printable US-ASCII characters.
+
+The @metavar{method-list} is a comma-separated list of procedure
+descriptions.  All the methods of an object type have distinct names.
+This means that independently-developed supertypes might not be usable together.
+
+Methods have the syntax:
+
+@display
+[ @kwd{FUNCTIONAL} ] [ @kwd{ASYNCHRONOUS} ] @metavar{method-name} @code{(} [ @metavar{args...} ] @code{)}
+        [ @code{:} @metavar{return-type-reference} ]
+        [ @kwd{RAISES} @metavar{exceptions...} @kwd{END} ]
+        [ @code{=} @metavar{procedure-id} ]
+        [ @metavar{documentation-string} ]
+@end display
+
+where the discriminator (the implicit first argument to the method,
+the subject of the call, an instance of the object type in question) is not
+explicitly listed in the signature.  Each method has zero or more arguments in
+a comma-separated list, each element of which is a colon-separated two-ple
+@display
+[ @metavar{argument-direction} ] @metavar{argument-name} @code{:} [ @kwd{SIBLING} ] @metavar{argument-type-reference}
+@end display
+The @kwd{SIBLING}
+keyword may only appear on arguments of an object type, to indicate that the
+argument should be a sibling object to the discriminator of the method.
+The @kwd{FUNCTIONAL} keyword indicates that the method, for a given set of arguments, is idempotent (i.e., the side effects of one call are the same as the side effects of more than one call) and will always return the same result (or raise the same exception); this
+information may be used for caching of return values in the client side stubs.
+The optional @metavar{argument-direction} information is one of the three keywords @isl{IN}, @isl{OUT}, @isl{INOUT},
+specifying whether the parameter is being used as an input parameter, an output parameter, or both.
+
+A method return type is allowed (again separated from the procedure argument
+list by a colon), and a list of possible exceptions may be specified as a
+comma-separated list of exception names, bracketed with the keywords RAISES
+and END.
+
+The optional @metavar{procedure-id} field allows a service description to specify the
+procedure code that is used in the RPC request packet for this method.
+Procedure ID's are restricted to the range [0,65279], and must be unique
+within an interface.  This may only be used in methods on objects marked
+with the @isl{SINGLETON} attribute.
+
+If a method is marked with the @kwd{ASYNCHRONOUS} keyword and does not return a
+value or raise an exception, the RPC method call of a surrogate instance will
+return after sending the request packet to the RPC partner, as the success of
+the call does not depend on the completion of the associated code.  Other RPC
+methods  will block in such a way as to allow the scheduler to handle other
+events while it is waiting for the call to complete, if the user has
+registered the appropriate scheduler hooks with the @system{ILU} runtime.
+
+The optional @metavar{documentation-string} is a quoted string, which is passed
+on to language bindings for which it is meaningful, such as the doc-string
+capability in @language{Common Lisp}.
+
+For example:
+
+@codeexample
+TYPE FancyString = OBJECT
+  METHODS
+    FUNCTIONAL Length () : cardinal,
+    Substring (start : cardinal, end : cardinal) : string
+      RAISES StartGreaterThanEnd, StartTooLarge, EndTooLarge END,
+    Char (index : cardinal) : character
+      RAISES BadIndex END
+  END;
+@end codeexample
+
+Note that the object language in @system{ILU} is not intended to be used to fully
+@emph{define} an object type, but rather to @emph{describe} it in a simple language
+that can be transformed into the different object type definition systems of several
+other languages.
+
+@subsubsection Fixed-point Declarations
+
+A @kwd{FIXEDPOINT} type is a rational type with a fixed denominator.  It is defined
+with a declaration of the form
+
+@display
+@kwd{TYPE} @metavar{type-name} @code{=} @kwd{FIXEDPOINT} @code{[} @kwd{MIN-NUMERATOR} @metavar{min-num-value} @code{]} @code{[} @kwd{MAX-NUMERATOR} @metavar{max-num-value} @code{]} @code{[} DENOMINATOR @metavar{denom-value} @code{]} @code{;}
+@end display
+
+where @metavar{denom-value} specifies the denominator of all values of the type, the optional @metavar{min-num-value} specifies the minimum numerator value allowed for values of the type, and the optional @metavar{max-num-value} specifies the maximum numerator value allowed for values of the type.  If @metavar{denom-value} is negative, it is interpreted as the reciprocal of its absolute value.  If either @metavar{min-num-value} or @metavar{max-num-value} is not specified, the numerator value is not bounded in that direction.  If the denominator is not specified, it defaults to 1.
+
+@emph{This type is still experimental and may not be supported in any of the ILU language bindings.}
+
+@subsection Exception Declarations
+
+Exceptions in @system{ILU} are raised by @system{ILU} methods.  They allow error conditions to
+be signalled back to the calling code.  They are declared with a statement of
+the form:
+
+@display
+@kwd{EXCEPTION} @metavar{exception-name} [ @code{:} @metavar{type-reference} ] [ @metavar{documentation-string} ] @code{;}
+@end display
+
+The optional @metavar{type-reference} part of the declaration allows the exception to have
+an associated value, to be used in interpretation of the exception.  For
+example, an exception BadFilename might have the type @type{ilu.CString}, so that the
+actual bad filename can be associated with the exception:
+
+The optional @metavar{documentation-string} is a quoted string, which is passed
+on to language bindings for which it is meaningful, such as the doc-string
+capability in @language{Common Lisp}.
+
+@codeexample
+TYPE Filename = ilu.CString;
+EXCEPTION BadFileName : Filename "The value is the bad filename";
+@end codeexample
+
+Because of the uncertain nature of life in distributed systems, the pre-defined exception
+@exception{ilu.ProtocolError} (defined in the @system{ILU} interface) may be raised by any
+method, to indicate that the method could not be handled, for some reason.  It
+has the following form:
+
+@codeexample
+TYPE ProtocolErrorDetail = ENUMERATION
+                NoSuchClassAtServer = 1,
+                BrandMismatch = 2,
+                NoSuchMethodOnClass = 3,
+                InvalidArguments = 4,
+                UnknownObjectInstance = 5,
+                UnreachableModule = 6,
+                RequestRejectedByModule = 7,
+                TimeoutOnRequest = 8,
+                UnknownError = 9
+        END;
+
+EXCEPTION ProtocolError : ProtocolErrorDetail;
+@end codeexample
+
+Signalling of @exception{ProtocolError} is never done by user-written server code; it is
+reserved to the transport and runtime layers of @system{ILU}.
+
+@subsection Constant Declarations
+
+For convenience of interface design, constant values for certain simple types
+may be defined in @language{ISL} with statements of the form
+
+@display
+@kwd{CONSTANT} @metavar{constant-name} @code{:} @metavar{constant-type} @code{=} @metavar{constant-value} @code{;}
+@end display
+
+@subsubsection Integer, Cardinal, and Byte Constants
+
+A @metavar{constant-value} for types that are sub-types of @type{INTEGER}, @type{CARDINAL}, or @type{BYTE}
+is specified with the syntax
+
+@display
+[ @metavar{sign} ] [ @metavar{base-indicator} ] @metavar{digits}
+@end display
+
+where the optional @metavar{base-indicator} allows selection of bases 2, 8, 10 or 16.
+It is a digit '0' (zero) followed by either the character 'B' for base 2, 'X'
+for base 16, 'O' (oh) for base 8, or 'D' for base 10.  The @metavar{sign} is only
+valid for subtypes of @type{INTEGER}; it is either '+' or '-'; if not specified, '+'
+is assumed.  The @metavar{base-indicator} and @metavar{digits} fields are case-insensitive.
+
+@subsubsection Real Constants
+
+A @metavar{constant-value} for subtypes of @type{REAL} has the syntax:
+
+@display
+[ @metavar{sign} ] @metavar{integer}@code{.}@metavar{fraction} [ @code{e} @metavar{exponent} ]
+@end display
+
+where @metavar{integer} and @metavar{fraction} are sequences of decimal digits, @metavar{sign} is
+either '+' or '-' ('+' is the default), and @metavar{exponent} is the power of 10
+which the rest of the value is multiplied by (defaults to 0).
+
+@subsubsection ilu.CString Constants
+
+A @metavar{constant-value} for a sub-type of @type{ilu.CString} has the form
+
+@display
+@code{"}@metavar{characters}@code{"}
+@end display
+
+where @metavar{characters} are any ISO-Latin-1 characters except for 8_000.  The
+escape character is defined to be '#' (hash).  The escape character may occur
+in the string only in the following ways:
+
+@display
+#" -- a single double-quote character
+## -- a single escape character
+#@metavar{hex-digit}@metavar{hex-digit} -- the octet 16_@metavar{hex-digit}@metavar{hex-digit}
+#n -- newline
+#r -- carriage return
+@end display
+
+@subsubsection Examples of Constants
+
+@codeexample
+CONSTANT Newline : byte = 10;
+CONSTANT Pi : short real = 3.14159;
+CONSTANT Big : long real = -1.1349e27;  (*  -1.1349 * 10**27   *)
+TYPE Filename = ilu.CString;
+CONSTANT MyLogin : Filename = "~/.login";
+CONSTANT Prompt : ilu.CString = "OK#n ";
+CONSTANT HeapBound : cardinal = 0xFFFF39a0;
+CONSTANT Pattern1 : cardinal = 0b000001000001;
+@end codeexample
+
+@section ilu.isl
+@cindex ilu.isl
+
+The standard interface @interface{ilu} can be found in the file @file{@metavar{ILUHOME}/interfaces/ilu.isl}; it is maintained as @file{@metavar{ILUHOME}/src/stubbers/parser/ilu.isl}.  Here are its contents:
+
+@codeexample
+INTERFACE ilu BRAND "version 2";
+
+(*
+Copyright (c) 1991-1997 Xerox Corporation.  All Rights Reserved.  
+   
+Unlimited use, reproduction, and distribution of this software is
+permitted.  Any copy of this software must include both the above
+copyright notice of Xerox Corporation and this paragraph.  Any
+distribution of this software must comply with all applicable United
+States export control laws.  This software is made available AS IS,
+and XEROX CORPORATION DISCLAIMS ALL WARRANTIES, EXPRESS OR IMPLIED,
+INCLUDING WITHOUT LIMITATION THE IMPLIED WARRANTIES OF MERCHANTABILITY
+AND FITNESS FOR A PARTICULAR PURPOSE, AND NOTWITHSTANDING ANY OTHER
+PROVISION CONTAINED HEREIN, ANY LIABILITY FOR DAMAGES RESULTING FROM
+THE SOFTWARE OR ITS USE IS EXPRESSLY DISCLAIMED, WHETHER ARISING IN
+CONTRACT, TORT (INCLUDING NEGLIGENCE) OR STRICT LIABILITY, EVEN IF
+XEROX CORPORATION IS ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+
+$Id: isl.tim,v 1.54 1999/08/03 01:56:51 janssen Exp $
+*)
+
+TYPE CString = SEQUENCE OF SHORT CHARACTER;
+
+TYPE CORBA-Object = OBJECT OPTIONAL TYPEID "IDL:omg.com/CORBA/Object:1.0";
+@end codeexample
+@section Using OMG IDL with ILU
+
+@system{ILU} allows the use of @system{CORBA} @language{OMG IDL}
+@footnote{@language{OMG IDL} is defined in:
+The Common Object Request Broker: Architecture and Specification,
+OMG Document Number 91.12.1, Revision 1.1} instead
+of @system{ILU} @language{ISL}.  It does this by translating the @language{OMG IDL}
+to its equivalent form in @language{ISL}.  Most @system{ILU} tools will do this automatically,
+based on whether the suffix of the filename argument is @file{.isl} or @file{.idl}.
+In addition, the program @program{idl2isl} can be invoked explicitly to create
+an @language{ISL} version of an @language{OMG IDL} interface file.
+The program @language{idl2isl} translates from @language{IDL} to @language{ISL}.
+@language{IDL} is the Interface Definition Language defined by the
+Object Management Group.@footnote{The program's front end is derived from the
+Interface Definition Language Compiler Front End
+from SunSoft, Inc.  See the file @file{src/stubbers/idl2isl/Sun-parser/docs/COPYRIGHT}
+in the @system{ILU} distribution.}
+
+@subsection Translation
+
+On the whole, the translation from @language{IDL} to @language{ISL} is
+a straightforward change of syntax.  There are a few cases, however, where a bit more is needed.
+
+@subsubsection Anonymous types
+
+@language{OMG IDL} allows type declarators to be used in certain places in the
+syntax (for example, struct members and operation parameters).
+@language{ISL} does not;
+it requires a type name in the corresponding situations.
+As a result, it is sometimes necessary for the translator to introduce
+a name in the @language{ISL} output for those types that are
+anonymous in the @language{OMG IDL} input.
+These names are always of the form
+@code{AnonType-@metavar{nnn}-}, where @metavar{nnn} is an integer.
+
+For example, the @language{OMG IDL} declaration
+
+@codeexample
+struct str @{
+	long	f1;
+	long	f2[5];
+@};
+@end codeexample
+is translated into the following @language{ISL}:
+@codeexample
+TYPE AnonType-1- = ARRAY OF 5 INTEGER;
+TYPE str = RECORD
+	f1 : INTEGER,
+	f2 : AnonType-1-
+	END;
+@end codeexample
+
+@subsubsection Topmodules mode
+When the translator is in this mode (which it is by default),
+only @kwd{module} declarations are allowed at the topmost level.
+Each @kwd{module} translates into an @kwd{INTERFACE} declaration
+in @language{ISL}, and the declarations inside each @kwd{module} go
+into the corresponding @language{ISL} @kwd{INTERFACE}.
+
+If the translator is not in this mode,
+all the declarations in the @language{IDL} file go into one
+@language{ISL} @kwd{INTERFACE} whose name is taken from the @language{OMG IDL}
+input filename, less the @file{.idl} suffix.
+
+@subsubsection Imports mode
+When the translator is in this mode (which it is by default),
+@code{#include} preprocessor directives are, roughly speaking, turned into
+@language{ISL} @kwd{IMPORT} statements.
+This mode allows for separate compilation (stub generation) of interfaces.
+There are some restrictions:
+the @code{#include} directives must occur before any declarations in the
+file, and the files that are included must not be fragments.
+That is, each must consist of a sequence of whole declarations
+(more specifically, @kwd{module} declarations if in @code{topmodules} mode).
+The included files may in turn include other files.
+
+If the translator is not in this mode,
+the input is considered to be the result of preprocessing the file first
+and textually substituting the included files,
+following the usual behavior of @language{C} and @language{C++} compilers.
+
+@subsubsection Unsupported constructs
+
+If VARIANT support has not been configured in,
+the @language{IDL} type @kwd{any} is disallowed
+by the translator.
+
+Use of @kwd{context} clauses on operations is not supported.
+
+@subsection Manual Invocation of @program{idl2isl}
+
+The program is run automatically as an intermediate step
+by any of the @system{ILU} tools that
+take @language{ISL} files (normally ending in @file{.isl})
+if the filename ends in @file{.idl}.
+
+The program may also be run directly, with the following arguments:
+@display
+@code{idl2isl} @{ @code{-Wb,@metavar{toggle}} | @code{-Wb,!@metavar{toggle}} @}* @code{@metavar{source}.idl}
+@end display
+In this case, it writes the @language{ISL} to its standard output.
+A toggle is set with an argument
+@code{-Wb,@metavar{toggle}}
+and cleared with an argument
+@code{-Wb,!@metavar{toggle}}.
+Toggle settings may also be effected by setting the environment variable
+@file{IDL2ISL_OPTS} to a comma-separated list of toggle names,
+each of which is either preceded by a @file{!} character (which clears it)
+or not (which sets it).
+Command-line arguments take precedence over the environment variable
+settings.
+
+The toggles are:
+@itemize @bullet
+@item
+@code{dump} (default off): produce a dump of the abstract syntax tree.
+Used for debugging the translator itself.
+@item
+@code{imports} (default on): set the @kwd{imports} mode on (explained below).
+@item
+@code{topmodules} (default on): set the @kwd{topmodules} mode on
+(explained below).
+@end itemize
+
+@section ISL Grammar
+
+In this grammar, parentheses are used for grouping, vertical-bar
+indicates selection, braces indicated optionality, quotation marks
+indicate literal keywords or literal punctuation.
+
+No whitespace is allowed between the parts of a @kwd{radix}, @kwd{number},
+or @kwd{quoted-string}.  Aside from that, whitespace is used to separate
+fields where necessary, and excess whitespace is ignored outside of
+@kwd{quoted-string}s.
+
+Three primitives are used:
+@itemize @bullet
+@item
+@metavar{name-string},
+which is a
+string consisting of decimal digits, upper and lower-case letters, and
+hyphens, beginning with a letter.  It may not be a keyword, unless it
+is quoted with double-quotes.
+@item
+@metavar{string},
+which is any sequence of
+characters.
+@item
+@metavar{digits},
+which is a sequence of digits drawn from the digits
+for the particular radix.  The default radix is decimal.
+@end itemize
+
+@codeexample
+interface = interface-def | interface interface-def
+
+interface-def = interface-declaration interface-directive-list other-declarations
+
+interface-declaration = "INTERFACE" @metavar{name-string}
+                        [ "BRAND" brand-string ]
+                        [ "IMPORTS" import-list "END" ]
+                        ";"
+
+import-name = @metavar{name-string} [ "FROM" filename ]
+
+import-list = import-name | import-list "," import-name
+
+interface-directive-list = [ interface-directive interface-directive-list ]
+
+interface-directive = "DIRECTIVE-EXPERIMENTAL" quoted-string-list ";"
+
+quoted-string-list = quoted-string | quoted-string-list "," quoted-string
+
+other-declarations = [ other-declaration other-declarations ]
+
+other-declaration = constant-decl | exception-decl | type-decl
+
+constant-decl = "CONSTANT" @metavar{name-string} ":" ( integer-const
+                                           | cardinal-const
+                                           | boolean-const
+                                           | byte-const
+                                           | float-const
+                                           | string-const ) ";"
+
+integer-const = [ "SHORT" | "LONG" ] "INTEGER" "=" [ sign ] number
+
+boolean-const = "BOOLEAN" "=" boolean-value
+
+cardinal-const = [ "SHORT" | "LONG" ] "CARDINAL" "=" number
+
+byte-const = "BYTE" "=" number
+
+float-const = [ "SHORT" | "LONG" ] "REAL" "="
+              [sign] @metavar{digits} [ "." @metavar{digits} ] [ "e" @metavar{digits} ]
+
+number = [ radix ] @metavar{digits}
+
+radix = "0" ( binary | octal | hexadecimal )
+
+binary = "b"
+
+octal = "o"
+
+hexadecimal = "x"
+
+string-const = "ilu.CString" "=" quoted-string
+
+exception-decl = "EXCEPTION" excp-name [ ":" type ] [ typeid ] [ doc-string ] ";"
+
+excp-name = @metavar{name-string}
+
+type-decl = "TYPE" @metavar{name-string} "=" ( type | type-cons ) [ typeid ]";"
+
+type = primitive-type-name | [ @metavar{name-string} "." ] @metavar{name-string}
+
+typeid = "TYPEID" type-id-string
+
+primitive-type-name = "BYTE"
+                    | [ "SHORT" | "LONG" ] "CARDINAL"
+                    | [ "SHORT" | "LONG" ] "INTEGER"
+                    | [ "SHORT" | "LONG" ] "REAL"
+                    | [ "SHORT" ] "CHARACTER"
+                    | "BOOLEAN"
+                    | "PICKLE"
+
+type-cons =   record-cons
+                | array-cons
+                | sequence-cons
+                | union-cons
+                | optional-cons
+                | enum-cons
+                | object-cons
+
+record-cons = "RECORD" field-list "END"
+
+field-list = field | field-list "," field
+
+field = @metavar{name-string} ":" type
+
+sequence-cons = [ "SHORT" ] "SEQUENCE" "OF" type [ "LIMIT" number ]
+
+array-cons = "ARRAY" "OF" dimensions-list type
+
+dimensions-list = number | dimensions-list "," number
+
+union-cons = [ @metavar{int-enum-or-boolean-type} ] "UNION" union-field-list "END"
+
+union-field-list = union-field | union-field-list "," union-field
+
+union-field = [ @metavar{field-name-string} ":" ] type [ "=" const-list "END" ]
+
+const-list = const | const-list "," const
+
+const = number | enum-field-name | boolean-value
+
+enum-cons = "ENUMERATION" enum-field-list
+
+enum-field-list = enum-field | enum-field-list "," enum-field
+
+enum-field = @metavar{string}
+
+boolean-value = "TRUE" | "FALSE"
+
+optional-cons = "OPTIONAL" type
+
+object-cons = "OBJECT" object-attributes
+
+object-attributes = object-feature | object-attributes object-feature
+
+object-feature =  "SINGLETON" singleton-protocol-info
+                | "COLLECTIBLE"
+                | "OPTIONAL"
+                | "DOCUMENTATION" doc-string
+                | "BRAND" brand-string
+                | "SUPERTYPES" supertype-list "END"
+                | "METHODS" method-list "END"
+
+supertype-list = type | supertype-list "," type
+
+singleton-protocol-info = quoted-string
+
+method-list = method | method-list "," method
+
+method = [ "FUNCTIONAL" | "ASYNCHRONOUS" ] @metavar{name-string}
+         arguments [ ":" return-type ] [ "RAISES" exception-list "END"]
+         [ doc-string ]
+
+return-type = type
+
+exception-list = excp-name | exception-list "," excp-name
+
+arguments = "(" [ argument-list ] ")"
+
+argument-list = argument | argument-list "," argument
+
+argument = [ "IN" | "OUT" | "INOUT" ] @metavar{name-string} ":" [ "SIBLING" ] type
+
+brand-string = printable-ascii-quoted-string
+
+doc-string = quoted-string
+
+quoted-string = "\"" @metavar{string} "\""
+
+printable-ascii-quoted-string = "\"" @metavar{string consisting of only printable ASCII characters} "\""
+
+type-id-string = "\"" scheme-name ":" @metavar{string} "\""
+
+scheme-name = @metavar{string-without-colon-char}
+@end codeexample

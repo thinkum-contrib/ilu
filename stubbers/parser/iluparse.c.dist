@@ -1,0 +1,6340 @@
+
+/*  A Bison parser, made from ilu.bison
+ by  GNU Bison version 1.25
+  */
+
+#define YYBISON 1  /* Identify Bison output.  */
+
+#define yyparse iluparseparse
+#define yylex iluparselex
+#define yyerror iluparseerror
+#define yylval iluparselval
+#define yychar iluparsechar
+#define yydebug iluparsedebug
+#define yynerrs iluparsenerrs
+#define	K_INTERFACE	258
+#define	K_EXCEPTION	259
+#define	K_TYPE	260
+#define	K_CONSTANT	261
+#define	K_IMPORTS	262
+#define	K_FROM	263
+#define	K_END	264
+#define	K_BRAND	265
+#define	K_DIRECTIVE	266
+#define	K_DIRECTIVE_EXPERIMENTAL	267
+#define	K_FIXEDPOINT	268
+#define	K_INTEGER	269
+#define	K_CARDINAL	270
+#define	K_STRING	271
+#define	K_CHARACTER	272
+#define	K_BYTE	273
+#define	K_EXTENSIBLE	274
+#define	K_FIXED	275
+#define	K_REAL	276
+#define	K_LONG	277
+#define	K_SHORT	278
+#define	K_BOOLEAN	279
+#define	K_FALSE	280
+#define	K_TRUE	281
+#define	K_UNICODE_1_1	282
+#define	K_UTF8	283
+#define	K_LATIN1	284
+#define	K_CHARSET	285
+#define	K_LANGUAGE	286
+#define	K_EQUALS	287
+#define	K_COLON	288
+#define	K_LEFTPAREN	289
+#define	K_RIGHTPAREN	290
+#define	K_SEMICOLON	291
+#define	K_COMMA	292
+#define	K_IN	293
+#define	K_OUT	294
+#define	K_INOUT	295
+#define	K_RECORD	296
+#define	K_UNION	297
+#define	K_ARRAY	298
+#define	K_OF	299
+#define	K_ENUMERATION	300
+#define	K_SEQUENCE	301
+#define	K_OPTIONAL	302
+#define	K_REFERENCE	303
+#define	K_ALIASED	304
+#define	K_PICKLE	305
+#define	K_DEFAULT	306
+#define	K_OBJECT	307
+#define	K_SUPERCLASS	308
+#define	K_SUPERTYPES	309
+#define	K_AUTHENTICATION	310
+#define	K_FUNCTIONAL	311
+#define	K_ASYNCH	312
+#define	K_DOCUMENTATION	313
+#define	K_PUBLIC	314
+#define	K_PRIVATE	315
+#define	K_METHODS	316
+#define	K_RAISES	317
+#define	K_SIBLING	318
+#define	K_SINGLETON	319
+#define	K_COLLECTIBLE	320
+#define	K_SOURCE	321
+#define	K_SINK	322
+#define	K_TYPEID	323
+#define	K_SEALED	324
+#define	K_LOCAL	325
+#define	K_STATE	326
+#define	T_STRING	327
+#define	T_NUMBER	328
+#define	K_EXPONENT	329
+#define	K_PERIOD	330
+#define	K_HYPHEN	331
+#define	K_PLUS	332
+#define	K_LIMIT	333
+#define	K_OTHERS	334
+#define	K_ALLOWS	335
+#define	K_MINNUMERATOR	336
+#define	K_MAXNUMERATOR	337
+#define	K_DENOMINATOR	338
+
+#line 1 "ilu.bison"
+
+/** 
+ BeginILUCopyright
+
+ Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+ Unlimited use, reproduction, modification, and distribution of this
+ software and modified versions thereof is permitted.  Permission is
+ granted to make derivative works from this software or a modified
+ version thereof.  Any copy of this software, a modified version
+ thereof, or a derivative work must include both the above copyright
+ notice of Xerox Corporation and this paragraph.  Any distribution of
+ this software, a modified version thereof, or a derivative work must
+ comply with all applicable United States export control laws.  This
+ software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+ WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+ LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+ EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+ NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+ OF THE POSSIBILITY OF SUCH DAMAGES.
+  
+ EndILUCopyright
+*/
+/*
+$Id: ilu.bison,v 1.218 1999/09/02 06:09:52 janssen Exp $
+*/
+
+/*
+ * portability warnings:  this code is highly dependent upon the list
+ * data type for storing lists of data.  This code makes the assumption
+ * that a pointer and integer are the same size, as it does list_insert()
+ * of integers at numerous points in the code, as part of the bison
+ * actions associated with grammar productions.
+ *
+ * The list data type should eventually be updated to use a more general
+ * (and portable) union mechanism;  For now casts have been added to coerce
+ * integers into pointers of the appropriate type for the corresponding
+ * call.
+ */
+#include <stdio.h>
+
+#include "iluptype.h"
+
+#ifdef ILU_FIXED_POINT_SUPPORT
+#include <ilubignm.h>
+#ifdef ILU_BIGNUM_LIBRARY_SUPPORT
+#include <ilubnops.h>
+#endif /* def ILU_BIGNUM_LIBRARY_SUPPORT */
+#endif /* def ILU_FIXED_POINT_SUPPORT */
+
+#if ((defined(WIN32) || defined(WIN16)) && defined(_WINIO))
+#include <winiodef.h>
+#endif /* ((defined(WIN32) || defined(WIN16)) && defined(_WINIO)) */
+
+#include <ctype.h>		/* for isgraph() */
+#include <stdlib.h>
+#include <string.h>
+
+#if (!((defined(WIN32) || defined(WIN16)) && defined(_WINIO)))
+#include <errno.h>		/* for errno, ERANGE */
+#include <limits.h>		/* for ULONG_MAX */
+#endif /* (!((defined(WIN32) || defined(WIN16)) && defined(_WINIO))) */
+
+#if (defined(WIN32) || defined(WIN16))
+#include <malloc.h>	/* needed because of include of alloca */
+#endif
+
+#ifdef _IS_POSIX
+#include <unistd.h>
+#endif
+
+
+#if defined( macintosh )
+#define yyparse iluparseparse
+#define yylex iluparselex
+#define yyerror iluparseerror
+#define yylval iluparselval
+#define yychar iluparsechar
+#define yydebug iluparsedebug
+#define yynerrs iluparsenerrs
+
+#include	"alloca.h"
+
+#endif
+
+/*
+#ifndef __GNUC__
+extern void * alloca(unsigned long);
+#endif
+*/
+
+#define AND		&&
+#define OR		||
+#define NOT		!
+
+#define KEYWORD(x)	static char x[1]
+
+#define YYSTYPE	refany
+
+#define NEWLINE	'\n'
+
+#define AlphaNumChars "abcdefghijklmnopqrstuvwxyz" "ABCDEFGHIJKLMNOPQRSTUVWXYZ" "0123456789"
+
+#ifdef ADD_DIRECT_OMG_IDL_SUPPORT
+extern list ParseIDLFile (struct idl_parse*);
+#endif /* ADD_DIRECT_OMG_IDL_SUPPORT */
+
+#ifdef ILU_XMLIDL_SUPPORT
+extern int ParseXMLIDL (struct idl_parse*, int type_accept_level);
+#endif /* ILU_XMLIDL_SUPPORT */
+
+#ifndef DEFAULT_INTERFACE_PATH
+
+#if (defined(WIN32) || defined(WIN16))
+#define DEFAULT_INTERFACE_PATH	"."
+#define ILU_INTERFACE_HOME	ILUHOME "\\interfaces"
+#elif defined( macintosh )
+#define DEFAULT_INTERFACE_PATH	""
+#define ILU_INTERFACE_HOME	ILUHOME ":interfaces"
+#else
+#define DEFAULT_INTERFACE_PATH	"."
+#define ILU_INTERFACE_HOME	ILUHOME "/interfaces"
+#endif /* if (def... */
+
+#else
+
+#endif /* ndef DEFAULT_INTERFACE_PATH */
+
+#include "version.h"	/* defines ILU_VERSION */
+
+static const char * _ilu_id = "$" "Id: ILU version " ILU_VERSION_STRING ".  Copyright 1990-1997 Xerox Corporation.  All Rights Reserved. $" ;
+
+#define YYDEBUG 1
+
+static void ilutokenprint (FILE *, int, YYSTYPE);
+
+#define YYPRINT ilutokenprint
+
+KEYWORD(o_Brand);
+KEYWORD(o_Singleton);
+KEYWORD(o_Superclasses);
+KEYWORD(o_Collectible);
+KEYWORD(o_Local);
+KEYWORD(o_Authentication);
+KEYWORD(o_RepositoryID);
+KEYWORD(o_Optional);
+KEYWORD(o_State);
+KEYWORD(o_Methods);
+KEYWORD(o_Sealed);
+KEYWORD(o_Documentation);
+KEYWORD(m_Functional);
+KEYWORD(m_Asynchronous);
+
+typedef struct keyword_s {
+  char * keyword;
+  refany value;
+} Attribute;
+
+static Attribute O_Brand = { o_Brand, 0 };
+static Attribute O_Singleton = { o_Singleton, 0 };
+static Attribute O_Superclasses = { o_Superclasses, 0 };
+static Attribute O_Collectible = { o_Collectible, 0 };
+static Attribute O_Local = { o_Local, 0 };
+static Attribute O_Optional = { o_Optional, 0 };
+static Attribute O_Authentication = { o_Authentication, 0};
+static Attribute O_RepositoryID = { o_RepositoryID, 0};
+static Attribute O_State = { o_State, 0 };
+static Attribute O_Methods = { o_Methods, 0 };
+static Attribute O_Sealed = { o_Sealed, 0 };
+static Attribute O_Documentation = { o_Documentation, 0 };
+
+static const char IDLScopeNamingSeparator[] = "-iluIDLNamingScope-";
+
+extern int iluparsedebug;
+
+int iluparseparse(void);
+static int iluparselex (refany *lvalp);
+extern void FigureTypeUID(Type t);
+
+struct parse_s {
+  list interfaces;
+  Interface interface;
+  FILE *input;
+  string filename;
+  cardinal line;
+  struct parse_s *next;
+};
+
+static struct parse_s *CurrentParse = NULL;
+
+static list ActiveInterfaces = NULL;	/* list of interfaces currently being "fixed up" */
+
+static struct list_s iluparser_DefaultUnionArm = { NULL, NULL, 0 };
+
+static long int ilu_atoi (string s)
+{
+  cardinal base = 10;
+  int sign = 1;
+
+  if (*s == '-')
+    {
+      s++;
+      sign = -1;
+    }
+  else if (*s == '+')
+    {
+      s++;
+    }
+
+  if (*s == '0')
+    {
+      switch (*++s)
+	{
+	case 'b':
+	case 'B':
+	  ++s;
+	  base = 2;
+	  break;
+
+	case 'x':
+	case 'X':
+	  ++s;
+	  base = 16;
+	  break;
+
+	case 'd':
+	case 'D':
+	  ++s;
+	  base = 10;
+	  break;
+
+	case 'o':
+	case 'O':
+	  ++s;
+	  base = 8;
+	  break;
+
+	default:
+	  --s;
+	}
+    }
+
+  return (sign * strtol(s, NULL, base));
+}  
+
+static boolean ilu_strtoul (string input, int *sign, unsigned long *immed, boolean *good)
+{
+  cardinal base = 10;
+  char *finalp = NULL;
+  char *s = input;
+
+  if (*s == '-')
+    {
+      s++;
+      *sign = -1;
+    }
+  else if (*s == '+')
+    {
+      s++;
+      *sign = 1;
+    }
+  else
+    *sign = 1;
+
+  if (((*s == '0') || (*s == '#')) && (strlen(s) > 1))
+    {
+      switch (*++s)
+	{
+	case 'b':
+	case 'B':
+	  ++s;
+	  base = 2;
+	  break;
+
+	case 'x':
+	case 'X':
+	  ++s;
+	  base = 16;
+	  break;
+
+	case 'd':
+	case 'D':
+	  ++s;
+	  base = 10;
+	  break;
+
+	case 'o':
+	case 'O':
+	  ++s;
+	  base = 8;
+	  break;
+
+	default:
+	  return FALSE;
+	}
+    }
+
+  *immed = strtoul (s, &finalp, base);
+  *good = (!((*immed == ULONG_MAX) && (errno == ERANGE))) && ((finalp != NULL) && (*finalp == 0));
+  return ((finalp != NULL) && ((*finalp == 0) || isxdigit(*finalp)));
+}  
+
+char *ilu_strdup(char *src)
+{
+  char *dst=(char *) iluparser_Malloc(strlen(src)+1);
+
+  strcpy(dst,src);
+  return dst;
+}
+
+char *ilu_strndup(char *src, cardinal len)
+{
+  char *dst=(char *) iluparser_Malloc(len + 1);
+
+  strncpy(dst,src,len);
+  dst[len] = '\0';
+  return dst;
+}
+
+/* a strcasecmp(), since we don't have one with ANSI */
+int ilu_strcasecmp (char *a, char *b)
+{
+  register unsigned char *p1 = ( unsigned char *) a;
+  register unsigned char *p2 = ( unsigned char *) b;
+  unsigned char c1, c2;
+
+  if (p1 == p2)
+    return 0;
+
+  do
+    {
+      c1 = tolower (*p1++);
+      c2 = tolower (*p2++);
+      if (c1 == '\0')
+        break;
+    }
+  while (c1 == c2);
+
+  return c1 - c2;
+}
+
+typedef struct {
+  string          name;
+  string          interface;
+}               matchname_s;
+
+static boolean matchTypeName (Type type, matchname_s *name)
+{
+#ifdef ILU_TYPEUID_V2
+  return ((strcmp(type_name(type), name->name) == 0) AND
+  	  (((name->interface == NULL) && (type->importInterfaceName == NULL)) OR
+ 	   (name->interface != NULL AND type->importInterfaceName != NULL
+ 	    AND
+ 	    strcmp(name->interface, type->importInterfaceName) == 0)));
+#else
+  return ((strcmp(type_name(type), name->name) == 0) AND
+	  (((name->interface == NULL) && (type->importInterfaceName == NULL)) OR
+	   (name->interface != NULL AND type->interface != NULL AND
+	    type->importInterfaceName == NULL AND
+	    strcmp(name->interface, name_base_name(type->interface->name)) == 0)));
+#endif
+}
+
+string constant_name (Constant c)
+{
+  return (name_base_name(c->name));
+}
+
+static boolean matchConstantName (Constant constant, matchname_s *name)
+{
+  return (strcmp(constant_name(constant), name->name) == 0 AND
+	  ((name->interface == NULL AND constant->importInterfaceName == NULL) OR
+	   (name->interface != NULL AND constant->importInterfaceName != NULL AND
+	    strcmp(name->interface, constant->importInterfaceName) == 0)));
+}
+    
+static boolean matchExceptionName (Exception exception, matchname_s *e)
+{
+  return (strcmp(exception_name(exception), e->name) == 0 AND
+	  ((e->interface == NULL AND exception->importInterfaceName == NULL) OR
+	   (e->interface != NULL AND exception->importInterfaceName != NULL AND
+	    strcmp(e->interface, exception->importInterfaceName) == 0)));
+}
+
+static void
+printIntegerLiteral (char *msg, IntegerLiteral il)
+{
+  fprintf(stderr, "%s = { small=%s, negative=%s, val=",
+	  msg, il->small ? "TRUE" : "FALSE", il->negative ? "TRUE" : "FALSE");
+  if (il->small)
+    fprintf(stderr, "%lu", il->val.direct);
+  else
+    fprintf(stderr, "\"%s\"", il->val.string);
+  fprintf(stderr, " }\n");
+}
+
+/***********************************************************************
+	List functions
+***********************************************************************/
+
+#ifdef new_list
+#undef new_list
+#endif
+
+list iluparser_new_list (void)
+{
+  list ptr;
+
+  ptr = (list) iluparser_Malloc (sizeof(struct list_s));
+  ptr->head = NULL;
+  ptr->tail = NULL;
+  ptr->count = 0;
+  return (ptr);
+}
+
+#define new_list iluparser_new_list
+
+void list_insert (list l, refany element)
+{
+  listElement *new;
+
+  if (l == NULL)
+    return;
+
+  new = (listElement *) iluparser_Malloc (sizeof(listElement));
+
+  new->data = element;
+  new->next = NULL;
+  if (l->tail != NULL)
+    l->tail->next = new;
+  l->tail = new;
+  if (l->head == NULL)
+    l->head = new;
+  l->count += 1;
+}
+
+void list_insert1(refany element,refany l)
+{
+  list_insert(l,element);
+}
+
+void list_push (list l, refany element)
+{
+  listElement *new;
+
+  if (l == NULL)
+    return;
+
+  new = (listElement *) iluparser_Malloc (sizeof(listElement));
+
+  new->data = element;
+  new->next = l->head;
+  l->head = new;
+  if (l->tail == NULL)
+    l->tail = new;
+  l->count += 1;
+}
+
+boolean list_remove (list l, refany element)
+{
+  listElement *next, *last;
+  boolean wasThere = FALSE;
+
+  if (l == NULL)
+    return (FALSE);
+
+  for (next = l->head, last = NULL;  next != NULL;  last = next, next = next->next)
+    {
+      if (next->data == element)
+	{
+	  wasThere = TRUE;
+	  if (last == NULL)
+	    l->head = next->next;
+	  else
+	    last->next = next->next;
+	  if (next == l->tail)
+	    l->tail = last;
+	  next->next = NULL;
+	  iluparser_Free (next);
+	  l->count -= 1;
+	  next = last;
+	  if (next == NULL)
+	    break;
+	}
+    }
+  return (wasThere);
+}
+
+void list_clear (list l, boolean freeElements)
+{
+  listElement *p, *last;
+
+  for (p = l->head, last = NULL;  p != NULL;  p = last)
+    {
+      last = p->next;
+      if (freeElements && p->data != NULL)
+	iluparser_Free(p->data);
+      p->data = NULL;
+      p->next = NULL;
+      iluparser_Free(p);
+    }
+  l->head = NULL;
+  l->tail = NULL;
+  l->count = 0;
+}
+
+void list_enumerate (list l, iluparser_EnumProc proc, refany rock)
+{
+  listElement *ptr;
+
+  if (l == NULL || l->count < 1)
+    return;
+
+  for (ptr = l->head;  ptr != NULL;  ptr = ptr->next)
+    (*proc)(ptr->data, rock);
+}
+
+refany list_find (list l, iluparser_FindProc proc, refany rock)
+{
+  listElement *ptr;
+
+  if (l == NULL)
+    return (NULL);
+
+  for (ptr = l->head;  ptr != NULL;  ptr = ptr->next)
+    if ((*proc)(ptr->data, rock))
+      return (ptr->data);
+  return (NULL);
+}
+
+cardinal list_size (list l)
+{
+  if (l == NULL)
+    return (0);
+
+  return (l->count);
+}
+
+refany list_ref (list l, cardinal index)
+{
+  listElement *ptr;
+  cardinal i;
+
+  if (l == NULL)
+    return (NULL);
+
+  for (ptr = l->head, i = 0;  ptr != NULL && i <= index;  ptr = ptr->next, i++)
+    if (i == index)
+      return (ptr->data);
+  return (NULL);
+}
+
+boolean list_ref_set (list l, cardinal index, refany p)
+{
+  cardinal i;
+  listElement *ptr;
+
+  for (ptr = l->head, i = 0;  ptr != NULL && i <= index;  ptr = ptr->next, i++) {
+    if (i == index) {
+      ptr->data = p;
+      return TRUE;
+    }
+  }
+  return FALSE;
+}
+
+list list_cdr (list l)
+{
+  list ptr;
+
+  if (l == NULL || l->count < 1)
+    return (NULL);
+      
+  ptr = (list) iluparser_Malloc (sizeof(struct list_s));
+  ptr->head = l->head->next;
+  ptr->tail = l->tail;
+  ptr->count = l->count - 1;
+  return (ptr);
+}
+
+refany list_car (list l)
+{
+  if (l == NULL || l->count == 0)
+    return (NULL);
+  else
+    return (l->head->data);      
+}
+
+void list_sort (list l, iluparser_CompareProc fn)
+{
+  listElement *current, *next, *prev;
+  int count = list_size(l);
+  int index;
+  boolean stable = FALSE;
+
+  /* bubblesort list */
+  while (!stable && count > 1)
+    {
+      for (stable = TRUE, prev = NULL, current = NULL, next = l->head, index = 0;
+	   next != NULL && index < count;
+	   prev = current, current = next, next = current->next, index++)
+	{
+	  if (current != NULL)
+	    {
+	      if ((*fn)(current->data, next->data))
+		{
+		  if (prev == NULL)
+		    l->head = next;
+		  else
+		    prev->next = next;
+		  current->next = next->next;
+		  next->next = current;
+		  current = next;
+		  next = next->next;
+		  stable = FALSE;
+		}
+	    }
+	}
+    }
+}
+
+/**********************************************************************
+	Name methods
+**********************************************************************/
+
+static Name new_Name(void)
+{
+  Name new = (Name) iluparser_Malloc (sizeof(struct name_s));
+  new->base_name = NULL;
+  new->langnames = (set) new_list();
+  return (new);
+}
+
+string name_base_name (Name n)
+{
+  if (n == NULL)
+    return (NULL);
+  return (n->base_name);
+}
+
+string name_remove_idl_scoping (string n)
+{
+  string source, p;
+  string newname;
+
+  newname = iluparser_Malloc(strlen(n) + 1);
+  newname[0] = '\0';
+  source = n;
+  while ((p = strstr(source, IDLScopeNamingSeparator)) != NULL) {
+    strncat (newname, source, (p - source));
+    strncat (newname, "_", 1);
+    source = p + strlen(IDLScopeNamingSeparator);
+  };
+  strcat (newname, source);
+  return newname;
+}
+
+void name_set_base_name (Name n, string name)
+{
+  char *source = name;
+  char *p;
+
+  if (n == NULL)
+    return;
+  if (n->base_name != NULL)
+    iluparser_Free (n->base_name);
+  n->base_name = ilu_strdup(name);
+}
+
+static boolean MatchNameLang (usagename u, string lang)
+{
+  return (u != NULL && strcmp (u->lang, lang) == 0);
+}
+
+string name_lang_name (Name n, string lang)
+{
+  usagename p;
+
+  if (n == NULL)
+    return (NULL);
+  p = (usagename) list_find (n->langnames, (boolean (*)(refany, refany)) MatchNameLang, lang);
+  if (p != NULL)
+    return (p->name);
+  else
+    return (NULL);
+}
+
+void name_set_lang_name (Name n, string lang, string name)
+{
+  usagename new;
+
+  if (n == NULL)
+    return;
+  
+  if ((new = (usagename) list_find (n->langnames, (boolean (*)(refany, refany)) MatchNameLang, lang)) != NULL)
+    {
+      iluparser_Free (new->name);
+      new->name = ilu_strdup (name);
+    }
+  else
+    {
+      new = (usagename) iluparser_Malloc (sizeof(struct usagename_s));
+      new->lang = ilu_strdup(lang);
+      new->name = ilu_strdup(name);
+      list_insert (n->langnames, new);
+    }
+}
+
+void iluparser_set_scoping (list scopes, char *interfacename, char *elementname)
+{
+  char *source = elementname;
+  char *p;
+
+  list_insert(scopes, ilu_strdup(interfacename));
+  while ((p = strstr(source, IDLScopeNamingSeparator)) != NULL) {
+    list_insert(scopes, ilu_strndup(source, (p - source)));
+    source = p + strlen(IDLScopeNamingSeparator);
+  }
+  list_insert(scopes, ilu_strdup(source));
+}
+
+/**********************************************************************
+	Type constructors
+**********************************************************************/
+
+static Type new_Type(void)
+{
+  Type new = (Type) iluparser_Malloc (sizeof(struct ilu_type_s));
+  new->scoping = new_list();
+  new->name = (Name) new_Name();
+  new->description = NULL;
+  new->supertype = NULL;
+  new->refs = new_list();
+  new->def = 0;
+  new->builtIn = FALSE;
+  new->importInterfaceName = NULL;
+  new->interface = NULL;
+  new->cached_des = NULL;
+  new->marked = FALSE;
+  new->uid = NULL;
+  new->explicit_uid = FALSE;
+  new->brand = NULL;
+  return (new);
+}
+
+string type_name (Type t)
+{
+  if (t == NULL || t->name == NULL)
+    return ((string) "void");
+  else
+    return (name_base_name(t->name));
+}
+
+Type ur_type (Type t)
+{
+  Type            p;
+  if (t == NULL)
+    return t;
+  /*
+   * The following circumlocution is better for setting breakpoints
+   * than the straightfoward formulation.
+   */
+  for (p = t; 1; p = p->supertype)
+    if (p->supertype == NULL)
+      return p;
+}
+
+Type under_type (Type t)
+{
+  Type            ans = t;
+  if (ans->supertype != NULL) {
+    ans = ans->supertype;
+    if (ans->importInterfaceName != NULL)
+      ans = ans->supertype;
+  }
+  return ans;
+}
+
+TypeDescription type_description (Type t)
+{
+  Type p;
+
+  if (t == NULL)
+    return (NULL);
+  if (t->cached_des == NULL)
+    {
+      for (p = t;  p->description == NULL; )
+	{
+	  if (p->supertype != NULL)
+	    p = p->supertype;
+	  else
+	    return (NULL);
+	}
+      t->cached_des = p->description;
+    }
+  return (t->cached_des);
+}
+
+TypeKind type_kind (Type t)
+{
+  TypeDescription td;
+
+  if (t == NULL)
+    return (void_Type);
+  if (t->supertype != NULL)
+    return (alias_Type);
+  td = type_description(t);
+  if (td == NULL)
+    return (invalid_Type);
+  return (td->type);
+}
+
+TypeKind type_basic_type (Type t)
+{
+  return type_kind(t);
+}
+
+TypeKind type_ur_kind(Type t)
+{
+  Type            u = ur_type(t);
+  return type_kind(u);
+}
+
+typedef struct {
+  void (*action)(Type, refany);
+  refany actionrock;
+} typeRecurseData;
+
+static void recurseRecordFields (Argument field, typeRecurseData *data)
+{
+  if (field->type != NULL AND NOT field->type->marked)
+    type_recurse (field->type, data->action, data->actionrock);
+}
+
+void type_recurse (Type t, void (*action) (Type, refany),
+		   refany actionrock)
+{
+  TypeKind        tk;
+  if (t == NULL OR t->marked)
+    return;
+  t->marked = TRUE;
+  tk = type_kind(t);
+
+  /* check types that contain other types */
+  if (tk == alias_Type)
+    type_recurse(t->supertype, action, actionrock);
+  else if (tk == record_Type) {
+    typeRecurseData data;
+
+    data.action = action;
+    data.actionrock = actionrock;
+
+    list_enumerate(type_description(t)->structuredDes.record.fields,
+		   (void (*) (refany, refany)) recurseRecordFields,
+		   &data);
+    if (type_description(t)->structuredDes.record.supertype != NULL)
+      type_recurse(type_description(t)->structuredDes.record.supertype,
+		   action, actionrock);
+#ifndef ILU_REFERENCE_TYPES_ONLY
+  } else if (tk == optional_Type) {
+    type_recurse(type_description(t)->structuredDes.optional,
+		 action, actionrock);
+#endif
+  } else if (tk == reference_Type) {
+    type_recurse(type_description(t)->structuredDes.reference.base_type,
+		 action, actionrock);
+  } else if (tk == sequence_Type) {
+    type_recurse(type_description(t)->structuredDes.sequence.type,
+		 action, actionrock);
+  } else if (tk == array_Type) {
+    type_recurse(type_description(t)->structuredDes.array.type,
+		 action, actionrock);
+  } else if (tk == union_Type) {
+    typeRecurseData data;
+
+    data.action = action;
+    data.actionrock = actionrock;
+
+    list_enumerate(type_description(t)->structuredDes.uniond.types,
+		   (void (*) (refany, refany)) recurseRecordFields,
+		   &data);
+  }
+  (*action) (t, actionrock);
+  t->marked = FALSE;
+}
+
+Interface type_interface (Type type)
+{
+  Type t;
+
+  for (t = type;  t->importInterfaceName != NULL;  t = t->supertype)
+    ;
+  return (t->interface);
+}
+
+static Argument new_Argument(void)
+{
+  Argument new = (Argument) iluparser_Malloc (sizeof(struct ilu_argument_s));
+  new->name = new_Name();
+  new->type = NULL;
+  new->values = NULL;
+  new->def = 0;
+  new->sibling = FALSE;
+  new->direction = In;
+  return (new);
+}
+
+string argument_name (Argument a)
+{
+  if (a == NULL)
+    return (NULL);
+  return (name_base_name(a->name));
+}
+
+static Exception new_Exception(void)
+{
+  Exception new = (Exception) iluparser_Malloc (sizeof(struct ilu_exception_s));
+  new->name = new_Name();
+  new->scoping = new_list();
+  new->type = NULL;
+  new->valueOptional = FALSE;
+  new->refs = new_list();
+  new->def = 0;
+  new->id = 0;
+  new->builtIn = FALSE;
+  new->interface = NULL;
+  new->importInterfaceName = NULL;
+  new->import = NULL;
+  new->marked = FALSE;
+  new->corba_rep_id = NULL;
+  new->doc_string = NULL;
+  return (new);
+}
+
+string exception_name (Exception e)
+{
+  if (e == NULL)
+    return (NULL);
+  return (name_base_name(e->name));
+}
+
+Type exception_type (Exception e)
+{
+  Exception ep = e;
+
+  while (ep->import != NULL)
+    ep = ep->import;
+  return (ep->type);
+}
+
+static Procedure new_Procedure(void)
+{
+  Procedure new = (Procedure) iluparser_Malloc (sizeof(struct ilu_proc_s));
+  new->name = new_Name();
+  new->object = NULL;
+  new->arguments = NULL;
+  new->returnType = NULL;
+  new->returnOptional = FALSE;
+  new->functional = FALSE;
+  new->asynch = FALSE;
+  new->exceptions = NULL;
+  new->def = 0;
+  new->id = -1;
+  new->interface = NULL;
+  new->marked = FALSE;
+  return (new);
+}
+
+string procedure_name (Procedure p)
+{
+  return (name_base_name(p->name));
+}
+
+static void SetObjectSlotOfMethod (refany element, refany rock)
+{
+  Procedure m = (Procedure) element;
+  Type o = (Type) rock;
+  if (m != NULL)
+    m->object = o;
+}
+
+static TypeDescription new_TypeDescription(void)
+{
+  TypeDescription new = (TypeDescription) iluparser_Malloc(sizeof(struct ilu_typedes_s));
+  new->type = invalid_Type;
+  memset((char *) new, 0, sizeof(struct ilu_typedes_s));
+  return (new);
+}
+
+static boolean FindInterfaceName (string name, string *interfacename, string *typename)
+{
+  string p;
+
+  if ((p = strchr(name, '.')) == NULL)
+    return (FALSE);
+  name = ilu_strdup(name);
+  p = strchr(name, '.');
+  *p = (char) 0;
+  *interfacename = name;
+  *typename = p + 1;
+  return (TRUE);
+}
+
+static Type find_or_create_type (list l, char *name, Interface interface)
+{
+  Type hit;
+  matchname_s stype;
+  char *stubname;
+
+  stubname = name_remove_idl_scoping(name);
+
+
+/*
+  printf ("%s, %u:  finding type \"%s\"...\n",
+	  (CurrentParse == NULL) ? "" : CurrentParse->filename,
+	  (CurrentParse == NULL) ? 0 : CurrentParse->line, stubname);
+*/
+
+  stype.name = NULL;
+  stype.interface = NULL;
+  FindInterfaceName (stubname, &stype.interface, &stype.name);
+#ifdef ILU_TYPEUID_V2
+  if (stype.name == NULL)
+    stype.name = stubname;
+  else if (interface != NULL &&
+ 	   strcmp(stype.interface,
+ 		  name_base_name(interface->name)) == 0)
+    stype.interface = NULL;
+#else
+  if (stype.name == NULL) stype.name = stubname;
+#endif /* def ILU_TYPEUID_V2 */
+
+  hit = (Type) list_find (l, (iluparser_FindProc) matchTypeName, &stype);
+
+  if (hit == NULL)
+    {
+      hit = new_Type();
+      hit->interface = interface;
+      hit->importInterfaceName = stype.interface;
+      name_set_base_name(hit->name, ilu_strdup(stype.name));
+      list_push (l, hit);
+      iluparser_set_scoping(hit->scoping, interface_name(interface), name);
+#ifdef ILU_TYPEUID_V2
+      if (stype.interface != NULL AND interface != NULL) {
+	name_set_lang_name(hit->name, "import", stype.name);
+      }
+      if (iluparsedebug) {
+ 	fprintf(stderr,
+		"added type_stamp %p (%s.%s) to interface %p (%s).\n",
+ 		hit, stype.interface ? stype.interface : "",
+ 		stype.name, interface,
+ 		interface ? name_base_name(interface->name) : "*");
+      }
+#else
+      if (stype.interface != NULL AND interface != NULL
+	  AND strcmp(stype.interface, name_base_name(interface->name)) != 0)
+	{
+	  name_set_lang_name(hit->name, "import", stype.name);
+	}
+/*
+      printf ("added type <%s> to interface <%s>\n", stubname, (interface == NULL) ? "*" : name_base_name(interface->name));
+*/
+#endif /* def ILU_TYPEUID_V2 */
+
+    }
+  free(stubname);
+  return (hit);
+}
+
+#define FIND_OR_CREATE_TYPE(name) (find_or_create_type (CurrentParse->interface->types, (name), CurrentParse->interface))
+
+static Exception find_or_create_exception (list l, char *name, Interface interface)
+{
+  string typename = NULL, interfacename = NULL;
+  matchname_s e;
+  Exception hit;
+  char *stubname;
+
+  stubname = name_remove_idl_scoping(name);
+
+  FindInterfaceName(stubname, &interfacename, &typename);
+
+  if (typename == NULL)
+    typename = stubname;
+
+  e.name = typename;
+  e.interface = interfacename;
+  hit = (Exception) list_find (l, (boolean (*)(refany, refany)) matchExceptionName, &e);
+
+  if (hit == NULL)
+    {
+      hit = new_Exception();
+      hit->interface = interface;
+      name_set_base_name(hit->name, ilu_strdup(typename));
+      list_insert (l, hit);
+      hit->importInterfaceName = interfacename;
+      iluparser_set_scoping(hit->scoping, interface_name(interface), name);
+      if (interfacename != NULL)
+	name_set_lang_name (hit->name, "import", typename);
+    }
+  free(stubname);
+  return (hit);
+}
+
+#define FIND_OR_CREATE_EXCEPTION(name) (find_or_create_exception (CurrentParse->interface->exceptions, (name), CurrentParse->interface))
+
+static Constant find_or_create_constant (list l, char *name, Interface interface)
+{
+  string typename = NULL, interfacename = NULL;
+  Constant hit;
+  matchname_s ndata;
+  char *stubname;
+
+  stubname = name_remove_idl_scoping(name);
+
+  FindInterfaceName(stubname, &interfacename, &typename);
+
+  if (typename == NULL)
+    typename = stubname;
+
+  ndata.name = typename;
+  ndata.interface = interfacename;
+  hit = (Constant) list_find (l, (boolean (*)(refany, refany)) matchConstantName, &ndata);
+
+  if (hit == NULL)
+    {
+      hit = (Constant) iluparser_Malloc(sizeof(struct ilu_constant_s));
+      hit->scoping = new_list();
+      hit->type = NULL;
+      hit->def = 0;
+      hit->value = NULL;
+      hit->name = new_Name();
+      hit->interface = interface;
+      hit->import = NULL;
+      hit->importInterfaceName = interfacename;
+      name_set_base_name(hit->name, ilu_strdup(typename));
+      iluparser_set_scoping(hit->scoping, interface_name(interface), name);
+      if (interfacename != NULL)
+	name_set_lang_name (hit->name, "import", typename);
+      list_insert (l, hit);
+    }
+  free(stubname);
+  return (hit);
+}
+
+#define FIND_OR_CREATE_CONSTANT(name) (find_or_create_constant (CurrentParse->interface->constants, (name), CurrentParse->interface))
+
+#define ADD_PRIMITIVE_TYPE(l,i,n,t) {Type new = find_or_create_type((l),(n),(i));if(new->description==NULL){TypeDescription d = new_TypeDescription();d->type=(t);new->description=d;new->builtIn=TRUE;};}
+
+static void AddPredefinedTypes (list l, Interface i)
+{
+  ADD_PRIMITIVE_TYPE (l, i, "integer", integer_Type);
+  ADD_PRIMITIVE_TYPE (l, i, "cardinal", cardinal_Type);
+  ADD_PRIMITIVE_TYPE (l, i, "real", real_Type);
+  ADD_PRIMITIVE_TYPE (l, i, "shortinteger", shortinteger_Type);
+  ADD_PRIMITIVE_TYPE (l, i, "shortcardinal", shortcardinal_Type);
+  ADD_PRIMITIVE_TYPE (l, i, "shortreal", shortreal_Type);
+  ADD_PRIMITIVE_TYPE (l, i, "longinteger", longinteger_Type);
+  ADD_PRIMITIVE_TYPE (l, i, "longcardinal", longcardinal_Type);
+  ADD_PRIMITIVE_TYPE (l, i, "longreal", longreal_Type);
+  ADD_PRIMITIVE_TYPE (l, i, "byte", byte_Type);
+  ADD_PRIMITIVE_TYPE (l, i, "boolean", boolean_Type);
+  ADD_PRIMITIVE_TYPE (l, i, "character", character_Type);
+  ADD_PRIMITIVE_TYPE (l, i, "shortcharacter", shortcharacter_Type);
+  ADD_PRIMITIVE_TYPE (l, i, "pickle", pickle_Type);
+}
+
+static list KnownInterfaces = NULL;
+static list ProcessedFiles = NULL;	/* list of "struct parse_s *" */
+
+static void ClearExcnMark (Exception e, void *junk)
+{
+  e->marked = FALSE;
+}
+
+static void ClearProcMark (Procedure p, void *junk)
+{
+  p->marked = FALSE;
+  if (p->exceptions != NULL)
+    list_enumerate (p->exceptions, (iluparser_EnumProc) ClearExcnMark, NULL);
+}
+
+static void ClearTypeMarks (Type t, void *unused)
+{
+  t->marked = FALSE;
+  if (iluparsedebug) {
+    fprintf(stderr,
+ 	    "Clearing mark on type_stamp %p (%s.%s) in ifc %p (%s).\n",
+ 	    t, t->importInterfaceName ? t->importInterfaceName : "",
+ 	    type_name(t), t->interface, interface_name(t->interface));
+  }
+  if (type_ur_kind(t) == object_Type)
+    {
+      Class c = class_object(t);
+      if (c->methods != NULL)
+	list_enumerate (c->methods, (iluparser_EnumProc) ClearProcMark, NULL);
+    }
+}
+
+static void ClearInterfaceMarks(Interface s, void *unused)
+{
+  if (iluparsedebug)
+    fprintf(stderr, "Clearing marks on ifc %s %p\n",
+	    interface_name(s), s);
+  list_enumerate (s->types, (iluparser_EnumProc) ClearTypeMarks, NULL);
+  list_enumerate (s->exceptions, (iluparser_EnumProc) ClearExcnMark, NULL);
+}
+
+void iluparser_ClearMarks (void)
+{
+  list_enumerate (KnownInterfaces, (iluparser_EnumProc) ClearInterfaceMarks, NULL);
+}
+
+static boolean FindNamedInterface (Interface s, string name)
+{
+  return (strcmp (interface_name(s), name) == 0);
+}
+
+static Exception FindExceptionInInterface (string interfacename, string ename)
+{
+  Interface s;
+  Exception e;
+  matchname_s edata;
+
+  if (KnownInterfaces == NULL)
+    return (NULL);
+  if ((s = (Interface) list_find (KnownInterfaces, (boolean (*)(refany, refany)) FindNamedInterface, interfacename)) == NULL)
+    return (NULL);
+  edata.name = ename;
+  edata.interface = NULL;
+  if ((e = (Exception) list_find (s->exceptions, (boolean (*)(refany, refany)) matchExceptionName, &edata)) == NULL)
+    return (NULL);
+  return (e);
+}
+
+static boolean matchTypeNameInIfc(refany element, refany rock)
+{
+  Type            type = (Type) element;
+  matchname_s    *name = (matchname_s *) rock;
+  return ((strcmp(type_name(type), name->name) == 0) AND
+ 	  (name->interface != NULL AND type->interface != NULL AND
+ 	   type->importInterfaceName == NULL AND
+ 	   strcmp(name->interface, name_base_name(type->interface->name)) == 0));
+}
+ 
+static Type FindTypeInInterface (string interfacename, string tname)
+{
+  Interface s;
+  Type t;
+  matchname_s stype;
+
+  if (KnownInterfaces == NULL
+      || ((s = (Interface) list_find (KnownInterfaces, (boolean (*)(refany, refany)) FindNamedInterface, interfacename)) == NULL))
+    {
+      fprintf (stderr, "(FindTypeInInterface):  Can't find interface \"%s\".\n", interfacename);
+      return (NULL);
+    }
+  stype.name = tname;
+  stype.interface = interfacename;
+#ifdef ILU_TYPEUID_V2
+  if ((t = (Type) list_find (s->types, matchTypeNameInIfc, &stype)) == NULL)
+#else
+  if ((t = (Type) list_find (s->types, (iluparser_FindProc) matchTypeName, &stype)) == NULL)
+#endif /* def ILU_TYPEUID_V2 */
+    {
+      fprintf (stderr, "(FindTypeInInterface):  Interface \"%s\" doesn't seem to contain a type \"%s\".\n",
+	       interfacename, tname);
+      return (NULL);
+    }
+  return (t);
+}
+
+static Imported new_Imported(string name, string filename);
+
+static Interface new_Interface (string name)
+{
+  Interface new = (Interface) iluparser_Malloc (sizeof(struct ilu_interface_s));
+  new->name = new_Name();
+  name_set_base_name(new->name, name);
+  new->types = (set) new_list();
+  new->classes = (set) new_list();
+  new->imports = NULL;
+  new->exceptions = (set) new_list();
+  new->constants = (set) new_list();
+  new->brand = NULL;
+  new->idirectives = NULL;
+  new->def = 0;
+  new->module_structure = NULL;
+  AddPredefinedTypes (new->types, new);
+  return (new);
+}
+
+static boolean FindImport (Imported a, char *b)
+{
+  return (strcmp(a->name, b) == 0);
+}
+
+static boolean has_imported (list imports, char *newimport)
+{
+  return (list_find(imports, (iluparser_FindProc) FindImport, newimport) != NULL);
+}
+
+string interface_name(Interface i)
+{
+  return ((string) ((i == NULL) ? NULL : name_base_name(i->name)));
+}
+
+static Imported new_Imported (string name, string filename)
+{
+  Imported new = (Imported) iluparser_Malloc (sizeof(struct ilu_imported_s));
+  new->name = name;
+  new->filename = filename;
+  return (new);
+}
+
+static TypeDescription new_ReferenceType (boolean aliased, boolean optional, Type base_type)
+{
+  TypeDescription new = new_TypeDescription();
+#ifndef ILU_REFERENCE_TYPES_ONLY
+  if (!aliased && optional) {
+      new->type = optional_Type;
+      new->structuredDes.optional = base_type;
+  } else
+#endif
+    {
+      new->type = reference_Type;
+      new->structuredDes.reference.optional = optional;
+      new->structuredDes.reference.aliased = aliased;
+      new->structuredDes.reference.base_type = base_type;
+    }
+  return new;
+}
+
+/**********************************************************************
+  Globals and code
+**********************************************************************/
+
+static list SearchList = NULL;
+
+static void AddILUPATH (list sl)
+{
+  char *prefix;
+  char *p;
+  char *ourstorage;
+  char *iluhome = ILU_INTERFACE_HOME;
+
+  if ((prefix = getenv ("ILUPATH")) == NULL) {
+    prefix = DEFAULT_INTERFACE_PATH;
+    iluhome = NULL;
+  } else if (getenv("ILUPATH_NO_ILUHOME") != NULL) {
+    iluhome = NULL;
+  };
+  p = ourstorage = ilu_strdup(prefix);
+  while (p != NULL AND *p != '\0')
+    {
+      list_insert (sl, p);
+#if (defined(WIN32) || defined(WIN16))
+	/* use common ; path convention for windows platforms */
+      p = strchr(p, ';');
+#elif defined( macintosh )
+      p = strchr(p, ',');
+#else
+      p = strchr(p, ':');
+#endif
+      if (p != NULL)
+	*p++ = '\0';
+    }
+  if (iluhome != NULL) {
+    p = ilu_strdup(iluhome);
+    list_insert(sl, p);
+  };
+}
+
+void iluparser_RegisterInterfaceDirectories (list directories)
+{
+  if (SearchList != NULL)
+    {
+      list_clear (SearchList, FALSE);
+    }
+  SearchList = directories;
+  AddILUPATH (SearchList);
+}
+
+static list GetSearchList (void)
+{
+  if (SearchList == NULL)
+    {
+      SearchList = new_list();
+#if (defined(WIN32) || defined(WIN16))
+      list_insert (SearchList, ilu_strdup("."));
+#endif
+      AddILUPATH (SearchList);
+    }
+  return (SearchList);
+}
+
+string iluparser_FindFileInDir (char *dir, char *name)
+{
+  char buf[1000];
+  char *canonical_name;
+  boolean status;
+
+#if (defined(WIN32) || defined(WIN16))
+  sprintf (buf, "%s\\%s", dir, name);
+#elif defined( macintosh )
+  sprintf (buf, "%s%s", dir, name);
+#else
+  sprintf (buf, "%s/%s", dir, name);
+#endif /* (defined(WIN32) || defined(WIN16)) */
+
+  canonical_name = iluparser_CanonicalPathname (buf);
+
+#ifdef _IS_POSIX
+  status = (access (canonical_name, R_OK) == 0);
+#else
+  {
+    FILE *f = fopen(canonical_name, "r");
+    if (f != NULL)
+      fclose(f);
+    status = (f != NULL);
+  }
+#endif
+  if (status)
+    return canonical_name;
+  else {
+    iluparser_Free(canonical_name);
+    return NULL;
+  }
+}
+
+static boolean
+  FindFileInDir (string dir, string name)
+{
+  string b = iluparser_FindFileInDir(dir, name);
+  if (b == NULL)
+    return FALSE;
+  else {
+    iluparser_Free(b);
+    return TRUE;
+  }    
+}
+
+static string FigureFilename (string name, string extension)
+{
+  char buf[1000];
+  char nbuf[1000];
+  char *testname;
+  char *dir;
+  char *ext;
+  
+  if ((ext = strrchr(name, '.')) == NULL)
+    {
+      sprintf (nbuf, "%s%s", name, (extension == NULL) ? ".isl" : extension);
+      testname = nbuf;
+    }
+  else
+    testname = name;
+
+#if (defined(WIN32) || defined(WIN16))
+  if (*testname == '.' || *testname == '\\')
+#elif defined( macintosh )
+  /*
+     For the Mac implementation, we'll do search list (non-canonical) processing
+     only if:
+       The file name is simple (no paths, no leading colon).
+  */
+  if ( (*testname == ':') || ( strchr( testname, ':' ) != 0 ) )
+#else
+  if (*testname == '.' || *testname == '/')
+#endif /* (defined(WIN32) || defined(WIN16)) */
+    return (iluparser_CanonicalPathname(testname));
+
+  if ((dir = list_find(GetSearchList(), (iluparser_FindProc) FindFileInDir, testname)) != NULL)
+    {  
+#if (defined(WIN32) || defined(WIN16))
+      sprintf (buf, "%s\\%s", dir, testname);
+#elif defined( macintosh )
+      sprintf (buf, "%s%s", dir, testname);
+#else
+      sprintf (buf, "%s/%s", dir, testname);
+#endif /* (defined(WIN32) || defined(WIN16)) */
+      return (iluparser_CanonicalPathname(buf));
+    }
+  else
+    return NULL;
+}
+
+string iluparser_FindFileInIncludes (string filename)
+{
+  return FigureFilename(filename, "");
+}
+
+static boolean
+  printInterfaceName (Interface i, char *name)
+{
+  fprintf (stderr, " imported by %s", interface_name(i));
+  return (strcmp(interface_name(i), name) == 0);
+}
+
+/* used to return an Interface; changed to be ANSI-conformant for
+ * only use in call to list_enumerate().
+ */
+static boolean GetImportedInterface (Imported s)
+{
+  if (list_find(ActiveInterfaces, (iluparser_FindProc) FindNamedInterface, s->name) != NULL) {
+    fprintf(stderr, "Interface %s referenced recursively, which is not allowed in ISL.\n", s->filename);
+    fprintf(stderr, "Reference chain is %s", s->name);
+    list_find(ActiveInterfaces, (iluparser_FindProc) printInterfaceName, stderr);
+    fprintf(stderr, ".\n");
+    return TRUE;
+  };
+  return (GetInterface (s->name, s->filename) == NULL);
+}
+
+static string type_import_name (Type t)
+{
+  return ((string) ((t == NULL) ? NULL : name_lang_name (t->name, "import")));
+}
+
+static void FixUpImportedType (Type t)
+{
+  if (t->importInterfaceName != NULL && t->supertype == NULL) {
+    Type            ref = FindTypeInInterface(t->importInterfaceName,
+					      type_import_name(t));
+#ifdef ILU_TYPEUID_V2
+    if (ref) {
+      if (t->scoping != NULL) {
+ 	list_clear(t->scoping, TRUE);
+ 	free(t->scoping);
+      }
+      t->scoping = ref->scoping;
+      t->supertype = ref;
+    }
+#else
+    if (t->scoping != NULL) {
+      list_clear(t->scoping, TRUE); free(t->scoping);
+    }
+    t->scoping = ref->scoping;
+    t->supertype = ref;
+#endif /* def ILU_TYPEUID_V2 */
+    if (strchr(name_base_name(t->name), '.') != NULL)
+      t->interface = GetInterface(t->importInterfaceName, NULL);
+  }
+  return;
+}
+
+static string exception_import_name (Exception e)
+{
+  return ((string) ((e == NULL) ? NULL : name_lang_name (e->name, "import")));
+}
+
+static void AssignEnumValue(EnumField ef, long int *count)
+{
+    if ( ef->id < 0 ) {
+        ef->id = *count;
+        *count += 1;
+    }
+    else
+	*count = ef -> id + 1;
+}
+
+static void AssignEnumerationIDs(Type t)
+{
+    long count = 0;
+
+    if ( t->importInterfaceName == NULL && 
+		type_kind(t) == enumeration_Type ) {
+        list_enumerate (type_description(t)->structuredDes.enumeration, 
+			(void (*)(refany, refany)) AssignEnumValue, &count );
+    }
+}
+
+static void AssignArmSpecificValue (Argument arg, int *count)
+{
+  ConstantValue new = (ConstantValue) iluparser_Malloc (sizeof(struct ilu_constantvalue_s));
+  new->type = integer_Type;
+  new->val.i.sign = 1;
+  new->val.i.value = *count;
+
+  arg->values = new_list();
+  list_insert(arg->values, new);
+  *count += 1;
+}
+
+static void CountUnvaluedArms (Argument arm, int *count)
+{
+  if (arm->values == NULL)
+    *count += 1;
+}
+
+static boolean matchConstant (Constant c, string name)
+{
+  return (strcmp(c->name->base_name, name) == 0);
+}
+
+static void MassageConstantValue (ConstantValue cv, Type union_type)
+{
+  Constant c;
+  if (cv->type != shortcharacter_Type)
+    return;
+  if ((c = list_find(union_type->interface->constants, (iluparser_FindProc) matchConstant, cv->val.s)) != NULL) {
+    if (ur_type(c->type) != ur_type(type_description(union_type)->structuredDes.uniond.discriminator_type)) {
+      fprintf(stderr, "Union type <%s> with discriminant type <%s> has invalid arm selector value <%s>, apparently a constant of type <%s>.\n",
+	      type_name(union_type), type_name(type_description(union_type)->structuredDes.uniond.discriminator_type),
+	      cv->val.s, type_name(c->type));
+      exit(1);
+    } else {
+      free(cv->val.s);
+      while (c->import != NULL)
+	c = c->import;
+      *cv = *c->value;
+    }
+  }
+}
+
+static void CheckArmValueConstantValue (Argument arm, Type union_type)
+{
+  if (arm->values != NULL)
+    list_enumerate(arm->values, (iluparser_EnumProc) MassageConstantValue, union_type);
+}
+
+static boolean FindDefaultArm (Argument arg, Argument *default_arm)
+{
+  if (arg->values == &iluparser_DefaultUnionArm)
+    {
+      if (*default_arm != NULL)
+	return (TRUE);
+      else
+	*default_arm = arg;
+    }
+  return (FALSE);
+}
+
+static void FigureUnionIDs (Type t)
+{
+  long            count = 0;
+  unsigned int    arms_without_specific_values = 0;
+  TypeDescription td;
+  Type            tagt;
+  TypeKind        tagtb;
+  list            arms;
+
+  if (t->importInterfaceName != NULL ||
+      type_kind(t) != union_Type)
+    return;
+
+  td = type_description(t);
+  arms = td->structuredDes.uniond.types;
+  tagt = ur_type(td->structuredDes.uniond.discriminator_type);
+  tagtb = type_kind(tagt);
+
+  if (NOT(tagtb == integer_Type OR tagtb == shortinteger_Type
+	  OR tagtb == cardinal_Type OR tagtb == shortcardinal_Type
+	  OR tagtb == boolean_Type OR tagtb == byte_Type
+	  OR tagtb == enumeration_Type)) {
+    fprintf(stderr,
+	    "Error:  Type \"%s\" specified as tag type for a union.  Only enumerations, [SHORT]CARDINAL, [SHORT]INTEGER, BYTE, or BOOLEAN are allowed.\n",
+	    type_name(tagt));
+    exit(1);
+  }
+  if (list_find(arms, (iluparser_FindProc) FindDefaultArm,
+		&td->structuredDes.uniond.default_arm)
+      != NULL) {
+    fprintf(stderr,
+	    "Two arms of union \"%s\" declared as default!\n",
+	    type_name(t));
+    exit(1);
+  }
+  if (td->structuredDes.uniond.default_arm != NULL
+      AND td->structuredDes.uniond.others_allowed) {
+    fprintf(stderr, "Union \"%s\":  the keyword OTHERS should not be used with a union type that has a default arm.\n", type_name(t));
+    exit(1);
+  }
+  list_enumerate(arms, (iluparser_EnumProc) CountUnvaluedArms,
+		 &arms_without_specific_values);
+  if (arms_without_specific_values > 0
+      AND list_size(arms) > arms_without_specific_values) {
+    fprintf(stderr, "If any arm of a union such as \"%s\" is assigned particular case values or defaulted, all arms must be assigned values.\n",
+	    type_name(t));
+    exit(1);
+  }
+  if ((tagtb == enumeration_Type) &&
+      (arms_without_specific_values > 0)) {
+    fprintf(stderr, "All arms in enumeration-discriminated union \"%s\" must have explicit enumeration values specified.\n", type_name(t));
+    exit(1);
+  };
+  if (arms_without_specific_values > 0)
+    list_enumerate(arms, (iluparser_EnumProc) AssignArmSpecificValue,
+		   &count);
+  list_enumerate(arms, (iluparser_EnumProc) CheckArmValueConstantValue, t);
+}
+
+static void FixUpImportedException (Exception e, refany ignored_rock)
+{
+  if (e->importInterfaceName != NULL && e->import == NULL)
+    {
+      Exception ref = FindExceptionInInterface (e->importInterfaceName, exception_import_name(e));
+      e->import = ref;
+      if (ref == NULL) {
+	fprintf (stderr, "Can't find referred-to exception \"%s\" or perhaps interface \"%s\".\n",
+		 exception_import_name(e), e->importInterfaceName);
+	exit(1);
+      } else {
+	if (e->scoping != NULL) {
+	  list_clear(e->scoping, TRUE); free(e->scoping);
+	};
+	e->scoping = ref->scoping;
+      }
+    }
+}
+
+static void AssignMethodID (Procedure method, ProtocolId *val)
+{
+  if (method->id < 0)
+    method->id = ++*val;
+}
+
+static void FindHighestMethodID (Procedure method, ProtocolId *val)
+{
+  if (method->id > *val)
+    *val = method->id;
+}
+
+Class class_object (Type t)
+{
+  Type rt = ur_type(t);
+  if (type_kind(rt) != object_Type)
+    return (NULL);
+  if (rt->description != NULL)
+    return (rt->description->structuredDes.object);
+  return NULL;
+}
+
+static void AssignMethodIDs (refany element, refany rock)
+{
+  Type            type = (Type) element;
+  Class           od;
+  ProtocolId      HighestMethodID;
+
+  if (type == NULL || type_kind(type) != object_Type ||
+      (od = class_object(type)) == NULL)
+    return;
+  list_enumerate(od->superclasses, AssignMethodIDs, NULL);
+  if (list_size(od->methods) > 0) {
+    HighestMethodID = 0;
+    list_enumerate(od->methods,
+		   (void (*) (refany, refany)) FindHighestMethodID,
+		   &HighestMethodID);
+    list_enumerate(od->methods,
+		   (void (*) (refany, refany)) AssignMethodID,
+		   &HighestMethodID);
+  }
+}
+
+static boolean ParsingConstant = FALSE;
+static boolean ParsingNonRealConstant = FALSE;
+
+static char *ErrorCheckMsg;
+static char *ErrorCheckTname;
+static boolean ErrorCheckErrors = FALSE;
+static char *ErrorCheckFilename;
+
+static void PrintRef (long int ref, char *file)
+{
+  fprintf (stderr, "%s:%ld:  %s \"%s\".\n", file, ref, ErrorCheckMsg, ErrorCheckTname);
+}
+
+static void FindDifferentlyCasedSameException (Exception e1, Exception e2)
+{
+  if (e1->interface == e2->interface && e1->def != 0 && e2->def != 0
+      && ilu_strcasecmp(exception_name(e1), exception_name(e2)) == 0
+      && strcmp(exception_name(e1), exception_name(e2)) != 0)
+    {
+      fprintf (stderr, "%s:%ld:  exception \"%s\" redefined as \"%s\"\n",
+	       ErrorCheckFilename, e2->def, exception_name(e1), exception_name(e2));
+      ErrorCheckErrors = TRUE;
+    }
+}
+
+static void FindDifferentlyCasedSameType (Type t1, Type t2)
+{
+  if (t1->interface == t2->interface && t1->def != 0 && t2->def != 0
+      && ilu_strcasecmp(type_name(t1), type_name(t2)) == 0 && strcmp(type_name(t1), type_name(t2)) != 0)
+    {
+      fprintf (stderr, "%s:%ld:  type \"%s\" redefined as \"%s\"\n",
+	       ErrorCheckFilename, t2->def, type_name(t1), type_name(t2));
+      ErrorCheckErrors = TRUE;
+    }
+}
+
+static void CheckTypeDefs (Type type, char *file)
+{
+  ErrorCheckFilename = file;
+  if (!type->builtIn && type->def == 0 && type->importInterfaceName == NULL)
+    {
+      fprintf (stderr, "%s:*:  undefined type \"%s\".\n", file, name_base_name(type->name));
+      ErrorCheckTname = type_name(type);
+      ErrorCheckMsg = "undefined type";
+      list_enumerate (type->refs, (void (*)(refany, refany)) PrintRef, file);
+      ErrorCheckErrors = TRUE;
+    }
+  else
+    {
+      if (type->interface != NULL)
+	list_enumerate (type->interface->types, (void (*)(refany, refany)) FindDifferentlyCasedSameType, type);
+    }
+}
+
+static void CheckExceptionDefs (Exception e, char *file)
+{
+  ErrorCheckFilename = file;
+  if (!e->builtIn && e->def == 0 && e->importInterfaceName == NULL)
+    {
+      ErrorCheckTname = exception_name(e);
+      ErrorCheckMsg = "undefined exception";
+      fprintf (stderr, "%s:  undefined exception %s\n", file, ErrorCheckTname);
+      list_enumerate (e->refs, (void (*)(refany, refany)) PrintRef, file);
+      ErrorCheckErrors = TRUE;
+    }
+  if (e->interface != NULL)
+    list_enumerate (e->interface->exceptions, (void (*)(refany, refany)) FindDifferentlyCasedSameException, e);
+}
+
+static void FixEnumValuedConstants (Constant c, void *junk)
+{
+  char *old, *p;
+
+  if ((type_ur_kind(c->type) == enumeration_Type) &&
+      (c->value->type == shortcharacter_Type) &&
+      ((p = strrchr(c->value->val.s, '.')) != NULL)) {
+    old = c->value->val.s;
+    c->value->val.s = ilu_strdup(p + 1);
+    free(old);
+  }
+}
+
+static void FigureCollectibility2 (Type type, boolean *v)
+{
+  Class od;
+
+  if (type == NULL || type_kind(type) != object_Type || (od = class_object(type)) == NULL)
+    return;
+  if (!od->collectible)
+    {
+      *v = FALSE;
+      return;
+    }
+  else
+    list_enumerate(od->superclasses, (void (*) (refany, refany)) FigureCollectibility2, v);
+}
+
+static void FigureCollectibility (Type type, char *file)
+{
+  Class od;
+  boolean was_collectible;
+
+  if (type == NULL || type_kind(type) != object_Type || (od = class_object(type)) == NULL)
+    return;
+  was_collectible = od->collectible;
+  if (!od->collectible)
+    return;
+  else
+    list_enumerate(od->superclasses, (void (*) (refany, refany)) FigureCollectibility2, &od->collectible);
+  if (was_collectible AND NOT od->collectible)
+    {
+      fprintf (stderr, "%s:%ld:  collectible type %s inherits from non-collectible superclasses.\n",
+	       type_interface(type)->filename, type->def, type_name(type));
+      ErrorCheckErrors = TRUE;
+    }
+}
+
+static void FigureOptionality2 (Type type, boolean *v)
+{
+  Class od;
+
+  if (type == NULL || type_kind(type) != object_Type || (od = class_object(type)) == NULL)
+    return;
+  if (!od->collectible)
+    {
+      *v = FALSE;
+      return;
+    }
+  else
+    list_enumerate(od->superclasses, (void (*) (refany, refany)) FigureOptionality2, v);
+}
+
+static void FigureOptionality (Type type, char *file)
+{
+  Class od;
+  boolean was_collectible;
+
+  if (type == NULL || type_kind(type) != object_Type || (od = class_object(type)) == NULL)
+    return;
+  was_collectible = od->collectible;
+  if (!od->collectible)
+    return;
+  else
+    list_enumerate(od->superclasses, (void (*) (refany, refany)) FigureOptionality2, &od->collectible);
+  if (was_collectible AND NOT od->collectible)
+    {
+      fprintf (stderr, "%s:%ld:  optional class %s inherits from non-optional superclasses.\n",
+	       type_interface(type)->filename, type->def, type_name(type));
+      ErrorCheckErrors = TRUE;
+    }
+}
+
+static void CheckConstants (Constant c, char *file)
+{
+  TypeKind ctk, vtk;
+  char *cn = name_base_name(c->name);
+  char *tn = type_name(c->type);
+
+  ctk = type_ur_kind(c->type);
+  vtk = c->value->type;
+
+  switch (ctk)
+    {
+    case shortinteger_Type:
+    case integer_Type:
+    case longinteger_Type:
+      if (vtk != integer_Type) {
+	fprintf (stderr, "%s:%ld:  %s: constants of type \"%s\" must have an associated integer value.\n",
+		 file, c->def, cn, tn);
+	ErrorCheckErrors = TRUE;
+      }
+      else if (ctk == shortinteger_Type &&
+	       (((c->value->val.i.sign > 0) && (c->value->val.i.value > 0x7FFF)) ||
+		((c->value->val.i.sign < 0) && (c->value->val.i.value > 0x8000)))) {
+	fprintf (stderr, "%s:%ld:  %s: constants of type \"%s\" must be between %ld and %ld.\n",
+		 file, c->def, cn, tn, -32768, 32767);
+	ErrorCheckErrors = TRUE;
+      }
+      else if (ctk == integer_Type &&
+	       (((c->value->val.i.sign > 0) && (c->value->val.i.value > 0x7FFFFFFF)) ||
+		((c->value->val.i.sign < 0) && (c->value->val.i.value > 0x80000000)))) {
+	fprintf (stderr, "%s:%ld:  %s: constants of type \"%s\" must be between %ld and %ld.\n",
+		 file, c->def, cn, tn, (-2147483647 - 1), 2147483647);
+	ErrorCheckErrors = TRUE;
+      }
+      break;
+
+    case byte_Type:
+    case shortcardinal_Type:
+    case cardinal_Type:
+    case longcardinal_Type:
+      if (vtk != integer_Type) {
+	fprintf (stderr, "%s:%ld:  %s: constants of type \"%s\" must have an associated integer value.\n", file, c->def, cn, tn);
+	ErrorCheckErrors = TRUE;
+      }
+      else if (c->value->val.i.sign < 0) {
+	fprintf (stderr, "%s:%ld:  %s: constants of type \"%s\" may not be negative.\n", file, c->def, cn, tn);
+	ErrorCheckErrors = TRUE;
+      }
+      else if (ctk == byte_Type && c->value->val.i.value > 255) {
+	fprintf (stderr, "%s:%ld:  %s: constants of type \"%s\" must be less than 255.\n", file, c->def, cn, tn);
+	ErrorCheckErrors = TRUE;
+      }
+      else if (ctk == shortcardinal_Type && c->value->val.i.value > 0xFFFF) {
+	fprintf (stderr, "%s:%ld:  %s: constants of type \"%s\" must be less than %lu.\n", file, c->def, cn, tn, 0xFFFF);
+	ErrorCheckErrors = TRUE;
+      }
+      else if (ctk == cardinal_Type && c->value->val.i.value > 0xFFFFFFFF) {
+	fprintf (stderr, "%s:%ld:  %s: constants of type \"%s\" must be less than %lu.\n", file, c->def, cn, tn, 0xFFFFFFFF);
+	ErrorCheckErrors = TRUE;
+      }
+      break;
+
+    case real_Type:
+    case shortreal_Type:
+    case longreal_Type:
+      if (vtk != real_Type && vtk != integer_Type) {
+	fprintf (stderr, "%s:%ld:  %s: constants of type \"%s\" must have an associated real or integer value.\n", file, c->def, cn, tn);
+	ErrorCheckErrors = TRUE;
+      }
+      break;
+
+    case boolean_Type:
+      if (vtk != boolean_Type) {
+	fprintf (stderr, "%s:%ld:  %s: constants of type \"%s\" must have an associated boolean value.\n", file, c->def, cn, tn);
+	ErrorCheckErrors = TRUE;
+      }
+      break;
+
+    case sequence_Type:
+      if (vtk != shortcharacter_Type) {
+	fprintf (stderr, "%s:%ld:  %s: constants of type \"%s\" must have an associated string value.\n", file, c->def, cn, tn);
+	ErrorCheckErrors = TRUE;
+      }
+      break;
+
+    case enumeration_Type:
+      if (vtk != shortcharacter_Type) {
+	fprintf (stderr, "%s:%ld:  %s: constants of type \"%s\" must have an associated string value.\n", file, c->def, cn, tn);
+	ErrorCheckErrors = TRUE;
+      }
+      break;
+
+    default:
+      fprintf (stderr, "%s:%ld:  %s: constants of type \"%s\" not allowed.\n", file, c->def, cn, tn);
+      ErrorCheckErrors = TRUE;
+      break;
+    }
+}
+
+static Type CheckDuplicateField (Argument field, Type t)
+{
+  int i, nfields;
+  list sfields = type_description(ur_type(t))->structuredDes.record.fields;
+
+  nfields = list_size(sfields);
+  for (i = 0;  i < nfields;  i++) {
+    if (strcmp(argument_name(field), argument_name(list_ref(sfields, i))) == 0)
+      return t;
+  }
+  if (type_description(ur_type(t))->structuredDes.record.supertype != NULL)
+    return CheckDuplicateField(field, type_description(ur_type(t))->structuredDes.record.supertype);
+  else
+    return NULL;
+}
+
+static boolean CheckRecordDefs (Type t, char *file)
+{
+  Type s, p;
+  int i, nfields;
+
+  if (type_kind(t) != record_Type)
+    return FALSE;
+  for (p = t, s = type_description(t)->structuredDes.record.supertype;  (p != NULL && s != NULL);
+       p = s, s = type_description(s)->structuredDes.record.supertype) {
+    if (type_ur_kind(s) != record_Type) {
+      fprintf(stderr, "Non-record type \"%s\" cannot be a supertype for record type \"%s\".\n",
+	      type_name(s), type_name(p));
+      ErrorCheckErrors = TRUE;
+    } else if (!(type_description(ur_type(s))->structuredDes.record.extensible)) {
+      fprintf(stderr, "Non-extensible record type \"%s\" cannot be a supertype for record type \"%s\".\n",
+	      type_name(s), type_name(p));
+      ErrorCheckErrors = TRUE;
+    };
+  };
+  if (type_description(t)->structuredDes.record.supertype != NULL) {
+    nfields = list_size(type_description(t)->structuredDes.record.fields);
+    for (i = 0;  i < nfields;  i++) {
+      if ((s = CheckDuplicateField(list_ref(type_description(t)->structuredDes.record.fields, i),
+				   type_description(t)->structuredDes.record.supertype)) != NULL) {
+	fprintf(stderr, "Record field \"%s\" declared in type \"%s\" cannot be re-declared in subtype \"%s\".\n",
+		argument_name(list_ref(type_description(t)->structuredDes.record.fields, i)),
+		type_name(s), type_name(t));
+	ErrorCheckErrors = TRUE;
+      }
+    }
+  } else if (list_size(type_description(t)->structuredDes.record.fields) < 1) {
+    fprintf (stderr, "Record type \"%s\" has no fields!\n", type_name(t));
+    ErrorCheckErrors = TRUE;
+  };
+  return FALSE;  
+}
+
+static boolean MatchEnumFieldName (EnumField ef, char *s)
+{
+  return (strcmp(ef->name, s) == 0);
+}
+
+static boolean CheckUnionDefs (Type t, char *file)
+{
+  Type d;
+  int i, n, nfields;
+  list values;
+  Argument arm;
+
+  if (type_kind(t) != union_Type)
+    return FALSE;
+  d = type_description(t)->structuredDes.uniond.discriminator_type;
+  if (type_ur_kind(d) == enumeration_Type) {
+    /* Check to see all arms have some value attached to them... */
+    for (i = 0;  i < list_size(type_description(t)->structuredDes.uniond.types);  i++) {
+      arm = (Argument) list_ref(type_description(t)->structuredDes.uniond.types, i);
+      if (list_size(arm->values) < 1) {
+	if (arm->values != &iluparser_DefaultUnionArm) {
+	  char *arm_name;
+	  if ((arm_name = argument_name(arm)) == NULL)
+	    arm_name = type_name(arm->type);
+	  fprintf (stderr, "Enumeration-discriminated union \"%s\" "
+		   "has arm (\"%s\") with no assigned discriminant values.\n",
+		   type_name(t), arm_name);
+	  ErrorCheckErrors = TRUE;
+	}
+      } else {
+	for (n = 0;  n < list_size(arm->values); n++) {
+	  ConstantValue val = list_ref(arm->values, n);
+	  char *arm_name;
+	  if (val->type != shortcharacter_Type) {
+	    if ((arm_name = argument_name(arm)) == NULL)
+	      arm_name = type_name(arm->type);
+	    fprintf (stderr, "Enumeration-discriminated union \"%s\" "
+		     "has arm (\"%s\") with non-enumeration discriminant value.\n",
+		     type_name(t), arm_name);
+	    ErrorCheckErrors = TRUE;
+	  } else {
+	    if (list_find(type_description(d)->structuredDes.enumeration,
+			  (iluparser_FindProc) MatchEnumFieldName, val->val.s) == NULL)
+	      {
+		if ((arm_name = argument_name(arm)) == NULL)
+		  arm_name = type_name(arm->type);
+		fprintf (stderr, "Arm \"%s\" of union \"%s\" has "
+			 "discriminant value not in enumeration type \"%s\".\n",
+			 arm_name, type_name(t), type_name(d));
+		ErrorCheckErrors = TRUE;
+	      }
+	  }
+	}
+      }
+    }
+  }
+  return FALSE;  
+}
+
+static boolean ErrorCheck (Interface s, char *file)
+{
+  boolean         stat;
+
+  ErrorCheckErrors = FALSE;
+  list_enumerate(s->types, (void (*) (refany, refany)) CheckTypeDefs,
+		 file);
+  list_enumerate(s->types,
+		 (void (*) (refany, refany)) CheckRecordDefs, file);
+  list_enumerate(s->types,
+		 (void (*) (refany, refany)) CheckUnionDefs, file);
+  list_enumerate(s->exceptions,
+	    (void (*) (refany, refany)) CheckExceptionDefs, file);
+  list_enumerate(s->classes,
+	  (void (*) (refany, refany)) FigureCollectibility, file);
+  list_enumerate(s->classes,
+	     (void (*) (refany, refany)) FigureOptionality, file);
+  list_enumerate(s->constants,
+		 (iluparser_EnumProc) CheckConstants, file);
+  stat = ErrorCheckErrors;
+  ErrorCheckErrors = FALSE;
+  return (stat);
+}
+
+static boolean has_suffix(string filename, string suffix)
+{
+  int offset = strlen(filename) - strlen(suffix);
+
+  return offset >= 0 && strcmp(filename + offset, suffix) == 0;
+}
+
+static char* IdlIncludePath = "";
+
+void iluparser_SetIdlIncludePath(string path)
+{
+  IdlIncludePath = path;
+}
+
+static FILE *idl2isl(char *filename)
+{
+#if (defined(_IS_POSIX) || defined(WIN32))
+  static char idl2isl_cmd[] = "idl2isl";
+  char command_buffer[1000];
+  char name_buffer[L_tmpnam];
+  char *isl_name = tmpnam(name_buffer);
+  FILE *file = NULL;
+
+#ifndef WIN32
+  sprintf(command_buffer, "%s/%s %s %s > %s", IDL2ISL_BINDIR,
+	  idl2isl_cmd, IdlIncludePath, filename, isl_name);
+#else
+/* for WIN32 we assume idl2isl is on the path */
+ sprintf(command_buffer, "%s %s %s > %s", 
+	  idl2isl_cmd, IdlIncludePath, filename, isl_name);
+#endif
+  if (system(command_buffer) != 0)
+      fprintf (stderr, "IDL to ISL translation failed on file %s.\n", filename);
+  else if ((file = fopen(isl_name, "r")) == NULL)
+      fprintf (stderr, "Error opening file %s for read.\n", isl_name);
+  unlink(isl_name);
+  return file;
+#else	/* is *not* POSIX  or WIN32 */
+  printf("ILU parser:  OMG IDL parsing is only supported on POSIX UNIX or WIN32 platforms.\n");
+  exit(1);
+  return (0);	/* shut up compiler warning about no return value */
+#endif /* _IS_POSIX or WIN32 */
+}
+
+
+static void AddNewInterface (Interface interface, struct parse_s *new)
+{
+  interface->filename = ilu_strdup(new->filename);
+
+  if (KnownInterfaces == NULL)
+    KnownInterfaces = new_list();
+  if (list_find(KnownInterfaces,
+		(boolean(*) (refany, refany)) FindNamedInterface,
+		name_base_name(interface->name))
+      == NULL)
+    list_insert(KnownInterfaces, interface);
+}
+
+static void IdentifyClasses (Type t, list classes)
+{
+  if (type_kind(t) == object_Type && t->importInterfaceName == NULL)
+    list_insert(classes, t);
+}
+
+static boolean FixupInterface (Interface interface, struct parse_s *new)
+{
+  list_enumerate(interface->types, (iluparser_EnumProc) IdentifyClasses, interface->classes);
+
+  list_push(ActiveInterfaces, interface);
+
+  /* Now go and get any imported interfaces. */
+  if (list_find(interface->imports,
+		(iluparser_FindProc) GetImportedInterface, NULL) != NULL) {
+    list_remove(ActiveInterfaces, interface);
+    list_remove(KnownInterfaces, interface);
+    if (iluparsedebug)
+      fprintf(stderr, "Forgetting ifc %s %p due to early errs.\n",
+	      interface_name(interface), interface);
+    return TRUE;
+  };
+  list_remove(ActiveInterfaces, interface);
+  list_enumerate(interface->types,
+		 (iluparser_EnumProc) FixUpImportedType, NULL);
+  list_enumerate(interface->exceptions,
+	       (iluparser_EnumProc) FixUpImportedException, NULL);
+
+  /* assign Enumeration IDs */
+  list_enumerate(interface->types,
+	  (void (*) (refany, refany)) AssignEnumerationIDs, NULL);
+
+  /* assign Union discriminators */
+  list_enumerate(interface->types, (iluparser_EnumProc) FigureUnionIDs, NULL);
+
+  /* fix imported enum-valued constants */
+  list_enumerate(interface->constants, (iluparser_EnumProc) FixEnumValuedConstants, NULL);
+
+  /* assign Method IDs and unique class ids */
+  list_enumerate(interface->classes, AssignMethodIDs, NULL);
+  iluparser_ClearMarks();
+  list_enumerate(interface->types, (iluparser_EnumProc) FigureTypeUID, NULL);
+
+  /* check for errors and remove if necessary */
+  if (ErrorCheck(interface, new->filename)) {
+    list_remove(KnownInterfaces, interface);
+    if (iluparsedebug)
+      fprintf(stderr, "Forgetting ifc %s %p due to late errs.\n",
+	      interface_name(interface), interface);
+    return (TRUE);
+  } else
+    return (FALSE);
+}
+
+static boolean
+  MatchProcessedFilename (struct parse_s *entry, char *filename)
+{
+  return (strcmp(entry->filename, filename) == 0);
+}
+
+
+static void FixUpImportedInterfaceException(Interface p_interface_struct, refany rock) {
+ 	list_enumerate(p_interface_struct->exceptions, (iluparser_EnumProc) FixUpImportedException, rock);
+}
+
+
+static void FixUpImportedInterfaceType(Interface p_interface_struct, refany rock) {
+ 	list_enumerate(p_interface_struct->types, (iluparser_EnumProc) FixUpImportedType, rock);
+}
+
+
+static void FigureTypeUIDWhereNecessary (Type p_type, refany junk)
+{
+    if ((p_type->importInterfaceName != NULL) && (p_type->uid == NULL)) {
+	if (ur_type(p_type)->uid == NULL)
+	    FigureTypeUID (ur_type(p_type));
+	p_type->uid = ur_type(p_type)->uid;
+    }
+}
+
+static void FigureTypeUIDWhereNecessaryInterface (Interface p_interface, refany rock) {
+    list_enumerate(p_interface->types, (iluparser_EnumProc) FigureTypeUIDWhereNecessary, NULL);
+}
+
+list ParseFile (string filename)
+{
+  struct parse_s *new;
+  int stat;
+  list val = NULL;
+  char *full_filename;
+
+  iluparsedebug = ((getenv("ISLDEBUG") != NULL) ? 1 : 0);
+
+  if (KnownInterfaces == NULL)
+    KnownInterfaces = new_list();
+
+  if (ActiveInterfaces == NULL)
+    ActiveInterfaces = new_list();
+
+  if (ProcessedFiles == NULL)
+    ProcessedFiles = new_list();
+
+  
+  if ((full_filename = FigureFilename (filename, ".isl")) == NULL)
+    {
+      list searched_dirs = GetSearchList();
+      int i;
+      fprintf (stderr, "ParseFile:  couldn't figure full filename for partial name \"%s\".\n", filename);
+      fprintf (stderr, "Directories searched:\n");
+      for (i = 0;  i < list_size(searched_dirs);  i++) {
+	fprintf (stderr, "  %s\n", (char *) list_ref(searched_dirs, i));
+      }
+      return (NULL);
+    }
+  
+  if ((new = (struct parse_s *) list_find(ProcessedFiles,
+					  (iluparser_FindProc) MatchProcessedFilename,
+					  (void *) full_filename)) != NULL)
+    return new->interfaces;
+
+  new = (struct parse_s *) iluparser_Malloc (sizeof(struct parse_s));
+  new->filename = full_filename;
+  new->interfaces = NULL;
+  new->interface = NULL;
+  new->input = NULL;
+  new->line = 0;
+  new->next = NULL;
+  new->next = CurrentParse;
+  new->interface = NULL;
+  new->line = 1;
+  
+  if (has_suffix(new->filename, ".idl"))
+    {
+#if   defined(ADD_DIRECT_OMG_IDL_SUPPORT)
+      struct idl_parse p;
+
+      p.file=new->filename;
+      p.definitions=p.defined_interfaces=p.imported_interfaces=NULL;
+      if ((new->interfaces = ParseIDLFile(&p)) == NULL) {
+	fprintf (stderr, "ParseFile:  couldn't parse OMG IDL file \"%s\".\n", new->filename);
+	iluparser_Free (new->filename);
+	iluparser_Free (new);
+	return (NULL);
+      } else {
+	stat = 0;
+	list_enumerate(p.imported_interfaces,list_insert1,KnownInterfaces);
+	list_enumerate(p.imported_interfaces, (iluparser_EnumProc) FixUpImportedInterfaceException, new);
+	list_enumerate(p.imported_interfaces, (iluparser_EnumProc) FixUpImportedInterfaceType, new);
+	iluparser_ClearMarks();
+	list_enumerate(p.imported_interfaces, (iluparser_EnumProc) FigureTypeUIDWhereNecessaryInterface, NULL);
+      }
+
+#elif defined(ADD_IDL_SUPPORT)
+
+      if ((new->input = idl2isl(new->filename)) == NULL)
+	{
+	  fprintf (stderr, "ParseFile:  couldn't create ISL from IDL file \"%s\".\n", new->filename);
+	  iluparser_Free (new->filename);
+	  iluparser_Free (new);
+	  return (NULL);
+	}
+
+#else
+
+      fprintf(stderr, "Parsing of OMG IDL files not supported in this configuration of ILU.\n");
+      return (NULL);
+
+#endif
+    }
+  else if (has_suffix(new->filename, ".xmlidl") || has_suffix(new->filename, ".xi"))
+    {
+#ifdef ILU_XMLIDL_SUPPORT
+      struct idl_parse p;
+
+      p.file=new->filename;
+      p.definitions=p.defined_interfaces=p.imported_interfaces=NULL;
+      if (ParseXMLIDL(&p, 0) == 0) {
+	fprintf (stderr, "ParseFile:  couldn't parse XML IDL file \"%s\".\n", new->filename);
+	iluparser_Free (new->filename);
+	iluparser_Free (new);
+	return (NULL);
+      } else {
+	new->interfaces = p.defined_interfaces;
+	stat = 0;
+	list_enumerate(p.imported_interfaces,list_insert1,KnownInterfaces);
+	list_enumerate(p.imported_interfaces, (iluparser_EnumProc) FixUpImportedInterfaceException, new);
+	list_enumerate(p.imported_interfaces, (iluparser_EnumProc) FixUpImportedInterfaceType, new);
+	iluparser_ClearMarks();
+	list_enumerate(p.imported_interfaces, (iluparser_EnumProc) FigureTypeUIDWhereNecessaryInterface, NULL);
+      }
+#else
+
+      fprintf(stderr, "Parsing of XML IDL files not supported in this configuration of ILU.\n");
+      return (NULL);
+
+#endif
+    }
+  else if ((new->input = fopen(new->filename, "r")) == NULL)
+    {
+      fprintf (stderr, "ParseFile:  Error opening file \"%s\" for read.\n", new->filename);
+      iluparser_Free (new->filename);
+      iluparser_Free (new);
+      return (NULL);
+    }
+
+  if (new->interfaces == NULL) {
+    CurrentParse = new;
+    ParsingConstant = FALSE;
+    if (iluparsedebug)
+      fprintf (stderr, "parsing %s\n", filename);
+    stat = iluparseparse();
+    if (iluparsedebug)
+      fprintf (stderr, "finished %s\n", filename);
+    fclose (new->input);
+    CurrentParse = new->next;
+  }
+
+  if (stat == 0 AND new->interfaces != NULL)
+    {
+      Interface invalid_interface;
+
+      list_enumerate (new->interfaces, (iluparser_EnumProc) AddNewInterface, new);
+
+      while ((invalid_interface = (Interface) list_find (new->interfaces, (boolean (*)(refany, refany)) FixupInterface, new)) != NULL)
+	list_remove (new->interfaces, invalid_interface);      
+      if (list_size(new->interfaces) == 0)
+	val = NULL;
+      else
+	val = new->interfaces;
+      /* remember this file */
+      list_insert(ProcessedFiles, new);
+    }
+  else
+    {
+      fprintf (stderr, "%s:%ld:  parse error %d\n", new->filename, new->line, stat);
+      iluparser_Free (new->filename);
+      iluparser_Free (new);
+      val = NULL;
+    }
+  return (val);
+}
+
+Interface GetInterface (string interfacename, string filename)
+{
+  Interface s;
+
+  if (interfacename == NULL)
+    return (NULL);
+
+  if (KnownInterfaces == NULL
+      || interfacename == NULL
+      || (s = (Interface) list_find (KnownInterfaces, (boolean (*)(refany, refany)) FindNamedInterface, interfacename)) == NULL)
+    {
+      char buf[1000];
+
+      if (filename == NULL)
+	{
+	  sprintf (buf, "%s.isl", interfacename);
+	  ParseFile (buf);
+	}
+      else
+	ParseFile (filename);
+    }
+  if (KnownInterfaces == NULL
+      || (s = (Interface) list_find (KnownInterfaces, (boolean (*)(refany, refany)) FindNamedInterface, interfacename)) == NULL)
+    return (NULL);
+  else
+    return (s);      
+}
+
+static boolean MyError = FALSE;
+
+static int iluparseerror (string s)
+{
+  if (!MyError && (strcmp("parse error", s) == 0) && (!iluparsedebug))
+    return 0;
+
+  fprintf (stderr, "%s:%ld:  %s\n", CurrentParse->filename, CurrentParse->line, s);
+  return (0);
+}
+
+static int iluwarn (string s)
+{
+  fprintf (stderr, "%s:%ld:  WARNING -- %s\n", CurrentParse->filename, CurrentParse->line, s);
+  return 0;
+}
+
+static void iluerror (string s)
+{
+  MyError = TRUE;
+  iluparseerror (s);
+  MyError = FALSE;
+}
+
+static void iluerror1 (string s, refany a)
+{
+  char buf[1000];
+
+  sprintf (buf, s, a);
+  iluerror (buf);
+}
+
+static Argument argument_Create (char *name, Type type, boolean sibling,
+	ArgDirection direction, long int line_def, list value)
+{
+  Argument new = new_Argument();
+  if ( name )
+      name_set_base_name (new->name, name);
+  new->def = line_def;
+  new->type = type;
+  new->values = value;
+  new->direction = direction;
+  new->sibling = sibling;
+  return (new);
+}
+
+static Procedure procedure_Create (char *name, boolean functional, boolean asynch, list args, Type returnType, list exceptions, long int id, long int def_line, Interface interface, Type object, char *authentication_type, char *doc_string)
+{
+  Procedure new = new_Procedure();
+  name_set_base_name (new->name, name);
+  new->functional = functional;
+  new->asynch = asynch;
+  new->arguments = args;
+  new->returnType = returnType;
+  new->returnOptional = FALSE;
+  new->exceptions = exceptions;
+  new->id = id;
+  new->def = def_line;
+  new->interface = interface;
+  new->object = object;
+  new->authentication_type = authentication_type;
+  new->doc_string = doc_string;
+  return (new);
+}
+
+static void AssignClassAttributes (Attribute *a, Class c)
+{
+  if (a->keyword == o_Brand)
+    c->brand = (string) a->value;
+  else if (a->keyword == o_Collectible)
+    c->collectible = (boolean) a->value;
+  else if (a->keyword == o_Optional)
+    c->optional = (boolean) a->value;
+  else if (a->keyword == o_Singleton)
+    c->singleton = (string) a->value;
+  else if (a->keyword == o_Superclasses)
+    c->superclasses = (list) a->value;
+  else if (a->keyword == o_Authentication)
+    c->authentication = (string) a->value;
+  else if (a->keyword == o_RepositoryID)
+    c->corba_rep_id = (string) a->value;
+  else if (a->keyword == o_Methods)
+    c->methods = (list) a->value;
+  else if (a->keyword == o_State)
+    c->state = (list) a->value;
+  else if (a->keyword == o_Sealed)
+    c->sealed = (boolean) a->value;
+  else if (a->keyword == o_Local)
+    c->local = (boolean) a->value;
+  else if (a->keyword == o_Documentation)
+    c->doc_string = (char *) a->value;
+  else
+    {
+      yyerror ("Bad keyword for object type\n");
+    }
+  a->value = 0;
+}
+
+static boolean CheckForSelf (Imported i, string name)
+{
+  return (strcmp(i->name, name) == 0);
+}
+
+#ifdef ILU_FIXED_POINT_SUPPORT
+
+static ilubignum_Value IntegerLiteralToBignum (IntegerLiteral v)
+{
+  ilubignum_Value v2;
+  char *err;
+  if (v->small) {
+    char buf[20];
+    sprintf(buf, "%s%lu", v->negative ? "-" : "", v->val.direct);
+    v2 = ilubignum_FromString (buf, NULL, 0, &err);
+  } else {
+    v2 = ilubignum_FromString (v->val.string, NULL, 0, &err);
+  }
+  if (err) {
+    fprintf (stderr, "IntegerLiteralToBignum:  Can't convert integer literal to Bignum:  %s\n", err);
+    return NULL;
+  }
+  return v2;
+}
+
+static int PowerOf10 (ilubignum_Value v, boolean nines)
+{
+  int sign;
+  char *str_val, *old_str_val;
+  char *err;
+  int i;
+
+  str_val = ilubignum_AsString(v, 10, &err);
+  if (err) {
+    fprintf (stderr, "PowerOf10:  Can't convert Bignum to string:  %s\n", err);
+    return 0;
+  };
+  old_str_val = str_val;
+  if (str_val[0] == '-') {
+    sign = -1;
+    str_val += 1;
+  } else {
+    sign = 1;
+  }
+  if (nines) {
+    for (i = 0;  str_val[i] != 0;  i++)
+      if (str_val[i] != '9') return 0;
+    free(old_str_val);
+    return i * sign;
+  } else {
+    for (i = 0;  str_val[i+1] != 0;  i++)
+      if (str_val[i+1] != '0') return 0;
+    free(old_str_val);
+    return i * sign;
+  }    
+}
+
+static void FigureFixedPointCharacteristics (TypeDescription newfp)
+{
+  /* this routine determines the ilu_FixedPointRangeSize for the type,
+     and also whether or not it qualifies as a CORBA 'fixed', and if so,
+     what the digits and size of the possible values are.
+     */
+  static boolean initialized = FALSE;
+  char *str, *err;
+  int minnum, maxnum, denom;
+  ilubignum_Value mn, mx, d;
+  static ilubignum_Value byte_low, byte_high;
+  static ilubignum_Value shortcardinal_low, shortcardinal_high;
+  static ilubignum_Value cardinal_low, cardinal_high;
+  static ilubignum_Value longcardinal_low, longcardinal_high;
+  static ilubignum_Value shortinteger_low, shortinteger_high;
+  static ilubignum_Value integer_low, integer_high;
+  static ilubignum_Value longinteger_low, longinteger_high;
+
+  if (!initialized) {
+    if ((byte_low = ilubignum_FromString("0", NULL, 0, &err)) &&
+	(byte_high = ilubignum_FromString("255", NULL, 0, &err)) &&
+	(shortcardinal_low = ilubignum_FromString("0", NULL, 0, &err)) &&
+	(shortcardinal_high = ilubignum_FromString("65535", NULL, 0, &err)) &&
+	(cardinal_low = ilubignum_FromString("0", NULL, 0, &err)) &&
+	(cardinal_high = ilubignum_FromString("0xFFFFFFFF", NULL, 0, &err)) &&
+	(longcardinal_low = ilubignum_FromString("0", NULL, 0, &err)) &&
+	(longcardinal_high = ilubignum_FromString("0xFFFFFFFFFFFFFFFF", NULL, 0, &err)) &&
+	(shortinteger_low = ilubignum_FromString("-32768", NULL, 0, &err)) &&
+	(shortinteger_high = ilubignum_FromString("32767", NULL, 0, &err)) &&
+	(integer_low = ilubignum_FromString("-0x80000000", NULL, 0, &err)) &&
+	(integer_high = ilubignum_FromString("0x7FFFFFFF", NULL, 0, &err)) &&
+	(longinteger_low = ilubignum_FromString("-0x8000000000000000", NULL, 0, &err)) &&
+	(longinteger_high = ilubignum_FromString("0x7FFFFFFFFFFFFFFF", NULL, 0, &err)))
+      initialized = TRUE;
+    else {
+      fprintf (stderr, "FigureFixedPointCharacteristics:  can't initialize bignum constants:  %s\n", err);
+      exit(1);
+    }
+  };
+
+  /* check for unbounded min or max which makes things simple */
+  if ((newfp->structuredDes.fixed.min_numerator == NULL) ||
+      (newfp->structuredDes.fixed.max_numerator == NULL)) {
+    newfp->structuredDes.fixed.fixed_digits = 0;
+    newfp->structuredDes.fixed.fixed_decimal_places = 0;
+    newfp->structuredDes.fixed.range_size = ilu_fprs_large;
+    return;
+  };
+
+  /* get the values as bignums */
+  mn = IntegerLiteralToBignum(newfp->structuredDes.fixed.min_numerator);
+  mx = IntegerLiteralToBignum(newfp->structuredDes.fixed.max_numerator);
+  d = IntegerLiteralToBignum(newfp->structuredDes.fixed.denominator);
+
+  /* first, check to see if the denominator, min, and max are all
+   * powers of 10
+   */
+  minnum = PowerOf10(mn, 1);
+  maxnum = PowerOf10(mx, 1);
+  denom = PowerOf10(d, 0);
+  if ((minnum == 0) ||
+      (maxnum == 0) ||
+      (minnum != -maxnum) ||
+      ((denom == 0) && ((!newfp->structuredDes.fixed.denominator->small) ||
+			(newfp->structuredDes.fixed.denominator->val.direct != 1)))) {
+    newfp->structuredDes.fixed.fixed_digits = 0;
+    newfp->structuredDes.fixed.fixed_decimal_places = 0;
+  } else {
+    newfp->structuredDes.fixed.fixed_digits = maxnum;
+    newfp->structuredDes.fixed.fixed_decimal_places = denom;
+  }
+
+  /* Next, check the size in bytes */
+  if ((ilubignum_Compare(mn, byte_low) >= 0) &&
+      (ilubignum_Compare(mx, byte_high) <= 0))
+    newfp->structuredDes.fixed.range_size = ilu_fprs_byte;
+  else if ((ilubignum_Compare(mn, shortcardinal_low) >= 0) &&
+	   (ilubignum_Compare(mx, shortcardinal_high) <= 0))
+    newfp->structuredDes.fixed.range_size = ilu_fprs_shortcardinal;
+  else if ((ilubignum_Compare(mn, cardinal_low) >= 0) &&
+	   (ilubignum_Compare(mx, cardinal_high) <= 0))
+    newfp->structuredDes.fixed.range_size = ilu_fprs_cardinal;
+  else if ((ilubignum_Compare(mn, longcardinal_low) >= 0) &&
+	   (ilubignum_Compare(mx, longcardinal_high) <= 0))
+    newfp->structuredDes.fixed.range_size = ilu_fprs_longcardinal;
+  else if ((ilubignum_Compare(mn, shortinteger_low) >= 0) &&
+	   (ilubignum_Compare(mx, shortinteger_high) <= 0))
+    newfp->structuredDes.fixed.range_size = ilu_fprs_shortinteger;
+  else if ((ilubignum_Compare(mn, integer_low) >= 0) &&
+	   (ilubignum_Compare(mx, integer_high) <= 0))
+    newfp->structuredDes.fixed.range_size = ilu_fprs_integer;
+  else if ((ilubignum_Compare(mn, longinteger_low) >= 0) &&
+	   (ilubignum_Compare(mx, longinteger_high) <= 0))
+    newfp->structuredDes.fixed.range_size = ilu_fprs_longinteger;
+  else
+    newfp->structuredDes.fixed.range_size = ilu_fprs_large;
+
+  /* free bignum values */
+  ilubignum_FreeValue(mn);
+  ilubignum_FreeValue(mx);
+  ilubignum_FreeValue(d);
+}
+
+#else
+
+static void FigureFixedPointCharacteristics (TypeDescription newfp)
+{
+  /* this routine determines the ilu_FixedPointRangeSize for the type,
+     and also whether or not it qualifies as a CORBA 'fixed', and if so,
+     what the digits and size of the possible values are.
+     */
+  newfp->structuredDes.fixed.fixed_digits = 0;
+  newfp->structuredDes.fixed.fixed_decimal_places = 0;
+  newfp->structuredDes.fixed.range_size = ilu_fprs_large;
+}
+
+#endif /* def ILU_FIXED_POINT_SUPPORT */
+
+#if ((defined(WIN32) || defined(WIN16)) && defined(_WINIO))
+#include <winiodef.h>
+#endif /* ((defined(WIN32) || defined(WIN16)) && defined(_WINIO)) */
+
+#ifndef YYSTYPE
+#define YYSTYPE int
+#endif
+#include <stdio.h>
+
+#ifndef __cplusplus
+#ifndef __STDC__
+#define const
+#endif
+#endif
+
+
+
+#define	YYFINAL		335
+#define	YYFLAG		-32768
+#define	YYNTBASE	84
+
+#define YYTRANSLATE(x) ((unsigned)(x) <= 338 ? yytranslate[x] : 183)
+
+static const char yytranslate[] = {     0,
+     2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+     2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+     2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+     2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+     2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+     2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+     2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+     2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+     2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+     2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+     2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+     2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+     2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+     2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+     2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+     2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+     2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+     2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+     2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+     2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+     2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+     2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+     2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+     2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+     2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+     2,     2,     2,     2,     2,     1,     2,     3,     4,     5,
+     6,     7,     8,     9,    10,    11,    12,    13,    14,    15,
+    16,    17,    18,    19,    20,    21,    22,    23,    24,    25,
+    26,    27,    28,    29,    30,    31,    32,    33,    34,    35,
+    36,    37,    38,    39,    40,    41,    42,    43,    44,    45,
+    46,    47,    48,    49,    50,    51,    52,    53,    54,    55,
+    56,    57,    58,    59,    60,    61,    62,    63,    64,    65,
+    66,    67,    68,    69,    70,    71,    72,    73,    74,    75,
+    76,    77,    78,    79,    80,    81,    82,    83
+};
+
+#if YYDEBUG != 0
+static const short yyprhs[] = {     0,
+     0,     2,     5,     8,    10,    12,    15,    17,    19,    21,
+    24,    30,    31,    36,    38,    42,    43,    46,    48,    51,
+    55,    60,    62,    66,    68,    72,    80,    87,    93,    95,
+    97,    99,   101,   103,   105,   107,   109,   111,   113,   117,
+   122,   126,   127,   129,   130,   132,   134,   137,   140,   143,
+   146,   148,   150,   152,   154,   156,   161,   162,   168,   169,
+   172,   173,   176,   177,   180,   181,   184,   185,   188,   190,
+   192,   194,   196,   199,   204,   209,   211,   215,   221,   222,
+   225,   229,   231,   233,   239,   244,   250,   252,   256,   260,
+   261,   263,   265,   266,   269,   274,   278,   281,   282,   284,
+   286,   290,   293,   298,   299,   300,   304,   306,   309,   310,
+   312,   315,   318,   321,   325,   327,   331,   338,   341,   342,
+   344,   345,   348,   352,   355,   359,   361,   365,   366,   368,
+   370,   372,   378,   379,   381,   383,   387,   390,   391,   394,
+   397,   400,   403,   406,   409,   412,   415,   418,   421,   424,
+   427,   430,   432,   434,   436,   438,   441,   445,   447,   451,
+   454,   457,   460,   464,   470,   474,   476,   480,   484,   489,
+   490,   492,   494,   498,   504,   508,   510,   514,   518,   527,
+   530,   531,   534,   535,   537,   539,   540,   542,   543,   547,
+   551,   552,   555,   556,   559,   560,   561,   571,   573,   575,
+   578,   580,   582,   584,   588,   594,   599,   603,   605,   608,
+   612,   616,   618,   620,   621,   623
+};
+
+static const short yyrhs[] = {    85,
+     0,    84,    85,     0,    88,    86,     0,     1,     0,    87,
+     0,    86,    87,     0,    96,     0,   137,     0,   172,     0,
+     1,    36,     0,     3,   181,    91,    92,    89,     0,     0,
+    89,    12,    90,    36,     0,    72,     0,    90,    37,    72,
+     0,     0,    10,    72,     0,    36,     0,    93,    36,     0,
+     7,    94,     9,     0,     7,    94,    36,     1,     0,    95,
+     0,    94,    37,    95,     0,   181,     0,   181,     8,    72,
+     0,     5,   181,    32,    97,   139,    91,    36,     0,     5,
+   181,    32,   103,   139,    36,     0,     5,   181,    32,   147,
+    36,     0,   114,     0,   116,     0,   118,     0,   120,     0,
+   125,     0,   104,     0,   105,     0,    99,     0,   134,     0,
+    98,     0,   100,    48,   103,     0,   100,    47,    48,   103,
+     0,   100,    47,   103,     0,     0,    49,     0,     0,    22,
+     0,    23,     0,   101,    14,     0,   101,    15,     0,   101,
+    21,     0,   101,    17,     0,    24,     0,    18,     0,    50,
+     0,   102,     0,   182,     0,    16,   117,   110,   111,     0,
+     0,    13,   106,   107,   108,   109,     0,     0,    81,   113,
+     0,     0,    82,   113,     0,     0,    83,   113,     0,     0,
+    30,   112,     0,     0,    31,    72,     0,    27,     0,    28,
+     0,    29,     0,    73,     0,   180,    73,     0,    43,    44,
+   115,   103,     0,    43,   115,    44,   103,     0,    73,     0,
+   115,    37,    73,     0,   101,    46,    44,   103,   117,     0,
+     0,    78,    73,     0,   119,    44,   103,     0,    66,     0,
+    67,     0,   123,    41,   124,   121,     9,     0,   123,    41,
+     1,     9,     0,   123,    41,   124,   121,     1,     0,   122,
+     0,   121,    37,   122,     0,   181,    33,   103,     0,     0,
+    20,     0,    19,     0,     0,    53,   103,     0,   126,   128,
+     9,   133,     0,   126,   128,     1,     0,   127,    42,     0,
+     0,   103,     0,   129,     0,   128,    37,   129,     0,   103,
+   130,     0,   181,    33,   103,   130,     0,     0,     0,    32,
+   131,   132,     0,    51,     0,   178,     9,     0,     0,    79,
+     0,   135,     9,     0,   135,     1,     0,    45,   136,     0,
+   135,    37,   136,     0,   181,     0,   181,    32,    73,     0,
+     4,   181,   140,   139,   168,    36,     0,    68,    72,     0,
+     0,   138,     0,     0,    33,   103,     0,    34,   142,    35,
+     0,    34,    35,     0,    34,     1,    35,     0,   144,     0,
+   142,    37,   144,     0,     0,    38,     0,    39,     0,    40,
+     0,   143,   181,    33,   145,   103,     0,     0,    63,     0,
+   182,     0,   146,    37,   182,     0,    52,   148,     0,     0,
+   148,   157,     0,   148,   150,     0,   148,   151,     0,   148,
+   152,     0,   148,   153,     0,   148,   149,     0,   148,   154,
+     0,   148,   156,     0,   148,   138,     0,   148,   163,     0,
+   148,   159,     0,   148,   158,     0,    64,    72,     0,    65,
+     0,    69,     0,    70,     0,    47,     0,    53,   182,     0,
+    54,   155,     9,     0,   103,     0,   155,    37,   103,     0,
+    55,    72,     0,    10,    72,     0,    58,    72,     0,    71,
+   160,     9,     0,    71,   160,    37,     9,     1,     0,    71,
+     1,    37,     0,   161,     0,   160,    37,   161,     0,   160,
+     1,    37,     0,   162,   181,    33,   103,     0,     0,    59,
+     0,    60,     0,    61,   164,     9,     0,    61,   164,    37,
+     9,     1,     0,    61,     1,    37,     0,   165,     0,   164,
+    37,   165,     0,   164,     1,    37,     0,   167,   181,   141,
+   166,   169,   170,   171,   168,     0,   165,    36,     0,     0,
+    33,   103,     0,     0,    56,     0,    57,     0,     0,    72,
+     0,     0,    62,   146,     9,     0,    62,     1,    37,     0,
+     0,    32,    73,     0,     0,    55,    72,     0,     0,     0,
+     6,   181,    33,   103,    32,   173,   175,   174,    36,     0,
+   177,     0,   176,     0,   180,    73,     0,    72,     0,    26,
+     0,    25,     0,   180,    73,   179,     0,   180,    73,    75,
+    73,   179,     0,   180,    73,    75,    73,     0,   178,    37,
+   175,     0,   175,     0,    74,    73,     0,    74,    76,    73,
+     0,    74,    77,    73,     0,    76,     0,    77,     0,     0,
+    72,     0,    72,     0
+};
+
+#endif
+
+#if YYDEBUG != 0
+static const short yyrline[] = { 0,
+  2767,  2773,  2780,  2784,  2790,  2792,  2797,  2801,  2805,  2809,
+  2819,  2840,  2845,  2852,  2858,  2865,  2869,  2875,  2880,  2888,
+  2892,  2900,  2907,  2917,  2921,  2927,  2986,  3013,  3036,  3040,
+  3044,  3048,  3052,  3056,  3060,  3064,  3068,  3072,  3078,  3082,
+  3088,  3093,  3097,  3103,  3107,  3111,  3117,  3121,  3125,  3129,
+  3133,  3137,  3141,  3147,  3195,  3201,  3237,  3240,  3293,  3297,
+  3303,  3307,  3313,  3317,  3323,  3327,  3333,  3337,  3343,  3347,
+  3351,  3355,  3362,  3382,  3392,  3404,  3410,  3417,  3433,  3437,
+  3444,  3456,  3460,  3466,  3475,  3481,  3489,  3495,  3503,  3510,
+  3514,  3518,  3524,  3528,  3534,  3544,  3552,  3561,  3565,  3571,
+  3578,  3585,  3591,  3599,  3603,  3607,  3614,  3618,  3637,  3641,
+  3647,  3654,  3661,  3667,  3674,  3681,  3690,  3712,  3735,  3739,
+  3745,  3749,  3756,  3760,  3764,  3771,  3777,  3784,  3788,  3792,
+  3796,  3802,  3811,  3815,  3821,  3829,  3838,  3871,  3875,  3881,
+  3887,  3893,  3899,  3905,  3911,  3917,  3923,  3929,  3935,  3941,
+  3949,  3955,  3961,  3967,  3973,  3979,  3985,  3991,  3997,  4004,
+  4010,  4016,  4022,  4026,  4032,  4040,  4047,  4053,  4061,  4070,
+  4074,  4078,  4084,  4088,  4094,  4102,  4109,  4115,  4123,  4150,
+  4157,  4161,  4168,  4172,  4176,  4182,  4186,  4192,  4196,  4200,
+  4207,  4211,  4217,  4221,  4227,  4230,  4233,  4253,  4257,  4263,
+  4280,  4287,  4294,  4303,  4313,  4323,  4335,  4341,  4350,  4355,
+  4359,  4365,  4369,  4373,  4379,  4403
+};
+#endif
+
+
+#if YYDEBUG != 0 || defined (YYERROR_VERBOSE)
+
+static const char * const yytname[] = {   "$","error","$undefined.","K_INTERFACE",
+"K_EXCEPTION","K_TYPE","K_CONSTANT","K_IMPORTS","K_FROM","K_END","K_BRAND","K_DIRECTIVE",
+"K_DIRECTIVE_EXPERIMENTAL","K_FIXEDPOINT","K_INTEGER","K_CARDINAL","K_STRING",
+"K_CHARACTER","K_BYTE","K_EXTENSIBLE","K_FIXED","K_REAL","K_LONG","K_SHORT",
+"K_BOOLEAN","K_FALSE","K_TRUE","K_UNICODE_1_1","K_UTF8","K_LATIN1","K_CHARSET",
+"K_LANGUAGE","K_EQUALS","K_COLON","K_LEFTPAREN","K_RIGHTPAREN","K_SEMICOLON",
+"K_COMMA","K_IN","K_OUT","K_INOUT","K_RECORD","K_UNION","K_ARRAY","K_OF","K_ENUMERATION",
+"K_SEQUENCE","K_OPTIONAL","K_REFERENCE","K_ALIASED","K_PICKLE","K_DEFAULT","K_OBJECT",
+"K_SUPERCLASS","K_SUPERTYPES","K_AUTHENTICATION","K_FUNCTIONAL","K_ASYNCH","K_DOCUMENTATION",
+"K_PUBLIC","K_PRIVATE","K_METHODS","K_RAISES","K_SIBLING","K_SINGLETON","K_COLLECTIBLE",
+"K_SOURCE","K_SINK","K_TYPEID","K_SEALED","K_LOCAL","K_STATE","T_STRING","T_NUMBER",
+"K_EXPONENT","K_PERIOD","K_HYPHEN","K_PLUS","K_LIMIT","K_OTHERS","K_ALLOWS",
+"K_MINNUMERATOR","K_MAXNUMERATOR","K_DENOMINATOR","interface_list","interface",
+"declaration_list","simple_declaration","interface_declaration","optional_multi_directives",
+"directives_list","optional_brand","interface_end","import_list","import_list2",
+"import_statement","type_declaration","type_description","reference_description",
+"optional_description","optional_aliased","primitive_size","primitive_type",
+"type_stamp","string_description","fixedpoint_description","@1","possible_min_numerator",
+"possible_max_numerator","possible_denominator","possible_charset","possible_language",
+"charset_spec","integer_literal","array_description","number_list","sequence_description",
+"possible_limit","pipe_description","pipe_side","record_description","record_field_list",
+"record_field_description","possible_extensible","possible_supertype","union_description",
+"union_prefix","possible_type_stamp","union_type_list","union_type","possible_value",
+"@2","union_value_specifier","possible_others","enumeration_description","enumeration_prefix",
+"enumeration_field","exception_declaration","corba_rep_id","possible_id","exception_type",
+"arguments","argument_list","direction_decl","argument","sibling_decl","exception_list",
+"object_description","object_keywords","object_singleton","object_collectible",
+"object_sealed","object_local","object_optional","object_superclasses","class_list",
+"object_authentication","object_brand","object_documentation","object_state",
+"object_state_list","object_state_attribute","public_private","object_methods",
+"object_method_list","object_method","method_type","possible_asynch_or_functional",
+"possible_documentation","method_exceptions","method_id","possible_authentication",
+"constant_declaration","@3","@4","constant_value","nonreal_constant_value","real_constant_value",
+"constant_value_list","real_exponent","negative","identifier","scoped_identifier", NULL
+};
+#endif
+
+static const short yyr1[] = {     0,
+    84,    84,    85,    85,    86,    86,    87,    87,    87,    87,
+    88,    89,    89,    90,    90,    91,    91,    92,    92,    93,
+    93,    94,    94,    95,    95,    96,    96,    96,    97,    97,
+    97,    97,    97,    97,    97,    97,    97,    97,    98,    98,
+    99,   100,   100,   101,   101,   101,   102,   102,   102,   102,
+   102,   102,   102,   103,   103,   104,   106,   105,   107,   107,
+   108,   108,   109,   109,   110,   110,   111,   111,   112,   112,
+   112,   112,   113,   114,   114,   115,   115,   116,   117,   117,
+   118,   119,   119,   120,   120,   120,   121,   121,   122,   123,
+   123,   123,   124,   124,   125,   125,   126,   127,   127,   128,
+   128,   129,   129,   130,   131,   130,   132,   132,   133,   133,
+   134,   134,   135,   135,   136,   136,   137,   138,   139,   139,
+   140,   140,   141,   141,   141,   142,   142,   143,   143,   143,
+   143,   144,   145,   145,   146,   146,   147,   148,   148,   148,
+   148,   148,   148,   148,   148,   148,   148,   148,   148,   148,
+   149,   150,   151,   152,   153,   154,   154,   155,   155,   156,
+   157,   158,   159,   159,   159,   160,   160,   160,   161,   162,
+   162,   162,   163,   163,   163,   164,   164,   164,   165,   165,
+   166,   166,   167,   167,   167,   168,   168,   169,   169,   169,
+   170,   170,   171,   171,   173,   174,   172,   175,   175,   176,
+   176,   176,   176,   177,   177,   177,   178,   178,   179,   179,
+   179,   180,   180,   180,   181,   182
+};
+
+static const short yyr2[] = {     0,
+     1,     2,     2,     1,     1,     2,     1,     1,     1,     2,
+     5,     0,     4,     1,     3,     0,     2,     1,     2,     3,
+     4,     1,     3,     1,     3,     7,     6,     5,     1,     1,
+     1,     1,     1,     1,     1,     1,     1,     1,     3,     4,
+     3,     0,     1,     0,     1,     1,     2,     2,     2,     2,
+     1,     1,     1,     1,     1,     4,     0,     5,     0,     2,
+     0,     2,     0,     2,     0,     2,     0,     2,     1,     1,
+     1,     1,     2,     4,     4,     1,     3,     5,     0,     2,
+     3,     1,     1,     5,     4,     5,     1,     3,     3,     0,
+     1,     1,     0,     2,     4,     3,     2,     0,     1,     1,
+     3,     2,     4,     0,     0,     3,     1,     2,     0,     1,
+     2,     2,     2,     3,     1,     3,     6,     2,     0,     1,
+     0,     2,     3,     2,     3,     1,     3,     0,     1,     1,
+     1,     5,     0,     1,     1,     3,     2,     0,     2,     2,
+     2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+     2,     1,     1,     1,     1,     2,     3,     1,     3,     2,
+     2,     2,     3,     5,     3,     1,     3,     3,     4,     0,
+     1,     1,     3,     5,     3,     1,     3,     3,     8,     2,
+     0,     2,     0,     1,     1,     0,     1,     0,     3,     3,
+     0,     2,     0,     2,     0,     0,     9,     1,     1,     2,
+     1,     1,     1,     3,     5,     4,     3,     1,     2,     3,
+     3,     1,     1,     0,     1,     1
+};
+
+static const short yydefact[] = {     0,
+     4,     0,     0,     1,     0,   215,    16,     2,     0,     0,
+     0,     0,     0,     5,     7,     8,     9,     0,     0,    10,
+   121,     0,     0,     6,    17,     0,    18,    12,     0,    44,
+   119,    44,    44,     0,    22,    24,    11,    19,    52,    45,
+    46,    51,    53,   216,     0,    54,   122,    55,     0,   120,
+   186,    57,    79,    92,    91,     0,     0,    43,   138,    82,
+    83,   119,    38,    36,     0,     0,    99,    34,    35,    29,
+    30,    31,     0,    32,     0,    33,    44,     0,    37,     0,
+     0,     0,    20,     0,     0,     0,     0,    47,    48,    50,
+    49,   118,   187,     0,    59,     0,    65,     0,    76,     0,
+   113,   115,   137,    16,    44,    44,     0,     0,    44,     0,
+   216,   104,     0,   100,     0,    97,   112,   111,     0,    28,
+   195,    21,    23,    25,    14,     0,   117,   214,    61,    80,
+     0,    67,    44,     0,    44,     0,     0,   155,     0,    44,
+     0,     0,     0,     0,   152,   153,   154,     0,   147,   144,
+   140,   141,   142,   143,   145,   146,   139,   150,   149,   148,
+     0,    44,    41,    39,    44,    27,    81,     0,    44,     0,
+   105,   102,    96,   109,    44,    44,   114,   214,    13,     0,
+   212,   213,    60,     0,   214,    63,    69,    70,    71,    72,
+    66,     0,    56,    74,    77,    75,   116,   161,   156,   158,
+     0,   160,   162,     0,   184,   185,     0,   176,     0,   151,
+     0,   171,   172,     0,   166,     0,    26,    40,    79,    85,
+    94,     0,    87,     0,   214,   110,    95,   101,   104,   203,
+   202,   201,   196,   199,   198,     0,    15,    73,    62,   214,
+    58,    68,   157,    44,   175,     0,   173,   183,   180,     0,
+   165,     0,   163,   170,     0,    78,    86,    84,     0,    44,
+   107,   106,   208,     0,   103,     0,   200,    64,   159,   178,
+     0,   177,     0,   181,   168,     0,   167,    44,    88,    89,
+   108,   214,   197,     0,     0,   204,   174,     0,   124,   129,
+   130,   131,     0,     0,   126,    44,   188,   164,   169,   207,
+   209,     0,     0,   206,   125,   123,   128,     0,   182,     0,
+   191,   210,   211,   205,   127,   133,     0,     0,   135,     0,
+   193,   134,    44,   190,   189,     0,   192,     0,   186,   132,
+   136,   194,   179,     0,     0
+};
+
+static const short yydefgoto[] = {     3,
+     4,    13,    14,     5,    37,   126,    19,    28,    29,    34,
+    35,    15,    62,    63,    64,    65,    45,    46,   112,    68,
+    69,    95,   129,   186,   241,   132,   193,   191,   183,    70,
+   100,    71,    97,    72,    73,    74,   222,   223,    75,   170,
+    76,    77,    78,   113,   114,   172,   225,   262,   227,    79,
+    80,   101,    16,    50,    51,    31,   274,   293,   294,   295,
+   323,   318,    81,   103,   150,   151,   152,   153,   154,   155,
+   201,   156,   157,   158,   159,   214,   215,   216,   160,   207,
+   208,   297,   209,    94,   311,   321,   329,    17,   178,   266,
+   233,   234,   235,   264,   286,   184,    36,    48
+};
+
+static const short yypact[] = {    33,
+-32768,   -53,   210,-32768,   165,-32768,    27,-32768,    18,   -53,
+   -53,   -53,   217,-32768,-32768,-32768,-32768,   -20,    13,-32768,
+    78,    70,    84,-32768,-32768,   -53,-32768,-32768,    23,    66,
+   -26,   134,    66,   100,-32768,   112,   137,-32768,-32768,-32768,
+-32768,-32768,-32768,-32768,   188,-32768,-32768,-32768,    93,-32768,
+   102,-32768,   107,-32768,-32768,   -15,   -53,-32768,-32768,-32768,
+-32768,   -26,-32768,-32768,    -1,   146,   -27,-32768,-32768,-32768,
+-32768,-32768,   136,-32768,   149,-32768,    76,   182,-32768,    16,
+   189,   194,-32768,   226,   -53,   156,   157,-32768,-32768,-32768,
+-32768,-32768,-32768,   195,   151,   160,   204,   162,-32768,   -16,
+-32768,   205,    60,    27,     0,    66,   192,   202,    66,    11,
+   206,   208,    29,-32768,   209,-32768,-32768,-32768,   -53,-32768,
+-32768,-32768,-32768,-32768,-32768,    97,-32768,    20,   161,-32768,
+    28,   213,    69,   168,    66,   172,   174,-32768,   175,    66,
+   177,   178,     6,   179,-32768,-32768,-32768,     9,-32768,-32768,
+-32768,-32768,-32768,-32768,-32768,-32768,-32768,-32768,-32768,-32768,
+   216,    66,-32768,-32768,    66,-32768,-32768,   244,    66,   -53,
+-32768,-32768,-32768,   176,    76,    66,-32768,   119,-32768,   184,
+-32768,-32768,-32768,   181,    20,   180,-32768,-32768,-32768,-32768,
+-32768,   185,-32768,-32768,-32768,-32768,-32768,-32768,-32768,-32768,
+    24,-32768,-32768,   221,-32768,-32768,    30,   223,   -53,-32768,
+   224,-32768,-32768,   103,-32768,   -53,-32768,-32768,   107,-32768,
+-32768,   150,-32768,   227,   117,-32768,-32768,-32768,   208,-32768,
+-32768,-32768,-32768,-32768,-32768,   191,-32768,-32768,-32768,    20,
+-32768,-32768,-32768,    66,-32768,   228,-32768,    17,-32768,   233,
+-32768,   231,-32768,    26,   236,-32768,-32768,-32768,   -53,    66,
+-32768,-32768,-32768,    86,-32768,   234,   141,-32768,-32768,-32768,
+   270,   223,     5,   239,-32768,   272,-32768,    66,-32768,-32768,
+-32768,   119,-32768,   131,   201,-32768,-32768,   240,-32768,-32768,
+-32768,-32768,   127,   -53,-32768,    66,   214,-32768,-32768,-32768,
+-32768,   207,   211,   203,-32768,-32768,   159,   245,-32768,    10,
+   247,-32768,-32768,-32768,-32768,   218,   246,   118,-32768,   212,
+   232,-32768,    66,-32768,-32768,   175,-32768,   219,   102,-32768,
+-32768,-32768,-32768,   282,-32768
+};
+
+static const short yypgoto[] = {-32768,
+   283,-32768,   275,-32768,-32768,-32768,   186,-32768,-32768,-32768,
+   215,-32768,-32768,-32768,-32768,-32768,   257,-32768,   -30,-32768,
+-32768,-32768,-32768,-32768,-32768,-32768,-32768,-32768,  -169,-32768,
+   196,-32768,    73,-32768,-32768,-32768,-32768,    36,-32768,-32768,
+-32768,-32768,-32768,-32768,   121,    72,-32768,-32768,-32768,-32768,
+-32768,   183,-32768,   200,   -35,-32768,-32768,-32768,-32768,    -9,
+-32768,-32768,-32768,-32768,-32768,-32768,-32768,-32768,-32768,-32768,
+-32768,-32768,-32768,-32768,-32768,-32768,    45,-32768,-32768,-32768,
+    56,-32768,-32768,   -24,-32768,-32768,-32768,-32768,-32768,-32768,
+  -217,-32768,-32768,-32768,     2,  -174,     3,  -138
+};
+
+
+#define	YYLAST		306
+
+
+static const short yytable[] = {    47,
+   199,    67,    82,   236,     7,   288,   204,   263,  -119,   211,
+   317,   168,    21,    22,    23,   239,   117,    39,     6,    26,
+   134,    40,    41,    42,   118,   271,   104,   135,    98,   173,
+   246,   108,   243,     1,   276,     2,    18,   174,   247,   289,
+    49,    49,   290,   291,   292,   105,   106,   162,    27,    43,
+   236,    25,   119,    20,   187,   188,   189,    99,    38,   102,
+   244,   205,   206,   169,   300,   175,   248,   212,   213,   137,
+   268,    44,   205,   206,   163,   164,  -128,  -183,   167,   115,
+  -170,    44,   -93,    39,   212,   213,    39,    40,    41,    42,
+    40,    41,    42,    39,   281,   181,   182,    40,    41,    42,
+   190,    32,   194,   252,   196,   134,   138,   236,    83,   200,
+    30,   253,   139,   140,   141,    43,    33,   142,    43,    86,
+   143,   102,   282,   144,   145,    43,   325,    49,   146,   147,
+   148,   218,   179,   180,   219,    84,    85,    44,   221,   254,
+    44,   230,   231,   230,   231,   229,    52,   111,    87,    53,
+   257,    39,    54,    55,   326,    40,    41,    42,   258,    88,
+    89,   306,    90,   307,    92,     9,    91,   261,    10,    11,
+    12,   319,   224,    93,   -90,   -98,    56,   115,    57,   109,
+   -42,   -42,    58,    43,    96,    59,   259,   331,   232,   110,
+   232,   107,   181,   182,   181,   182,   290,   291,   292,    60,
+    61,    88,    89,   301,    90,    44,   302,   303,    91,   334,
+     1,   250,     2,   269,   284,   285,    -3,     9,   255,    -3,
+    10,    11,    12,   116,   120,   121,   122,   124,   125,   280,
+   127,   128,   130,   131,    99,   165,   136,   166,  -215,   171,
+   195,   176,   185,   192,   197,   198,    44,   299,   202,   203,
+   210,   217,   220,   238,   226,   237,   242,   245,   249,   260,
+   251,   224,   240,   267,   270,   309,   273,   275,   278,   283,
+   287,   296,   298,   304,   305,   310,   284,   316,   320,   312,
+   322,   335,   324,   313,   327,     8,   328,    24,    66,   161,
+   332,   256,   330,   133,   279,   228,   308,   315,   277,   123,
+   265,   177,   149,   272,   333,   314
+};
+
+static const short yycheck[] = {    30,
+   139,    32,    33,   178,     2,     1,     1,   225,    36,     1,
+     1,     1,    10,    11,    12,   185,     1,    18,    72,     7,
+    37,    22,    23,    24,     9,     9,    62,    44,    44,     1,
+     1,    67,     9,     1,     9,     3,    10,     9,     9,    35,
+    68,    68,    38,    39,    40,    47,    48,    48,    36,    50,
+   225,    72,    37,    36,    27,    28,    29,    73,    36,    57,
+    37,    56,    57,    53,   282,    37,    37,    59,    60,    10,
+   240,    72,    56,    57,   105,   106,    72,    72,   109,    77,
+    72,    72,    72,    18,    59,    60,    18,    22,    23,    24,
+    22,    23,    24,    18,     9,    76,    77,    22,    23,    24,
+    73,    32,   133,     1,   135,    37,    47,   282,     9,   140,
+    33,     9,    53,    54,    55,    50,    33,    58,    50,     8,
+    61,   119,    37,    64,    65,    50,     9,    68,    69,    70,
+    71,   162,    36,    37,   165,    36,    37,    72,   169,    37,
+    72,    25,    26,    25,    26,   176,    13,    72,    12,    16,
+     1,    18,    19,    20,    37,    22,    23,    24,     9,    14,
+    15,    35,    17,    37,    72,     1,    21,    51,     4,     5,
+     6,   310,   170,    72,    41,    42,    43,   175,    45,    44,
+    47,    48,    49,    50,    78,    52,    37,   326,    72,    41,
+    72,    46,    76,    77,    76,    77,    38,    39,    40,    66,
+    67,    14,    15,    73,    17,    72,    76,    77,    21,     0,
+     1,   209,     3,   244,    74,    75,     0,     1,   216,     3,
+     4,     5,     6,    42,    36,    32,     1,    72,    72,   260,
+    36,    81,    73,    30,    73,    44,    32,    36,    33,    32,
+    73,    33,    82,    31,    73,    72,    72,   278,    72,    72,
+    72,    36,     9,    73,    79,    72,    72,    37,    36,    33,
+    37,   259,    83,    73,    37,   296,    34,    37,    33,    36,
+     1,    33,     1,    73,    35,    62,    74,    33,    32,    73,
+    63,     0,    37,    73,    73,     3,    55,    13,    32,   104,
+    72,   219,   323,    98,   259,   175,   294,   307,   254,    85,
+   229,   119,   103,   248,   329,   304
+};
+#define YYPURE 1
+
+/* -*-C-*-  Note some compilers choke on comments on `#line' lines.  */
+#line 3 "/import/bison-1.25/sparc-sun-solaris2.5/share/bison.simple"
+
+/* Skeleton output parser for bison,
+   Copyright (C) 1984, 1989, 1990 Free Software Foundation, Inc.
+
+   This program is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 2, or (at your option)
+   any later version.
+
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with this program; if not, write to the Free Software
+   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
+
+/* As a special exception, when this file is copied by Bison into a
+   Bison output file, you may use that output file without restriction.
+   This special exception was added by the Free Software Foundation
+   in version 1.24 of Bison.  */
+
+#ifndef alloca
+#ifdef __GNUC__
+#define alloca __builtin_alloca
+#else /* not GNU C.  */
+#if (!defined (__STDC__) && defined (sparc)) || defined (__sparc__) || defined (__sparc) || defined (__sgi)
+#include <alloca.h>
+#else /* not sparc */
+#if defined (MSDOS) && !defined (__TURBOC__)
+#include <malloc.h>
+#else /* not MSDOS, or __TURBOC__ */
+#if defined(_AIX)
+#include <malloc.h>
+ #pragma alloca
+#else /* not MSDOS, __TURBOC__, or _AIX */
+#ifdef __hpux
+#ifdef __cplusplus
+extern "C" {
+void *alloca (unsigned int);
+};
+#else /* not __cplusplus */
+void *alloca ();
+#endif /* not __cplusplus */
+#endif /* __hpux */
+#endif /* not _AIX */
+#endif /* not MSDOS, or __TURBOC__ */
+#endif /* not sparc.  */
+#endif /* not GNU C.  */
+#endif /* alloca not defined.  */
+
+/* This is the parser code that is written into each bison parser
+  when the %semantic_parser declaration is not specified in the grammar.
+  It was written by Richard Stallman by simplifying the hairy parser
+  used when %semantic_parser is specified.  */
+
+/* Note: there must be only one dollar sign in this file.
+   It is replaced by the list of actions, each action
+   as one case of the switch.  */
+
+#define yyerrok		(yyerrstatus = 0)
+#define yyclearin	(yychar = YYEMPTY)
+#define YYEMPTY		-2
+#define YYEOF		0
+#define YYACCEPT	return(0)
+#define YYABORT 	return(1)
+#define YYERROR		goto yyerrlab1
+/* Like YYERROR except do call yyerror.
+   This remains here temporarily to ease the
+   transition to the new meaning of YYERROR, for GCC.
+   Once GCC version 2 has supplanted version 1, this can go.  */
+#define YYFAIL		goto yyerrlab
+#define YYRECOVERING()  (!!yyerrstatus)
+#define YYBACKUP(token, value) \
+do								\
+  if (yychar == YYEMPTY && yylen == 1)				\
+    { yychar = (token), yylval = (value);			\
+      yychar1 = YYTRANSLATE (yychar);				\
+      YYPOPSTACK;						\
+      goto yybackup;						\
+    }								\
+  else								\
+    { yyerror ("syntax error: cannot back up"); YYERROR; }	\
+while (0)
+
+#define YYTERROR	1
+#define YYERRCODE	256
+
+#ifndef YYPURE
+#define YYLEX		yylex()
+#endif
+
+#ifdef YYPURE
+#ifdef YYLSP_NEEDED
+#ifdef YYLEX_PARAM
+#define YYLEX		yylex(&yylval, &yylloc, YYLEX_PARAM)
+#else
+#define YYLEX		yylex(&yylval, &yylloc)
+#endif
+#else /* not YYLSP_NEEDED */
+#ifdef YYLEX_PARAM
+#define YYLEX		yylex(&yylval, YYLEX_PARAM)
+#else
+#define YYLEX		yylex(&yylval)
+#endif
+#endif /* not YYLSP_NEEDED */
+#endif
+
+/* If nonreentrant, generate the variables here */
+
+#ifndef YYPURE
+
+int	yychar;			/*  the lookahead symbol		*/
+YYSTYPE	yylval;			/*  the semantic value of the		*/
+				/*  lookahead symbol			*/
+
+#ifdef YYLSP_NEEDED
+YYLTYPE yylloc;			/*  location data for the lookahead	*/
+				/*  symbol				*/
+#endif
+
+int yynerrs;			/*  number of parse errors so far       */
+#endif  /* not YYPURE */
+
+#if YYDEBUG != 0
+int yydebug;			/*  nonzero means print parse trace	*/
+/* Since this is uninitialized, it does not stop multiple parsers
+   from coexisting.  */
+#endif
+
+/*  YYINITDEPTH indicates the initial size of the parser's stacks	*/
+
+#ifndef	YYINITDEPTH
+#define YYINITDEPTH 200
+#endif
+
+/*  YYMAXDEPTH is the maximum size the stacks can grow to
+    (effective only if the built-in stack extension method is used).  */
+
+#if YYMAXDEPTH == 0
+#undef YYMAXDEPTH
+#endif
+
+#ifndef YYMAXDEPTH
+#define YYMAXDEPTH 10000
+#endif
+
+/* Prevent warning if -Wstrict-prototypes.  */
+#ifdef __GNUC__
+int yyparse (void);
+#endif
+
+#if __GNUC__ > 1		/* GNU C and GNU C++ define this.  */
+#define __yy_memcpy(TO,FROM,COUNT)	__builtin_memcpy(TO,FROM,COUNT)
+#else				/* not GNU C or C++ */
+#ifndef __cplusplus
+
+/* This is the most reliable way to avoid incompatibilities
+   in available built-in functions on various systems.  */
+static void
+__yy_memcpy (to, from, count)
+     char *to;
+     char *from;
+     int count;
+{
+  register char *f = from;
+  register char *t = to;
+  register int i = count;
+
+  while (i-- > 0)
+    *t++ = *f++;
+}
+
+#else /* __cplusplus */
+
+/* This is the most reliable way to avoid incompatibilities
+   in available built-in functions on various systems.  */
+static void
+__yy_memcpy (char *to, char *from, int count)
+{
+  register char *f = from;
+  register char *t = to;
+  register int i = count;
+
+  while (i-- > 0)
+    *t++ = *f++;
+}
+
+#endif
+#endif
+
+#line 196 "/import/bison-1.25/sparc-sun-solaris2.5/share/bison.simple"
+
+/* The user can define YYPARSE_PARAM as the name of an argument to be passed
+   into yyparse.  The argument should have type void *.
+   It should actually point to an object.
+   Grammar actions can access the variable by casting it
+   to the proper pointer type.  */
+
+#ifdef YYPARSE_PARAM
+#ifdef __cplusplus
+#define YYPARSE_PARAM_ARG void *YYPARSE_PARAM
+#define YYPARSE_PARAM_DECL
+#else /* not __cplusplus */
+#define YYPARSE_PARAM_ARG YYPARSE_PARAM
+#define YYPARSE_PARAM_DECL void *YYPARSE_PARAM;
+#endif /* not __cplusplus */
+#else /* not YYPARSE_PARAM */
+#define YYPARSE_PARAM_ARG
+#define YYPARSE_PARAM_DECL
+#endif /* not YYPARSE_PARAM */
+
+int
+yyparse(YYPARSE_PARAM_ARG)
+     YYPARSE_PARAM_DECL
+{
+  register int yystate;
+  register int yyn;
+  register short *yyssp;
+  register YYSTYPE *yyvsp;
+  int yyerrstatus;	/*  number of tokens to shift before error messages enabled */
+  int yychar1 = 0;		/*  lookahead token as an internal (translated) token number */
+
+  short	yyssa[YYINITDEPTH];	/*  the state stack			*/
+  YYSTYPE yyvsa[YYINITDEPTH];	/*  the semantic value stack		*/
+
+  short *yyss = yyssa;		/*  refer to the stacks thru separate pointers */
+  YYSTYPE *yyvs = yyvsa;	/*  to allow yyoverflow to reallocate them elsewhere */
+
+#ifdef YYLSP_NEEDED
+  YYLTYPE yylsa[YYINITDEPTH];	/*  the location stack			*/
+  YYLTYPE *yyls = yylsa;
+  YYLTYPE *yylsp;
+
+#define YYPOPSTACK   (yyvsp--, yyssp--, yylsp--)
+#else
+#define YYPOPSTACK   (yyvsp--, yyssp--)
+#endif
+
+  int yystacksize = YYINITDEPTH;
+
+#ifdef YYPURE
+  int yychar;
+  YYSTYPE yylval;
+  int yynerrs;
+#ifdef YYLSP_NEEDED
+  YYLTYPE yylloc;
+#endif
+#endif
+
+  YYSTYPE yyval;		/*  the variable used to return		*/
+				/*  semantic values from the action	*/
+				/*  routines				*/
+
+  int yylen;
+
+#if YYDEBUG != 0
+  if (yydebug)
+    fprintf(stderr, "Starting parse\n");
+#endif
+
+  yystate = 0;
+  yyerrstatus = 0;
+  yynerrs = 0;
+  yychar = YYEMPTY;		/* Cause a token to be read.  */
+
+  /* Initialize stack pointers.
+     Waste one element of value and location stack
+     so that they stay on the same level as the state stack.
+     The wasted elements are never initialized.  */
+
+  yyssp = yyss - 1;
+  yyvsp = yyvs;
+#ifdef YYLSP_NEEDED
+  yylsp = yyls;
+#endif
+
+/* Push a new state, which is found in  yystate  .  */
+/* In all cases, when you get here, the value and location stacks
+   have just been pushed. so pushing a state here evens the stacks.  */
+yynewstate:
+
+  *++yyssp = yystate;
+
+  if (yyssp >= yyss + yystacksize - 1)
+    {
+      /* Give user a chance to reallocate the stack */
+      /* Use copies of these so that the &'s don't force the real ones into memory. */
+      YYSTYPE *yyvs1 = yyvs;
+      short *yyss1 = yyss;
+#ifdef YYLSP_NEEDED
+      YYLTYPE *yyls1 = yyls;
+#endif
+
+      /* Get the current used size of the three stacks, in elements.  */
+      int size = yyssp - yyss + 1;
+
+#ifdef yyoverflow
+      /* Each stack pointer address is followed by the size of
+	 the data in use in that stack, in bytes.  */
+#ifdef YYLSP_NEEDED
+      /* This used to be a conditional around just the two extra args,
+	 but that might be undefined if yyoverflow is a macro.  */
+      yyoverflow("parser stack overflow",
+		 &yyss1, size * sizeof (*yyssp),
+		 &yyvs1, size * sizeof (*yyvsp),
+		 &yyls1, size * sizeof (*yylsp),
+		 &yystacksize);
+#else
+      yyoverflow("parser stack overflow",
+		 &yyss1, size * sizeof (*yyssp),
+		 &yyvs1, size * sizeof (*yyvsp),
+		 &yystacksize);
+#endif
+
+      yyss = yyss1; yyvs = yyvs1;
+#ifdef YYLSP_NEEDED
+      yyls = yyls1;
+#endif
+#else /* no yyoverflow */
+      /* Extend the stack our own way.  */
+      if (yystacksize >= YYMAXDEPTH)
+	{
+	  yyerror("parser stack overflow");
+	  return 2;
+	}
+      yystacksize *= 2;
+      if (yystacksize > YYMAXDEPTH)
+	yystacksize = YYMAXDEPTH;
+      yyss = (short *) alloca (yystacksize * sizeof (*yyssp));
+      __yy_memcpy ((char *)yyss, (char *)yyss1, size * sizeof (*yyssp));
+      yyvs = (YYSTYPE *) alloca (yystacksize * sizeof (*yyvsp));
+      __yy_memcpy ((char *)yyvs, (char *)yyvs1, size * sizeof (*yyvsp));
+#ifdef YYLSP_NEEDED
+      yyls = (YYLTYPE *) alloca (yystacksize * sizeof (*yylsp));
+      __yy_memcpy ((char *)yyls, (char *)yyls1, size * sizeof (*yylsp));
+#endif
+#endif /* no yyoverflow */
+
+      yyssp = yyss + size - 1;
+      yyvsp = yyvs + size - 1;
+#ifdef YYLSP_NEEDED
+      yylsp = yyls + size - 1;
+#endif
+
+#if YYDEBUG != 0
+      if (yydebug)
+	fprintf(stderr, "Stack size increased to %d\n", yystacksize);
+#endif
+
+      if (yyssp >= yyss + yystacksize - 1)
+	YYABORT;
+    }
+
+#if YYDEBUG != 0
+  if (yydebug)
+    fprintf(stderr, "Entering state %d\n", yystate);
+#endif
+
+  goto yybackup;
+ yybackup:
+
+/* Do appropriate processing given the current state.  */
+/* Read a lookahead token if we need one and don't already have one.  */
+/* yyresume: */
+
+  /* First try to decide what to do without reference to lookahead token.  */
+
+  yyn = yypact[yystate];
+  if (yyn == YYFLAG)
+    goto yydefault;
+
+  /* Not known => get a lookahead token if don't already have one.  */
+
+  /* yychar is either YYEMPTY or YYEOF
+     or a valid token in external form.  */
+
+  if (yychar == YYEMPTY)
+    {
+#if YYDEBUG != 0
+      if (yydebug)
+	fprintf(stderr, "Reading a token: ");
+#endif
+      yychar = YYLEX;
+    }
+
+  /* Convert token to internal form (in yychar1) for indexing tables with */
+
+  if (yychar <= 0)		/* This means end of input. */
+    {
+      yychar1 = 0;
+      yychar = YYEOF;		/* Don't call YYLEX any more */
+
+#if YYDEBUG != 0
+      if (yydebug)
+	fprintf(stderr, "Now at end of input.\n");
+#endif
+    }
+  else
+    {
+      yychar1 = YYTRANSLATE(yychar);
+
+#if YYDEBUG != 0
+      if (yydebug)
+	{
+	  fprintf (stderr, "Next token is %d (%s", yychar, yytname[yychar1]);
+	  /* Give the individual parser a way to print the precise meaning
+	     of a token, for further debugging info.  */
+#ifdef YYPRINT
+	  YYPRINT (stderr, yychar, yylval);
+#endif
+	  fprintf (stderr, ")\n");
+	}
+#endif
+    }
+
+  yyn += yychar1;
+  if (yyn < 0 || yyn > YYLAST || yycheck[yyn] != yychar1)
+    goto yydefault;
+
+  yyn = yytable[yyn];
+
+  /* yyn is what to do for this token type in this state.
+     Negative => reduce, -yyn is rule number.
+     Positive => shift, yyn is new state.
+       New state is final state => don't bother to shift,
+       just return success.
+     0, or most negative number => error.  */
+
+  if (yyn < 0)
+    {
+      if (yyn == YYFLAG)
+	goto yyerrlab;
+      yyn = -yyn;
+      goto yyreduce;
+    }
+  else if (yyn == 0)
+    goto yyerrlab;
+
+  if (yyn == YYFINAL)
+    YYACCEPT;
+
+  /* Shift the lookahead token.  */
+
+#if YYDEBUG != 0
+  if (yydebug)
+    fprintf(stderr, "Shifting token %d (%s), ", yychar, yytname[yychar1]);
+#endif
+
+  /* Discard the token being shifted unless it is eof.  */
+  if (yychar != YYEOF)
+    yychar = YYEMPTY;
+
+  *++yyvsp = yylval;
+#ifdef YYLSP_NEEDED
+  *++yylsp = yylloc;
+#endif
+
+  /* count tokens shifted since error; after three, turn off error status.  */
+  if (yyerrstatus) yyerrstatus--;
+
+  yystate = yyn;
+  goto yynewstate;
+
+/* Do the default action for the current state.  */
+yydefault:
+
+  yyn = yydefact[yystate];
+  if (yyn == 0)
+    goto yyerrlab;
+
+/* Do a reduction.  yyn is the number of a rule to reduce with.  */
+yyreduce:
+  yylen = yyr2[yyn];
+  if (yylen > 0)
+    yyval = yyvsp[1-yylen]; /* implement default value of the action */
+
+#if YYDEBUG != 0
+  if (yydebug)
+    {
+      int i;
+
+      fprintf (stderr, "Reducing via rule %d (line %d), ",
+	       yyn, yyrline[yyn]);
+
+      /* Print the symbols being reduced, and their result.  */
+      for (i = yyprhs[yyn]; yyrhs[i] > 0; i++)
+	fprintf (stderr, "%s ", yytname[yyrhs[i]]);
+      fprintf (stderr, " -> %s\n", yytname[yyr1[yyn]]);
+    }
+#endif
+
+
+  switch (yyn) {
+
+case 1:
+#line 2768 "ilu.bison"
+{
+  CurrentParse->interfaces = new_list();
+  list_insert(CurrentParse->interfaces, yyvsp[0]);
+  yyval = (refany) CurrentParse->interfaces;
+;
+    break;}
+case 2:
+#line 2774 "ilu.bison"
+{
+  list_insert ((list) yyvsp[-1], yyvsp[0]);
+  yyval = yyvsp[-1];
+;
+    break;}
+case 3:
+#line 2781 "ilu.bison"
+{
+  yyval = yyvsp[-1];
+;
+    break;}
+case 4:
+#line 2785 "ilu.bison"
+{
+  iluerror ("Bad interface description.");
+  YYABORT;
+;
+    break;}
+case 7:
+#line 2798 "ilu.bison"
+{
+  yyval = yyvsp[0];
+;
+    break;}
+case 8:
+#line 2802 "ilu.bison"
+{
+  yyval = yyvsp[0];
+;
+    break;}
+case 9:
+#line 2806 "ilu.bison"
+{
+  yyval = yyvsp[0];
+;
+    break;}
+case 10:
+#line 2810 "ilu.bison"
+{
+  iluerror ("Bad statement.");
+  yyerrok;
+  ParsingConstant = FALSE;
+  ParsingNonRealConstant = FALSE;
+  yyval = yyvsp[-1];
+;
+    break;}
+case 11:
+#line 2820 "ilu.bison"
+{
+  CurrentParse->interface = new_Interface(yyvsp[-3]);
+  CurrentParse->interface->idirectives = (list) yyvsp[0];
+  CurrentParse->interface->brand = (string) yyvsp[-2];
+  CurrentParse->interface->def = CurrentParse->line;
+  if (!has_imported((list) yyvsp[-1], "ilu") && strcmp((string) yyvsp[-3], "ilu") != 0)
+    list_insert ((list) yyvsp[-1], new_Imported("ilu", NULL));
+  CurrentParse->interface->imports = (list) yyvsp[-1];
+  /* check for import of self */
+  if (list_find((list) yyvsp[-1], (iluparser_FindProc) CheckForSelf, (refany) yyvsp[-3]) != NULL)
+    {
+      char buf[1000];
+      sprintf(buf, "Interface \"%s\" may not import itself.", (string) yyvsp[-3]);
+      iluerror(buf);
+      YYERROR;
+    }
+  yyval = (refany) CurrentParse->interface;
+;
+    break;}
+case 12:
+#line 2841 "ilu.bison"
+{
+  list new = new_list();
+  yyval = (refany) new;
+;
+    break;}
+case 13:
+#line 2846 "ilu.bison"
+{
+  list_insert(yyvsp[-3], yyvsp[-1]);
+  yyval = (refany) yyvsp[-3];
+;
+    break;}
+case 14:
+#line 2853 "ilu.bison"
+{
+  list new = new_list();
+  list_insert(new, yyvsp[0]);
+  yyval = (refany) new;
+;
+    break;}
+case 15:
+#line 2859 "ilu.bison"
+{
+  list_insert (yyvsp[-2], yyvsp[0]);
+  yyval = (refany) yyvsp[-2];
+;
+    break;}
+case 16:
+#line 2866 "ilu.bison"
+{
+  yyval = NULL;
+;
+    break;}
+case 17:
+#line 2870 "ilu.bison"
+{
+  yyval = (refany) yyvsp[0];
+;
+    break;}
+case 18:
+#line 2876 "ilu.bison"
+{
+  list new = new_list();
+  yyval = (refany) new;
+;
+    break;}
+case 19:
+#line 2882 "ilu.bison"
+{
+  yyval = yyvsp[-1];
+;
+    break;}
+case 20:
+#line 2889 "ilu.bison"
+{
+  yyval = yyvsp[-1];
+;
+    break;}
+case 21:
+#line 2893 "ilu.bison"
+{
+  iluerror ("Missing END statement in import list.");
+  yyerrok;
+  yyval = yyvsp[-2];
+;
+    break;}
+case 22:
+#line 2901 "ilu.bison"
+{
+  list new = new_list();
+
+  list_insert(new, yyvsp[0]);
+  yyval = (refany) new;
+;
+    break;}
+case 23:
+#line 2908 "ilu.bison"
+{
+  if (!has_imported((list) yyvsp[-2], ((Imported) yyvsp[0])->name))
+    list_insert (yyvsp[-2], yyvsp[0]);
+  else
+    free(yyvsp[0]);
+  yyval = yyvsp[-2];
+;
+    break;}
+case 24:
+#line 2918 "ilu.bison"
+{
+  yyval = (refany) new_Imported (yyvsp[0], NULL);
+;
+    break;}
+case 25:
+#line 2922 "ilu.bison"
+{
+  yyval = (refany) new_Imported (yyvsp[-2], yyvsp[0]);
+;
+    break;}
+case 26:
+#line 2928 "ilu.bison"
+{
+  Type            new = FIND_OR_CREATE_TYPE(yyvsp[-5]);
+  if (new->def != 0) {
+    char            buf[500];
+    sprintf(buf, "type \"%s\" already defined on line %ld\n",
+	    type_name(new), new->def);
+    iluerror(buf);
+    YYERROR;
+  } else if (yyvsp[-3] == 0) {
+    char            buf[500];
+    sprintf(buf, "bad type description for type \"%s\"\n",
+	    type_name(new));
+    iluerror(buf);
+    YYERROR;
+  } else {
+    TypeDescription d = (TypeDescription) yyvsp[-3];
+    new->description = NULL;
+    if (d->type == byte_Type) {
+      new->supertype = FIND_OR_CREATE_TYPE("byte");
+    } else if (d->type == shortcardinal_Type) {
+      new->supertype = FIND_OR_CREATE_TYPE("shortcardinal");
+    } else if (d->type == cardinal_Type) {
+      new->supertype = FIND_OR_CREATE_TYPE("cardinal");
+    } else if (d->type == shortinteger_Type) {
+      new->supertype = FIND_OR_CREATE_TYPE("shortinteger");
+    } else if (d->type == integer_Type) {
+      new->supertype = FIND_OR_CREATE_TYPE("integer");
+    } else {
+      new->supertype = NULL;
+      new->description = d;
+    }
+    new->def = CurrentParse->line;
+    new->uid = (char *) yyvsp[-2];
+    new->explicit_uid = (((void *) yyvsp[-2]) != NULL);
+    if (d->type == object_Type) {
+      if ((d->structuredDes.object->brand != NULL) &&
+	  (((char *) yyvsp[-1]) != NULL) &&
+	  (strcmp((char *) yyvsp[-1], d->structuredDes.object->brand) != 0)) {
+	char            buf[500];
+	sprintf(buf, "conflicting brands on type \"%s\"\n",
+		type_name(new));
+	iluerror(buf);
+	YYERROR;
+      } else if ((d->structuredDes.object->brand != NULL) &&
+		 (((char *) yyvsp[-1]) == NULL)) {
+	new->brand = d->structuredDes.object->brand;
+      } else if (((char *) yyvsp[-1]) != NULL) {
+	new->brand = (char *) yyvsp[-1];
+      }
+    } else 
+      new->brand = (char *) yyvsp[-1];
+    if (type_kind(new) == object_Type)
+      list_enumerate(new->description->structuredDes.object->methods,
+		     SetObjectSlotOfMethod,
+		     new);
+  }
+  yyval = (refany) new;
+;
+    break;}
+case 27:
+#line 2987 "ilu.bison"
+{
+  Type            new = NULL;
+
+  if ((strcmp(yyvsp[-4], type_name((Type)yyvsp[-2])) == 0) && ((Type)yyvsp[-2])->importInterfaceName == NULL) {
+    char	    buf[500];
+    sprintf (buf, "can't define type to be itself:  %s\n", (char*)yyvsp[-4]);
+    iluerror(buf);
+    YYERROR;
+  } else {
+    new = FIND_OR_CREATE_TYPE(yyvsp[-4]);
+    if (new->def != 0) {
+      char            buf[500];
+      sprintf(buf, "type \"%s\" already defined on line %ld\n",
+	      type_name(new), new->def);
+      iluerror(buf);
+      new = NULL;
+      YYERROR;
+    } else {
+      new->supertype = (Type) yyvsp[-2];
+      new->uid = (char *) yyvsp[-1];
+      new->explicit_uid = (((void *) yyvsp[-1]) != NULL);
+      new->def = CurrentParse->line;
+    }
+  }
+  yyval = (refany) new;
+;
+    break;}
+case 28:
+#line 3014 "ilu.bison"
+{
+  Type            new = FIND_OR_CREATE_TYPE(yyvsp[-3]);
+  if (new->def != 0) {
+    char            buf[500];
+    sprintf(buf, "type \"%s\" already defined on line %ld\n",
+	    type_name(new), new->def);
+    iluerror(buf);
+    YYERROR;
+  } else {
+    new->description = (TypeDescription) yyvsp[-1];
+    new->def = CurrentParse->line;
+    if (type_kind(new) == object_Type)
+      list_enumerate(new->description->structuredDes.object->methods,
+		     SetObjectSlotOfMethod,
+		     new);
+    new->brand = new->description->structuredDes.object->brand;
+  }
+  yyval = (refany) new;
+;
+    break;}
+case 29:
+#line 3037 "ilu.bison"
+{
+  yyval = (refany) yyvsp[0];
+;
+    break;}
+case 30:
+#line 3041 "ilu.bison"
+{
+  yyval = (refany) yyvsp[0];
+;
+    break;}
+case 31:
+#line 3045 "ilu.bison"
+{
+  yyval = (refany) yyvsp[0];
+;
+    break;}
+case 32:
+#line 3049 "ilu.bison"
+{
+  yyval = (refany) yyvsp[0];
+;
+    break;}
+case 33:
+#line 3053 "ilu.bison"
+{
+  yyval = (refany) yyvsp[0];
+;
+    break;}
+case 34:
+#line 3057 "ilu.bison"
+{
+  yyval = (refany) yyvsp[0];
+;
+    break;}
+case 35:
+#line 3061 "ilu.bison"
+{
+  yyval = (refany) yyvsp[0];
+;
+    break;}
+case 36:
+#line 3065 "ilu.bison"
+{
+  yyval = (refany) yyvsp[0];
+;
+    break;}
+case 37:
+#line 3069 "ilu.bison"
+{
+  yyval = (refany) yyvsp[0];
+;
+    break;}
+case 38:
+#line 3073 "ilu.bison"
+{
+  yyval = (refany) yyvsp[0];
+;
+    break;}
+case 39:
+#line 3079 "ilu.bison"
+{
+  yyval = (refany) new_ReferenceType ((boolean) yyvsp[-2], FALSE, (Type) yyvsp[0]);
+;
+    break;}
+case 40:
+#line 3083 "ilu.bison"
+{
+  yyval = (refany) new_ReferenceType ((boolean) yyvsp[-3], TRUE, (Type) yyvsp[0]);
+;
+    break;}
+case 41:
+#line 3089 "ilu.bison"
+{
+  yyval = (refany) new_ReferenceType ((boolean) yyvsp[-2], TRUE, (Type) yyvsp[0]);
+;
+    break;}
+case 42:
+#line 3094 "ilu.bison"
+{
+  yyval = (refany) 0;
+;
+    break;}
+case 43:
+#line 3098 "ilu.bison"
+{
+  yyval = (refany) 1;
+;
+    break;}
+case 44:
+#line 3104 "ilu.bison"
+{
+  yyval = (refany) 0;
+;
+    break;}
+case 45:
+#line 3108 "ilu.bison"
+{
+  yyval = (refany) K_LONG;
+;
+    break;}
+case 46:
+#line 3112 "ilu.bison"
+{
+  yyval = (refany) K_SHORT;
+;
+    break;}
+case 47:
+#line 3118 "ilu.bison"
+{
+  yyval = (refany) ((((int)yyvsp[-1]) == 0) ? integer_Type : ((((int)yyvsp[-1]) == K_SHORT) ? shortinteger_Type : longinteger_Type));
+;
+    break;}
+case 48:
+#line 3122 "ilu.bison"
+{
+  yyval = (refany) ((((int)yyvsp[-1]) == 0) ? cardinal_Type : ((((int)yyvsp[-1]) == K_SHORT) ? shortcardinal_Type : longcardinal_Type));
+;
+    break;}
+case 49:
+#line 3126 "ilu.bison"
+{
+  yyval = (refany) ((((int)yyvsp[-1]) == 0) ? real_Type : ((((int)yyvsp[-1]) == K_SHORT) ? shortreal_Type : longreal_Type));
+;
+    break;}
+case 50:
+#line 3130 "ilu.bison"
+{
+  yyval = (refany) ((((int)yyvsp[-1]) == 0 || ((int)yyvsp[-1]) == K_LONG) ? character_Type : shortcharacter_Type);
+;
+    break;}
+case 51:
+#line 3134 "ilu.bison"
+{
+  yyval = (refany) boolean_Type;
+;
+    break;}
+case 52:
+#line 3138 "ilu.bison"
+{
+  yyval = (refany) byte_Type;
+;
+    break;}
+case 53:
+#line 3142 "ilu.bison"
+{
+  yyval = (refany) pickle_Type;
+;
+    break;}
+case 54:
+#line 3148 "ilu.bison"
+{
+  matchname_s s;
+#define BTN(sss,nnn,iii)	((sss).name=(nnn),(sss).interface=(iii),&sss)
+
+  if ((TypeKind) yyvsp[0] == integer_Type)
+    yyval = (refany) list_find(CurrentParse->interface->types,
+			    (iluparser_FindProc) matchTypeName, BTN(s, "integer", NULL));
+  else if ((TypeKind) yyvsp[0] == cardinal_Type)
+    yyval = (refany) list_find(CurrentParse->interface->types,
+			 (iluparser_FindProc) matchTypeName, BTN(s, "cardinal", NULL));
+  else if ((TypeKind) yyvsp[0] == real_Type)
+    yyval = (refany) list_find(CurrentParse->interface->types,
+			    (iluparser_FindProc) matchTypeName, BTN(s, "real", NULL));
+  else if ((TypeKind) yyvsp[0] == shortinteger_Type)
+    yyval = (refany) list_find(CurrentParse->interface->types,
+		     (iluparser_FindProc) matchTypeName, BTN(s, "shortinteger", NULL));
+  else if ((TypeKind) yyvsp[0] == shortcardinal_Type)
+    yyval = (refany) list_find(CurrentParse->interface->types,
+		    (iluparser_FindProc) matchTypeName, BTN(s, "shortcardinal", NULL));
+  else if ((TypeKind) yyvsp[0] == shortreal_Type)
+    yyval = (refany) list_find(CurrentParse->interface->types,
+			(iluparser_FindProc) matchTypeName, BTN(s, "shortreal", NULL));
+  else if ((TypeKind) yyvsp[0] == longinteger_Type)
+    yyval = (refany) list_find(CurrentParse->interface->types,
+		      (iluparser_FindProc) matchTypeName, BTN(s, "longinteger", NULL));
+  else if ((TypeKind) yyvsp[0] == longcardinal_Type)
+    yyval = (refany) list_find(CurrentParse->interface->types,
+		     (iluparser_FindProc) matchTypeName, BTN(s, "longcardinal", NULL));
+  else if ((TypeKind) yyvsp[0] == longreal_Type)
+    yyval = (refany) list_find(CurrentParse->interface->types,
+			 (iluparser_FindProc) matchTypeName, BTN(s, "longreal", NULL));
+  else if ((TypeKind) yyvsp[0] == character_Type)
+    yyval = (refany) list_find(CurrentParse->interface->types,
+			(iluparser_FindProc) matchTypeName, BTN(s, "character", NULL));
+  else if ((TypeKind) yyvsp[0] == shortcharacter_Type)
+    yyval = (refany) list_find(CurrentParse->interface->types,
+		   (iluparser_FindProc) matchTypeName, BTN(s, "shortcharacter", NULL));
+  else if ((TypeKind) yyvsp[0] == boolean_Type)
+    yyval = (refany) list_find(CurrentParse->interface->types,
+			    (iluparser_FindProc) matchTypeName, BTN(s, "boolean", NULL));
+  else if ((TypeKind) yyvsp[0] == byte_Type)
+    yyval = (refany) list_find(CurrentParse->interface->types,
+			    (iluparser_FindProc) matchTypeName, BTN(s, "byte", NULL));
+  else if ((TypeKind) yyvsp[0] == pickle_Type)
+    yyval = (refany) list_find(CurrentParse->interface->types,
+			    (iluparser_FindProc) matchTypeName, BTN(s, "pickle", NULL));
+;
+    break;}
+case 55:
+#line 3196 "ilu.bison"
+{
+  yyval = (refany) FIND_OR_CREATE_TYPE(yyvsp[0]);
+;
+    break;}
+case 56:
+#line 3202 "ilu.bison"
+{
+  TypeDescription new = new_TypeDescription();
+  unsigned long limit = (unsigned long) yyvsp[-2];
+  unsigned charset = (unsigned) yyvsp[-1];
+  string language = (string) yyvsp[0];
+
+  ParsingConstant = FALSE;
+  if (limit == 0)
+    limit = 0xFFFFFFFF;
+  if ((language == NULL) && (charset == ISO_8859_1_CHARSET))
+    {
+      new->type = sequence_Type;
+      new->structuredDes.sequence.limit = limit;
+      new->structuredDes.sequence.optional = FALSE;
+      new->structuredDes.sequence.type = FIND_OR_CREATE_TYPE("ilu.shortcharacter");
+    }
+  else if ((language == NULL) && ((charset == ISO_UNICODE_1_1_CHARSET) ||
+				  (charset == ISO_UNICODE_UTF8_CHARSET)))
+    {
+      new->type = sequence_Type;
+      new->structuredDes.sequence.limit = limit;
+      new->structuredDes.sequence.optional = FALSE;
+      new->structuredDes.sequence.type = FIND_OR_CREATE_TYPE("ilu.character");
+    }
+  else
+    {
+      new->type = string_Type;
+      new->structuredDes.string.max_length = limit;
+      new->structuredDes.string.charset = charset;
+      new->structuredDes.string.language = language;
+    }
+  yyval = (refany) new;
+;
+    break;}
+case 57:
+#line 3238 "ilu.bison"
+{ ParsingConstant = TRUE; ;
+    break;}
+case 58:
+#line 3242 "ilu.bison"
+{
+  TypeDescription new = new_TypeDescription();
+  IntegerLiteral minnum = (IntegerLiteral) yyvsp[-2];
+  IntegerLiteral maxnum = (IntegerLiteral) yyvsp[-1];
+  IntegerLiteral denom = (IntegerLiteral) yyvsp[0];
+
+  ParsingConstant = FALSE;
+  new->type = fixedpoint_Type;
+
+  if (denom == NULL) {
+    denom = (IntegerLiteral) iluparser_Malloc(sizeof(*denom));
+    denom->small = TRUE;
+    denom->negative = FALSE;
+    denom->val.direct = 1;
+  };
+  if (minnum && maxnum && denom->small && (!denom->negative) && (denom->val.direct == 1))
+    {
+      /* bounded integer types */
+      if (minnum->small && (minnum->val.direct == 0)) {
+	/* cardinal types */
+	if (maxnum->small && (!maxnum->negative) && (maxnum->val.direct == 255)) {
+	  /* byte_Type */
+	  new->type = byte_Type;
+	} else if (maxnum->small && (!maxnum->negative) && (maxnum->val.direct == 0xFFFF)) {
+	  /* shortcardinal_Type */
+	  new->type = shortcardinal_Type;
+	} else if (maxnum->small && (!maxnum->negative) && (maxnum->val.direct == 0xFFFFFFFF)) {
+	  new->type = cardinal_Type;
+	}
+      } else if ((minnum->small && minnum->negative && (minnum->val.direct == 0x80000000)) &&
+		 (maxnum->small && (!maxnum->negative) && (maxnum->val.direct == 0x7FFFFFFF))) {
+	new->type = integer_Type;
+      } else if ((minnum->small && minnum->negative && (minnum->val.direct == 0x8000)) &&
+		 (maxnum->small && (!maxnum->negative) && (maxnum->val.direct == 0x7FFF))) {
+	new->type = shortinteger_Type;
+      }
+    }
+  if (new->type == fixedpoint_Type) {
+    new->structuredDes.fixed.min_numerator = minnum;
+    new->structuredDes.fixed.max_numerator = maxnum;
+    new->structuredDes.fixed.denominator = denom;
+    FigureFixedPointCharacteristics(new);
+  } else {
+    if (minnum != NULL) free(minnum);
+    if (maxnum != NULL) free(maxnum);
+    free(denom);
+  }
+  yyval = (refany) new;
+;
+    break;}
+case 59:
+#line 3294 "ilu.bison"
+{
+  yyval = (refany) 0;
+;
+    break;}
+case 60:
+#line 3298 "ilu.bison"
+{
+  yyval = (refany) yyvsp[0];
+;
+    break;}
+case 61:
+#line 3304 "ilu.bison"
+{
+  yyval = (refany) 0;
+;
+    break;}
+case 62:
+#line 3308 "ilu.bison"
+{
+  yyval = (refany) yyvsp[0];
+;
+    break;}
+case 63:
+#line 3314 "ilu.bison"
+{
+  yyval = (refany) 0;
+;
+    break;}
+case 64:
+#line 3318 "ilu.bison"
+{
+  yyval = (refany) yyvsp[0];
+;
+    break;}
+case 65:
+#line 3324 "ilu.bison"
+{
+  yyval = (refany) 0;
+;
+    break;}
+case 66:
+#line 3328 "ilu.bison"
+{
+  yyval = (refany) yyvsp[0];
+;
+    break;}
+case 67:
+#line 3334 "ilu.bison"
+{
+  yyval = (refany) 0;
+;
+    break;}
+case 68:
+#line 3338 "ilu.bison"
+{
+  yyval = (refany) yyvsp[0];
+;
+    break;}
+case 69:
+#line 3344 "ilu.bison"
+{
+  yyval = (refany) ISO_UNICODE_1_1_CHARSET;
+;
+    break;}
+case 70:
+#line 3348 "ilu.bison"
+{
+  yyval = (refany) ISO_UNICODE_UTF8_CHARSET;
+;
+    break;}
+case 71:
+#line 3352 "ilu.bison"
+{
+  yyval = (refany) ISO_8859_1_CHARSET;
+;
+    break;}
+case 72:
+#line 3356 "ilu.bison"
+{
+  cardinal value = ilu_atoi(yyvsp[0]);
+  yyval = (refany) value;
+;
+    break;}
+case 73:
+#line 3363 "ilu.bison"
+{
+  unsigned long val;
+  int mysign;
+  char *p;
+  IntegerLiteral new = (IntegerLiteral) iluparser_Malloc (sizeof(*new));
+  p = yyvsp[0];
+  if (!ilu_strtoul(p, &mysign, &new->val.direct, &new->small))
+    {
+      char buf[1000];
+      sprintf(buf, "Integer literal \"%s\" contains invalid character(s).", (string) yyvsp[0]);
+      iluerror(buf);
+      YYERROR;
+    }
+  else if (!new->small)
+    new->val.string = ilu_strdup(p);
+  new->negative = (yyvsp[-1] != 0);
+  yyval = (void *) new;
+;
+    break;}
+case 74:
+#line 3383 "ilu.bison"
+{
+  TypeDescription new = new_TypeDescription();
+  new->type = array_Type;
+  new->structuredDes.array.type = (Type) yyvsp[0];
+  new->structuredDes.array.optional = FALSE;
+  list_insert (((Type) yyvsp[0])->refs, (refany) CurrentParse->line);
+  new->structuredDes.array.dimensions = (list) yyvsp[-1];
+  yyval = (refany) new;
+;
+    break;}
+case 75:
+#line 3393 "ilu.bison"
+{
+  TypeDescription new = new_TypeDescription();
+  new->type = array_Type;
+  new->structuredDes.array.type = (Type) yyvsp[0];
+  new->structuredDes.array.optional = FALSE;
+  list_insert (((Type) yyvsp[0])->refs, (refany) CurrentParse->line);
+  new->structuredDes.array.dimensions = (list) yyvsp[-2];
+  yyval = (refany) new;
+;
+    break;}
+case 76:
+#line 3405 "ilu.bison"
+{
+  list new = new_list();
+  list_insert (new, (refany) ilu_atoi(yyvsp[0]));
+  yyval = (refany) new;
+;
+    break;}
+case 77:
+#line 3411 "ilu.bison"
+{
+  list_insert (yyvsp[-2], (refany) ilu_atoi(yyvsp[0]));
+  yyval = (refany) yyvsp[-2];
+;
+    break;}
+case 78:
+#line 3418 "ilu.bison"
+{
+  TypeDescription new = new_TypeDescription();
+  new->type = sequence_Type;
+  new->structuredDes.sequence.type = (Type) yyvsp[-1];
+  new->structuredDes.sequence.optional = FALSE;
+  new->structuredDes.sequence.limit = (cardinal) yyvsp[0];
+  if (new->structuredDes.sequence.limit > 0xFFFF && ((int)yyvsp[-4]) == K_SHORT)
+    iluwarn ("Both a limit and SHORT are used on sequence declaration.  SHORT dominates.\n");
+  if (((int)yyvsp[-4]) == K_SHORT)
+    new->structuredDes.sequence.limit = 0xFFFF;
+  list_insert (((Type) yyvsp[-1])->refs, (refany) CurrentParse->line);
+  yyval = (refany) new;
+;
+    break;}
+case 79:
+#line 3434 "ilu.bison"
+{
+  yyval = (refany) 0;
+;
+    break;}
+case 80:
+#line 3438 "ilu.bison"
+{
+  cardinal value = ilu_atoi(yyvsp[0]);
+  yyval = (refany) value;
+;
+    break;}
+case 81:
+#line 3445 "ilu.bison"
+{
+  TypeDescription new = new_TypeDescription();
+  new->type = pipe_Type;
+  new->structuredDes.pipe.type = (Type) yyvsp[0];
+  new->structuredDes.pipe.optional = FALSE;
+  new->structuredDes.pipe.sink_p = (boolean) yyvsp[-2];
+  list_insert (((Type) yyvsp[0])->refs, (refany) CurrentParse->line);
+  yyval = (refany) new;
+;
+    break;}
+case 82:
+#line 3457 "ilu.bison"
+{
+  yyval = (refany) FALSE;
+;
+    break;}
+case 83:
+#line 3461 "ilu.bison"
+{
+  yyval = (refany) TRUE;
+;
+    break;}
+case 84:
+#line 3467 "ilu.bison"
+{
+  TypeDescription new = new_TypeDescription();
+  new->type = record_Type;
+  new->structuredDes.record.fields = (list) yyvsp[-1];
+  new->structuredDes.record.extensible = (boolean) yyvsp[-4];
+  new->structuredDes.record.supertype = (Type) yyvsp[-2];
+  yyval = (refany) new;
+;
+    break;}
+case 85:
+#line 3476 "ilu.bison"
+{
+  iluerror ("Error on record field definitions.");
+  yyerrok;
+  yyval = NULL;
+;
+    break;}
+case 86:
+#line 3482 "ilu.bison"
+{
+  iluerror( "Missing 'End' in record definition" );
+  yyerrok;
+  yyval = NULL;
+;
+    break;}
+case 87:
+#line 3490 "ilu.bison"
+{
+  list new = new_list();
+  list_insert (new, yyvsp[0]);
+  yyval = (refany) new;
+;
+    break;}
+case 88:
+#line 3497 "ilu.bison"
+{
+  list_insert (yyvsp[-2], yyvsp[0]);
+  yyval = yyvsp[-2];
+;
+    break;}
+case 89:
+#line 3504 "ilu.bison"
+{
+  list_insert (((Type)yyvsp[0])->refs, (refany) CurrentParse->line);
+  yyval = (refany) argument_Create ((string) yyvsp[-2], (Type) yyvsp[0], FALSE, In, CurrentParse->line, NULL);
+;
+    break;}
+case 90:
+#line 3511 "ilu.bison"
+{
+  yyval = (refany) 0;
+;
+    break;}
+case 91:
+#line 3515 "ilu.bison"
+{
+  yyval = (refany) 0;
+;
+    break;}
+case 92:
+#line 3519 "ilu.bison"
+{
+  yyval = (refany) 1;
+;
+    break;}
+case 93:
+#line 3525 "ilu.bison"
+{
+  yyval = (refany) NULL;
+;
+    break;}
+case 94:
+#line 3529 "ilu.bison"
+{
+  yyval = (refany) yyvsp[0];
+;
+    break;}
+case 95:
+#line 3535 "ilu.bison"
+{
+  TypeDescription new = new_TypeDescription();
+  new->type = union_Type;
+  new->structuredDes.uniond.discriminator_type = yyvsp[-3];
+  new->structuredDes.uniond.types = yyvsp[-2];
+  new->structuredDes.uniond.default_arm=0;
+  new->structuredDes.uniond.others_allowed = (boolean) yyvsp[0];
+  yyval = (refany) new;
+;
+    break;}
+case 96:
+#line 3545 "ilu.bison"
+{
+  iluerror ("missing 'END' in Union description.");
+  yyerrok;
+;
+    break;}
+case 97:
+#line 3553 "ilu.bison"
+{
+  if (yyvsp[-1] != NULL)
+    yyval = yyvsp[-1];
+  else
+    yyval = (refany) FIND_OR_CREATE_TYPE("shortinteger");
+;
+    break;}
+case 98:
+#line 3562 "ilu.bison"
+{
+  yyval = NULL;
+;
+    break;}
+case 99:
+#line 3566 "ilu.bison"
+{
+  yyval = yyvsp[0];
+;
+    break;}
+case 100:
+#line 3572 "ilu.bison"
+{
+  list new;
+  new = new_list();
+  list_insert(new, yyvsp[0]);
+  yyval = (refany) new;
+;
+    break;}
+case 101:
+#line 3579 "ilu.bison"
+{
+  list_insert((list) yyvsp[-2], yyvsp[0]);
+  yyval = yyvsp[-2];
+;
+    break;}
+case 102:
+#line 3586 "ilu.bison"
+{
+  list_insert(((Type) yyvsp[-1])->refs, (refany) CurrentParse->line);
+  yyval = argument_Create((string) NULL, (Type) yyvsp[-1], FALSE, In,
+		       CurrentParse->line, (list) yyvsp[0]);
+;
+    break;}
+case 103:
+#line 3592 "ilu.bison"
+{
+  list_insert(((Type) yyvsp[-1])->refs, (refany) CurrentParse->line);
+  yyval = argument_Create((string) yyvsp[-3], (Type) yyvsp[-1], FALSE, In, CurrentParse->line,
+		       (list) yyvsp[0]);
+;
+    break;}
+case 104:
+#line 3600 "ilu.bison"
+{
+  yyval = (refany) NULL;
+;
+    break;}
+case 105:
+#line 3604 "ilu.bison"
+{ ParsingConstant = TRUE;
+			    ParsingNonRealConstant = TRUE; ;
+    break;}
+case 106:
+#line 3607 "ilu.bison"
+{ 
+  yyval = yyvsp[0];
+  ParsingNonRealConstant = FALSE;
+  ParsingConstant = FALSE;
+;
+    break;}
+case 107:
+#line 3615 "ilu.bison"
+{ 
+  yyval = (refany) &iluparser_DefaultUnionArm;
+;
+    break;}
+case 108:
+#line 3619 "ilu.bison"
+{
+  list values = (list) yyvsp[-1];
+  unsigned long i, n;
+  ConstantValue cv;
+  char *old, *p;
+  for (n = list_size(values), i = 0;  i < n;  i++) {
+    cv = list_ref(values, i);
+    if ((cv->type == shortcharacter_Type) &&
+	((p = strrchr(cv->val.s, '.')) != NULL)) {
+      old = cv->val.s;
+      cv->val.s = ilu_strdup(p + 1);
+      free(old);
+    };
+  }
+  yyval = (refany) values;
+;
+    break;}
+case 109:
+#line 3638 "ilu.bison"
+{
+  yyval = (refany) 0;
+;
+    break;}
+case 110:
+#line 3642 "ilu.bison"
+{
+  yyval = (refany) 1;
+;
+    break;}
+case 111:
+#line 3648 "ilu.bison"
+{
+  TypeDescription new = new_TypeDescription();
+  new->type = enumeration_Type;
+  new->structuredDes.enumeration = (list) yyvsp[-1];
+  yyval = (refany) new;
+;
+    break;}
+case 112:
+#line 3655 "ilu.bison"
+{
+  iluerror ("Missing 'END' in enumeration element list.");
+  yyerrok;
+;
+    break;}
+case 113:
+#line 3662 "ilu.bison"
+{
+  list new = new_list();
+  list_insert (new, yyvsp[0]);
+  yyval = (refany) new;
+;
+    break;}
+case 114:
+#line 3668 "ilu.bison"
+{
+  list_insert ((list) yyvsp[-2], yyvsp[0]);
+  yyval = yyvsp[-2];
+;
+    break;}
+case 115:
+#line 3675 "ilu.bison"
+{
+  EnumField new = (EnumField) iluparser_Malloc(sizeof(struct enumerationField_s));
+  new->name = yyvsp[0];
+  new->id = -1;
+  yyval = (refany) new;
+;
+    break;}
+case 116:
+#line 3682 "ilu.bison"
+{
+  EnumField new = (EnumField) iluparser_Malloc(sizeof(struct enumerationField_s));
+  new->name = yyvsp[-2];
+  new->id = ilu_atoi(yyvsp[0]);
+  yyval = (refany) new;
+;
+    break;}
+case 117:
+#line 3691 "ilu.bison"
+{
+  Exception new = FIND_OR_CREATE_EXCEPTION (yyvsp[-4]);
+  if (new->def != 0)
+    {
+      char buf[500];
+      sprintf (buf, "exception \"%s\" already defined on line %ld.\n", exception_name(new), new->def);
+      iluerror (buf);
+      YYERROR;
+    }
+  else
+    {
+      new->valueOptional = FALSE;
+      new->type = (Type) yyvsp[-3];
+      new->def = CurrentParse->line;
+      new->corba_rep_id = (char *) yyvsp[-2];
+      new->doc_string = (char *) yyvsp[-1];
+    }
+  yyval = (refany) new;
+;
+    break;}
+case 118:
+#line 3713 "ilu.bison"
+{
+  char *p = strchr((char *) yyvsp[0], ':');
+  if (p == NULL)
+    {
+      char buf[500];
+      sprintf (buf, "type ID \"%s\" has no type ID scheme tag.\n", (char *) yyvsp[0]);
+      iluerror (buf);
+      YYERROR;
+    }
+  else if ((! isalpha(*((char *)yyvsp[0]))) ||
+	   (strspn((char *) yyvsp[0], AlphaNumChars) != (p - ((char *) yyvsp[0]))))
+    {
+      iluerror ("type ID scheme tags must be alphanumeric beginning with alpha.\n");
+      YYERROR;
+    }
+  else
+    {
+      yyval = (refany) yyvsp[0];
+    }
+;
+    break;}
+case 119:
+#line 3736 "ilu.bison"
+{
+  yyval = (refany) 0;
+;
+    break;}
+case 120:
+#line 3740 "ilu.bison"
+{
+  yyval = (refany) yyvsp[0];
+;
+    break;}
+case 121:
+#line 3746 "ilu.bison"
+{
+  yyval = (refany) NULL;
+;
+    break;}
+case 122:
+#line 3750 "ilu.bison"
+{
+  list_insert (((Type) yyvsp[0])->refs, (refany) CurrentParse->line);
+  yyval = yyvsp[0];
+;
+    break;}
+case 123:
+#line 3757 "ilu.bison"
+{
+  yyval = yyvsp[-1];
+;
+    break;}
+case 124:
+#line 3761 "ilu.bison"
+{
+  yyval = (refany) new_list();
+;
+    break;}
+case 125:
+#line 3765 "ilu.bison"
+{
+  yyerrok;
+  yyval = (refany) NULL;
+;
+    break;}
+case 126:
+#line 3772 "ilu.bison"
+{
+  list new = new_list();
+  list_insert (new, yyvsp[0]);
+  yyval = (refany) new;
+;
+    break;}
+case 127:
+#line 3778 "ilu.bison"
+{
+  list_insert (yyvsp[-2], yyvsp[0]);
+  yyval = yyvsp[-2];
+;
+    break;}
+case 128:
+#line 3785 "ilu.bison"
+{
+  yyval = (refany) In;
+;
+    break;}
+case 129:
+#line 3789 "ilu.bison"
+{
+  yyval = (refany) In;
+;
+    break;}
+case 130:
+#line 3793 "ilu.bison"
+{
+  yyval = (refany) Out;
+;
+    break;}
+case 131:
+#line 3797 "ilu.bison"
+{
+  yyval = (refany) InOut;
+;
+    break;}
+case 132:
+#line 3803 "ilu.bison"
+{
+  /* name, type, sibling, direction, line_def */
+  Argument new = argument_Create (yyvsp[-3], yyvsp[0], (boolean) yyvsp[-1], (ArgDirection) yyvsp[-4], CurrentParse->line, NULL);
+  list_insert (new->type->refs, (refany) CurrentParse->line);
+  yyval = (refany) new;
+;
+    break;}
+case 133:
+#line 3812 "ilu.bison"
+{
+  yyval = (refany) FALSE;
+;
+    break;}
+case 134:
+#line 3816 "ilu.bison"
+{
+  yyval = (refany) TRUE;
+;
+    break;}
+case 135:
+#line 3822 "ilu.bison"
+{
+  list l = new_list();
+  Exception new = FIND_OR_CREATE_EXCEPTION (yyvsp[0]);
+  list_insert (l, new);
+  list_insert (new->refs, (refany) CurrentParse->line);
+  yyval = (refany) l;
+;
+    break;}
+case 136:
+#line 3830 "ilu.bison"
+{
+  Exception new = FIND_OR_CREATE_EXCEPTION (yyvsp[0]);
+  list_insert (yyvsp[-2], new);
+  list_insert (new->refs, (refany) CurrentParse->line);
+  yyval = (refany) yyvsp[-2];
+;
+    break;}
+case 137:
+#line 3840 "ilu.bison"
+{
+  TypeDescription new = new_TypeDescription();
+
+  new->type = object_Type;
+  new->structuredDes.object = (Class) iluparser_Malloc (sizeof(struct ilu_class_s));
+  new->structuredDes.object->brand = NULL;
+  new->structuredDes.object->corba_rep_id = NULL;
+  new->structuredDes.object->collectible = FALSE;
+  new->structuredDes.object->optional = FALSE;
+  new->structuredDes.object->singleton = NULL;
+  new->structuredDes.object->superclasses = NULL;
+  new->structuredDes.object->authentication = NULL;
+  new->structuredDes.object->methods = NULL;
+  new->structuredDes.object->doc_string = NULL;
+  new->structuredDes.object->sealed = FALSE;
+  new->structuredDes.object->local = FALSE;
+
+  list_enumerate ((list) yyvsp[0], (void (*)(refany, refany)) AssignClassAttributes, new->structuredDes.object);
+
+  if (new->structuredDes.object->superclasses == NULL)
+    new->structuredDes.object->superclasses = new_list();
+  if (new->structuredDes.object->methods == NULL)
+    new->structuredDes.object->methods = new_list();
+
+  list_clear ((list) yyvsp[0], FALSE);
+  iluparser_Free((void *) yyvsp[0]);
+
+  yyval = (refany) new;
+;
+    break;}
+case 138:
+#line 3872 "ilu.bison"
+{
+  yyval = (refany) new_list();
+;
+    break;}
+case 139:
+#line 3876 "ilu.bison"
+{
+  O_Brand.value = (refany) yyvsp[0];
+  list_insert ((list) yyvsp[-1], (refany) &O_Brand);
+  yyval = yyvsp[-1];
+;
+    break;}
+case 140:
+#line 3882 "ilu.bison"
+{
+  O_Collectible.value = (refany) yyvsp[0];
+  list_insert ((list) yyvsp[-1], (refany) &O_Collectible);
+  yyval = yyvsp[-1];
+;
+    break;}
+case 141:
+#line 3888 "ilu.bison"
+{
+  O_Sealed.value = (refany) yyvsp[0];
+  list_insert ((list) yyvsp[-1], (refany) &O_Sealed);
+  yyval = yyvsp[-1];
+;
+    break;}
+case 142:
+#line 3894 "ilu.bison"
+{
+  O_Local.value = (refany) yyvsp[0];
+  list_insert ((list) yyvsp[-1], (refany) &O_Local);
+  yyval = yyvsp[-1];
+;
+    break;}
+case 143:
+#line 3900 "ilu.bison"
+{
+  O_Optional.value = (refany) yyvsp[0];
+  list_insert ((list) yyvsp[-1], (refany) &O_Optional);
+  yyval = yyvsp[-1];
+;
+    break;}
+case 144:
+#line 3906 "ilu.bison"
+{
+  O_Singleton.value = (refany) yyvsp[0];
+  list_insert ((list) yyvsp[-1], (refany) &O_Singleton);
+  yyval = yyvsp[-1];
+;
+    break;}
+case 145:
+#line 3912 "ilu.bison"
+{
+  O_Superclasses.value = (refany) yyvsp[0];
+  list_insert ((list) yyvsp[-1], (refany) &O_Superclasses);
+  yyval = yyvsp[-1];
+;
+    break;}
+case 146:
+#line 3918 "ilu.bison"
+{
+  O_Authentication.value = (refany) yyvsp[0];
+  list_insert ((list) yyvsp[-1], (refany) &O_Authentication);
+  yyval = yyvsp[-1];
+;
+    break;}
+case 147:
+#line 3924 "ilu.bison"
+{
+  O_RepositoryID.value = (refany) yyvsp[0];
+  list_insert ((list) yyvsp[-1], (refany) &O_RepositoryID);
+  yyval = yyvsp[-1];
+;
+    break;}
+case 148:
+#line 3930 "ilu.bison"
+{
+  O_Methods.value = (refany) yyvsp[0];
+  list_insert ((list) yyvsp[-1], (refany) &O_Methods);
+  yyval = yyvsp[-1];
+;
+    break;}
+case 149:
+#line 3936 "ilu.bison"
+{
+  O_State.value = (refany) yyvsp[0];
+  list_insert ((list) yyvsp[-1], (refany) &O_State);
+  yyval = yyvsp[-1];
+;
+    break;}
+case 150:
+#line 3942 "ilu.bison"
+{
+  O_Documentation.value = (refany) yyvsp[0];
+  list_insert ((list) yyvsp[-1], (refany) &O_Documentation);
+  yyval = yyvsp[-1];
+;
+    break;}
+case 151:
+#line 3950 "ilu.bison"
+{
+  yyval = (refany) yyvsp[0];
+;
+    break;}
+case 152:
+#line 3956 "ilu.bison"
+{
+  yyval = (refany) TRUE;
+;
+    break;}
+case 153:
+#line 3962 "ilu.bison"
+{
+  yyval = (refany) TRUE;
+;
+    break;}
+case 154:
+#line 3968 "ilu.bison"
+{
+  yyval = (refany) TRUE;
+;
+    break;}
+case 155:
+#line 3974 "ilu.bison"
+{
+  yyval = (refany) TRUE;
+;
+    break;}
+case 156:
+#line 3980 "ilu.bison"
+{
+  list l = new_list();
+  list_insert(l, FIND_OR_CREATE_TYPE(yyvsp[0]));
+  yyval = (refany) l;
+;
+    break;}
+case 157:
+#line 3986 "ilu.bison"
+{
+  yyval = yyvsp[-1];
+;
+    break;}
+case 158:
+#line 3992 "ilu.bison"
+{
+  list l = new_list();
+  list_insert(l, (Type) yyvsp[0]);
+  yyval = (refany) l;
+;
+    break;}
+case 159:
+#line 3998 "ilu.bison"
+{
+  list_insert((list) yyvsp[-2], yyvsp[0]);
+  yyval = yyvsp[-2];
+;
+    break;}
+case 160:
+#line 4005 "ilu.bison"
+{
+  yyval = (refany) yyvsp[0];
+;
+    break;}
+case 161:
+#line 4011 "ilu.bison"
+{
+  yyval = (refany) yyvsp[0];
+;
+    break;}
+case 162:
+#line 4017 "ilu.bison"
+{
+  yyval = (refany) yyvsp[0];
+;
+    break;}
+case 163:
+#line 4023 "ilu.bison"
+{
+  yyval = (refany) yyvsp[-1];
+;
+    break;}
+case 164:
+#line 4027 "ilu.bison"
+{
+  iluerror ("Trailing comma in definition of object state.");
+  yyerrok;
+  yyval = (refany) yyvsp[-3];
+;
+    break;}
+case 165:
+#line 4033 "ilu.bison"
+{
+  iluerror ("Bad object state definition.");
+  yyerrok;
+  yyval = (refany) yyvsp[-1];
+;
+    break;}
+case 166:
+#line 4041 "ilu.bison"
+{
+  list new = new_list();
+  if (yyvsp[0] != NULL)
+    list_insert (new, yyvsp[0]);
+  yyval = (refany) new;
+;
+    break;}
+case 167:
+#line 4048 "ilu.bison"
+{
+  if (yyvsp[0] != NULL)
+    list_insert (yyvsp[-2], yyvsp[0]);
+  yyval = yyvsp[-2];
+;
+    break;}
+case 168:
+#line 4054 "ilu.bison"
+{
+  iluerror ("Bad state definition, possible missing comma.");
+  yyerrok;
+  yyval = yyvsp[-2];
+;
+    break;}
+case 169:
+#line 4062 "ilu.bison"
+{
+  /* name, type, sibling, direction, line_def */
+  Argument new = argument_Create (yyvsp[-2], yyvsp[0], (boolean) yyvsp[-3], In /* unused */, CurrentParse->line, NULL);
+  list_insert (new->type->refs, (refany) CurrentParse->line);
+  yyval = (refany) new;
+;
+    break;}
+case 170:
+#line 4071 "ilu.bison"
+{
+  yyval = 0;
+;
+    break;}
+case 171:
+#line 4075 "ilu.bison"
+{
+  yyval = 0;
+;
+    break;}
+case 172:
+#line 4079 "ilu.bison"
+{
+  yyval = (refany) 1;
+;
+    break;}
+case 173:
+#line 4085 "ilu.bison"
+{
+  yyval = (refany) yyvsp[-1];
+;
+    break;}
+case 174:
+#line 4089 "ilu.bison"
+{
+  iluerror ("Trailing comma in list of methods.");
+  yyerrok;
+  yyval = (refany) yyvsp[-3];
+;
+    break;}
+case 175:
+#line 4095 "ilu.bison"
+{
+  iluerror ("Bad method definition.");
+  yyerrok;
+  yyval = (refany) yyvsp[-1];
+;
+    break;}
+case 176:
+#line 4103 "ilu.bison"
+{
+  list new = new_list();
+  if (yyvsp[0] != NULL)
+    list_insert (new, yyvsp[0]);
+  yyval = (refany) new;
+;
+    break;}
+case 177:
+#line 4110 "ilu.bison"
+{
+  if (yyvsp[0] != NULL)
+    list_insert (yyvsp[-2], yyvsp[0]);
+  yyval = yyvsp[-2];
+;
+    break;}
+case 178:
+#line 4116 "ilu.bison"
+{
+  iluerror ("Bad method definition, possible missing comma.");
+  yyerrok;
+  yyval = yyvsp[-2];
+;
+    break;}
+case 179:
+#line 4124 "ilu.bison"
+{
+  if ((((char *) yyvsp[-7]) == m_Asynchronous) && (yyvsp[-4] != NULL || yyvsp[-3] != NULL))
+    {
+      iluerror1 ("method \"%s\":  ASYNCHRONOUS methods cannot have return type or exceptions.\n", (char *) yyvsp[-6]);
+      yyval = (refany) NULL;
+    }
+  else if (yyvsp[-5] == NULL)
+    {
+      iluerror1 ("method \"%s\":  Bad argument list.\n", (char *) yyvsp[-6]);
+      yyval = (refany) NULL;
+    }
+  else
+    {
+      /* name, functional, async, arguments, returnType, exceptions, id, def_line, interface, object_type, authentication_type, doc_string */
+      Type t = (yyvsp[-4] != NULL) ? ((Argument) yyvsp[-4])->type : NULL;
+
+      Procedure new = procedure_Create (yyvsp[-6],
+					((char *) yyvsp[-7] == m_Functional),
+					((char *) yyvsp[-7] == m_Asynchronous),
+					yyvsp[-5], t, yyvsp[-3], (int) yyvsp[-2],
+					CurrentParse->line,
+					CurrentParse->interface, NULL,
+					(char *) yyvsp[-1], (char *) yyvsp[0]);
+      yyval = (refany) new;
+    }
+;
+    break;}
+case 180:
+#line 4151 "ilu.bison"
+{
+  iluerror ("Semicolon invalidly used as method terminator.");
+  yyval = (refany) yyvsp[-1];
+;
+    break;}
+case 181:
+#line 4158 "ilu.bison"
+{
+  yyval = NULL;
+;
+    break;}
+case 182:
+#line 4162 "ilu.bison"
+{
+  yyval = (refany) argument_Create (ilu_strdup(""), yyvsp[0], FALSE, In, CurrentParse->line, NULL);
+  list_insert(((Type) yyvsp[0])->refs, (refany) CurrentParse->line);
+;
+    break;}
+case 183:
+#line 4169 "ilu.bison"
+{
+  yyval = (refany) FALSE;
+;
+    break;}
+case 184:
+#line 4173 "ilu.bison"
+{
+  yyval = (refany) m_Functional;
+;
+    break;}
+case 185:
+#line 4177 "ilu.bison"
+{
+  yyval = (refany) m_Asynchronous;
+;
+    break;}
+case 186:
+#line 4183 "ilu.bison"
+{
+  yyval = (refany) NULL;
+;
+    break;}
+case 187:
+#line 4187 "ilu.bison"
+{
+  yyval = (refany) yyvsp[0];
+;
+    break;}
+case 188:
+#line 4193 "ilu.bison"
+{
+  yyval = NULL;
+;
+    break;}
+case 189:
+#line 4197 "ilu.bison"
+{
+  yyval = yyvsp[-1];
+;
+    break;}
+case 190:
+#line 4201 "ilu.bison"
+{
+  iluerror ("Missing END on exception list");
+  yyval = NULL;
+;
+    break;}
+case 191:
+#line 4208 "ilu.bison"
+{
+  yyval = (refany) -1;
+;
+    break;}
+case 192:
+#line 4212 "ilu.bison"
+{
+  yyval = (refany) ilu_atoi(yyvsp[0]);
+;
+    break;}
+case 193:
+#line 4218 "ilu.bison"
+{
+  yyval = (refany) NULL;
+;
+    break;}
+case 194:
+#line 4222 "ilu.bison"
+{
+  yyval = (refany) ilu_strdup((char *) yyvsp[0]);
+;
+    break;}
+case 195:
+#line 4228 "ilu.bison"
+{ ParsingConstant = TRUE; ;
+    break;}
+case 196:
+#line 4230 "ilu.bison"
+{ ParsingConstant = FALSE; ;
+    break;}
+case 197:
+#line 4233 "ilu.bison"
+{
+  Constant new = FIND_OR_CREATE_CONSTANT((string) yyvsp[-7]);
+  ParsingConstant = FALSE;
+
+  if (new->def != 0)
+    {
+      char buf[500];
+      sprintf (buf, "constant \"%s\" already defined on line %ld\n", (char *) yyvsp[-7], new->def);
+      iluerror (buf);
+    }
+  else
+    {
+      new->type = (Type) yyvsp[-5];
+      new->value = (ConstantValue) yyvsp[-2];
+      new->def = CurrentParse->line;
+    }
+  yyval = (refany) new;
+;
+    break;}
+case 198:
+#line 4254 "ilu.bison"
+{
+  yyval = yyvsp[0];
+;
+    break;}
+case 199:
+#line 4258 "ilu.bison"
+{
+  yyval = yyvsp[0];
+;
+    break;}
+case 200:
+#line 4264 "ilu.bison"
+{
+  int junk;
+  boolean junk2;
+  ConstantValue new = (ConstantValue) iluparser_Malloc (sizeof(struct ilu_constantvalue_s));
+  new->type = integer_Type;
+  new->val.i.sign = (yyvsp[-1] == 0) ? 1 : -1;
+  if (!ilu_strtoul((char *) yyvsp[0], &junk, &new->val.i.value, &junk2))
+    {
+      char buf[1000];
+      sprintf(buf, "Integer literal \"%s\" contains invalid character(s).", (string) yyvsp[0]);
+      iluerror(buf);
+      YYERROR;
+    }
+  else
+    yyval = (refany) new;
+;
+    break;}
+case 201:
+#line 4281 "ilu.bison"
+{
+  ConstantValue new = (ConstantValue) iluparser_Malloc (sizeof(struct ilu_constantvalue_s));
+  new->type = shortcharacter_Type;
+  new->val.s = (string) yyvsp[0];
+  yyval = (refany) new;
+;
+    break;}
+case 202:
+#line 4288 "ilu.bison"
+{
+  ConstantValue new = (ConstantValue) iluparser_Malloc (sizeof(struct ilu_constantvalue_s));
+  new->type = boolean_Type;
+  new->val.b = TRUE;
+  yyval = (refany) new;
+;
+    break;}
+case 203:
+#line 4295 "ilu.bison"
+{
+  ConstantValue new = (ConstantValue) iluparser_Malloc (sizeof(struct ilu_constantvalue_s));
+  new->type = boolean_Type;
+  new->val.b = FALSE;
+  yyval = (refany) new;
+;
+    break;}
+case 204:
+#line 4304 "ilu.bison"
+{
+  ConstantValue new = (ConstantValue) iluparser_Malloc (sizeof(struct ilu_constantvalue_s));
+  new->type = real_Type;
+  new->val.r.sign = (yyvsp[-2] == 0) ? 1 : -1;
+  new->val.r.value = (string) yyvsp[-1];
+  new->val.r.fraction = NULL;
+  new->val.r.exponent = (long) yyvsp[0];
+  yyval = (refany) new;
+;
+    break;}
+case 205:
+#line 4314 "ilu.bison"
+{
+  ConstantValue new = (ConstantValue) iluparser_Malloc (sizeof(struct ilu_constantvalue_s));
+  new->type = real_Type;
+  new->val.r.sign = (yyvsp[-4] == 0) ? 1 : -1;
+  new->val.r.value = (string) yyvsp[-3];
+  new->val.r.fraction = (string) yyvsp[-1];
+  new->val.r.exponent = (long) yyvsp[0];
+  yyval = (refany) new;
+;
+    break;}
+case 206:
+#line 4324 "ilu.bison"
+{
+  ConstantValue new = (ConstantValue) iluparser_Malloc (sizeof(struct ilu_constantvalue_s));
+  new->type = real_Type;
+  new->val.r.sign = (yyvsp[-3] == 0) ? 1 : -1;
+  new->val.r.value = (string) yyvsp[-2];
+  new->val.r.fraction = (string) yyvsp[0];
+  new->val.r.exponent = 0;
+  yyval = (refany) new;
+;
+    break;}
+case 207:
+#line 4336 "ilu.bison"
+{
+    if ( yyvsp[0] != NULL )
+        list_insert( yyvsp[-2], yyvsp[0] );
+    yyval = yyvsp[-2];
+;
+    break;}
+case 208:
+#line 4342 "ilu.bison"
+{
+    list	new = new_list( );
+
+    if ( yyvsp[0] != NULL )
+        list_insert( new, yyvsp[0] );
+    yyval = ( refany ) new;
+;
+    break;}
+case 209:
+#line 4352 "ilu.bison"
+{
+  yyval = (refany) ilu_atoi(yyvsp[0]);
+;
+    break;}
+case 210:
+#line 4356 "ilu.bison"
+{
+  yyval = (refany) ( - ilu_atoi( yyvsp[0] ));
+;
+    break;}
+case 211:
+#line 4360 "ilu.bison"
+{
+  yyval = (refany) (( cardinal ) ilu_atoi( yyvsp[0] ));
+;
+    break;}
+case 212:
+#line 4366 "ilu.bison"
+{
+  yyval = (refany) 1;
+;
+    break;}
+case 213:
+#line 4370 "ilu.bison"
+{
+  yyval = 0;
+;
+    break;}
+case 214:
+#line 4374 "ilu.bison"
+{
+  yyval = 0;
+;
+    break;}
+case 215:
+#line 4380 "ilu.bison"
+{
+  register char *p;
+  if (!isalpha(*((string)yyvsp[0])))
+    {
+      char buf[500];
+      sprintf (buf, "Identifier \"%s\" does not begin with alphabetic character.", (string) yyvsp[0]);
+      iluerror (buf);
+      YYERROR;
+    }
+  for (p = (string) yyvsp[0];  *p != '\0';  p++)
+    {
+      if (!(isalnum(*p) OR (*p == '-')))
+	{
+	  char buf[500];
+	  sprintf (buf, "Identifier \"%s\" contains invalid character %c.", (string) yyvsp[0], *p);
+	  iluerror (buf);
+	  YYERROR;
+	}
+    }
+  yyval = yyvsp[0];
+;
+    break;}
+case 216:
+#line 4404 "ilu.bison"
+{
+  register char *p;
+  if (!isalpha(*((string)yyvsp[0])))
+    {
+      char buf[500];
+      sprintf (buf, "Identifier \"%s\" does not begin with alphabetic character.", (string) yyvsp[0]);
+      iluerror (buf);
+      YYERROR;
+    }
+  for (p = (string) yyvsp[0];  *p != '\0';  p++)
+    {
+      if (!(isalnum(*p) OR (*p == '-') OR (*p == '.')))
+	{
+	  char buf[500];
+	  sprintf (buf, "Scoped identifier \"%s\" contains invalid character %c.", (string) yyvsp[0], *p);
+	  iluerror (buf);
+	  YYERROR;
+	}
+    }
+  yyval = yyvsp[0];
+;
+    break;}
+}
+   /* the action file gets copied in in place of this dollarsign */
+#line 498 "/import/bison-1.25/sparc-sun-solaris2.5/share/bison.simple"
+
+  yyvsp -= yylen;
+  yyssp -= yylen;
+#ifdef YYLSP_NEEDED
+  yylsp -= yylen;
+#endif
+
+#if YYDEBUG != 0
+  if (yydebug)
+    {
+      short *ssp1 = yyss - 1;
+      fprintf (stderr, "state stack now");
+      while (ssp1 != yyssp)
+	fprintf (stderr, " %d", *++ssp1);
+      fprintf (stderr, "\n");
+    }
+#endif
+
+  *++yyvsp = yyval;
+
+#ifdef YYLSP_NEEDED
+  yylsp++;
+  if (yylen == 0)
+    {
+      yylsp->first_line = yylloc.first_line;
+      yylsp->first_column = yylloc.first_column;
+      yylsp->last_line = (yylsp-1)->last_line;
+      yylsp->last_column = (yylsp-1)->last_column;
+      yylsp->text = 0;
+    }
+  else
+    {
+      yylsp->last_line = (yylsp+yylen-1)->last_line;
+      yylsp->last_column = (yylsp+yylen-1)->last_column;
+    }
+#endif
+
+  /* Now "shift" the result of the reduction.
+     Determine what state that goes to,
+     based on the state we popped back to
+     and the rule number reduced by.  */
+
+  yyn = yyr1[yyn];
+
+  yystate = yypgoto[yyn - YYNTBASE] + *yyssp;
+  if (yystate >= 0 && yystate <= YYLAST && yycheck[yystate] == *yyssp)
+    yystate = yytable[yystate];
+  else
+    yystate = yydefgoto[yyn - YYNTBASE];
+
+  goto yynewstate;
+
+yyerrlab:   /* here on detecting error */
+
+  if (! yyerrstatus)
+    /* If not already recovering from an error, report this error.  */
+    {
+      ++yynerrs;
+
+#ifdef YYERROR_VERBOSE
+      yyn = yypact[yystate];
+
+      if (yyn > YYFLAG && yyn < YYLAST)
+	{
+	  int size = 0;
+	  char *msg;
+	  int x, count;
+
+	  count = 0;
+	  /* Start X at -yyn if nec to avoid negative indexes in yycheck.  */
+	  for (x = (yyn < 0 ? -yyn : 0);
+	       x < (sizeof(yytname) / sizeof(char *)); x++)
+	    if (yycheck[x + yyn] == x)
+	      size += strlen(yytname[x]) + 15, count++;
+	  msg = (char *) malloc(size + 15);
+	  if (msg != 0)
+	    {
+	      strcpy(msg, "parse error");
+
+	      if (count < 5)
+		{
+		  count = 0;
+		  for (x = (yyn < 0 ? -yyn : 0);
+		       x < (sizeof(yytname) / sizeof(char *)); x++)
+		    if (yycheck[x + yyn] == x)
+		      {
+			strcat(msg, count == 0 ? ", expecting `" : " or `");
+			strcat(msg, yytname[x]);
+			strcat(msg, "'");
+			count++;
+		      }
+		}
+	      yyerror(msg);
+	      free(msg);
+	    }
+	  else
+	    yyerror ("parse error; also virtual memory exceeded");
+	}
+      else
+#endif /* YYERROR_VERBOSE */
+	yyerror("parse error");
+    }
+
+  goto yyerrlab1;
+yyerrlab1:   /* here on error raised explicitly by an action */
+
+  if (yyerrstatus == 3)
+    {
+      /* if just tried and failed to reuse lookahead token after an error, discard it.  */
+
+      /* return failure if at end of input */
+      if (yychar == YYEOF)
+	YYABORT;
+
+#if YYDEBUG != 0
+      if (yydebug)
+	fprintf(stderr, "Discarding token %d (%s).\n", yychar, yytname[yychar1]);
+#endif
+
+      yychar = YYEMPTY;
+    }
+
+  /* Else will try to reuse lookahead token
+     after shifting the error token.  */
+
+  yyerrstatus = 3;		/* Each real token shifted decrements this */
+
+  goto yyerrhandle;
+
+yyerrdefault:  /* current state does not do anything special for the error token. */
+
+#if 0
+  /* This is wrong; only states that explicitly want error tokens
+     should shift them.  */
+  yyn = yydefact[yystate];  /* If its default is to accept any token, ok.  Otherwise pop it.*/
+  if (yyn) goto yydefault;
+#endif
+
+yyerrpop:   /* pop the current state because it cannot handle the error token */
+
+  if (yyssp == yyss) YYABORT;
+  yyvsp--;
+  yystate = *--yyssp;
+#ifdef YYLSP_NEEDED
+  yylsp--;
+#endif
+
+#if YYDEBUG != 0
+  if (yydebug)
+    {
+      short *ssp1 = yyss - 1;
+      fprintf (stderr, "Error: state stack now");
+      while (ssp1 != yyssp)
+	fprintf (stderr, " %d", *++ssp1);
+      fprintf (stderr, "\n");
+    }
+#endif
+
+yyerrhandle:
+
+  yyn = yypact[yystate];
+  if (yyn == YYFLAG)
+    goto yyerrdefault;
+
+  yyn += YYTERROR;
+  if (yyn < 0 || yyn > YYLAST || yycheck[yyn] != YYTERROR)
+    goto yyerrdefault;
+
+  yyn = yytable[yyn];
+  if (yyn < 0)
+    {
+      if (yyn == YYFLAG)
+	goto yyerrpop;
+      yyn = -yyn;
+      goto yyreduce;
+    }
+  else if (yyn == 0)
+    goto yyerrpop;
+
+  if (yyn == YYFINAL)
+    YYACCEPT;
+
+#if YYDEBUG != 0
+  if (yydebug)
+    fprintf(stderr, "Shifting error token, ");
+#endif
+
+  *++yyvsp = yylval;
+#ifdef YYLSP_NEEDED
+  *++yylsp = yylloc;
+#endif
+
+  yystate = yyn;
+  goto yynewstate;
+}
+#line 4427 "ilu.bison"
+	/* start of program */
+
+
+static void GetQuotedString(FILE *file, character match, string buffer, int buffersize);
+static int GetChar (FILE *file);
+
+static int EatComment (FILE *file)
+{
+  boolean possibleEndOfComment, possibleNestedComment, endOfComment;
+  register int c;
+
+  /* eat input until end-of-comment.  Handle nested comments. */
+  for (c = GetChar(file), possibleNestedComment = FALSE, possibleEndOfComment = FALSE, endOfComment = FALSE;
+       c != EOF;  c = GetChar(file))
+    {
+      if (c == NEWLINE)
+	CurrentParse->line += 1;
+
+      if (endOfComment)
+	return (c);
+
+      if (possibleNestedComment)
+	{
+	  if (c == '*')
+	    c = EatComment (file);
+	  possibleNestedComment = FALSE;
+	}
+      else if (possibleEndOfComment)
+	{
+	  if (c == ')')
+	    endOfComment = TRUE;
+	  possibleEndOfComment = FALSE;
+	}
+
+/*
+      if (c == '"')
+	GetQuotedString (file, c, buffer, sizeof(buffer));
+      else
+*/
+      if (c == '(')
+	possibleNestedComment = TRUE;
+      else if (c == '*')
+	possibleEndOfComment = TRUE;
+    }
+  return (c);
+}
+
+/* ungetc() only provides one character of putback.  Extend this. */
+
+struct putback_char {
+  FILE *file;
+  char *chars;
+  unsigned long allocated;
+  unsigned long used;
+  struct putback_char *next;
+};
+
+static struct putback_char *Putbacks = NULL;
+
+static void PutbackChar (char c, FILE *file)
+{
+  struct putback_char *p;
+
+  for (p = Putbacks;  p != NULL;  p = p->next)
+    if (p->file == file)
+      break;
+  if (p == NULL)
+    {
+      p = (struct putback_char *) iluparser_Malloc(sizeof(struct putback_char));
+      p->file = file;
+      p->chars = iluparser_Malloc(20);
+      p->allocated = 20;
+      p->used = 0;
+      p->next = Putbacks;
+      Putbacks = p;
+    }
+  if (p->used >= p->allocated)
+    {
+      p->allocated = p->used + 20;
+      p->chars = iluparser_Realloc(p->chars, p->allocated);
+    }
+  p->chars[p->used] = c;
+  p->used += 1;
+  if (c == NEWLINE)
+    {
+      CurrentParse->line -= 1;
+    }
+}
+
+static int GetChar (FILE *file)
+{
+  struct putback_char *p;
+
+  for (p = Putbacks;  p != NULL;  p = p->next)
+    if (p->file == file)
+      break;
+  if (p == NULL || p->used < 1)
+    {
+      return (getc(file));
+    }
+  else
+    {
+      p->used -= 1;
+      return (p->chars[p->used]);
+    }
+}
+
+static int NextChar (FILE *file)
+{
+  int c;
+
+  c = GetChar(file);
+  if (c == NEWLINE)
+    {
+      CurrentParse->line += 1;
+    }
+
+  while (c == '(')
+    {
+      c = GetChar(file);
+      if (c == NEWLINE)
+	CurrentParse->line += 1;
+      if (c == '*')
+	{
+	  c = EatComment (file);
+	}
+      else
+	{
+	  PutbackChar ((character) c, file);
+	  c = '(';
+	  break;
+	}
+    }
+  return (c);
+}
+
+static void GetQuotedString (FILE *file, character match, string buffer, int buffersize)
+{
+/*
+  Copy string into buffer, stopping when char matching string[0]
+  is encountered.  Backslash is quote character.
+*/
+  register int c;
+  register character *output;
+  register cardinal size;
+
+#define IsHexDigit(x) ((((x)>='0')&&((x)<='9'))||(((x)>='a')&&((x)<='f'))||(((x)>='A')&&((x)<='F')))
+#define HexValue(x) (((x)<='9')?((x)-'0'):((x)<='F')?((x)-'A'+10):((x)<='f')?((x)-'a'+10):0)
+
+  for (output = buffer, c = NextChar(file), size = 1;  c != EOF && size < (cardinal) buffersize;  c = NextChar(file))
+    {
+      if (c == match)
+	break;
+      else
+	{
+	  if (c == '#')
+	    {
+	      c = NextChar(file);
+	      if (IsHexDigit(c))
+		{
+		  character oldc = c;
+		  unsigned int num = HexValue(c);
+		  c = NextChar(file);
+		  if (IsHexDigit(c))
+		    *output++ = num * 16 + HexValue(c);
+		  else
+		    {
+		      PutbackChar((character) c, file);
+		      *output++ = oldc;
+		    }
+		}
+	      else if (c == 'n')
+		*output++ = '\n';
+	      else if (c == 'r')
+		*output++ = '\r';
+	      else
+		*output++ = c;
+	    }
+	  else
+	    *output++ = c;
+	  size += 1;
+	}
+    }
+  *output = (character) 0;
+  return;
+}
+
+static struct key {
+  string k;
+  int type;
+  cardinal len;
+  string trans;
+} isl_keywords[] = {
+
+    { "interface",		K_INTERFACE,	9, NULL },
+    { "imports",		K_IMPORTS,	7, NULL },
+    { "from",			K_FROM,		4, NULL },
+
+    { "type",			K_TYPE,		4, NULL },
+    { "short",			K_SHORT,	5, NULL },
+    { "long",			K_LONG,		4, NULL },
+    { "integer",		K_INTEGER,	7, NULL },
+    { "cardinal",		K_CARDINAL,	8, NULL },
+    { "iluextensible",		K_EXTENSIBLE,  13, NULL },
+    { "real",			K_REAL,		4, NULL },
+    { "byte",			K_BYTE,		4, NULL },
+    { "boolean",		K_BOOLEAN,	7, NULL },
+    { "character",		K_CHARACTER,	9, NULL },
+    { "unicode-charset",	K_UNICODE_1_1, 15, NULL },
+    { "utf8-charset",		K_UTF8,	       12, NULL },
+    { "latin1-charset",		K_LATIN1,      14, NULL },
+    { "enumeration",		K_ENUMERATION, 11, NULL },
+    { "union",			K_UNION,	5, NULL },
+    { "default",		K_DEFAULT,	7, NULL },
+    { "others",			K_OTHERS,	6, NULL },
+    { "array",			K_ARRAY,	5, NULL },
+    { "sequence",		K_SEQUENCE,	8, NULL },
+    { "limit",			K_LIMIT,	5, NULL },
+    { "of",			K_OF,		2, NULL },
+    { "record",			K_RECORD,	6, NULL },
+    { "optional",		K_OPTIONAL,	8, NULL },
+    { "pickle",			K_PICKLE,	6, NULL },
+    { "allows",			K_ALLOWS,	6, NULL },
+    { "end",			K_END,		3, NULL },
+    { "source",			K_SOURCE,	6, NULL },
+    { "sink",			K_SINK,		4, NULL },
+
+    { "exception",		K_EXCEPTION,	9, NULL },
+    { "typeid",			K_TYPEID,	7, NULL },
+
+    { "class",			K_OBJECT,	5, NULL },
+    { "object",			K_OBJECT,	6, NULL },
+    { "brand",			K_BRAND,	5, NULL },
+    { "superclass",		K_SUPERCLASS,  10, NULL },
+    { "supertype",		K_SUPERCLASS,	9, NULL },
+    { "superclasses",		K_SUPERTYPES,  12, NULL },
+    { "supertypes",		K_SUPERTYPES,  10, NULL },
+    { "authentication",		K_AUTHENTICATION, 14, NULL },
+    { "functional",		K_FUNCTIONAL,  10, NULL },
+    { "asynchronous",		K_ASYNCH,      12, NULL },
+    { "methods",		K_METHODS,	7, NULL },
+    { "in",			K_IN,		2, NULL },
+    { "out",			K_OUT,		3, NULL },
+    { "inout",			K_INOUT,	5, NULL },
+    { "sibling",		K_SIBLING,	7, NULL },
+    { "singleton",		K_SINGLETON,	9, NULL },
+    { "collectible",		K_COLLECTIBLE, 11, NULL },
+    { "raises",			K_RAISES,	6, NULL },
+    { "documentation",		K_DOCUMENTATION,13, NULL },
+
+    { "constant",		K_CONSTANT,	8, NULL },
+    { "true",			K_TRUE,		4, NULL },
+    { "false",			K_FALSE,	5, NULL },
+
+#ifdef ILU_USE_NEW_KEYWORDS
+
+/* To allow backwards compatibility, we prefix all new keywords
+   with "ILU", unless the user specifies ILU_USE_NEW_KEYWORDS,
+   which then causes them to be recognized only without the "ILU"
+   prefix.
+*/
+
+    { "directive",		K_DIRECTIVE,	9, NULL },
+    { "directive-experimental",	K_DIRECTIVE_EXPERIMENTAL,	22, NULL },
+    { "fixed",			K_FIXED,        5, NULL },
+    { "fixedpoint",		K_FIXEDPOINT,  10, NULL },
+    { "min-numerator",		K_MINNUMERATOR,13, NULL },
+    { "max-numerator",		K_MAXNUMERATOR,13, NULL },
+    { "denominator",		K_DENOMINATOR, 11, NULL },
+    { "local",			K_LOCAL,	5, NULL },
+    { "sealed",			K_SEALED,	6, NULL },
+    { "state",			K_STATE,	5, NULL },
+    { "string",			K_STRING,	6, NULL },
+    { "charset",		K_CHARSET,      7, NULL },
+    { "language",		K_LANGUAGE,     8, NULL },
+    { "reference",		K_REFERENCE,	9, NULL },
+    { "aliased",		K_ALIASED,	7, NULL },
+
+#else
+
+    { "iludirective",		K_DIRECTIVE,	12, NULL },
+    { "iludirective-experimental",	K_DIRECTIVE_EXPERIMENTAL,	25, NULL },
+    { "ilufixed",		K_FIXED,        8, NULL },
+    { "ilufixedpoint",		K_FIXEDPOINT,  13, NULL },
+    { "ilumin-numerator",	K_MINNUMERATOR,16, NULL },
+    { "ilumax-numerator",	K_MAXNUMERATOR,16, NULL },
+    { "iludenominator",		K_DENOMINATOR, 14, NULL },
+    { "ilulocal",		K_LOCAL,	8, NULL },
+    { "ilusealed",		K_SEALED,	9, NULL },
+    { "ilustate",		K_STATE,	8, NULL },
+    { "ilustring",		K_STRING,	9, NULL },
+    { "ilucharset",		K_CHARSET,     10, NULL },
+    { "ilulanguage",		K_LANGUAGE,    11, NULL },
+    { "ilureference",		K_REFERENCE,   12, NULL },
+    { "ilualiased",		K_ALIASED,     10, NULL },
+
+#endif
+
+    { NULL, 0, 0} };
+
+static boolean find_keyword (string buffer, cardinal *type, cardinal *length, string *translation)
+{
+  struct key *p;
+/*
+  printf ("checking <%s> for keywordness\n", buffer);
+*/
+
+  if (buffer == NULL)
+    return FALSE;
+  for (p = isl_keywords;  p->k != NULL;  p += 1)
+    if (ilu_strcasecmp(buffer, p->k) == 0)
+      {
+	if (type != NULL)
+	  *type = p->type;
+	if (length != NULL)
+	  *length = p->len;
+	if (translation != NULL)
+	  *translation = p->trans == NULL ? p->k : p->trans;
+	return (TRUE);
+      }
+  return (FALSE);		 
+}
+
+boolean iluparser_IsKeyword (char *str)
+{
+  return (find_keyword (str, NULL, NULL, NULL));
+}
+
+static boolean IsBaseDigit (cardinal base, unsigned char digit)
+{
+  return ((base <= 10 && (((cardinal)(digit - '0')) < base))
+	  || ((base > 10) && ((((cardinal)(digit - '0')) < 10)
+			      || ((digit >= 'a') && (((cardinal) (digit - 'a' + 10)) < base))
+			      || ((digit >= 'A') && (((cardinal) (digit - 'A' + 10)) < base)))));
+}
+
+static int GetToken (FILE *file, string buffer, int buffersize, cardinal *type)
+{
+  static string chars = "();:,=";
+  static cardinal types[] = { K_LEFTPAREN, K_RIGHTPAREN, K_SEMICOLON, K_COLON, K_COMMA, K_EQUALS };
+  static string funnychars = "&|!()<>\"';:,";
+  static string bases = "bBdDoOxX";
+  static cardinal base[] = { 2, 2, 10, 10, 8, 8, 16, 16 };
+  int length;
+  character *q;
+  int c;
+  string trans;
+  string bufferbase = buffer;
+
+#define loop while(1)
+
+  c = NextChar(file);
+  while (!isgraph(c) && c != EOF)
+    c = NextChar(file);
+  if (c == EOF)
+    return (EOF);
+
+  if (c == '"' || c == '\'')
+    {
+      GetQuotedString (file, (character) c, buffer, buffersize);
+      *type = T_STRING;
+    }
+  else if ((q = (char *) strchr(chars, c)) != NULL)
+    {
+      *buffer = c;
+      buffer[1] = (char) 0;
+      *type = types[q - chars];
+    }
+  else if (ParsingConstant && c == '-')
+    {
+      *type = K_HYPHEN;
+    }
+  else if (ParsingConstant && c == '+')
+    {
+      *type = K_PLUS;
+    }
+  else if (ParsingConstant && c == '.')
+    {
+      *type = K_PERIOD;
+    }
+  else if (ParsingConstant && (!ParsingNonRealConstant)
+	   && (c == 'e' || c == 'E'))
+    {
+      *type = K_EXPONENT;
+    }
+  else if (isdigit(c))
+    {
+      cardinal CurrentBase = 10;
+
+      *buffer++ = c;
+      if ((c == '0') || (c == '#'))
+	{
+	  c = NextChar(file);
+	  if ((q = (char *) strchr(bases, c)) != NULL)
+	    {
+	      *buffer++ = c;
+	      CurrentBase = base[q - bases];
+	    }
+	  else
+	    PutbackChar((character) c, file);
+	}
+      while ((c = NextChar(file)) != EOF && IsBaseDigit(CurrentBase, (unsigned char) c))
+	*buffer++ = c;
+      PutbackChar((character) c, file);
+      *buffer = 0;
+      *type = T_NUMBER;
+/*
+      if (iluparsedebug)
+	fprintf (stderr, "(number)  %s   (%s, %u)\n", bufferbase, CurrentParse->filename, CurrentParse->line);
+*/
+    }	  
+  else
+    {
+      string orig = buffer;
+      loop
+	{
+	  if (isgraph(c) && (strchr(funnychars, c) == NULL))
+	    { *buffer++ = c;  c = NextChar(file); }
+	  else
+	    {
+	      PutbackChar((character) c, file);
+	      *buffer = 0;
+	      *type = T_STRING;
+	      break;
+	    }
+	}
+      if (find_keyword (orig, type, (cardinal *) &length, &trans))
+	{
+	  strcpy (orig, trans);
+	  orig[strlen(trans)] = (char) 0;
+/*
+	  if (iluparsedebug) 
+	    fprintf (stderr, "(keyword)  <%s>   (%s, %u)\n", orig, CurrentParse->filename, CurrentParse->line);
+*/
+	}
+/*
+      else if (iluparsedebug)
+	fprintf (stderr, "(string)  \"%s\"   (%s, %u)\n", bufferbase, CurrentParse->filename, CurrentParse->line);
+*/
+    }
+  return (c);
+}
+
+/*
+	"iluparselex"
+*/
+static int iluparselex (refany *lvalp)
+{	/* lexical analysis routine */
+  cardinal type;
+  char buffer[1000];
+  int c;
+
+  if (CurrentParse->input == NULL)
+    return (-1);
+
+  buffer[0] = '\0';
+  c = GetToken (CurrentParse->input, buffer, sizeof(buffer), &type);
+  if (c == EOF)
+    return (-1);
+
+  *lvalp = (YYSTYPE) ilu_strdup(buffer);
+
+  return ((int) type);
+}
+
+static void ilutokenprint (FILE *where, int tokentype, YYSTYPE token)
+{
+  if (tokentype == T_STRING)
+    fprintf (where, " \"%s\"", (string) token);
+  else if (tokentype == T_NUMBER)
+    fprintf (where, " %s", (string) token);
+}

@@ -1,0 +1,114 @@
+.\" ILUCosNaming.1
+.TH ILUCosNaming 1 "20 August 1997"
+.SH NAME
+ILUCosNaming \- a server providing the CORBA COS Naming service
+.SH SYNOPSIS
+\fBILUCosNaming\fR [\fB-p\fR \fIPORT\fR] [\fB-h\fR \fIHOSTNAME\fR] [\fB-sid\fR \fISID\fR] [\fB-ih\fR \fIIH\fR] [\fB-f\fR \fIBACKING-FILE\fR] [\fB-sid_and_ih_from_IOR\fR STRINGIFIED-IOR] [\fB-ior\fR] [\fB-publish\fR]
+.SH DESCRIPTION
+.B ILUCosNaming
+is a server program which implements the the CORBA
+standard `COS Naming' service.  This program is
+installed with ILU if the configuration options for ILU include support for the
+C programming language, the OMG IDL interface definition language, and
+the CORBA IIOP wire protocol.  The interface to the service is
+defined in \fC"\fIILUHOME\fP/interfaces/CosNaming.idl"\fR.
+.sp
+The program supports the following command-line options:
+.br
+.IP "\fB-p \fIPORT\fR"
+.nr bi 1
+.Pp
+Allows specification of the port on which the server will
+listen for connections.  If this is not specified, the server will use a
+randomly assigned free port, and the CORBA IOR for the service
+will differ from invocation to invocation.  If you want the
+service to have an unchanging CORBA IOR or ILU SBH, this must be
+specified.
+.IP "\fB-h \fIHOSTNAME\fR"
+.nr bi 1
+.Pp
+Allows overriding the default hostname for
+the machine.  This switch is mainly for multi-ported machines
+(machines which have two or more different IP addresses).  The
+default hostname is whatever is returned by the \fCgethostname(2)\fP
+system call on your machine.
+.IP "\fB-sid \fISID\fR"
+.nr bi 1
+.Pp
+Allows specification of a server ID for the root
+object exported by the naming service, and all subsequent naming
+contexts created in that server.  If none is specified, the
+default used is \fC"CosNaming_\fIHOSTNAME\fP"\fR, where \fIHOSTNAME\fP is the
+hostname being used.
+.IP "\fB-ih \fIIH\fR"
+.nr bi 1
+.Pp
+Allows specification of an instance handle for the
+root object exported by the naming service.  This defaults to
+\fC"root"\fP.
+.IP "\fB-f \fIFILENAME\fR"
+.nr bi 1
+.Pp
+Allows you to specify the name of a file in
+which the server will store a backup of the various registrations
+currently active.  If the server is restarted, and this file
+already exists, the server will read this file, and use the
+registrations in it as the current set of registrations.  This
+file should be in a directory which can be read and written by the
+user identity under which the `ILUCosNaming' program is running.
+The default is a file called \fC"/tmp/ILUCosNaming.\fISID\fP"\fR, where \fISID\fP is
+the server ID specified or defaulted to for the program.
+.IP "\fB-sid_and_ih_from_IOR \fISTRINGIFIED-IOR\fR"
+.nr bi 1
+.Pp
+It is sometimes useful to use the `ILUCosNaming' program to mimic
+the name service provided by another ORB.  In particular, this means
+that the root object should have the same server ID and instance
+handle provided by that other service.  To accomplish this, you can
+start `ILUCosNaming' with the stringified IOR for that other service,
+and it will use the server ID and instance handle in that IOR for
+its server ID and instance handle.  Note that you may also need to
+specify the port and hostname with the \fB-h\fR and \fB-p\fR options
+to exactly mimic the other service.
+.IP "\fB-ior\fR"
+If this option is specified, the service will write its
+CORBA IOR to the standard output after it has successfully
+initialized.  This is sometimes useful when this service is being
+used with a non-ILU CORBA ORB.
+.IP "\fB-publish\fR"
+If this option is specified, the service will `publish' its root
+object, using the ILU simple binding mechanism.  This is not typically
+needed, and defaults to not being published.  It's included mainly
+to allow some regression testing of the CosNaming service.
+.LP
+In general, the user shouldn't have to specify the hostname, server ID,
+instance handle, or filename; the defaults work pretty well.  It is
+useful to specify the port in most applications, just so that the
+service always has the same string binding handle, which will be
+.ft C
+.nf
+ilu:\fISID\fC/\fIIH\fC;IDL%3Aomg.org%2FCosNaming%2FNamingContext%3A1.0;iiop_1_0_1@tcp_\fIHOST\fC_\fIPORT\fC
+.ft
+.fi
+.ft R
+where \fISID\fP, \fIIH\fP, \fIHOST\fP, and \fIPORT\fP are the values for the server ID,
+instance handle, hostname, and port, as given above.
+.SH SEE ALSO
+You should look at any CORBA book, or the
+COS Naming service specification
+(ftp://ftp.omg.org/pub/docs/formal/97-07-04.pdf) itself, for more
+information on how to use the naming service with applications.  Note
+that the ILU implementation does not include the client-side `Names Library'
+described in the specification.  Applications are expected to
+use the service functionality directly.
+.SH AUTHOR
+.Pp
+Bill Janssen, Xerox PARC
+.Pp
+.SH SUGGESTIONS AND BUG REPORTS
+.Pp
+Please send suggestions to \fC<ilu-core@parc.xerox.com>\fP.
+.br
+Please send bug reports to \fC<ilu-bugs@parc.xerox.com>\fP, to make sure
+they get into the bugs database.
+.Pp

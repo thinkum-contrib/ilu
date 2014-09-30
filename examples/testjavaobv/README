@@ -1,0 +1,75 @@
+README for the "testjavaobv" example directory.
+[$Id: README,v 1.2 1999/08/03 01:59:11 janssen Exp $
+ BeginILUCopyright
+
+ Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+ Unlimited use, reproduction, modification, and distribution of this
+ software and modified versions thereof is permitted.  Permission is
+ granted to make derivative works from this software or a modified
+ version thereof.  Any copy of this software, a modified version
+ thereof, or a derivative work must include both the above copyright
+ notice of Xerox Corporation and this paragraph.  Any distribution of
+ this software, a modified version thereof, or a derivative work must
+ comply with all applicable United States export control laws.  This
+ software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+ WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+ LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+ EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+ NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+ OF THE POSSIBILITY OF SUCH DAMAGES.
+
+ EndILUCopyright ]
+
+
+This directory contains a test program or example how to use "java objects by value" and 
+"marshalled java objects" .
+
+This needs Java jdk-1.1 or newer  (It uses new java features from the 1.1 release)
+
+
+The setup of the example program is somewhat involved because you need to 
+make sure that on the client side the FooWhizBangFuzzler class is NOT available
+(for proof that it really has been loaded through ilu).
+
+
+Start with the basics:
+Disable JIT so that stack traces will have line numbers
+setenv JAVA_COMPILER NONE
+
+Set the classpath environment variable
+...
+
+stubbing (included in Imakefile)
+java-stubber testJavaSerialObjects.isl
+
+compile all generated stubs available for both client and server
+javac -d classes `cat jstubber.files` 
+
+compile test code available for client and server (included in Imakefile)
+javac -d classes TestReceiving.java   
+
+compile written code which should NOT be available to the client (included in Imakefile)
+rm -rf hiddenclasses
+mkdir hiddenclasses
+javac -d hiddenclasses TestSending.java FooWhizBangFuzzler.java
+
+Create a jar file to make this stuff available to the "server" as bytes (NOT included in Imakefile)
+cd hiddenclasses; jar cv0f ../MyJarFile.jar *; cd ..
+cp MyJarFile.jar /tilde/jacobi/public_html/test/test.jar
+
+Run the server side with access to the hiddenclasses (NOT included in Imakefile).  The test
+program expects an accessMethod and depending on accessMethod a jar file. One of:
+java -classpath ./hiddenclasses:${CLASSPATH} test_sender.TestSending wire MyJarFile.jar
+java -classpath ./hiddenclasses:${CLASSPATH} test_sender.TestSending uncached MyJarFile.jar
+java -classpath ./hiddenclasses:${CLASSPATH} test_sender.TestSending url 
+
+Run the client side (NOT included in Imakefile) The test program will enable the url loader
+if there is an url argument. One of:
+java  test_client.TestReceiving
+java  test_client.TestReceiving http://parcweb.parc.xerox.com/~jacobi/test/test.jar
+ 
+
+

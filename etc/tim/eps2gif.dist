@@ -1,0 +1,65 @@
+#!PERL
+
+# eps2gif - Written by Gisle Aas, Norsk Regnesentral, Norway
+# $Id: eps2gif.dist,v 1.1 1995/10/05 00:19:20 janssen Exp $
+
+$scale_factor	= 1;
+$margins	= 0;
+
+# Sanity checks:
+die "Illegal scale factor\n" if $scale_factor == 0;
+die "Illegal scale factor\n" unless $scale_factor =~ /-?\d+.?\d*/;
+die "Illegal margins\n" unless $margins =~ /-?\d+.?\d*/;
+
+@slurp = <STDIN>;
+
+grep(s/^%%BoundingBox:\s*(-?[0-9\.]+)\s+(-?[0-9\.]+)\s+(-?[0-9\.]+)\s+(-?[0-9\.]+)\s*$// ?
+     @bb = ($1,$2,$3,$4) : 0, @slurp);
+die "No %%BoundingBox\n" unless defined(@bb);
+
+if ($scale_factor != 1) {
+   unshift(@slurp, sprintf("%.4g dup scale\n", $scale_factor));
+   grep($_ *= $scale_factor, @bb);
+   if ($scale_factor < 0) {   # Needs to swap 'll' with 'ur'
+      local(@tmp) =  @bb[0,1];
+      @bb[0,1] = @bb[2,3];
+      @bb[2,3] = @tmp;
+   }
+}
+grep($_ -= $margins, @bb[0,1]);
+grep($_ += $margins, @bb[2,3]);
+
+
+$bb_width =    int($bb[2] - $bb[0] + 0.5);
+$bb_height =   int($bb[3] - $bb[1] + 0.5);
+$bb_width = 1 if $bb_width < 1;
+$bb_height = 1 if $bb_height < 1;
+
+    open(STDOUT,"| GHOSTSCRIPT -sDEVICE=gif8 -sOutputFile=- -q -g${bb_width}x${bb_height} -") || die "Can't run ghostscript\n";
+
+# How to place an EPS file.
+#   1. Translate the orgin to the new orgin you want on the page
+#   2. Rotate if the EPS shall be rotated
+#   3. Scale if the EPS shall be scaled
+#   4. Translate the lower left corner of the EPS files bounding to the orgin.
+#        i.e. '-llx -lly translate'
+
+
+print "%!PS-Adobe-3.0
+%%BoundingBox: @bb
+%%EndComments
+";
+
+printf "%.1f %.1f translate %% -llx -lly translate\n", -$bb[0], -$bb[1];
+print "%%BeginDocument: slurp\n";
+for (@slurp) {
+   print unless /^%/;
+}
+print "%%EndDocument\n";
+
+
+print "%%Trailer
+%%EOF
+";
+
+

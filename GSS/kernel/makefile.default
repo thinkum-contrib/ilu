@@ -1,0 +1,123 @@
+# BeginILUCopyright
+# 
+# Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+# 
+# Unlimited use, reproduction, modification, and distribution of this
+# software and modified versions thereof is permitted.  Permission is
+# granted to make derivative works from this software or a modified
+# version thereof.  Any copy of this software, a modified version
+# thereof, or a derivative work must include both the above copyright
+# notice of Xerox Corporation and this paragraph.  Any distribution of
+# this software, a modified version thereof, or a derivative work must
+# comply with all applicable United States export control laws.  This
+# software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+# WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+# PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+# LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+# EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+# NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+# OF THE POSSIBILITY OF SUCH DAMAGES.
+#   
+# EndILUCopyright
+# 
+# $Id: makefile.default,v 1.6 1999/08/03 01:59:39 janssen Exp $
+# 
+## This is a hand-edited version of an automatically-generated Makefile.
+## Edit at your peril!
+##
+##########################################################################
+#
+#  The following should be changed to suit your machine and installation
+#
+##########################################################################
+
+  DESTDIR = /usr/local/lib
+  CDEBUGFLAGS = -g
+  ANSI_C_COMPILER = cc
+  AR = ar cq
+  ARDEL = ar d
+  INSTALL = /usr/bin/install
+  RANLIB = ranlib
+  RM = rm -f
+  SED = sed
+
+##########################################################################
+#
+#  Nothing below this should need to be changed
+#
+##########################################################################
+
+ALL_INCLUDES = -I. $(LOCALINCLUDES) $(INCLUDES)
+ALL_DEFINES = $(STD_DEFINES) $(DEFINES) $(BSDDEFINE) $(POSIXDEFINE)
+CFLAGS = $(COMPILERFLAGS) $(CDEBUGFLAGS) $(ALL_INCLUDES) $(ALL_DEFINES)
+LDFLAGS = $(SYS_LIBRARIES) $(SYSAUX_LIBRARIES)
+INSTLIBFLAGS = -m 0664
+INSTINCFLAGS = -m 0444
+INSTMANFLAGS = -m 0444
+INSTAPPFLAGS = -m 0444
+INSTPROGFLAGS = -m 0555
+
+CC = $(ANSI_C_COMPILER)
+
+all:: libgss.a
+
+clean::
+	$(RM) *.do *.eh *.ih *.a *.fwm *.snf *.pcf *.rtx *.fb
+	$(RM) *.ax *.pyc *.o
+	$(RM) install.time install.doc
+
+.SUFFIXES: .o .c
+
+.c.o:
+	$(RM) $@
+	$(ANSI_C_COMPILER) -c $(CFLAGS) $*.c
+
+GSSOBJS = gss_impl.o gss_util.o gss_oidtbl.o gss_asn1.o gss_debug.o nil_scheme.o gss_x500_ns.o rfc822_ns.o gss_ext.o anon_ns.o
+
+libgss.a:  $(GSSOBJS)
+	$(RM) $@
+	$(AR) $@  $(GSSOBJS)
+	$(RANLIB) $@
+
+test:: nstest
+nstest:   nstest.o   libgss.a
+	$(RM) $@
+	$(ANSI_C_COMPILER) $(CFLAGS) -o $@   nstest.o   libgss.a $(CC_LINK)   $(ANSI_C_LIBRARY) $(SYSAUX_LIBRARIES)
+clean::
+	$(RM) nstest
+test::
+	if ./nstest >/dev/null ; then echo "passed" nstest "test" ; else echo "failed" nstest "test" ; exit 1; fi ; exit 0
+
+mechtest: test.data
+
+test.data:
+	cp mechtest.c test.data
+
+test:: mechtest
+mechtest:   mechtest.o   libgss.a
+	$(RM) $@
+	$(ANSI_C_COMPILER) $(CFLAGS) -o $@   mechtest.o   libgss.a $(CC_LINK)   $(ANSI_C_LIBRARY) $(SYSAUX_LIBRARIES)
+clean::
+	$(RM) mechtest
+test::
+	if ./mechtest >/dev/null ; then echo "passed" mechtest "test" ; else echo "failed" mechtest "test" ; exit 1; fi ; exit 0
+
+enc_oids:  encode_oids.o  libgss.a
+	$(RM) $@
+	$(ANSI_C_COMPILER) $(CFLAGS) -o $@  encode_oids.o  libgss.a  $(CC_LINK) $(ANSI_C_LIBRARY) $(SYSAUX_LIBRARIES)
+clean:: ; $(RM) enc_oids
+
+test:: nilsrvr
+nilsrvr:  nilsrvr.o  libgss.a
+	$(RM) $@
+	$(ANSI_C_COMPILER) $(CFLAGS) -o $@  nilsrvr.o  libgss.a $(CC_LINK)  $(ANSI_C_LIBRARY) $(SYSAUX_LIBRARIES)
+clean::
+	$(RM) nilsrvr
+
+test:: nilclnt
+nilclnt:  nilclnt.o  libgss.a
+	$(RM) $@
+	$(ANSI_C_COMPILER) $(CFLAGS) -o $@  nilclnt.o  libgss.a $(CC_LINK)  $(ANSI_C_LIBRARY) $(SYSAUX_LIBRARIES)
+clean::
+	$(RM) nilclnt

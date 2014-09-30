@@ -1,0 +1,80 @@
+README for the "excn" example directory.
+[$Id: README,v 1.7 1999/08/03 01:58:54 janssen Exp $
+ BeginILUCopyright
+
+ Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+ Unlimited use, reproduction, modification, and distribution of this
+ software and modified versions thereof is permitted.  Permission is
+ granted to make derivative works from this software or a modified
+ version thereof.  Any copy of this software, a modified version
+ thereof, or a derivative work must include both the above copyright
+ notice of Xerox Corporation and this paragraph.  Any distribution of
+ this software, a modified version thereof, or a derivative work must
+ comply with all applicable United States export control laws.  This
+ software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+ WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+ LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+ EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+ NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+ OF THE POSSIBILITY OF SUCH DAMAGES.
+
+ EndILUCopyright ]
+
+
+This directory contains a simple example which tests exception
+throwing.
+
+Here's how to run it:
+
+  % ilumkmf
+  % make
+  <various make operations omitted here...>
+  % ./server &
+  exported ilu:ExcnTest.server.YOURDOMAIN/T;ilutypeuid2%3AgjavqS5swqAdXCThn2hEDQ++8uV;w3ng@sunrpcrm=tcp_13.1.101.26_39373
+
+And here's what you should see when you run the client:
+
+  % ./client
+  ExcnTest_O_throw_excn(1) signalled exception ilu:ExcnTest.E1
+    val = R: [i = 789, css = <"first", "second", "third">, a = {{13, 13, 13, 13}{13, 13, 13, 13}{13, 13, 13, 13}}]
+  ExcnTest_O_throw_excn(2) signalled exception ilu:ExcnTest.E2
+    val = 13
+  ExcnTest_O_throw_excn(3) signalled exception ilu:ExcnTest.E3
+    val = nil
+  ExcnTest_O_throw_excn(4) signalled exception ilu:ExcnTest.E4
+    val = ilu:ExcnTest.server.YOURDOMAIN/T;ilutypeuid2%3AnmKulRCunANuh7WYTk-mmlV7fef;iiop@tcp_13.1.101.26_37298
+  ExcnTest_O_throw_excn(5) signalled exception ilu:ExcnTest.E5
+    val = {0, 1, 2, 3, 4, 5, 6, 7}
+  ExcnTest_O_throw_excn(6) signalled exception ilu:ExcnTest.E6
+    val = <[i = 0, css = <>, a = {{0, 0, 0, 0}{0, 0, 0, 0}{0, 0, 0, 0}}], [i = 0, css = <>, a = {{0, 0, 0, 0}{0, 0, 0, 0}{0, 0, 0, 0}}]>
+  ExcnTest_O_throw_excn(7) signalled exception ilu:ExcnTest.E7
+    val = "test-string"
+  ExcnTest_O_throw_excn(8) signalled exception ilu:ExcnTest.E8
+    val = {{0, 1, 2, 3}{4, 5, 6, 7}{8, 9, 10, 11}}
+  ExcnTest_O_throw_excn(9) signalled exception ilu:ExcnTest.E9
+    val = [i = 123, css = <>, a = {{9, 9, 9, 9}{9, 9, 9, 9}{9, 9, 9, 9}}]
+  ExcnTest_O_throw_excn(10) signalled exception ilu:ExcnTest.E10
+    val = ExcnTest.E.ev5
+  ExcnTest_O_throw_excn(11) signalled exception CORBA: a bad parameter was passed
+    minor = 0, completion_status = No
+  ExcnTest_O_throw_excn(12) signalled exception CORBA: a bad parameter was passed
+  ILU/C: throw-excn raises unexpected exception 2fc098 "ilu:ExcnTest.NotUsed"!
+  ILU/C: throw-excn tries to free unexpected exception 2fc098 "ilu:ExcnTest.NotUsed"!
+    minor = 0, completion_status = No
+  ExcnTest_O_throw_excn(13) signalled exception CORBA: an unknown exception was encountered
+    minor = 0, completion_status = Maybe
+  ExcnTest_O_throw_excn(14) completed successfully.
+  %
+
+(The lines beginning "ILU/C:" are from the server; if you run the
+server in a different shell, they will not be intermixed with the
+client's output.)  The client will exit with status 0 if everything is
+as expected, or with status 1 if it finds any anomalies.
+
+The client supports the "-nosys" command-line argument to suppress
+tests of system exceptions.  This is handy for testing with server
+runtimes that don't support application raising of system exceptions,
+such as the Python runtime.

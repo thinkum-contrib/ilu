@@ -1,0 +1,98 @@
+
+        <!ELEMENT interface (uname, brand?, imports?, types?) > 
+         <!ELEMENT imports (import)+ >
+         <!ELEMENT import (uname, fromfile)>
+         <!ELEMENT types (type)+ >
+         <!ELEMENT type
+               (uname, typeid?,  
+                    ( existing | array | sequence | record | union    
+                     | optional | enumeration | object | constant))> 
+         <!ELEMENT existing (typeref)>
+         <!ELEMENT array (typeref, dims) > 
+         <!ELEMENT dims (dim)+ > 
+         <!ELEMENT sequence (typeref, short?, limit?)>
+         <!ELEMENT record (fields)> 
+         <!ELEMENT fields (field)+> 
+         <!ELEMENT field  (lname, typeref)>
+         <!ELEMENT union (tag-type?, others, arms) >
+         <!ELEMENT arms (arm)+>
+         <!ELEMENT arm  (lname, typeref, cases)+>
+         <!ELEMENT cases (case | default)+ >
+         <!ELEMENT default EMPTY>
+         <!ELEMENT optional (typeref)> 
+         <!ELEMENT enumeration (enum-elements)>
+         <!ELEMENT enum-elements (enum-elements)+> 
+         <!ELEMENT enum-element (uname, enum-id)>
+         <!ELEMENT object 
+             (singleton?, doc?, collectible?, isoptional? , typeid?,
+              brand?, supertypes?,  methods?,  exceptions?)? >    
+         <!ELEMENT supertypes (supertype)+>  
+         <!ELEMENT supertype (typeref)>  
+         <!ELEMENT methods (method)+>
+         <!ELEMENT method (lname, functional?, asynchronous?,
+                           returntype?, args?) >
+         <!ELEMENT args (arg)+ > 
+         <!ELEMENT arg (lname, typeref, direction?, sibling?) > 
+         <!ELEMENT exceptions (exception)+>
+         <!ELEMENT exception (lname, typeref?, doc?)>
+         <!ELEMENT constant (uname, typeref, value)> 
+                       
+   <!-- 
+    Leaf-level elements of two types:.
+        Empty elements used to represent y/n alternatives.
+        Non-empty elements contain FIXED attributes, used
+              as a way of passing required detailed data types
+              to the application, and can/should be omitted by
+              interface definer 
+   --> 
+
+   <!--Empty leaf-level elements --> 
+    <!ELEMENT short       EMPTY>
+    <!ELEMENT others      EMPTY>
+    <!ELEMENT singleton   EMPTY>
+    <!ELEMENT collectible EMPTY> 
+    <!ELEMENT isoptional  EMPTY> 
+    <!ELEMENT functional  EMPTY>
+    <!ELEMENT asynchronous EMPTY>
+    <!ELEMENT sibling     EMPTY>
+
+   <!--Non-empty leaf-level elements --> 
+    <!ELEMENT uname    (#PCDATA)>
+    <!ELEMENT lname    (#PCDATA)>
+    <!ELEMENT typeref  (#PCDATA)> 
+    <!ELEMENT brand    (#PCDATA)>
+    <!ELEMENT fromfile (#PCDATA)>
+    <!ELEMENT typeid   (#PCDATA)> 
+    <!ELEMENT dim      (#PCDATA)> 
+    <!ELEMENT limit    (#PCDATA)> 
+    <!ELEMENT tag-type (#PCDATA)> 
+    <!ELEMENT case     (#PCDATA)>
+    <!ELEMENT enum-id  (#PCDATA)> 
+    <!ELEMENT direction (#PCDATA)>
+    <!ELEMENT value    (#PCDATA)> 
+    <!ELEMENT doc      (#PCDATA)> 
+
+    <!ATTLIST uname     sc_type  CDATA #FIXED "NAME"  
+                        validity CDATA #FIXED  "UNIQUE"> 
+    <!ATTLIST lname     sc_type  CDATA #FIXED "NAME" 
+                        validity CDATA #FIXED  "LOCALLYUNIQUE"> 
+    <!ATTLIST typeref   sc_type  CDATA #FIXED "NAME" 
+                        validity CDATA #FIXED  "TYPENAME"> 
+    <!ATTLIST brand     sc_type  CDATA #FIXED "NAME"> 
+    <!ATTLIST fromfile  sc_type  CDATA #FIXED "FILENAME" 
+                        validity CDATA #FIXED  "UNIQUE"> 
+    <!ATTLIST typeid    sc_type  CDATA #FIXED "MSTID"> 
+    <!ATTLIST dim       sc_type  CDATA #FIXED "POSINT"> 
+    <!ATTLIST limit     sc_type  CDATA #FIXED "POSINT"> 
+    <!ATTLIST tag-type  sc_type  CDATA #FIXED "NAME" 
+                        validity CDATA #FIXED "TAGTYPE"> 
+    <!ATTLIST case      sc_type  CDATA #FIXED "ANY" 
+                        validity CDATA #FIXED "CASETYPE" > 
+    <!ATTLIST enum-id   sc_type  CDATA #FIXED "NAME" 
+                        validity CDATA #FIXED  "LOCALLYUNIQUE"> 
+    <!ATTLIST direction sc_type  CDATA #FIXED "NAME" 
+                        validity CDATA #FIXED  "INOUT"> 
+    <!ATTLIST value     sc_type  CDATA #FIXED "ANY" 
+                        validity CDATA #FIXED "CONSTANTTYPE"> 
+    <!ATTLIST doc       sc_type  CDATA #FIXED "QSTRING">
+

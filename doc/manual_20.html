@@ -1,0 +1,213 @@
+<!-- This HTML file has been created by timdif2html 1.11
+     from manual.dif on 20 September 1999 -->
+
+<TITLE>ILU Reference Manual - Using Imake with ILU</TITLE>
+<BODY TEXT=#000000 BGCOLOR=#ffffff>
+<P>Go to the <A HREF="manual_19.html">previous</A>, <A HREF="manual_21.html">next</A> section.<P>
+<H1><A NAME="SEC580" HREF="manual_toc.html#SEC580">Using Imake with ILU</A></H1>
+<P>
+ILU uses the <CODE>imake</CODE> system from the X Window System distribution.
+<CODE>imake</CODE> provides a parameterized way of constructing <TT>`Makefile'</TT>s automatically
+from <TT>`Imakefile'</TT>s.  The <TT>`Imakefile'</TT>s contain macros which are expanded to regular <TT>`Makefile'</TT>
+rules when the program <CODE>imake</CODE> is run.
+<P>
+<A NAME="IDX809"></A>
+<H2><A NAME="SEC581" HREF="manual_toc.html#SEC581">Creating <TT>`Makefile'</TT>s from <TT>`Imakefile'</TT>s</A></H2>
+<P>
+The program <CODE>ilumkmf</CODE>
+<A NAME="IDX810"></A>
+is supplied with the ILU system.
+When run, it will use the <TT>`Imakefile'</TT> in your current working
+directory as input, and produce the corresponding <TT>`Makefile'</TT>,
+again in the current working directory:
+<P>
+<PRE>
+% <STRONG>cd myilu</STRONG>
+% <STRONG>ls</STRONG>
+Imakefile foo.isl fooProg.cc
+% <STRONG>ilumkmf</STRONG>
+% <STRONG>ls</STRONG>
+Imakefile Makefile foo.isl fooProg.cc
+%
+</PRE>
+<P>
+<H2><A NAME="SEC582" HREF="manual_toc.html#SEC582">ANSI C Usage</A></H2>
+<P>
+A typical <TT>`Imakefile'</TT> for an ANSI C ILU application would look like:
+<P>
+<PRE>
+NormalObjectRule()  /* this rule defines the .c -&#62; .o step */
+
+InterfaceTarget(foo.isl)
+ILUCTarget(foo.h foo-surrogate.c foo-common.c foo-true.c, foo.isl)
+
+DepObjectTarget(programComponent1.o, foo.h somethingElse.h)
+ObjectTarget(programComponent2.o)
+
+CProgramTarget(program, programComponent1.o programComponent2.o foo-surrogate.o foo-common.o,,)
+</PRE>
+<P>
+<H3><A NAME="SEC583" HREF="manual_toc.html#SEC583">ANSI C ILU <CODE>imake</CODE> Macros</A></H3>
+<P>
+The variable <CODE>LOCAL_INCLUDES</CODE>
+<A NAME="IDX811"></A>
+is a list of include
+file locations to be included when compiling.
+<P>
+The variable <CODE>ANSI_C_COMMAND</CODE>
+<A NAME="IDX812"></A>
+defines the particular
+command invoked for compiling ANSI C on your system.  If you
+wish to use a different ANSI C compiler, override the default
+command by redefining this value in your <TT>`Imakefile'</TT>.  Note that it may also be
+necessary to build a version of the ILU ANSI C library,
+<TT>`<VAR>ILUHOME</VAR>/lib/libilu-c.a'</TT>, to use with this compiler.
+<P>
+<CODE>NormalObjectRule()</CODE>
+<A NAME="IDX813"></A>
+defines a number of suffix rules, in particular
+the one to go from <TT>`.c'</TT> files to <TT>`.o'</TT> files in your environment.
+<P>
+<CODE>InterfaceTarget(<VAR>ISL-file</VAR>)</CODE>
+<A NAME="IDX814"></A>
+defines a number of rules
+about the <TT>`.isl'</TT> file <VAR>ISL-file</VAR>.  You should have one of these
+in your <TT>`Imakefile'</TT> for every interface you use.
+<P>
+<CODE>ILUCTarget(<VAR>generated-files</VAR>, <VAR>ISL-file</VAR>)</CODE>
+<A NAME="IDX815"></A>
+defines
+which ANSI C files are generated from the <TT>`isl'</TT> file and may therefore by
+re-generated at will, and when the <TT>`.isl'</TT> file changes.  Generally, for
+an interface called <CODE>foo</CODE>, the generated files will be
+<TT>`foo-surrogate.c'</TT>, <TT>`foo-true.c'</TT>, <TT>`foo-common.c'</TT>, and <TT>`foo.h'</TT>.
+<P>
+<CODE>ObjectTarget(<VAR>object-file</VAR>)</CODE>
+<A NAME="IDX816"></A>
+simply states that the
+specified <VAR>object-file</VAR> should be built.
+<P>
+<CODE>DepObjectTarget(<VAR>object-file</VAR>, <VAR>dependencies</VAR>)</CODE>
+<A NAME="IDX817"></A>
+says
+that the specified <VAR>object-file</VAR> should be built, and that it
+depends on the files specified in <VAR>dependencies</VAR>, which is a list
+of file names separated by spaces.  Whenever something in the <VAR>dependencies</VAR>
+list changes, the <VAR>object-file</VAR> will be re-built.
+<P>
+<CODE>CProgramTarget(<VAR>program-name</VAR>, <VAR>objects</VAR>, <VAR>dep-libraries</VAR>, <VAR>non-dep-libraries</VAR>)</CODE>
+<A NAME="IDX818"></A>
+defines a program called <VAR>program-name</VAR> that is dependent on
+the object files defined in <VAR>objects</VAR>, and the libraries specified in
+<VAR>dep-libraries</VAR>, so that it will be re-built if anything changes
+in those two groups.  It will also be linked with libraries specified in
+<VAR>non-dep-libraries</VAR>, but will not be re-built if they change.  Note that
+the ILU ANSI C libraries are not automatically included
+by this command, but may be specified as part of the program by specifying them
+as part of either <CODE>dep-libraries</CODE> or <CODE>non-dep-libraries</CODE>.
+<P>
+<CODE>ILUCProgramTarget(<VAR>program-name</VAR>, <VAR>objects</VAR>, <VAR>dep-libraries</VAR>, <VAR>non-dep-libraries</VAR>)</CODE>
+<A NAME="IDX819"></A>
+defines a program called <VAR>program-name</VAR> that is dependent on
+the object files defined in <VAR>objects</VAR>, and the libraries specified in
+<VAR>dep-libraries</VAR>, and the normal ILU ANSI C libraries,
+so that it will be re-built if anything changes
+in those three groups, all of which will be linked into the program <VAR>program-name</VAR>.
+It will also be linked with libraries specified in
+<VAR>non-dep-libraries</VAR>, but will not be re-built if they change.
+This differs from <CODE>CProgramTarget</CODE> in that the ILU libraries
+are automatically included.
+<P>
+<H2><A NAME="SEC584" HREF="manual_toc.html#SEC584">C++ Usage</A></H2>
+<P>
+A typical <TT>`Imakefile'</TT> for a C++ application and ILU would look like:
+<P>
+<PRE>
+LOCALINCLUDES = -I$(ILUHOME)/include
+ILULIBS = $(ILUHOME)/lib/libilu-c++.a $(ILUHOME)/lib/libilu.a
+
+NormalObjectRule()  /* this rule defines the .cc -&#62; .o step */
+
+InterfaceTarget(foo.isl)
+ILUCPlusPlusTarget(foo.H foo.cc foo-server-stubs.cc, foo.isl)
+
+DepObjectTarget(programComponent1.o, foo.H somethingElse.H)
+ObjectTarget(programComponent2.o)
+
+CPlusPlusProgramTarget(program, programComponent1.o programComponent2.o foo.o, $(ILULIBS),)
+</PRE>
+<P>
+<H3><A NAME="SEC585" HREF="manual_toc.html#SEC585">C++ ILU <CODE>imake</CODE> Macros</A></H3>
+<P>
+The variable <CODE>LOCAL_INCLUDES</CODE>
+<A NAME="IDX820"></A>
+is a list of include
+file locations to be included when compiling.  <CODE>-I$(ILUHOME)/include</CODE>
+should always be on this list for compiling ILU applications.
+<P>
+The variable <CODE>CPLUSPLUS_COMMAND</CODE>
+<A NAME="IDX821"></A>
+defines the particular
+command invoked for compiling C++ on your system.  If you
+wish to use a different C++, override the default
+command by redefining this value.  Note that it will also be
+necessary to build a version of ILU C++ library,
+<TT>`<VAR>ILUHOME</VAR>/lib/libilu-c++.a'</TT>, to use with this compiler.
+<P>
+<CODE>NormalObjectRule()</CODE>
+<A NAME="IDX822"></A>
+defines a number of suffix rules, in particular
+the one to go from <TT>`.cc'</TT> files to <TT>`.o'</TT> files in your environment.
+<P>
+<CODE>InterfaceTarget(<VAR>ISL-file</VAR>)</CODE>
+<A NAME="IDX823"></A>
+defines a number of rules
+about the <TT>`.isl'</TT> file <VAR>ISL-file</VAR>.  You should have one of these
+in your <TT>`Imakefile'</TT> for every interface you use.
+<P>
+<CODE>ILUCPlusPlusTarget(<VAR>generated-files</VAR>, <VAR>ISL-file</VAR>)</CODE>
+<A NAME="IDX824"></A>
+defines
+which C++ files are generated from the <TT>`isl'</TT> file and may therefore by
+re-generated at will, and when the <TT>`.isl'</TT> file changes.  Generally, for
+an interface called <CODE>foo</CODE>, the generated files will be
+<TT>`foo.cc'</TT>, <TT>`foo.H'</TT>, and <TT>`foo-server-stubs.cc'</TT>.
+<P>
+<CODE>ObjectTarget(<VAR>object-file</VAR>)</CODE>
+<A NAME="IDX825"></A>
+simply states that the
+specified <VAR>object-file</VAR> should be built.
+<P>
+<CODE>DepObjectTarget(<VAR>object-file</VAR>, <VAR>dependencies</VAR>)</CODE>
+<A NAME="IDX826"></A>
+says
+that the specified <VAR>object-file</VAR> should be built, and that it
+depends on the files specified in <VAR>dependencies</VAR>, which is a list
+of file names separated by spaces.  Whenever something in the <VAR>dependencies</VAR>
+list changes, the <VAR>object-file</VAR> will be re-built.
+<P>
+<CODE>CPlusPlusProgramTarget(<VAR>program-name</VAR>, <VAR>objects</VAR>, <VAR>dep-libraries</VAR>, <VAR>non-dep-libraries</VAR>)</CODE>
+<A NAME="IDX827"></A>
+defines a program called <VAR>program-name</VAR> that is dependent on
+the object files defined in <VAR>objects</VAR>, and the libraries specified in
+<VAR>dep-libraries</VAR>, so that it will be re-built if anything changes
+in those two groups.  It will also be linked with libraries specified in
+<VAR>non-dep-libraries</VAR>, but will not be re-built if they change.
+Note that
+the ILU ANSI C libraries are not automatically included
+by this command, but may be specified as part of the program by specifying them
+as part of either <CODE>dep-libraries</CODE> or <CODE>non-dep-libraries</CODE>.
+<P>
+<CODE>ILUCPlusPlusProgramTarget(<VAR>program-name</VAR>, <VAR>objects</VAR>, <VAR>dep-libraries</VAR>, <VAR>non-dep-libraries</VAR>)</CODE>
+<A NAME="IDX828"></A>
+defines a program called <VAR>program-name</VAR> that is dependent on
+the object files defined in <VAR>objects</VAR>, and the libraries specified in
+<VAR>dep-libraries</VAR>, and the normal ILU ANSI C libraries,
+so that it will be re-built if anything changes
+in those three groups, all of which will be linked into the program <VAR>program-name</VAR>.
+It will also be linked with libraries specified in
+<VAR>non-dep-libraries</VAR>, but will not be re-built if they change.
+This differs from <CODE>CProgramTarget</CODE> in that the ILU libraries
+are automatically included.
+<P>
+<P>Go to the <A HREF="manual_19.html">previous</A>, <A HREF="manual_21.html">next</A> section.<P>

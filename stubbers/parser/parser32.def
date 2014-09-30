@@ -1,0 +1,54 @@
+LIBRARY   parser32
+
+VERSION 1.7
+
+EXPORTS
+	ParseFile
+	GetInterface
+	iluparser_CanonicalPathname
+	iluparser_CString_Type DATA
+	iluparser_GetProgramName
+	iluparser_GenerateBoilerplate
+	iluparser_MultipleInterfaceBoilerplate
+	iluparser_GetILUVersionString
+	iluparser_RegisterInterfaceDirectories
+	iluparser_IsKeyword
+	iluparser_ClearMarks
+	iluparser_Malloc
+	iluparser_Free
+	iluparser_Realloc
+	ilu_strdup
+	ilu_strcasecmp
+	list_size
+	list_ref
+	list_cdr
+	list_car
+	list_insert
+	list_remove
+	list_clear
+	list_enumerate
+	list_find
+	iluparser_new_list
+	list_push
+	list_sort
+	type_description
+	ur_type
+	under_type
+	type_kind
+	type_basic_type
+	type_ur_kind
+	type_name
+	type_interface
+	type_recurse
+	class_object
+	exception_type
+	name_set_base_name
+	name_set_lang_name
+	name_lang_name
+	name_base_name
+	exception_name
+	interface_name
+	argument_name
+	procedure_name
+	constant_name
+	

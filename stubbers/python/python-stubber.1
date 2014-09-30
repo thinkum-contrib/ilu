@@ -1,0 +1,56 @@
+.\" python-stubber.1
+.TH PYTHON-STUBBER 1 "8 April 1994"
+.SH NAME
+python-stubber \- generate ILU stubs for the Python programming language
+.SH SYNOPSIS
+\fBpython-stubber\fR [\fB-removefirst\fR] [\fB-dir\fR [\fB-quiet\fR] \fIDIRECTORY\fR] \fIISLFILE\fR [ \fI...ISLFILES\fR ]
+.SH DESCRIPTION
+.B python-stubber
+Generates Python code for the
+interface defined in \fIISLFILE\fR, which should be a file
+containing an ISL specification of the interface.  If no directory
+is specified as part of \fIISLFILE\fR, the stubber will search
+for the file in the list of directories specified by the
+environment variable \fCILUPATH\fR.  If no file extension is
+specified for \fIISLFILE\fR, the extension "\fC.isl\fR" is assumed.
+.sp
+If the \fB-removefirst\fR switch is specified, the stubber will
+attempt to delete old versions of the stub files before creating
+new ones, rather than overwriting the contents of the old files,
+which is the default behavior.
+.sp
+If the interface being stubbed is called \fCfoo\fR,
+two output files will be created, "\fCfoo.py\fR",
+and "\fCfoo__skel.py\fR".
+.sp
+If the \fB-dir\fR switch is specified, the stubber
+will attempt to create the output files in the directory
+specified by \fIDIRECTORY\fR.
+.sp
+If the \fB-quiet\fR switch is specified, the stubber won't
+put out the customary messages about which files which parts
+of the stubs are being put in.
+.SH EXAMPLES
+.LP
+.RS
+\fC57 % python-stubber foo.isl
+.br
+python-stubber foo.isl
+.br
+client stubs for interface "foo" to foo.py ...
+.br
+server stubs for interface "foo" to foo__skel.py ...
+.br
+58 %\fR
+.SH "ENVIRONMENT VARIABLES"
+The environment variable "ILUPATH" is consulted to find referenced
+interfaces.  It should consist of a sequence of colon-separated directories,
+which contain interface specifications in the form of files
+with names like \fI<interface-name>\fC.isl\fR.
+.SH "SEE ALSO"
+\fCc-stubber(1), c++-stubber(1), lisp-stubber(1), ILU(1)\fR
+.sp
+\fI``Using ILU with Python''\fR
+.SH "AUTHOR"
+.RE
+Denis Severson

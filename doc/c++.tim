@@ -1,0 +1,518 @@
+@setfilename ilu-c++.info
+@settitle Using ILU with C++
+@ifset ilucopyright
+BeginILUCopyright
+
+Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+Unlimited use, reproduction, modification, and distribution of this
+software and modified versions thereof is permitted.  Permission is
+granted to make derivative works from this software or a modified
+version thereof.  Any copy of this software, a modified version
+thereof, or a derivative work must include both the above copyright
+notice of Xerox Corporation and this paragraph.  Any distribution of
+this software, a modified version thereof, or a derivative work must
+comply with all applicable United States export control laws.  This
+software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+OF THE POSSIBILITY OF SUCH DAMAGES.
+  
+EndILUCopyright
+@end ifset
+@ifclear largerdoc
+@titlepage
+@title Using ILU with C++
+@author Bill Janssen @code{<janssen@@parc.xerox.com>}
+@sp
+Typeset @today{}
+@sp
+Copyright @copyright{} 1993--95 Xerox Corporation@*
+All Rights Reserved.
+@end titlepage
+@ifinfo
+@node Top, ,(dir),(dir)
+@top Using ILU with C++
+@end ifinfo
+@end ifclear
+
+@section Introduction
+
+This document is for the @language{C++} programmer who wishes to use 
+@system{ILU}. The following sections will show how @language{ILU} is
+mapped into @language{C++} constructs and how both @language{C++}
+clients and servers are generated and built.
+
+When functions are described in this section,
+they are sometimes accompanied by @dfn{locking comments},
+which describe the locking invariants maintained by @system{ILU} on a threaded system.
+See the file @file{@metavar{ILUSRC}/runtime/kernel/iluxport.h}
+for more information on this locking scheme, and the types of locking comments used.
+
+A number of macros are used in function descriptions, to indicated optional arguments, and ownership of potentially
+malloc'ed objects.
+The owner is responsible for freeing the object's storage at an appropriate time, and generally makes no interesting guarantees of when that will be.  Some types of objects (generally (fixed- and variable-length) arrays, including strings) are presumed to be mutable by only their owners.
+The macro @C{OPTIONAL(@metavar{type-name})} means that the value
+is either of the type indicated by @metavar{type-name}, or the value @C{NULL}.  This macro
+may only be used with pointer values.  The macro @C{RETAIN(@metavar{type-name})}
+indicates, when used on a parameter type, that the caller retains ownership of the value,
+and when used on a return type, that the called function retains ownership of the
+value.  The macro @C{PASS(@metavar{type-name})} indicates, when used on a parameter type,
+that the caller is passing ownership of the storage to the called function, and when
+used on a return type, that the called function is passing ownership of the called
+value to the caller.  The macro @C{GLOBAL(@metavar{type-name})} means that neither
+the caller nor the calling function owns the storage.
+
+@section Mapping ILU ISL to C++
+
+@cindex ILU and the CORBA C++ mapping
+Using @system{ILU} with @language{C++} is intended to eventually be compatible
+with the OMG @system{CORBA} specification.  That is, all of the naming
+and stub generation comply with the Common Object Request Broker
+Architecture specified mapping for @language{C++}, when that specification is available.
+The current mapping was designed to be usable with a large number of @language{C++}
+compilers, by avoiding problematic constructs such as templates, exceptions,
+namespaces, and nested class definitions.
+
+Note that @system{ILU} support for @language{C++} does rely on having
+argument prototypes, all @language{C++} library functions, and the
+capabilities of the @language{C++} pre-processor.
+
+@subsection Names
+@cindex Mapping ISL names to C++ names
+
+In general, @system{ILU} constructs @language{C++} names from @language{ISL} names
+by replacing hyphens with underscores.  Type names are prepended with their interface name
+and the string ``_T_''.  Enumeration value namess are formed
+by prepending the enumeration type name and ``_'' to the @language{ISL} enumeration value name.
+Exception names are prepended with their interface name and ``_E_''.
+Constant names are prepended with their interface name and ``_C_''.
+
+Other naming conventions may be specified explicitly; see the following section on tailoring names
+for more information.
+
+@subsection Types
+
+Records turn directly into @language{C++} structs.
+Unions consist of a struct with two fields:  the type discriminator, a field called ``discriminator'',
+and a union of the possible values, called ``value''.
+Arrays map directly into @language{C++} arrays.  Sequences become a @language{C++} class
+with methods and representation analogous to the procedures and representation that appear in the @language{C} mapping.  Objects become normal @language{C++} classes
+that are subclasses of the pre-defined class @class{iluObject}.
+
+@subsubsection Sequence types
+
+For most sequences types, the generated @language{C++} code follows a pattern analogous to that set in the @language{C} mapping and illustrated in the upcoming example.
+
+@subsection Object types
+
+@subsection Exceptions
+
+Because of the scarcity of implementation of the @language{C++} exception mechanism,
+exceptions are passed by adding an additional argument to the beginning of each method,
+which is a pointer to a status struct, which contains an exception code, and a union of
+all the possible exception value types defined in the interface.  Method implementations
+set the exception code, and fill in the appropriate value of the union, to signal an
+exception.  Exception codes
+are represented in @language{C++} with values of the type @type{ilu_Exception}.
+
+In a true module, exceptions may be raised by using the function @fn{@metavar{<interface>}_G::RaiseException}.
+
+@deftypefn {C++} void {@metavar{<interface>}_G::RaiseException} ( RETAIN(@metavar{<interface>}Status *) @metavar{status}, GLOBAL(ilu_Exception) @metavar{code}, ...)
+
+Causes an exception code and value for the exception specified by @metavar{code} to be bound
+in @metavar{status}.  Besides the two required arguments, the function may take another
+argument, which should be a value of the type implied by the value of @metavar{code};
+that is, of the appropriate type to be a value of the exception being signalled.
+Note that @fn{RaiseException} does not actually cause a transfer of control,
+so that an explicit return statement must follow a call to @fn{RaiseException}.
+
+@end deftypefn
+
+@subsection Constants
+
+Constants are implemented with @language{C++} @code{#define} statements.
+
+@subsection Examples
+
+Here's a sample @language{ISL} spec, and the resulting @language{C++} mappings:
+
+@codeexample
+INTERFACE Foo;
+
+TYPE String = ilu.CString;
+TYPE UnsignedInt = CARDINAL;
+
+TYPE E1 = ENUMERATION val1, val2, val3=40 END;
+TYPE R1 = RECORD field1 : CARDINAL, field2 : E1 END;
+TYPE A1 = ARRAY OF 200 BYTE;
+TYPE A2 = ARRAY OF 41, 3 R1;
+TYPE S1 = SEQUENCE OF E1;
+TYPE U1 = UNION R1, A2 END;
+
+EXCEPTION Except1 : String;
+
+CONSTANT Zero : CARDINAL = 0;
+
+TYPE O1 = OBJECT
+  METHODS
+    M1 (arg1 : R1) : UnsignedInt RAISES Except1 END
+  END;
+@end codeexample
+
+The @language{C++} mapping:
+
+@codeexample
+typedef ilu_CString Foo_T_String;
+typedef ilu_Cardinal Foo_T_UnsignedInt;
+
+typedef enum _Foo_T_E1_enum @{
+  Foo_T_E1_val1 = 1,
+  Foo_T_E1_val2 = 2,
+  Foo_T_E1_val3 = 40
+@} Foo_T_E1;
+typedef struct _Foo_T_R1_struct @{
+  ilu_Cardinal field1;
+  Foo_T_E1 field2;
+@} Foo_T_R1;
+typedef ilu_Byte Foo_T_A1[200];
+typedef Foo_T_R1 Foo_T_A2[41][3];
+class _Foo_T_S1_sequence @{
+ private:
+  ilu_Cardinal _maximum;
+  ilu_Cardinal _length;
+  Foo_T_E1 *_buffer;
+ public:
+  _Foo_T_S1_sequence ();
+  virtual ~_Foo_T_S1_sequence ();
+  static class _Foo_T_S1_sequence *Create (ilu_Cardinal initial_size, Foo_T_E1 *initial_data);
+  virtual ilu_Cardinal Length();
+  virtual void Append(Foo_T_E1);
+  virtual Foo_T_E1 RemoveHead();
+  virtual Foo_T_E1 RemoveTail();
+  virtual ilu_Cardinal RemoveAll(ilu_Boolean (*matchproc)(Foo_T_E1));
+  virtual Foo_T_E1 * Array();
+  virtual Foo_T_E1 Nth(ilu_Cardinal index);
+@};
+typedef class _Foo_T_S1_sequence * Foo_T_S1;
+enum Foo_T_U1_allowableTypes @{ Foo_T_U1_R1, Foo_T_U1_A2 @};
+typedef struct _Foo_T_U1_union @{
+  enum Foo_T_U1_allowableTypes discriminator;
+  union @{
+    Foo_T_R1 R1;
+    Foo_T_A2 A2;
+  @} value;
+@} Foo_T_U1;
+
+extern ilu_Exception Foo_E_Except1;     /* exception code Except1 */
+
+typedef struct _Foo_Status_struct @{
+  ilu_Exception returnCode;
+  union @{
+    ilu_Cardinal anyvalue;
+    Foo_T_String Except1;
+  @} values;
+@} FooStatus;
+
+class Foo_T_O1 : public iluObject @{
+ public:
+  Foo_T_O1();			// constructor
+  virtual ~Foo_T_O1();		// destructor
+  static class Foo_T_O1 * ILUCreateFromSBH(ilu_CString sbh);
+  Foo_T_UnsignedInt M1 (FooStatus *_status, Foo_T_R1 *arg1);
+@};
+
+#define Foo_C_Zero ((ilu_Cardinal) 0)
+@end codeexample
+
+@section Using an ILU module from C++
+
+A client module may obtain an instance of an @system{ILU} object in
+three basic ways:  1)  instantiating it directly from a string binding handle,
+2) using the function @C++{iluObject::Lookup} to locate it via the
+simple binding interface, and 3) receiving the instance directly as a return
+value or out parameter from a method on a different object.
+
+To instantiate from a string binding handle, a static member function is
+generated for each subclass of @C++{class iluObject} declared in the @language{C++} stubs:
+
+@deftypefn {C++} {OPTIONAL(class @metavar{T} *)} @metavar{T}::ILUCreateFromSBH (ilu_CString @metavar{sbh})
+
+@end deftypefn
+
+To use the simple binding service to locate an object:
+
+@deftypefn {C++} {static OPTIONAL(GLOBAL(void *))} iluObject::Lookup ( RETAIN(char *) @metavar{sid}, RETAIN(char *) @metavar{ih}, ilu_Class @metavar{putative-class} )
+
+Locking:  Main invariant holds.
+
+Finds and returns the object specified by the given Server ID (@metavar{sid}) and server-relative Instance Handle (@metavar{ih}) by consulting the local domain registry of objects.
+@metavar{putative-class} is the type that the object is expected to be of,
+though the type of the actual object returned may be a subtype of @metavar{putative-class}, cast
+to the @metavar{putative-class}.  The return value should be immediately cast to a value of the @language{C++}
+mapping of @metavar{putative-class}.
+@end deftypefn
+
+@section Implementing an ILU Module in C++
+
+For each @system{ILU} class @class{@metavar{interface}.@metavar{otype}},
+@system{ILU} will define, in the file
+@file{@metavar{interface}.cc},
+a @language{C++} class called @cl{@metavar{interface}_T_@metavar{otype}}.
+To implement a true object for @class{@metavar{interface}.@metavar{otype}},
+one should further subclass this @language{C++} class,
+and override all of its methods.  In particular, do not let
+any of the default methods for the class be called from your methods for it.
+
+@subsection Servers
+
+@system{ILU} supports,
+in each address space, multiple instances of something called
+a @dfn{kernel server}, each of which in turn
+supports some set of object instances.
+A kernel server @dfn{export}s its objects by making them available
+to other modules.  It may do so via one or more @dfn{port}s, which are
+abstractly a tuple of (@metavar{rpc protocol}, @metavar{transport type},
+@metavar{transport address}).  For example, a typical port might
+provide access to a kernel server's objects
+via @code{(Sun RPC, TCP/IP, (host 13.24.52.9, UNIX port 2076))}.  Another port on the
+same kernel server might provide access to the objects via
+@code{(Xerox Courier, XNS SPP, XNS port 1394)}.
+
+When creating an instance of a true object, a kernel server for it,
+and an instance handle (the name by which the kernel server knows it) for
+it must be determined.  These may be specified explicitly by overriding
+the default @C++{iluObject::ILUGetServer} and @C++{iluObject::ILUGetInstanceHandle} methods,
+respectively.  The @C++{iluObject} implementation of @C++{ILUGetServer} defers to @C++{ilu::GetDefaultServer}.
+The @C++{iluObject} implementation of @C++{ILUGetInstanceHandle} generates a handle that's unique relative to the kernel server.
+
+The kernel server is represented in @language{C++} with the class @C++{iluServer},
+which has the following constructor:
+
+@deftypefn {C++} {??} iluServer::iluServer ( OPTIONAL(const char *) @metavar{server-id}, OPTIONAL(iluObjectTable *) @metavar{object-table} )
+
+Constructs an instance of @C++{class iluObject} with the given @metavar{server-id}
+and @metavar{object-table}.
+
+@end deftypefn
+
+Note that @system{ILU} object IDs, which consist of the kernel server ID, plus the instance
+handle of the object on that server, must be unique ``across space
+and time'', as the saying goes.  If no kernel server id is specified,
+@system{ILU} will generate one automatically, using an algorithm
+that provides a high probability of uniqueness.  If you explicitly
+specify a kernel server ID, a good technique is to use a prefix or
+suffix which uniquely identifies some domain in which you can assure
+the uniqueness of the remaining part of the ID.  For example, when
+using @system{ILU} at some project called NIFTY at some internet
+site in the IP domain @code{department.company.com}, one might use
+kernel server IDs with names like
+@code{something.NIFTY.department.company.com}.
+
+Once the server is constructed, a port must be added:
+
+@deftypefn {C++} ilu_Boolean iluServer::AddPort (OPTIONAL(RETAIN(char *)) @metavar{protocol-info}, OPTIONAL(RETAIN(ilu_TransportInfo)) @metavar{transport-info}, ilu_Boolean @metavar{be-default})
+
+Adds a port through which the server can be contacted.  The @metavar{protocol-info} and @metavar{transport-info} specify the RPC and transport protocols and their parameters.  The @metavar{transport-info} has a layered structure, represented by the @language{C} type @C{ilu_TransportInfo}, described in @file{@metavar{ILUSRC}/runtime/kernel/iluxport.h}.  See chapter 1 for a catalogue of available RPC and transport layer specifications.
+
+@end deftypefn
+
+To export a module for use by other modules,
+simply instantiate one or more instances
+of your subtype of @cl{@metavar{interface}:@metavar{otype}} and (if single-threaded) call the @system{ILU} @language{C++}
+event dispatching loop, @C++{iluServer::Run}.
+
+@subsection Event dispatching
+
+Most non-threaded long-lived @language{C} and @language{C++} programs
+simulate threads with @dfn{event dispatching}, in which the program waits in some
+piece of code called the @dfn{main loop} until an @dfn{event} such
+as input arriving on a file descriptor or the expiration of an alarm
+signal causes a @dfn{callback routine} to be invoked.  The @system{ILU} @language{C++}
+runtime, in single-threaded mode, supports this style of operation with various static member functions
+of the class @C++{iluServer}.
+
+@deftypefn {C++} {static ilu_Boolean} iluServer::RegisterInputHandler ( int @metavar{fd}, void (*@metavar{callbackRoutine})(int, void *), void * @metavar{callbackArg})
+
+Register the file descriptor @metavar{fd} with the @system{ILU} kernel so that when
+@system{ILU} kernel event dispatching is active (that is, during the @C++{iluServer::Run} call),
+the function @metavar{callbackRoutine} will be invoked with the arguments @C++{(@metavar{fd}, @metavar{callbackArg})}
+whenever input is available on the file descriptor @metavar{fd}.
+
+@end deftypefn
+
+@deftypefn {C++} {static ilu_Boolean} iluServer::UnregisterInputHandler ( int @metavar{fd} )
+
+Removes any callback routine registered on file descriptor @metavar{fd}.
+
+@end deftypefn
+
+@deftypefn {C++} {static ilu_Boolean} iluServer::Run ( void )
+
+Invokes the @system{ILU} main loop and causes @system{ILU} kernel event
+dispatching to be active.  This routine never returns.
+
+@end deftypefn
+
+Occasionally it is necessary to use a different event dispatching mechanism,
+typically because some other work is done inside the main loop of the mechanism.
+An alternate main loop can be registered for use with @system{ILU} by creating
+a subtype of the class @C++{iluMainLoop} and registering it with the kernel
+by calling the function @C++{iluServer::iluSetMainLoop}:
+
+@deftypefn {C++} {static void} iluServer::iluSetMainLoop ( RETAIN(iluMainLoop *) @metavar{ml} )
+
+Registers the main loop object @metavar{ml} with the runtime kernel.
+
+@end deftypefn
+
+@subsection Publishing
+
+To enable users of your module find the exported objects, you may
+register the string binding handle of the object or objects, along
+with their type IDs, in any name service or registry that is convenient
+for you.  In releases 1.6--2.0 of @system{ILU}, we support an experimental
+simple binding method that allows you to ``publish'' an object,
+which registers it in a domain-wide registry, and
+then to withdraw the object, if necessary.  Potential clients can
+find the string binding handle of the object by calling
+a lookup function.  @strong{Note that this interface and service
+is experimental, and may be supported differently in future releases
+of the @system{ILU} system.}
+
+@deftypefn {C++} ilu_Boolean iluObject::ILUPublish ()
+
+A method on instances of @C++{class iluObject}, it registers the instance with some
+domain-wide registration service.
+The object is known by its <@metavar{Server-ID}, @metavar{Instance-Handle}> pair.  Clients may find
+the object by passing this pair to the @C++{iluObject::Lookup} function.
+Returns true if the object can be successfully published in the local registry.
+
+@end deftypefn
+
+@deftypefn {C++} ilu_Boolean iluObject::ILUWithdraw ()
+
+Returns true if the object's registration in the local registry can be successfully withdrawn,
+or does not exist.
+
+@end deftypefn
+
+@deftypefn {C++} ilu_Boolean iluObject::ILUPing (ilu_Error* p_error)
+
+Returns ilu_TRUE if the true object exists, and the process serving it can be contacted, otherwise ilu_FALSE.
+*p_error is set if some error occurred.
+
+@end deftypefn
+
+@section ILU API for C++
+
+@section Generating ILU stubs for C++
+
+To generate @language{C++} stubs from an @language{ISL} file, you use the
+program @language{c++-stubber}.
+@pindex c++-stubber
+Three files are generated from the
+@file{.isl} file (the extension @C++{cpp} is used instead of @C++{cc} when running on @system{Windows}):
+@itemize @bullet
+@item
+@file{@metavar{interface-name}.hh} contains the class definitions for the types
+and procedures defined by the interface;
+@item
+@file{@metavar{interface-name}.cc} contains the client-side and general code
+for the interface; and
+@item
+@file{@metavar{interface-name}-server-stubs.cc} contains the server-side
+stubs and code for the interface.
+@end itemize
+Typically, clients of a module never have a need for the @file{@metavar{interface-name}-server-stubs.cc} file.
+
+@transcript
+% @userinput{c++-stubber foo.isl}
+header file interface foo to ./foo.hh...
+code for interface foo to ./foo.cc...
+code for server stubs of interface foo to ./foo-server-stubs.cc...
+%
+@end transcript
+
+The option @code{-renames @metavar{renames-filename}} may be used with @program{c++-stubber}
+to specify particular @language{C++} names for @language{ISL} types.  See the following section
+for more details.
+
+@subsection Tailoring C++ Names
+@cindex Tailoring C++ names
+
+It is sometimes necessary to have the @language{C++} names of an @system{ILU} interface
+match some other naming scheme.  A mechanism is provided to allow the programmer to
+specify the names of @language{C++} language artifacts directly, and thus override
+the automatic @language{ISL} to @language{C++} name mappings.
+
+To do this, you place a set of synonyms for @language{ISL} names in a
+@dfn{renames-file}, and invoke the @program{c++-stubber} program with the switch @code{-renames},
+specifying the name of the renames-file.  The lines in the file are of the form
+@display
+@metavar{construct} @metavar{@language{ISL}-name} @metavar{@language{C++}-name}
+@end display
+@noindent
+where @metavar{construct} is one of @kwd{method}, @kwd{exception}, @kwd{type}, @kwd{interface},
+or @kwd{constant}; @metavar{@language{ISL}-name} is the name of the construct, expressed either
+as the simple name, for interface names, the concatenation
+@code{@metavar{interface-name}.@metavar{construct-name}} for exceptions, types, and constants,
+or @code{@metavar{interface-name}.@metavar{type-name}.@metavar{method-name}} for methods;
+and @metavar{@language{C++}-name} is the name the construct should have in the generated
+@language{C++} code.  For example:
+
+@example
+# change "Foo_T_R1" to plain "R1"
+type Foo.R1 R1
+# change name of method "M1" to "Method1"
+method Foo.O1.M1 Method1
+@end example
+
+@noindent
+Lines beginning with the `hash' character @samp{#} are treated as comment lines,
+and ignored, in the renames-file.
+
+This feature of the @program{c++-stubber} should be used as little and as carefully
+as possible, as it can cause confusion for readers of the @language{ISL} interface,
+in trying to follow the @language{C++} code.  It can also create name conflicts
+between different modules, unless names are carefully chosen.
+
+@section Threading
+
+The @system{ILU} @language{C++} runtime is prepared to be used in either a single-thread or a multi-threaded mode.  Single-threaded is the default.  To run multi-threaded, the application is responsible for picking a threading mechanism and making it accessible to @system{ILU}.  Two calls must be made to make a threading mechanism available to @system{ILU}.  One, @C++{iluServer::SetFork}, enables @system{ILU} to fork new threads.  The other, @C{ilu_SetLockTech} (from @file{@metavar{ILUSRC}/runtime/kernel/iluxport.h}), supplies various thread synchronization primitives.  These calls must be done at startup time, before any @system{ILU} servers are created or surrogate objects imported.
+
+@section Other ILU Considerations For C++
+
+@subsection Libraries and Linking
+
+For clients of an @system{ILU} module, it is only necessary to link
+with the @file{@metavar{interface-name}.o} file compiled from the
+@file{@metavar{interface-name}.cc} file generated for the interface or interfaces
+being used, and with the two libraries
+@file{@metavar{ILUHOME}/lib/libilu-c++.a} and @file{@metavar{ILUHOME}/lib/libilu.a} (in this
+order, as @file{libilu-c++.a} uses functions in @file{libilu.a}).
+
+For implementors of true classes, or servers, the code for the server-side
+stubs, in the file @file{@metavar{interface-name}-server-stubs.o}, compiled
+from @file{@metavar{interface-name}-server-stubs.cc}, should be included along
+with the other files and libraries.
+
+@subsection Initialization order
+
+@system{ILU} uses the static-object-with-constructor trick to effect per-compilation-unit startup code.  In certain cases you'll want to ensure that a certain compilation unit's initialization is run before another's.  While @language{C++} defines no standard way to do this, most compilers work like this: compilation units are initialized (static object construtors run) in the order in which they are given to the link-editor.  We want to hear about any exceptions to this rule.
+
+@subsection Makefiles
+
+@system{ILU} uses the @program{imake} system from @system{X11R?} to produce
+@file{Makefile}s from @file{Imakefile}s.  For more details on this process,
+@ref{Using Imake with ILU}.
+
+@ifclear largerdoc
+@page
+@section Index
+@printindex cp
+@end ifclear

@@ -1,0 +1,100 @@
+README for the "pickle" example directory.
+[ $Id: README,v 1.10 1999/09/10 22:36:32 janssen Exp $
+ BeginILUCopyright
+
+ Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+ Unlimited use, reproduction, modification, and distribution of this
+ software and modified versions thereof is permitted.  Permission is
+ granted to make derivative works from this software or a modified
+ version thereof.  Any copy of this software, a modified version
+ thereof, or a derivative work must include both the above copyright
+ notice of Xerox Corporation and this paragraph.  Any distribution of
+ this software, a modified version thereof, or a derivative work must
+ comply with all applicable United States export control laws.  This
+ software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+ WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+ LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+ EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+ NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+ OF THE POSSIBILITY OF SUCH DAMAGES.
+
+ EndILUCopyright ]
+
+
+This directory contains a simple example which exercises the pickle
+support in the IIOP protocol, mainly via Python.  You must have
+Python support to use this test, though there is also a C server,
+which can be used with Purify to test memory usage of pickle code
+and a java server which is good for nothing except testing java.
+
+Here's how to run it:
+
+  % ilumkmf
+  % make
+  <various make commands omitted here...>
+  % setenv PYTHONPATH ${ILUHOME}/lib
+  % python pyServer.py &
+  exported ilu:pickleServer/pickleObj;ilu%3AlvqRLlaDW1PioYFW0Dlz5uk7GFe;iiop_1_0_1@tcp_13.1.101.26_61839
+  [1] 6272
+  % python pyClient.py
+  <Test1.O1:pickleServer/pickleObj>.bounce(<Pickle <Typecode "Test1.I"> 344>) => <Pickle <Typecode "ilu.integer"> 344>
+  <Test1.O1:pickleServer/pickleObj>.bounce(<Pickle <Typecode "Test1.IS"> [345, 3, 14]>) => <Pickle <Typecode "Test1.IS"> [345, 3, 14]>
+  <Test1.O1:pickleServer/pickleObj>.bounce(<Pickle <Typecode "Test1.SC"> 45>) => <Pickle <Typecode "ilu.shortcharacter"> 45>
+  <Test1.O1:pickleServer/pickleObj>.bounce(<Pickle <Typecode "Test1.C"> 454>) => <Pickle <Typecode "ilu.character"> 454>
+  <Test1.O1:pickleServer/pickleObj>.bounce(<Pickle <Typecode "Test1.ScS"> 'foobar'>) => <Pickle <Typecode "Test1.ScS"> 'foobar'>
+  <Test1.O1:pickleServer/pickleObj>.bounce(<Pickle <Typecode "Test1.CSS"> ['foobar', 'bletch']>) => <Pickle <Typecode "Test1.CSS"> ['foobar', 'bletch']>
+  <Test1.O1:pickleServer/pickleObj>.bounce(<Pickle <Typecode "Test1.A0"> 'abcdefgh'>) => <Pickle <Typecode "Test1.A0"> 'abcdefgh'>
+  <Test1.O1:pickleServer/pickleObj>.bounce(<Pickle <Typecode "Test1.TheA1"> ['foo', 'bar', 'bletch']>) => <Pickle <Typecode "Test1.TheA1"> ['foo', 'bar', 'bletch']>
+  <Test1.O1:pickleServer/pickleObj>.bounce(<Pickle <Typecode "Test1.A1"> ['foo', 'bar', 'bletch']>) => <Pickle <Typecode "Test1.TheA1"> ['foo', 'bar', 'bletch']>
+  <Test1.O1:pickleServer/pickleObj>.bounce(<Pickle <Typecode "Test1.BS"> '\001\002\003\004\005\006\007'>) => <Pickle <Typecode "Test1.BS"> '\001\002\003\004\005\006\007'>
+  <Test1.O1:pickleServer/pickleObj>.bounce(<Pickle <Typecode "Test1.TheR"> <Test1.TheR:{'i': 2, 'css': ['foo', 'bar'], 'a': ['foo', 'bar', 'bletch']}>>) => <Pickle <Typecode "Test1.TheR"> <Test1.TheR:{'i': 2, 'css': ['foo', 'bar'], 'a': ['foo', 'bar', 'bletch']}>>
+  <Test1.O1:pickleServer/pickleObj>.bounce(<Pickle <Typecode "Test1.R"> <Test1.TheR:{'i': 2, 'css': ['foo', 'bar'], 'a': ['foo', 'bar', 'bletch']}>>) => <Pickle <Typecode "Test1.TheR"> <Test1.TheR:{'i': 2, 'css': ['foo', 'bar'], 'a': ['foo', 'bar', 'bletch']}>>
+  <Test1.O1:pickleServer/pickleObj>.bounce(<Pickle <Typecode "Test1.TheRS"> [<Test1.TheR:{'i': 2, 'css': ['foo', 'bar'], 'a': ['foo', 'bar', 'bletch']}>, <Test1.TheR:{'i': 1, 'css': ['foo', 'bar'], 'a': ['foo', 'bar', 'bletch']}>, <Test1.TheR:{'i': 0, 'css': ['foo', 'bar'], 'a': ['foo', 'bar', 'bletch']}>]>) => <Pickle <Typecode "Test1.TheRS"> [<Test1.TheR:{'i': 2, 'css': ['foo', 'bar'], 'a': ['foo', 'bar', 'bletch']}>, <Test1.TheR:{'i': 1, 'css': ['foo', 'bar'], 'a': ['foo', 'bar', 'bletch']}>, <Test1.TheR:{'i': 0, 'css': ['foo', 'bar'], 'a': ['foo', 'bar', 'bletch']}>]>
+  <Test1.O1:pickleServer/pickleObj>.bounce(<Pickle <Typecode "Test1.RS"> [<Test1.TheR:{'i': 2, 'css': ['foo', 'bar'], 'a': ['foo', 'bar', 'bletch']}>, <Test1.TheR:{'i': 1, 'css': ['foo', 'bar'], 'a': ['foo', 'bar', 'bletch']}>, <Test1.TheR:{'i': 0, 'css': ['foo', 'bar'], 'a': ['foo', 'bar', 'bletch']}>]>) => <Pickle <Typecode "Test1.TheRS"> [<Test1.TheR:{'i': 2, 'css': ['foo', 'bar'], 'a': ['foo', 'bar', 'bletch']}>, <Test1.TheR:{'i': 1, 'css': ['foo', 'bar'], 'a': ['foo', 'bar', 'bletch']}>, <Test1.TheR:{'i': 0, 'css': ['foo', 'bar'], 'a': ['foo', 'bar', 'bletch']}>]>
+  <Test1.O1:pickleServer/pickleObj>.bounce(<Pickle <Typecode "Test1.RO"> None>) => <Pickle <Typecode "Test1.RO"> None>
+  <Test1.O1:pickleServer/pickleObj>.bounce(<Pickle <Typecode "Test1.RO"> <Test1.TheR:{'i': 2, 'css': ['foo', 'bar'], 'a': ['foo', 'bar', 'bletch']}>>) => <Pickle <Typecode "Test1.RO"> <Test1.TheR:{'i': 2, 'css': ['foo', 'bar'], 'a': ['foo', 'bar', 'bletch']}>>
+  <Test1.O1:pickleServer/pickleObj>.bounce(<Pickle <Typecode "Test1.TheOO"> None>) => <Pickle <Typecode "Test1.TheOO"> None>
+  <Test1.O1:pickleServer/pickleObj>.bounce(<Pickle <Typecode "Test1.OO"> <Test1.O1:pickleServer/pickleObj>>) => <Pickle <Typecode "Test1.TheOO"> <Test1.O1:pickleServer/pickleObj>>
+  <Test1.O1:pickleServer/pickleObj>.bounce(<Pickle <Typecode "Test1.OO2"> (1, <Test1.O1:pickleServer/pickleObj>)>) => <Pickle <Typecode "Test1.OO2"> (1, <Test1.O1:pickleServer/pickleObj>)>
+  <Test1.O1:pickleServer/pickleObj>.bounce(<Pickle <Typecode "Test1.OO2"> (0, None)>) => <Pickle <Typecode "Test1.OO2"> (0, None)>
+  <Test1.O1:pickleServer/pickleObj>.bounce(<Pickle <Typecode "Test1.TheU"> (0, <Test1.TheR:{'i': 2, 'css': ['foo', 'bar'], 'a': ['foo', 'bar', 'bletch']}>)>) => <Pickle <Typecode "Test1.TheU"> (0, <Test1.TheR:{'i': 2, 'css': ['foo', 'bar'], 'a': ['foo', 'bar', 'bletch']}>)>
+  <Test1.O1:pickleServer/pickleObj>.bounce(<Pickle <Typecode "Test1.TheU"> (1, <Test1.TheR:{'i': 2, 'css': ['foo', 'bar'], 'a': ['foo', 'bar', 'bletch']}>)>) => <Pickle <Typecode "Test1.TheU"> (1, <Test1.TheR:{'i': 2, 'css': ['foo', 'bar'], 'a': ['foo', 'bar', 'bletch']}>)>
+  <Test1.O1:pickleServer/pickleObj>.bounce(<Pickle <Typecode "Test1.TheU"> (2, ['foo', 'bar'])>) => <Pickle <Typecode "Test1.TheU"> (2, ['foo', 'bar'])>
+  <Test1.O1:pickleServer/pickleObj>.bounce(<Pickle <Typecode "Test1.TheU"> (3, <Test1.O1:pickleServer/pickleObj>)>) => <Pickle <Typecode "Test1.TheU"> (3, <Test1.O1:pickleServer/pickleObj>)>
+  <Test1.O1:pickleServer/pickleObj>.bounce(<Pickle <Typecode "Test1.TheU"> (4, None)>) => <Pickle <Typecode "Test1.TheU"> (4, None)>
+  <Test1.O1:pickleServer/pickleObj>.bounce(<Pickle <Typecode "Test1.TheU"> (4, <Test1.O1:pickleServer/pickleObj>)>) => <Pickle <Typecode "Test1.TheU"> (4, <Test1.O1:pickleServer/pickleObj>)>
+  <Test1.O1:pickleServer/pickleObj>.bounce(<Pickle <Typecode "Test1.TheU"> (5, 1)>) => <Pickle <Typecode "Test1.TheU"> (5, 1)>
+  <Test1.O1:pickleServer/pickleObj>.bounce(<Pickle <Typecode "Test1.U"> (5, 1)>) => <Pickle <Typecode "Test1.TheU"> (5, 1)>
+  <Test1.O1:pickleServer/pickleObj>.bounce(<Pickle <Typecode "Test1.U1"> (0, <Test1.TheR:{'i': 2, 'css': ['foo', 'bar'], 'a': ['foo', 'bar', 'bletch']}>)>) => <Pickle <Typecode "Test1.U1"> (0, <Test1.TheR:{'i': 2, 'css': ['foo', 'bar'], 'a': ['foo', 'bar', 'bletch']}>)>
+  <Test1.O1:pickleServer/pickleObj>.bounce(<Pickle <Typecode "Test1.U1"> (1, ['foo', 'bar', 'bletch'])>) => <Pickle <Typecode "Test1.U1"> (1, ['foo', 'bar', 'bletch'])>
+  <Test1.O1:pickleServer/pickleObj>.bounce(<Pickle <Typecode "Test1.TheE"> 3>) => <Pickle <Typecode "Test1.TheE"> 3>
+  <Test1.O1:pickleServer/pickleObj>.bounce(<Pickle <Typecode "Test1.E"> 3>) => <Pickle <Typecode "Test1.TheE"> 3>
+  <Test1.O1:pickleServer/pickleObj>.bounce(<Pickle <Typecode "Test1.U2"> (22, <Test1.O1:pickleServer/pickleObj>)>) => <Pickle <Typecode "Test1.U2"> (22, <Test1.O1:pickleServer/pickleObj>)>
+  <Test1.O1:pickleServer/pickleObj>.bounce(<Pickle <Typecode "Test1.U3"> (0, 'foobar')>) => <Pickle <Typecode "Test1.U3"> (0, 'foobar')>
+  <Test1.O1:pickleServer/pickleObj>.bounce(<Pickle <Typecode "Test1.U4"> (7, 1)>) => <Pickle <Typecode "Test1.U4"> (7, 1)>
+  <Test1.O1:pickleServer/pickleObj>.bounce(<Pickle <Typecode "Test1.U-byte"> (1, <Test1.O1:pickleServer/pickleObj>)>) => <Pickle <Typecode "Test1.U-byte"> (1, <Test1.O1:pickleServer/pickleObj>)>
+  <Test1.O1:pickleServer/pickleObj>.bounce(<Pickle <Typecode "Test1.U-int"> (1, <Test1.O1:pickleServer/pickleObj>)>) => <Pickle <Typecode "Test1.U-int"> (1, <Test1.O1:pickleServer/pickleObj>)>
+  <Test1.O1:pickleServer/pickleObj>.bounce(<Pickle <Typecode "Test1.U-card"> (1, <Test1.O1:pickleServer/pickleObj>)>) => <Pickle <Typecode "Test1.U-card"> (1, <Test1.O1:pickleServer/pickleObj>)>
+  <Test1.O1:pickleServer/pickleObj>.bounce(<Pickle <Typecode "Test1.U-scard"> (1, <Test1.O1:pickleServer/pickleObj>)>) => <Pickle <Typecode "Test1.U-scard"> (1, <Test1.O1:pickleServer/pickleObj>)>
+  %
+
+
+
+Here is how to run the java version of the server
+
+% setenv LD_LIBRARY_PATH $ILUHOME/lib
+
+and
+% java -classpath ./classes:$ILUHOME/lib/ilu.jar:$JAVAHOME/lib/classes.zip Test.JaServ
+
+
+When using the IIOP protocol, if you pass a nil object, you will get
+back a pickle with the typecode of ilu.CORBA-Object, instead of the
+original typecode.  The client will normally see this as an error.  To
+prevent it from signalling this as an error, you can specify the
+switch -allow-different-types-on-nil-objects, as in
+
+  % python pyClient.py -allow-different-types-on-nil-objects

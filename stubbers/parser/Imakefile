@@ -1,0 +1,125 @@
+/** $Id: Imakefile,v 1.61 1999/09/20 22:42:42 spreitze Exp $
+ BeginILUCopyright
+
+ Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+ Unlimited use, reproduction, modification, and distribution of this
+ software and modified versions thereof is permitted.  Permission is
+ granted to make derivative works from this software or a modified
+ version thereof.  Any copy of this software, a modified version
+ thereof, or a derivative work must include both the above copyright
+ notice of Xerox Corporation and this paragraph.  Any distribution of
+ this software, a modified version thereof, or a derivative work must
+ comply with all applicable United States export control laws.  This
+ software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+ WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+ LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+ EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+ NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+ OF THE POSSIBILITY OF SUCH DAMAGES.
+  
+ EndILUCopyright
+*/
+/* Last edited by Mike Spreitzer October 30, 1998 10:08 am PST */
+
+#ifdef ILU_FIXED_POINT_SUPPORT
+BIGNUM_INCLUDES = -I../../common/bignum
+#endif
+
+LOCALINCLUDES = -I../../runtime/kernel $(BIGNUM_INCLUDES)
+DEFINES = -DDEFAULT_INTERFACE_PATH=\".:$(ILUHOME)/interfaces\" -DILU_INTERFACE_HOME=\"$(ILUHOME)/interfaces\" -DIDL2ISL_BINDIR=\"$(DESTDIR)/bin\"
+ILUCINCLUDES =
+
+NormalObjectRule()
+
+scan.o : scan.c
+shs.o : shs.c shs.h
+typeuid.o : typeuid.c shs.h
+typeuid2.o : typeuid2.c shs.h
+util.o : util.c iluptype.h
+iluparse.o : iluconf.h
+
+COMMONOBJS = iluparse.o shs.o pathname.o malloc.o util.o aprintf.o
+
+#ifdef ADD_DIRECT_OMG_IDL_SUPPORT
+DISTMAKE = cd ../idl ; make idlparser.o idlscan.o idl2isl.o
+DISTCLEAN = cd ../idl ; rm -f idlparser.o idlscan.o idl2isl.o
+IDLOBJS = ../idl/idlparser.o ../idl/idlscan.o ../idl/idl2isl.o
+
+$(IDLOBJS) :
+	$(DISTMAKE)
+
+#else
+DISTMAKE = 
+DISTCLEAN = 
+IDLOBJS = 
+#endif
+
+#ifdef ILU_FIXED_POINT_SUPPORT
+BIGNUM_OBJS = ../../common/bignum/bignum.o ../../common/bignum/bigarith.o
+#endif
+
+#if defined(ILU_TYPEUID_HTTPNG)
+TYPEUID_OBJS = typeuidng.o
+#else
+#if defined(ILU_TYPEUID_V2)
+TYPEUID_OBJS = typeuid2.o
+#else
+TYPEUID_OBJS = typeuid.o
+#endif
+#endif
+
+XMLIDL_OBJS =
+#ifdef ILU_XMLIDL_SUPPORT
+XMLIDL_OBJS = ../xmlidl/xmlidl.o ../xmlidl/ilu-fixed.o 
+#endif
+
+LibraryTarget(libilu-parser.a, $(COMMONOBJS) $(TYPEUID_OBJS) $(XMLIDL_OBJS) $(IDLOBJS) $(BIGNUM_OBJS))
+ProgramTarget(islscan, scan.o, $(ILU_STUBBER_LIBRARIES),)
+
+iluconf.h : ../../runtime/kernel/iluconf.h
+	-rm -f iluconf.h
+	cp ../../runtime/kernel/iluconf.h .
+
+iluparse.c iluparse.h:	iluparse.c.dist iluparse.h.dist
+	-rm -f iluparse.c iluparse.h
+	cp iluparse.c.dist iluparse.c
+	cp iluparse.h.dist iluparse.h
+
+dist:: iluparse.c.dist iluparse.h.dist
+
+iluparse.c.dist iluparse.h.dist: ilu.bison
+	$(BISON) -p iluparse -d ilu.bison
+	-rm -f iluparse.c iluparse.h.dist
+	mv ilu.bison.tab.c iluparse.c.dist
+	mv ilu.bison.tab.h iluparse.h.dist
+
+CleanTarget(iluparse.c iluparse.h)
+
+InstallProgram(islscan, $(DESTDIR)/bin)
+InstallRO(libilu-parser.a, $(DESTDIR)/lib)
+InstallRO(iluptype.h, $(DESTDIR)/include)
+InstallRO(ilu.isl, $(DESTDIR)/interfaces)
+InstallRO(iluhttp.isl, $(DESTDIR)/interfaces)
+InstallRO(islscan.1, $(DESTDIR)/man/man1)
+
+dist::
+	rm -f version.h
+	( echo "#define ILU_VERSION $(RELNUM)" ; echo "#define ILU_VERSION_STRING \"$(RELNUM)\"" ) >version.h
+	( echo "#define ILU_MAJOR_VERSION $(RELNUM)" | sed -e 's/\([0-9]*\)\..*/\1/' ) >>version.h 
+	( echo "#define ILU_MINOR_VERSION $(RELNUM)" | sed -e 's/\([0-9]*\)\.\([0-9]*\).*/\2/' ) >>version.h 
+	chmod 444 version.h
+
+/* Generate, in ../../runtime/kernel/ilutpcod.{c,h}, a set of registrations
+   for the ILU built-in types, including their type ID as calculated by
+   the code in ./typeuid[2].c.
+*/
+
+genregs: version.h genregs.c libilu-parser.a ../../runtime/kernel/iluconf.h
+	$(ANSI_C_COMPILER) -o genregs $(CFLAGS) genregs.c $(ILU_STUBBER_LIBRARIES)
+	-rm -f ../../runtime/kernel/ilutpcod.c ../../runtime/kernel/ilutpcod.h
+	./genregs "../../runtime/kernel/ilutpcod"
+
+all:: genregs

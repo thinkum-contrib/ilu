@@ -1,0 +1,31 @@
+*** slib.scm	Thu May 15 16:31:19 1997
+--- slib.scm	Thu May 10 16:31:19 1997
+***************
+*** 111,123 ****
+       (set-current-module slib-module)
+       (let* ((errinfo (catch 'system-error
+  			    (lambda ()
+! 			      (basic-load name)
+  			      #f)
+  			    (lambda args args)))
+  	    (errinfo (and errinfo
+  			  (catch 'system-error
+  				 (lambda ()
+! 				   (basic-load (string-append name ".scm"))
+  				   #f)
+  				 (lambda args args)))))
+         (if errinfo
+--- 111,123 ----
+       (set-current-module slib-module)
+       (let* ((errinfo (catch 'system-error
+  			    (lambda ()
+! 			      (primitive-load-path name)
+  			      #f)
+  			    (lambda args args)))
+  	    (errinfo (and errinfo
+  			  (catch 'system-error
+  				 (lambda ()
+! 				   (primitive-load-path (string-append name ".scm"))
+  				   #f)
+  				 (lambda args args)))))
+         (if errinfo

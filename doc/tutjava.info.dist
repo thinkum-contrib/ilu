@@ -1,0 +1,1900 @@
+This is Info file /usr/tmp/@21339.3, produced by Makeinfo-1.55 from the
+input file /usr/tmp/@21339.2.
+
+
+File: @21339.3,  Node: Top,  Prev: (dir),  Up: (dir)
+
+Using ILU with Java
+*******************
+
+Introduction
+============
+
+   This tutorial will show how to use the ILU system with the
+programming language Java, both as a way of developing software
+libraries, and as a way of building distributed systems.  In an
+extended example, we'll build an ILU module that implements a simple
+four-function calculator, capable of addition, subtraction,
+multiplication, and division.  It will signal an error if the user
+attempts to divide by zero.  The example demonstrates how to specify
+the interface for the module; how to implement the module in Java; how
+to use that implementation as a simple library; how to provide the
+module as a remote service; how to write a client of that remote
+service; and how to use subtyping to extend an object type and provide
+different versions of a module.  We'll also demonstrate how to use OMG
+IDL with ILU, and discuss the notion of network garbage collection.
+
+   Each of the programs and files referenced in this tutorial is
+available as a complete program in a separate appendix to this
+document; parts of programs are quoted in the text of the tutorial.
+
+   This tutorial is more complex then a hello world example.  We will
+bother about "factory" objects which have lots to do with good design
+but would absolutely not be necessary for a calculator to be functional.
+
+Specifying the Interface
+========================
+
+   Our first task is to specify more exactly what it is we're trying to
+provide.  A typical four-function calculator lets a user enter a value,
+then press an operation key, either +, -, /, or *, then enter another
+number, then press = to actually have the operation happen.  There's
+usually a CLEAR button to press to reset the state of the calculator.
+We want to provide something like that.
+
+   We'll recast this a bit more formally as the interface of our
+module; that is, the way the module will appear to clients of its
+functionality.  The interface typically describes a number of function
+calls which can be made into the module, listing their arguments and
+return types, and describing their effects.  ILU uses object-oriented
+interfaces, in which the functions in the interface are grouped into
+sets, each of which applies to an object type.  These functions are
+called methods.
+
+   For example, we can think of the calculator as an object type, with
+several methods:  Add, Subtract, Multiply, Divide, Clear, etc.  ILU
+provides a standard notation to write this down with, called ISL (which
+stands for "Interface Specification Language").  ISL is a declarative
+language which can be processed by computer programs.  It allows you to
+define object types (with methods), other non-object types, exceptions,
+and constants.
+
+   The interface for our calculator would be written in ISL as:
+     INTERFACE Tutorial;
+     
+     EXCEPTION DivideByZero;
+     
+     TYPE Calculator = OBJECT
+       METHODS
+         SetValue (v : REAL),
+         GetValue () : REAL,
+         Add (v : REAL),
+         Subtract (v : REAL),
+         Multiply (v : REAL),
+         Divide (v : REAL) RAISES DivideByZero END
+       END;
+   This defines an interface `Tutorial', an exception `DivideByZero',
+and an object type `Calculator'.  Let's consider these one by one.
+
+   The interface, `Tutorial', is a way of grouping a number of type and
+exception definitions.  This is important to prevent collisions between
+names defined by one group and names defined by another group.  For
+example, suppose two different people had defined two different object
+types, with different methods, but both called `Calculator'!  It would
+be impossible to tell which calculator was meant.  By defining the
+`Calculator' object type within the scope of the `Tutorial' interface,
+this confusion can be avoided.
+
+   The exception, `DivideByZero', is a formal name for a particular
+kind of error, division by zero.  Exceptions in ILU can specify an
+exception-value type, as well, which means that real errors of that
+kind have a value of the exception-value type associated with them.
+This allows the error to contain useful information about why it might
+have come about.  However, `DivideByZero' is a simple exception, and
+has no exception-value type defined.  We should note that the full name
+of this exception is `Tutorial.DivideByZero', but for this tutorial
+we'll simply call our exceptions and types by their short name.
+
+   The object type, `Calculator' (again, really `Tutorial.Calculator'),
+is a set of six methods.  Two of those methods, `SetValue' and
+`GetValue', allow us to enter a number into the calculator object, and
+"read" the number.  Note that `SetValue' takes a single argument, V, of
+type `REAL'.  `REAL' is a built-in ISL type, denoting a 64-bit floating
+point number.  Built-in ISL types are things like `INTEGER' (32-bit
+signed integer), `BYTE' (8-bit unsigned byte), and `CHARACTER' (16-bit
+Unicode character).  Other more complicated types are built up from
+these simple types using ISL type constructors, such as `SEQUENCE OF',
+`RECORD', or `ARRAY OF'.
+
+   Note also that `SetValue' does not return a value, and neither do
+`Add', `Subtract', `Multiply', or `Divide'.  Rather, when you want to
+see what the current value of the calculator is, you must call
+`GetValue', a method which has no arguments, but which returns a `REAL'
+value, which is the value of the calculator object.  This is an
+arbitrary decision on our part; we could have written the interface
+differently, say as
+     TYPE NotOurCalculator = OBJECT
+       METHODS
+         SetValue () : REAL,
+         Add (v : REAL) : REAL,
+         Subtract (v : REAL) : REAL,
+         Multiply (v : REAL) : REAL,
+         Divide (v : REAL) : REAL RAISES DivideByZero END
+       END;
+
+- but we didn't.
+
+   Our list of methods on `Calculator' is bracketed by the two keywords
+`METHODS' and `END', and the elements are separated from each other by
+commas.  This is pretty standard in ISL: elements of a list are
+separated by commas; the keyword `END' is used when an explicit
+list-end marker is needed (but not when it's not necessary, as in the
+list of arguments to a method); the list often begins with some
+keyword, like `METHODS'.  The raises clause (the list of exceptions
+which a method might raise) of the method `Divide' provides another
+example of a list, this time with only one member, introduced by the
+keyword `RAISES'.
+
+   Another standard feature of ISL is separating a name, like `v', from
+a type, like `REAL', with a colon character.  For example, constants
+are defined with syntax like
+     CONSTANT Zero : INTEGER = 0;
+
+Definitions, of interface, types, constants, and exceptions, are
+terminated with a semicolon.
+
+   We should expand our interface a bit by adding more documentation on
+what our methods actually do.  We can do this with the docstring
+feature of ISL, which allows the user to add arbitrary text to object
+type definitions and method definitions.  Using this, we can write
+     INTERFACE Tutorial;
+     
+     EXCEPTION DivideByZero
+       "this error is signalled if the client of the Calculator calls
+     the Divide method with a value of 0";
+     
+     TYPE Calculator = OBJECT
+       COLLECTIBLE
+       DOCUMENTATION "4-function calculator"
+       METHODS
+         SetValue (v : REAL) "Set the value of the calculator to `v'",
+         GetValue () : REAL  "Return the value of the calculator",
+         Add (v : REAL)      "Adds `v' to the calculator's value",
+         Subtract (v : REAL) "Subtracts `v' from the calculator's value",
+         Multiply (v : REAL) "Multiplies the calculator's value by `v'",
+         Divide (v : REAL) RAISES DivideByZero END
+           "Divides the calculator's value by `v'"
+       END;
+
+Note that we can use the `DOCUMENTATION' keyword on object types to add
+documentation about the object type, and can simply add documentation
+strings to the end of exception and method definitions.  These
+docstrings would be passed on to the lisp docstring system, so that
+they are available at runtime from lisp.  Documentation strings cannot
+currently be used for non-object types or from Java.
+
+   ILU provides a program, `islscan', which can be used to check the
+syntax of an ISL specification.  `islscan' parses the specification and
+summarizes it to standard output:
+     % islscan Tutorial.isl
+     Interface "Tutorial", imports "ilu"
+       {defined on line 1
+        of file /tmp/tutorial/Tutorial.isl (Fri Jan 27 09:41:12 1995)}
+     
+     Types:
+       real                       {<built-in>, referenced on 10 11 12 13 14 15}
+     
+     Classes:
+       Calculator                 {defined on line 17}
+         methods:
+           SetValue (v : real);                          {defined 10, id 1}
+             "Set the value of the calculator to `v'"
+           GetValue () : real;                           {defined 11, id 2}
+             "Return the value of the calculator"
+           Add (v : real);                               {defined 12, id 3}
+             "Adds `v' to the calculator's value"
+           Subtract (v : real);                          {defined 13, id 4}
+             "Subtracts `v' from the calculator's value"
+           Multiply (v : real);                          {defined 14, id 5}
+             "Multiplies the calculator's value by `v'"
+           Divide (v : real) {DivideByZero};             {defined 16, id 6}
+             "Divides the calculator's value by `v'"
+         documentation:
+           "4-function calculator"
+         unique id:  ilu:cigqcW09P1FF98gYVOhf5XxGf15
+     
+     Exceptions:
+       DivideByZero               {defined on line 5, refs 15}
+     %
+
+`islscan' simply lists the types defined in the interface, separating
+out object types (which it calls "classes"), the exceptions, and the
+constants.  Note that for the `Calculator' object type, it also lists
+something called its unique id.  This is a 160-bit number (expressed in
+base 64) that ILU assigns automatically to every type, as a way of
+distinguishing them.  While it might interesting to know that it exists
+(:-), the ILU user never has know what it is; `islscan' supplies it for
+the convenience of the ILU implementors, who sometimes do have to know
+it.
+
+Implementing the True Module
+============================
+
+   After we've defined an interface, we then need to supply an
+implementation of our module.  Implementations can be done in any
+language supported by ILU.  Which language you choose often depends on
+what sort of operations have to be performed in implementing the
+specific functions of the module.  Different languages have specific
+advantages and disadvantages in different areas.  Another consideration
+is whether you wish to use the implementation mainly as a library, in
+which case it should probably be done in the same language as the rest
+of your applications, or mainly as a remote service, in which case the
+specific implementation language is less important.
+
+   We'll demonstrate an implementation of the `Calculator' object type
+in Java, which is one of the most capable of all the ILU-supported
+languages.  This is just a matter of defining a Java class,
+corresponding to the `Tutorial.Calculator' type.  Before we do that,
+though, we'll explain how the names and signatures of the Java functions
+are arrived at.
+
+What the Interface Looks Like in Java
+-------------------------------------
+
+   For every programming language supported by ILU, there is a standard
+mapping defined from ISL to that programming language.  This mapping
+defines what ISL type names, exception names, method names, and so on
+look like in that programming language.
+
+   The mapping for Java is simple.  For type names, such as
+`Tutorial.Calculator', the Java name of the ISL type `Interface.Name'
+is `Interface.Name', with any hyphens replaced by underscores.  That
+is, the name of the interface in ISL becomes the name of a class in
+Java.  So the name of our `Calculator' type in Java would be
+`Tutorial.Calculator', which is really the name of a Java class.
+
+   The Java mapping for a method name such as `SetValue' is the method
+name, with any hyphens replaced by underscores.  The return type of
+this Java method is whatever is specified in the ISL specification for
+the method, or `void' if no type is specified.  The arguments for the
+Java method are the same as specified in the ISL; their types are the
+Java types corresponding to the ISL types.  An instance is simply a
+value of that type.  Thus the Java method corresponding to our ISL
+`SetValue' would have the prototype signature
+        void SetValue(float v) throws org.omg.CORBA.SystemException
+
+Similarly, the signatures for the all methods, in Java, are
+encapsulated in this generated interface
+     package Tutorial;
+     
+     public interface Calculator extends org.omg.CORBA.Object{
+       public void SetValue(double v)
+         throws org.omg.CORBA.SystemException;
+       public double GetValue()
+         throws org.omg.CORBA.SystemException;
+       public void Add(double v)
+         throws org.omg.CORBA.SystemException;
+       public void Subtract(double v)
+         throws org.omg.CORBA.SystemException;
+       public void Multiply(double v)
+         throws org.omg.CORBA.SystemException;
+       public void Divide(double v)
+         throws DivideByZero, org.omg.CORBA.SystemException;
+     } //Calculator
+
+Note that we don't always want to generate code in a package name
+derived directly from the interface name.  The stubber allows to
+specify a prefix package.
+
+   Note that even though most methods do not raise an exception, we
+still dedclare the system exceptions.  The mapping of exception names
+is similar to the mapping used for types.  So the exception
+`Tutorial.DivideByZero' would also have the name
+`Tutorial.DivideByZero', in Java.
+
+   One way to see what all the Java names for an interface look like is
+to run the program `java-stubber'.  This program reads an ISL file, and
+generates the necessary Java code to support that interface in Java.
+One of the files generated is `INTERFACE.java', which contains the
+definitions of all the Java types for that interface.
+     % java-stubber Tutorial.isl
+     writing file javastubs/Tutorial/DivideByZero.java
+     writing file javastubs/Tutorial/Factory.java
+     writing file javastubs/Tutorial/FactoryStub.java
+     writing file javastubs/Tutorial/Calculator.java
+     writing file javastubs/Tutorial/CalculatorStub.java
+     %
+
+Building the Implementation
+---------------------------
+
+   Now we provide an implementation of our object; the CalculatorImpl
+class implement the generated Java interface for our `Calculator' class:
+
+     package Tutorial;
+     
+     /*
+      * While this class complies to the Tutorial.isl specification
+      * it is a local implementation.  Its instances need to be
+      * registered explicitely or implicitely with Ilu before they
+      * are publicly accessible.
+      */
+     
+     public class CalculatorImpl
+                 extends xerox.ilu.IluObjectBase
+                 implements Tutorial.Calculator {
+         double theValue = 0.0;
+         public CalculatorImpl(){
+             theValue = 0.0;
+         }
+         public void SetValue(double v) {
+             theValue = v;
+         }
+         public double GetValue() {
+             return theValue;
+         }
+         public void Add(double v) {
+             theValue = theValue + v;
+         }
+         public void Subtract(double v) {
+             theValue = theValue - v;
+         }
+         public void Multiply(double v) {
+             theValue = theValue * v;
+         }
+         public void Divide(double v) throws Tutorial.DivideByZero {
+             if (v==0.0) throw new Tutorial.DivideByZero();
+             theValue = theValue / v;
+         }
+     } //CalculatorImpl
+
+   Each instance of a `Tutorial.CalculatorImpl' implements a
+`Tutorial.Calculator'. Each has an instance variable called `theValue',
+which maintains a running total of the `accumulator' for that instance.
+We can create an instance of a `Tutorial.CalculatorImpl' object by
+simply calling `new Tutorial.CalculatorImpl()'.
+
+   So, a very simple program to use the `Tutorial' module might be the
+following:
+
+     /*
+      * A simple client program that demonstrates the use of the
+      * Calculator module as a library.
+      */
+     
+     /*
+      * Run this like
+      * java Tutorial.simple1 number [number...]
+      */
+     
+     package Tutorial;
+     
+     public class simple1 {
+     
+         public static void main(String argv[]) {
+             CalculatorImpl calc;
+             //create the calculator
+             calc = new CalculatorImpl();
+             if (calc==null) {
+                 System.err.println("Got null TapeCalculator");
+                 System.exit(1);
+             }
+             //clear the calculator before using it
+             calc.SetValue(0.0);
+             //now loop over the arguments, adding each in turn
+             int i = 0;
+             while (i<argv.length) {
+                 Double v = Double.valueOf(argv[i]); //don't bother about exceptions
+                 calc.Add(v.doubleValue());
+                 i = i+1;
+             }
+             //and print the result
+             System.out.println("The sum is " + calc.GetValue());
+         } //main
+     
+     } //simple1
+
+This program would be compiled and then run as follows:
+     % java Tutorial.simple1 34.9 45.23111 12
+     the sum is 92.13111
+     %
+
+This is a completely self-contained use of the `Tutorial'
+implementation; when a method is called, it is the true method that is
+invoked.  The use of ILU in this program adds some overhead in terms of
+included code, but has almost the same performance as a version of this
+program that does not use ILU.
+
+Using ILU generated interfaces
+------------------------------
+
+   Lets do this little change: instead of
+             CalculatorImpl calc;
+             calc = new CalculatorImpl();
+   we will write
+             Tutorial.Calculator calc;
+             calc = new CalculatorImpl();
+   This obvously doesn't cause any real change but conceptionally the
+change is quite large:   calc isn't simply a local class anymore but
+now is the java interface representing the ILU object.
+
+Checking for Exceptions
+-----------------------
+
+   Suppose, instead of the `Add' method, we'd called the `Divide'
+method.  In that case, we might have had to handle a `DivideByZero'
+exception; that is, notice the exception and do something sensible.  We
+do this by establishing a handler for the exception:
+             ...
+             try {
+                 //now loop over the arguments, adding each in turn
+                 int i = 1;
+                 while (i<argv.length) {
+                     Double v = Double.valueOf(argv[i]); //don't bother...
+                     calc.Divide(v.doubleValue());
+                     i = i+1;
+                 }
+             } catch (Tutorial.DivideByZero e) {
+                 System.err.println("raised DivideByZero exception: " + e);
+             }
+
+And here's an example of what we get when it runs:
+     % java Tutorial.simple2 12345 6 7 8 9
+     the sum is 4.08234126984
+     % java simple2.py 12345 6 0 8 9
+     exception signalled:  Tutorial: DivideByZero
+   Actually, every method may return an exception, as there are a number
+of standard system exceptions which may be signalled even by methods
+which have no declared exceptions.  So we should check every method to
+see if it succeeded, even simple ones like `GetValue'.
+
+Providing the True Module as a Network Service
+==============================================
+
+   Now let's see what's involved in providing the calculator
+functionality as a network service.  Basically, there are three things
+to look at:
+   * providing a "factory" to build calculator objects;
+
+   * publishing the name of the factory; and
+
+   * writing a server program.
+
+Using Factories to Build Objects
+--------------------------------
+
+   When one program uses code from another address space, it has to get
+its hands on an instance of an ILU object, to be able to call methods.
+In our library application, we simply made a call into the true module,
+to create an instance of the calculator object.  In the networked
+world, we need to do the same kind of thing, but this time the call
+into the true module has to be a method on an object type.  In short,
+we need to have some object type which exports a method something like
+       CreateCalculator () : Calculator
+
+   There are several ways to provide this.  The standard way of doing
+it is to add an object type to our `Tutorial' interface, which contains
+this method.  This kind of object type is sometimes called a factory,
+because it exists only in order to build instances of other object
+types.  We'll add the following type definition to our `Tutorial.isl':
+     TYPE Factory = OBJECT
+       METHODS
+         CreateCalculator () : Calculator
+       END;
+
+   Then we need to provide an implementation of the `Factory' object
+type, just as we did with the `Calculator' type:
+
+     //we will be lazy and not make an extra file
+     class FactoryImpl
+             extends xerox.ilu.IluObjectBase
+             implements Tutorial.Factory  {
+         xerox.ilu.IluServer server;
+         public FactoryImpl(xerox.ilu.IluServer server) {
+             this.server = server;
+         }
+         public Tutorial.Calculator CreateCalculator()
+             	throws org.omg.CORBA.SystemException
+         {
+             Tutorial.Calculator calc = new Tutorial.CalculatorImpl();
+             xerox.ilu.Ilu.registerTrueObject(
+                 xerox.ilu.Ilu.inventID(),
+                 calc,
+                 this.server,
+                 Tutorial.CalculatorStub.iluClass(),
+                 xerox.ilu.Ilu.unspec
+                 );
+             return calc;
+         }
+     } //FactoryImpl
+
+Now, to provide other programs a way of creating calculator objects,
+we'll just create just one instance of `Tutorial.Factory', and let
+programs call the `CreateCalculator' method on that at will, to obtain
+new calculator objects.
+
+   Little remark:  Using factories is one way of taking care of the
+start up and scaling issues of an application.  It is also a means to
+make this tutorial example somewhat less trivial then a hello world
+program.  However you can write applications and use Ilu without using
+this factory scheme.
+
+Publishing a Well-Known Instance
+--------------------------------
+
+   The question then arises, how does a program that wants to use the
+`Factory' object get its hands on that one well-known instance?  The
+answer is to use the simple binding system built into ILU.  Simple
+binding allows a program acting as a "server" to publish the location
+of a well-known object, and allows programs acting as "clients" of that
+server to look up the location, given the object's name.
+
+   The name of an ILU object instance has two parts, which are the
+instance handle of the object, and the name of its kernel server, called
+the server ID.  (The kernel server is a data structure maintained by
+the ILU kernel which takes care of all communication between different
+address spaces.)  These two combined must form a universally unique ID
+for the object.  Usually you can simply let the ILU system choose names
+for your objects automatically, in which case it takes care to choose
+names which will never conflict with names in use by others.  However,
+for objects which we wish to publish, we need to specify what the name
+of an object will be, so that users of the well-known object can find
+it.
+
+   When working with the Java programming language, this act of
+explicitly specifying an object name is divided into two steps.  First,
+we create a kernel server with a specified server ID.  Secondly, we
+create an instance of an object on this new server, with a specified
+instance handle.  Together, the server ID and the instance handle form
+the name of the instance.
+
+   For instance, we might use a server ID of `Tutorial.DOMAIN', where
+DOMAIN is your Internet domain (typically something like
+`DEPARTMENT.COMPANY.com', or `DEPARTMENT.UNIVERITY.edu').  This serves
+to distinguish your server from other servers on the net.  Then we can
+use a simple instance handle, like `theFactory'.  The name, or object
+ID, of this object would then be `theFactory@Tutorial.DOMAIN', where
+DOMAIN would vary from place to place.  Note that this implies that
+only one instance of this object is going to exist in the whole domain.
+If you have many people using different versions of this object in
+your domain, you should introduce more qualifiers in the server ID so
+that your kernel server can be distinguished from that run by others.
+
+The Server Program
+------------------
+
+   Given this information, we can now write a complete program that will
+serve as a provider of calculator objects to other programs.  It will
+create a single `Factory' instance with a well-known name, publish that
+instance, then hang out servicing methods invoked on its objects.
+Here's what it looks like:
+     package Tutorial;
+     
+     import Tutorial.CalculatorImpl;
+     import Tutorial.DivideByZero;
+     
+     //insert the factory code from above here...
+     
+     public class TutorialServer {
+         static FactoryImpl factory;
+         static xerox.ilu.IluServer trueServer;
+         public static void main(String argv[]) {
+             try {
+                 String serverId;
+                 if (argv.length < 1) {
+                      System.out.println("Must specify a server id");
+                      return;
+                 }
+                 //Create a server with appropriate server id (which is
+                 //taken from the first argument)
+                 serverId = argv[0];
+                 trueServer = xerox.ilu.IluServer.createServer(serverId);
+                 //Now create an instance of a Factory object on the server
+                 //with an instance handle "theFactory"
+                 factory = new FactoryImpl(trueServer);
+                 xerox.ilu.Ilu.registerTrueObject(
+                     "theFactory",
+                     factory,
+                     trueServer,
+                     Tutorial.FactoryStub.iluClass(),
+                     xerox.ilu.Ilu.remember
+                     );
+                 //Make the factory well known by publishing it
+                 xerox.ilu.IluSimpleBinding.publish(factory);
+                 //Now we print the string binding handle (the object's name
+                 //plus its location) of the new Factory instance
+                 System.out.println("Factory instance published");
+                 System.out.println("Its SBH is '" + xerox.ilu.Ilu.sbhOfObject(factory) + "'");
+                 //the program doesn't terminate because the server is still alive...
+             } catch (org.omg.CORBA.SystemException e) {
+                 System.out.println("IluException: " + e);
+             }
+         }
+     } //TutorialServer
+
+   When we run this program, we'll see something like:
+     % java Tutorial.TutorialServer Tutorial.DEPT.COMPANY.COM &
+     Factory instance published.
+     Its SBH is 'theFactory@Tutorial.DEPT.COMPANY.COM@SOMEGIBBERISH'.
+     %
+
+This indicates that the object known as
+`theFactory@Tutorial.DEPT.COMPANY.COM' is being exported in a
+particular way, which is encoded in the SOMEGIBBERISH part of the
+string binding handle.  Your specific numbers will vary, but it should
+look similar.
+
+Using the Network Service
+=========================
+
+   Given that someone has exported a module as a network service, by
+publishing the location of a well-known instance of an object type, a
+potential client of that module can then use the module by binding to
+that well-known instance.  It does this by calling the standard ILU
+routine `ilu.LookupObject()', which takes the name and type of an
+instance, and attempts to find that instance on the net.  The name of
+the object is specified as a pair of strings, the server ID of the
+object's kernel server, and the instance handle of the object on that
+kernel server.
+
+   So, in our first example, we could replace the call to
+`Create_Tutorial_Calculator' with a routine that calls
+`xerox.ilu.IluSimpleBinding.lookup()' to find the factory, then creates
+an instance of a `Calculator'.  The full code of the revised example,
+`simple3.java', is available as *Note simple3.java::, but here's what
+the new code for obtaining an instance of a `Calculator' looks like:
+         /* We define a new routine, "Get_Tutorial_Calculator", which
+          * finds the tutorial factory, then creates a new Calculator
+          * object for us.
+          */
+         public static Tutorial.Calculator
+         GetTutorialCalculator(String serverId, String factoryId) {
+             Tutorial.Factory factory = null;
+             Tutorial.Calculator calc = null;
+             System.out.println("Looking up factory");
+             try {
+                 /* We have to call lookupObject with the object ID of
+                  * the factory object, and the ``type'' of the object we're looking
+                  * for.
+                  */
+                 factory = (Tutorial.Factory)
+                 		xerox.ilu.IluSimpleBinding.lookup(
+                 	serverId,
+                 	factoryId,
+                 	Tutorial.FactoryStub.iluClass()
+                 	);
+             } catch (org.omg.CORBA.SystemException e) {
+                 System.err.println("Failed to get factory: " + e);
+                 System.exit(1);
+             }
+             if (factory==null) {
+                 System.err.println("Got null factory");
+                 System.exit(1);
+             }
+             System.out.println("Got factory " + factory);
+             System.out.println("Looking up Calculator");
+             try {
+                 calc = factory.CreateCalculator();
+             } catch (org.omg.CORBA.SystemException e) {
+                 System.err.println("Failed to get Calculator: " + e);
+                 System.exit(1);
+             }
+             if (calc==null) {
+                 System.err.println("Got null Calculator");
+                 System.exit(1);
+             }
+             System.out.println("Got Calculator " + calc);
+             return calc;
+         } //GetTutorialCalculator
+   We then can use the `simple3' program:
+     % java Tutorial.simple3 Tutorial.DEPT.COMPANY.COM theFactory 1 2 3 4 5 6
+     the sum is 2.10000
+     %
+
+Subtyping and Other ISL Types
+=============================
+
+   ILU ISL contains support for a number of types other than object
+types and `REAL'.  The primitive ISL types include 16, 32, and 64 bit
+signed and unsigned integers, bytes, 8 and 16 bit characters, a boolean
+type, and 32, 64, and 128 bit floating point types.  A number of type
+constructors allow specification of arrays, sequences, records, unions,
+and enumerations, as well as object types.  The ISL `OPTIONAL' type
+constructor provides an implicit union of some type with `NULL', which
+is useful for building recursive data structures such as linked lists
+or binary trees.
+
+   To illustrate some of these types, we'll extend the
+`Tutorial.Calculator' type.  Many real-world desktop calculators
+include a register tape, a printed listing of all the operations that
+have been performed, with a display of what the value of the calculator
+was after each operation.  We'll add a register tape to
+`Tutorial.Calculator'.
+
+   We could do it by adding a new method to `Tutorial.Calculator',
+called `GetTape'.  Unfortunately, this would break our existing code,
+because it would change the `Tutorial.Calculator' object type, and
+existing compiled clients wouldn't be able to recognize the new object
+type.  Instead, we'll extend the object type by subtyping; that is, by
+creating a new object type which uses `Tutorial.Calculator' as a
+supertype, but adds new methods of its own.  This subtype will actually
+have two types; both its own new type, and `Tutorial.Calculator'.
+We'll also define a subtype of the `Tutorial.Factory' type, to allow us
+to create new instances of the new `Calculator' subtype.  Finally,
+we'll define a new module interface for the new types, so that we don't
+have to modify the `Tutorial' interface.
+
+   First, let's define the necessary type to represent the operations
+performed on the calculator:
+
+     INTERFACE Tutorial2 IMPORTS Tutorial END;
+     
+     TYPE OpType = ENUMERATION
+         SetValue, Add, Subtract, Multiply, Divide END;
+     
+     TYPE Operation = RECORD
+         op : OpType,
+         value : REAL,
+         accumulator : REAL
+       END;
+     
+     TYPE RegisterTape = SEQUENCE OF Operation;
+   The enumerated type `OpType' defines an abstract type with five
+possible values.  The type `Operation' defines a record type (in Java,
+a dictionary) with 3 fields:  the OP field, which tells us which of the
+five possible calculator operations was performed, the VALUE field,
+which tells us the value of the operand for the operation, and the
+ACCUMULATOR field, which tells us what the value of the calculator was
+after the operation had been performed.  Finally, the `Operation' type
+is a simple sequence, or list, of `Operation'.  Note that `Tutorial2'
+imports `Tutorial'; that is, it allows the use of the `Tutorial' types,
+exceptions, and constants, in the specifications in `Tutorial2'.
+
+   Now we define the new object types (in the same file):
+     TYPE TapeCalculator = OBJECT COLLECTIBLE
+       SUPERTYPES Tutorial.Calculator END
+       DOCUMENTATION "4 function calculator with register tape"
+       METHODS
+         GetTape () : RegisterTape
+       END;
+     
+     TYPE Factory = OBJECT SUPERTYPES Tutorial.Factory END
+       METHODS
+         CreateTapeCalculator () : TapeCalculator
+       END;
+
+The `SUPERTYPES' attribute of an object type may take multiple object
+type names, so ISL supports multiple inheritance.  The
+`Tutorial2.TapeCalculator' type will now support the six methods of
+`Tutorial.Calculator', as well as its own method, `GetTape'.
+
+   We then need to provide an implementation for
+`Tutorial2.TapeCalculator' (We will be lazy again and put the actual
+code in the file with the server).  We modify each method on the
+`TapeCalculator' object to record its invocation, and add a slot to
+hold the contents of the `tape'.
+
+   We also provide an implementation for `Tutorial2.Factory':
+     // lazy again... this is in other file
+     
+     class Factory2Impl
+                 extends xerox.ilu.IluObjectBase
+                 implements Tutorial2.Factory {
+     
+         public Factory2Impl() {
+         }
+     
+         public Tutorial.Calculator CreateCalculator()
+             		throws org.omg.CORBA.SystemException {
+             System.out.println("Factory2Impl: request for a simple calculator");
+             return new Tutorial2.TapeCalculatorImpl();
+         } //CreateCalculator
+     
+         public Tutorial2.TapeCalculator CreateTapeCalculator()
+     		throws org.omg.CORBA.SystemException {
+             System.out.println("Factory2Impl: request for a tape calculator");
+             return new Tutorial2.TapeCalculatorImpl();
+         } //CreateTapeCalculator
+     
+     } //Factory2Impl
+
+Note that both the `Tutorial2.FactoryImpl.CreateCalculator' and
+`Tutorial2.FactoryImpl.CreateTapeCalculator' methods create and return
+instances of `Tutorial2.TapeCalculator'.  This is valid, because
+instances of `Tutorial2.TapeCalculator' are also instances of
+`Tutorial.Calculator'.
+
+   Now we modify `TutorialServer.java' to create an instance of
+`Tutorial2.Factory', instead of `Tutorial.Factory', and to initialize
+the `Tutorial2' true-side code (See *Note Tutorial2Server.java:: for
+the actual code).
+
+   Finally, see *Note simple4.java::, for an example of a client of the
+`TapeCalculator' type.
+
+   Note that one nice result of this approach to versioning is that old
+clients, which know nothing about the new `TapeCalculator' class, or
+about the whole `Tutorial2' interface in general, will continue to
+function, since every instance of `Tutorial2.TapeCalculator' is also an
+instance of `Tutorial.Calculator', and every instance of
+`Tutorial2.Factory' is also an instance of `Tutorial.Factory'.
+
+Using OMG IDL with ILU
+======================
+
+   ILU also supports the use of the interface definition language OMG
+IDL, defined by the Object Management Group (OMG) for their Common
+Object Request Broker Architecture (CORBA).  OMG IDL uses a C++-like
+syntax, so it may be easier for Java and C++ programmers to use than
+ILU ISL.  Unfortunately, CORBA doesn't include some of the concepts in
+ILU, such as garbage collection for transient objects, or `OPTIONAL'
+types, so not every ILU interface can be expressed in OMG IDL, but many
+of them can.  For example, here is the OMG IDL version of the
+`Tutorial' interface:
+     module Tutorial {
+     
+       exception DivideByZero {};
+     
+       interface Calculator {
+         // Set the value of the calculator to `v'
+         void SetValue (in double v);
+         // Return the value of the calculator
+         double GetValue ();
+         // Adds `v' to the calculator's value
+         void Add (in double v);
+         // Subtracts `v' from the calculator's value
+         void Subtract (in double v);
+         // Multiplies the calculator's value by `v'
+         void Multiply (in double v);
+         // Divides the calculator's value by `v'
+         void Divide (in double v) raises (DivideByZero);
+       };
+     
+       interface Factory {
+         // Create and return an instance of a Calculator object
+         Calculator CreateCalculator();
+       };
+     };
+
+   WARNING: The IDL version and the ISL version have subtle differences
+(explained later).  To avoid type conflicts it is essential that the
+client and the server in the examples either are both build using the
+IDL version or both using the ISL versions.
+
+   This can be used with the `java-stubber':
+
+     % java-stubber Tutorial.idl
+     writing file javastubs/Tutorial/DivideByZero.java
+     writing file javastubs/Tutorial/Factory.java
+     writing file javastubs/Tutorial/FactoryStub.java
+     writing file javastubs/Tutorial/Calculator.java
+     writing file javastubs/Tutorial/CalculatorStub.java
+     %
+
+   This will be a bit slower than running the `java-stubber' on the
+equivalent ISL file, as the program works by converting the OMG IDL
+into ISL, then compiling from the ISL description.  OMG IDL interfaces
+can be checked by running the OMG IDL-to-ILU ISL converter, `idl2isl',
+directly:
+
+     % idl2isl Tutorial.idl
+     INTERFACE Tutorial;
+     
+     EXCEPTION DivideByZero;
+     TYPE Calculator = OBJECT OPTIONAL
+             METHODS
+                     SetValue (v : REAL),
+                     GetValue () : REAL,
+                     Add (v : REAL),
+                     Subtract (v : REAL),
+                     Multiply (v : REAL),
+                     Divide (v : REAL)
+                             RAISES DivideByZero END
+             END;
+     TYPE Factory = OBJECT OPTIONAL
+             METHODS
+                     CreateCalculator () : Calculator
+             END;
+     %
+
+   You will notice that the ISL interface generated by `idl2isl' is a
+bit different, in that the object type modifier `OPTIONAL' is used in
+the description of the `Calculator' and `Factory' types.  This is
+because CORBA has the notion that any object type instance passed as a
+parameter or return value (or field in an array, or element of a
+sequence, etc.) may be `null', instead of being a valid instance
+pointer.  Thus, when working with OMG IDL descriptions of your
+interfaces, it is necessary to check the return type of methods like
+`Tutorial.Factory.CreateCalculator' to see that a valid object
+reference has been returned, before using the object.  ISL allows you
+to have these CORBA-style objects, by using the `OPTIONAL' modifier in
+the declaration of an object type, but it also allows object pointers
+which can't be `null'.  By default ILU object instances may not be
+`null'.
+
+   The OMG IDL version of `Tutorial2' can be found in *Note
+Tutorial2.idl::.
+
+Transient and Permanent Objects
+===============================
+
+   Keen-eyed readers will have seen that the `Calculator' type in
+`Tutorial.isl' is marked with the modifier `COLLECTIBLE', while the
+`Factory' type is not.  ILU differentiates between two kinds of
+objects, which we call transient and permanent.
+
+   Transient objects are typically created for a specific use, and
+typically have a fixed lifetime.  They often have state associated with
+them.  They are frequently used to represent some ongoing computation
+or operation.
+
+   Permanent objects are usually expected to be around forever (or
+until some activity not captured by a programming concept terminates).
+Permanent objects are often gateways to some sort of service, or
+represent some external piece of data, such as a cell in a spreadsheet,
+or a file on a disk somewhere.  They are often stateless; when they do
+have state, it is typically backed by some form of stable storage, as
+they have to be available across crashes of their server program.
+
+   ILU provides an automatic system for distributed garbage collection
+of transient objects; that is, of removing them from everyone's address
+space when everyone is done with them.  This uses the underlying
+garbage collection techniques of the particular programming language
+being used.  With Java, the ILU garbage collector works in conjunction
+with the Java collector; with ANSI C, we use the extremely primitive
+collector provided for C; that is, when the process terminates, the
+objects are collected.  To indicate to ILU that a particular object
+type is to be treated as transient, you mark the object type
+specification, in the ISL, with the keyword `COLLECTIBLE'.
+
+   For permanent objects, like the `Tutorial.Factory' object type, the
+ILU Java support will maintain a reference to the instance, preventing
+the Java collector from collecting it.
+
+
+File: @21339.3,  Node: General ILU Info
+
+General ILU Info
+****************
+
+   The Inter-Language Unification system (ILU) is a multi-language
+object interface system.  The object interfaces provided by ILU hide
+implementation distinctions between different languages, between
+different address spaces, and between operating system types.  ILU can
+be used to build multi-lingual object-oriented libraries ("class
+libraries") with well-specified language-independent interfaces.  It
+can also be used to implement distributed systems.  It can also be used
+to define and document interfaces between the modules of non-distributed
+programs.
+
+   The 2.0 release of ILU contains support for the programming
+languages ANSI C, C++, Python, Java, and Common Lisp.  It has been
+installed on many flavors of UNIX, including SPARC machines running
+SunOS 4.1.3 and Solaris 2, SGI MIPS machines running IRIX 5.2, Intel
+486 machines running Linux 1.1.78, DEC Alpha machines with OSF/1, IBM
+RS/6000 machines running AIX, and HP machines running HP/UX.  It runs
+on Microsoft Windows 3.1, Windows 95, and Windows NT environments.  It
+supports both threaded and non-threaded operation.  Since one of the
+implementation goals of ILU is to maximize compatibility with existing
+open standards, ILU provides support for use of the OMG CORBA IDL
+interface description language, and can be thought of as a CORBA ORB
+system (though with omissions from and extensions to the CORBA spec).
+As another result, ILU includes a self-contained implementation of ONC
+RPC.
+
+   ILU is available free from
+`ftp://ftp.parc.xerox.com/pub/ilu/ilu.html'.
+
+
+File: @21339.3,  Node: Commandline mumbojumbo
+
+Commandline mumbojumbo
+**********************
+
+   Before running any java stuff, a few environment variables need to
+be set up.
+
+   Make sure the "java" interpreter is on your PATH, and that
+"$(ILUHOME)/bin" is on your path.  If you use the literal expression
+"$(ILUHOME)/bin", make sure that the environment variable ILUHOME is
+properly defined.
+
+   2.  Make sure "./classes" and "$(ILUHOME)/lib/ilu.jar" are on your
+CLASSPATH.
+
+   3.  Make sure your LD_LIBRARY_PATH has "$(ILUHOME)/lib" on it.
+
+
+File: @21339.3,  Node: Tutorial.isl
+
+Tutorial.isl
+************
+
+     INTERFACE Tutorial;
+     
+     EXCEPTION DivideByZero
+       "this error is signalled if the client of the Calculator calls
+     the Divide method with a value of 0";
+     
+     TYPE Calculator = OBJECT COLLECTIBLE
+       DOCUMENTATION "4-function calculator"
+       METHODS
+         SetValue (v : REAL) "Set the value of the calculator to `v'",
+         GetValue () : REAL  "Return the value of the calculator",
+         Add (v : REAL)      "Adds `v' to the calculator's value",
+         Subtract (v : REAL) "Subtracts `v' from the calculator's value",
+         Multiply (v : REAL) "Multiplies the calculator's value by `v'",
+         Divide (v : REAL) RAISES DivideByZero END
+           "Divides the calculator's value by `v'"
+       END;
+     
+     TYPE Factory = OBJECT
+       METHODS
+         CreateCalculator () : Calculator
+       END;
+
+
+File: @21339.3,  Node: CalculatorImpl.java
+
+CalculatorImpl.java
+*******************
+
+     package Tutorial;
+     
+     /*
+      * While this class matches the Tutorial.isl specification
+      * it is a local implementation.  Its instances need to be
+      * registered explicitely or implicitely with Ilu before they
+      * are publicly accessible.
+      */
+     
+     public class CalculatorImpl
+             extends xerox.ilu.IluObjectBase
+             implements Tutorial.Calculator {
+         double theValue = 0.0;
+         public CalculatorImpl(){
+             theValue = 0.0;
+         }
+         public void SetValue(double v) {
+             theValue = v;
+         }
+         public double GetValue() {
+             return theValue;
+         }
+         public void Add(double v) {
+             theValue = theValue + v;
+         }
+         public void Subtract(double v) {
+             theValue = theValue - v;
+         }
+         public void Multiply(double v) {
+             theValue = theValue * v;
+         }
+         public void Divide(double v) throws Tutorial.DivideByZero {
+             if (v==0.0) throw new Tutorial.DivideByZero();
+             theValue = theValue / v;
+         }
+     } //CalculatorImpl
+
+
+File: @21339.3,  Node: simple1.java
+
+simple1.java
+************
+
+     /*
+      * A simple client program that demonstrates the use of the
+      * Calculator module as a library.
+      */
+     
+     /*
+      * Run this like
+      * java Tutorial.simple1 number [number...]
+      */
+     
+     package Tutorial;
+     
+     public class simple1 {
+     
+         public static void main(String argv[]) {
+             CalculatorImpl calc;
+             //create the calculator
+             calc = new CalculatorImpl();
+             if (calc==null) {
+                 System.err.println("Got null TapeCalculator");
+                 System.exit(1);
+             }
+             //clear the calculator before using it
+             calc.SetValue(0.0);
+             //now loop over the arguments, adding each in turn
+             int i = 0;
+             while (i<argv.length) {
+                 Double v = Double.valueOf(argv[i]); //don't bother about exceptions
+                 calc.Add(v.doubleValue());
+                 i = i+1;
+             }
+             //and print the result
+             System.out.println("The sum is " + calc.GetValue());
+         } //main
+     
+     } //simple1
+
+
+File: @21339.3,  Node: simple2.java
+
+simple2.java
+************
+
+     /*
+      * A simple client program that demonstrates the use of the
+      * Calculator stub module with a local implementation.
+      */
+     
+     /*
+      * Run this like
+      * java Tutorial.simple2 number [number...]
+      */
+     
+     package Tutorial;
+     
+     public class simple2 {
+     
+         public static void main(String argv[]) {
+             Tutorial.Calculator calc;  //Interface from stubbing...
+             try {
+                 //create the calculator
+                 calc = new Tutorial.CalculatorImpl();
+                 if (calc==null) {
+                      System.err.println("Couldn't create calculator");
+                      System.exit(1);
+                 }
+                 //clear the calculator before using it
+                 if (argv.length<1) {
+                     calc.SetValue(0.0);
+                 } else {
+                     Double v = Double.valueOf(argv[0]);
+                     calc.SetValue(v.doubleValue());
+                 }
+                 //now loop over the arguments, adding each in turn
+                 int i = 1;
+                 while (i<argv.length) {
+                     Double v = Double.valueOf(argv[i]); //don't bother...
+                     calc.Divide(v.doubleValue());
+                     i = i+1;
+                 }
+                 //and print the result
+                 System.out.println("the 'sum' is " + calc.GetValue());
+             } catch (Tutorial.DivideByZero e) {
+                 System.err.println("raised DivideByZero exception: " + e);
+             } catch (org.omg.CORBA.SystemException e) {
+                 System.err.println("raised CORBA SystemException: " + e);
+             }
+         } //main
+     
+     } //simple2
+
+
+File: @21339.3,  Node: TutorialServer.java
+
+TutorialServer.java
+*******************
+
+     /*
+      * Run this like
+      * java Tutorial.TutorialServer servername
+      */
+     package Tutorial;
+     
+     import Tutorial.Calculator;
+     import Tutorial.Factory;
+     import Tutorial.DivideByZero;
+     import Tutorial.CalculatorStub;
+     import Tutorial.FactoryStub;
+     
+     import Tutorial.CalculatorImpl;
+     
+     import xerox.ilu.Ilu;
+     import xerox.ilu.IluSimpleBinding;
+     import org.omg.CORBA.SystemException;
+     import xerox.ilu.IluServer;
+     
+     
+     class FactoryImpl
+             extends xerox.ilu.IluObjectBase
+             implements Tutorial.Factory  {
+         xerox.ilu.IluServer server;
+         public FactoryImpl(xerox.ilu.IluServer server) {
+             this.server = server;
+         }
+         public Tutorial.Calculator CreateCalculator()
+                     throws org.omg.CORBA.SystemException
+         {
+             Tutorial.Calculator calc = new Tutorial.CalculatorImpl();
+             xerox.ilu.Ilu.registerTrueObject(
+                 xerox.ilu.Ilu.inventID(),
+                 calc,
+                 this.server,
+                 Tutorial.CalculatorStub.iluClass(),
+                 xerox.ilu.Ilu.unspec
+                 );
+             return calc;
+         }
+     } //FactoryImpl
+     
+     
+     public class TutorialServer {
+         static FactoryImpl factory;
+         static xerox.ilu.IluServer trueServer;
+         public static void main(String argv[]) {
+             try {
+                 String serverId;
+                 if (argv.length < 1) {
+                      System.out.println("Must specify a server id");
+                      return;
+                 }
+                 //Create a server with appropriate server id (which is
+                 //taken from the first argument)
+                 serverId = argv[0];
+                 trueServer = xerox.ilu.IluServer.createServer(serverId);
+                 //Now create an instance of a Factory object on the server
+                 //with an instance handle "theFactory"
+                 factory = new FactoryImpl(trueServer);
+                 xerox.ilu.Ilu.registerTrueObject(
+                     "theFactory",
+                     factory,
+                     trueServer,
+                     Tutorial.FactoryStub.iluClass(),
+                     xerox.ilu.IluLifetimeArgs.iluLifetimeRemember
+                     );
+                 //Make the factory well known by publishing it
+                 xerox.ilu.IluSimpleBinding.publish(factory);
+                 //Now we print the string binding handle (the object's name
+                 //plus its location) of the new Factory instance
+                 System.out.println("Factory instance published");
+                 System.out.println("Its SBH is '" + xerox.ilu.Ilu.sbhOfObject(factory) + "'");
+                 //the program doesn't terminate because the server is still alive...
+             } catch (org.omg.CORBA.SystemException e) {
+                 System.out.println("raised CORBA SystemException : " + e);
+             }
+         }
+     } //TutorialServer
+
+
+File: @21339.3,  Node: simple3.java
+
+simple3.java
+************
+
+     /*
+      * A simple client program that finds the Calculator-Factory,
+      * creates a calculator, and adds up its arguments.
+      */
+     
+     /*
+      * Run this like
+      * java Tutorial.simple3 servername number [number...]
+      * after making sure a server is running.
+      */
+     
+     package Tutorial;
+     
+     public class simple3 {
+     
+         /* We define a new routine, "Get_Tutorial_Calculator", which
+          * finds the tutorial factory, then creates a new Calculator
+          * object for us.
+          */
+         public static Tutorial.Calculator
+         GetTutorialCalculator(String serverId, String factoryId) {
+             Tutorial.Factory factory = null;
+             Tutorial.Calculator calc = null;
+             System.out.println("Looking up factory");
+             try {
+                 /* We have to call lookup with the object ID of
+                  * the factory object, and the ``type'' of the object
+                  * we're looking for.
+                  */
+                 factory = (Tutorial.Factory)
+                                 xerox.ilu.IluSimpleBinding.lookup(
+                         serverId,
+                         factoryId,
+                         Tutorial.FactoryStub.iluClass()
+                         );
+             } catch (org.omg.CORBA.SystemException e) {
+                 System.err.println("Failed to get factory: " + e);
+                 System.exit(1);
+             }
+             if (factory==null) {
+                 System.err.println("Got null factory");
+                 System.exit(1);
+             }
+             System.out.println("Got factory " + factory);
+             System.out.println("Looking up Calculator");
+             try {
+                 calc = factory.CreateCalculator();
+             } catch (org.omg.CORBA.SystemException e) {
+                 System.err.println("Failed to get Calculator: " + e);
+                 System.exit(1);
+             }
+             if (calc==null) {
+                 System.err.println("Got null Calculator");
+                 System.exit(1);
+             }
+             System.out.println("Got Calculator " + calc);
+             return calc;
+         } //GetTutorialCalculator
+     
+     
+         public static void main(String argv[]) {
+             Tutorial.Calculator calc;
+             if (argv.length < 2) {
+                 System.err.println("usage: java Tutorial.simple3 number*");
+                 System.exit(1);
+             }
+             //Find a calculator
+             String serverId = argv[0];
+             calc = GetTutorialCalculator(serverId, "theFactory");
+             if (calc==null) {
+                 System.out.println("Null calculator");
+                 System.exit(1);
+             }
+             try {
+                 //clear the calculator before using it
+                 calc.SetValue(0.0);
+                 //now loop over the arguments, adding each in turn
+                 int i = 1;
+                 while (i<argv.length) {
+                     Double v = Double.valueOf(argv[i]);//exceptions possible
+                     calc.Add(v.doubleValue());
+                     i = i+1;
+                 }
+                 //and print the result
+                 System.out.println("The sum is " + calc.GetValue());
+     
+     /* This is awfull but Java does not let you catch exceptions which
+      * are not raised.  What an idiotic feature!
+      *      } catch (Tutorial.DivideByZero e) {
+      *          System.err.println("Division by zero: " + e);
+      */
+     
+             } catch (org.omg.CORBA.SystemException e) {
+                 System.err.println("Some CORBA SystemException: " + e);
+             }
+         } //main
+     
+     } //simple3/*
+      * A simple client program that finds the Calculator-Factory,
+      * creates a calculator, and adds up its arguments.
+      */
+     
+     /*
+      * Run this like
+      * java Tutorial.simple3 servername number [number...]
+      * after making sure a server is running.
+      */
+     
+     package Tutorial;
+     
+     import xerox.ilu.Ilu;
+     import org.omg.CORBA.SystemException;
+     import xerox.ilu.IluServer;
+     import Tutorial.DivideByZero;
+     
+     public class simple3 {
+     
+         /* We define a new routine, "Get_Tutorial_Calculator", which
+          * finds the tutorial factory, then creates a new Calculator
+          * object for us.
+          */
+         public static Tutorial.Calculator
+         GetTutorialCalculator(String serverId, String factoryId) {
+             Tutorial.Factory factory = null;
+             Tutorial.Calculator calc = null;
+             System.out.println("Looking up factory");
+             try {
+                 /* We have to call lookupObject with the object ID of
+                  * the factory object, and the ``type'' of the object we're looking
+                  * for.
+                  */
+                 factory = (Tutorial.Factory)
+                 		xerox.ilu.Ilu.lookupObject(
+                 	serverId,
+                 	factoryId,
+                 	Tutorial.FactoryStub.iluClass()
+                 	);
+             } catch (org.omg.CORBA.SystemException e) {
+                 System.err.println("Failed to get factory: " + e);
+                 System.exit(1);
+             }
+             if (factory==null) {
+                 System.err.println("Got null factory");
+                 System.exit(1);
+             }
+             System.out.println("Got factory " + factory);
+             System.out.println("Looking up Calculator");
+             try {
+                 calc = factory.CreateCalculator();
+             } catch (org.omg.CORBA.SystemException e) {
+                 System.err.println("Failed to get Calculator: " + e);
+                 System.exit(1);
+             }
+             if (calc==null) {
+                 System.err.println("Got null Calculator");
+                 System.exit(1);
+             }
+             System.out.println("Got Calculator " + calc);
+             return calc;
+         } //GetTutorialCalculator
+     
+     
+         public static void main(String argv[]) {
+             Tutorial.Calculator calc;
+             if (argv.length < 2) {
+                 System.err.println("usage: java Tutorial.simple3 number*");
+                 System.exit(1);
+             }
+             //Find a calculator
+             String serverId = argv[0];
+             calc = GetTutorialCalculator(serverId, "theFactory");
+             if (calc==null) {
+                 System.out.println("Null calculator");
+                 System.exit(1);
+             }
+             try {
+                 //clear the calculator before using it
+                 calc.SetValue(0.0);
+                 //now loop over the arguments, adding each in turn
+                 int i = 1;
+                 while (i<argv.length) {
+                     Double v = Double.valueOf(argv[i]);//exceptions possible
+                     calc.Add(v.doubleValue());
+                     i = i+1;
+                 }
+                 //and print the result
+                 System.out.println("The sum is " + calc.GetValue());
+             } catch (org.omg.CORBA.SystemException e) {
+                 System.err.println("Some IluException: " + e);
+             }
+         } //main
+     
+     } //simple3
+
+
+File: @21339.3,  Node: Tutorial2.isl
+
+Tutorial2.isl
+*************
+
+     INTERFACE Tutorial2 IMPORTS Tutorial END;
+     
+     TYPE OpType = ENUMERATION
+         SetValue, Add, Subtract, Multiply, Divide END;
+     
+     TYPE Operation = RECORD
+         op : OpType,
+         value : REAL,
+         accumulator : REAL
+       END;
+     
+     TYPE RegisterTape = SEQUENCE OF Operation;
+     
+     TYPE TapeCalculator = OBJECT COLLECTIBLE
+       SUPERTYPES Tutorial.Calculator END
+       DOCUMENTATION "4 function calculator with register tape"
+       METHODS
+         GetTape () : RegisterTape
+       END;
+     
+     TYPE Factory = OBJECT SUPERTYPES Tutorial.Factory END
+       METHODS
+         CreateTapeCalculator () : TapeCalculator
+       END;
+
+
+File: @21339.3,  Node: TapeCalculatorImpl.java
+
+TapeCalculatorImpl.java
+***********************
+
+     package Tutorial2;
+     
+     import java.util.Vector;
+     import Tutorial2.OpType;
+     import Tutorial2.Operation;
+     
+     /*
+      * While this class complies to the Tutorial2.isl specification
+      * it is a local implementation.  Its instances need to be
+      * registered with Ilu before they are publicly accessible.
+      */
+     
+     public class TapeCalculatorImpl
+                 extends xerox.ilu.IluObjectBase
+                 implements Tutorial2.TapeCalculator {
+         double value;
+         java.util.Vector tape;
+         public TapeCalculatorImpl() {
+             value = 0.0;
+             tape = new java.util.Vector();
+         }
+         public void SetValue(double v) {
+             value = v;
+             Operation op = new Operation(OpType.SetValue, v, value);
+             tape.addElement(op);
+         }
+         public double GetValue() {
+             return value;
+         }
+         public void Add(double v) {
+             value = value + v;
+             Operation op = new Operation(OpType.Add, v, value);
+             tape.addElement(op);
+         }
+         public void Subtract(double v) {
+             value = value - v;
+             Operation op = new Operation(OpType.Subtract, v, value);
+             tape.addElement(op);
+         }
+         public void Multiply(double v) {
+             value = value * v;
+             Operation op = new Operation(OpType.Multiply, v, value);
+             tape.addElement(op);
+         }
+         public void Divide(double v) throws Tutorial.DivideByZero {
+             if (v==0.0) throw new Tutorial.DivideByZero();
+             if (v==1.0) tape = null; //raise an unexpected exception for debugging
+             value = value / v;
+             Operation op = new Operation(OpType.Divide, v, value);
+             tape.addElement(op);
+         }
+         public Operation[] GetTape() {
+             Operation retVal[];
+             //We protect structural integrity even if we don't care
+             //about the value in case of a conflict.
+             synchronized (tape) {
+                 retVal = new Operation[tape.size()];
+                 tape.copyInto(retVal);
+             }
+             return retVal;
+         }
+     } //TapeCalculatorImpl
+
+
+File: @21339.3,  Node: Tutorial2Server.java
+
+Tutorial2Server.java
+********************
+
+     /*
+      * Run this like
+      * java Tutorial2.Tutorial2Server servername
+      */
+     
+     package Tutorial2;
+     
+     import xerox.ilu.Ilu;
+     import org.omg.CORBA.SystemException;
+     import xerox.ilu.IluServer;
+     
+     
+     class Factory2Impl
+                 extends xerox.ilu.IluObjectBase
+                 implements Tutorial2.Factory {
+     
+         public Factory2Impl() {
+         }
+     
+         public Tutorial.Calculator CreateCalculator()
+                             throws org.omg.CORBA.SystemException {
+             System.out.println("Factory2Impl: request for a simple calculator");
+             return new Tutorial2.TapeCalculatorImpl();
+         } //CreateCalculator
+     
+         public Tutorial2.TapeCalculator CreateTapeCalculator()
+                     throws org.omg.CORBA.SystemException {
+             System.out.println("Factory2Impl: request for a tape calculator");
+             return new Tutorial2.TapeCalculatorImpl();
+         } //CreateTapeCalculator
+     
+     } //Factory2Impl
+     
+     
+     public class Tutorial2Server {
+         static Factory2Impl factory;
+         static xerox.ilu.IluServer trueServer;
+     
+         public static void main(String argv[]) {
+             String serverId;
+             if (argv.length != 1) {
+                 System.err.println("usage: java Tutorial2.Tutorial2Server servername");
+                 System.exit(1);
+             }
+             System.out.println("Create the server");
+             try {
+                 //Create a server with appropriate server id (which is
+                 //taken from the first argument)
+                 serverId = argv[0];
+                 trueServer = xerox.ilu.IluServer.createServer(serverId);
+             } catch (org.omg.CORBA.SystemException e) {
+                 System.err.println("Failed creating server: " + e);
+                 System.exit(1);
+             }
+             System.out.println("Create the factory");
+             try {
+                 //Now create an instance of a Factory object on the server
+                 //with an instance handle "theFactory"
+                 factory = new Factory2Impl();
+                 Tutorial2.FactoryStub.registerTrueObject(
+                     "theFactory",
+                     factory,
+                     trueServer
+                     );
+                 //Make the factory well known by publishing it
+                 xerox.ilu.IluSimpleBinding.publish(factory);
+             } catch (org.omg.CORBA.SystemException e) {
+                 System.err.println("Failed creating Factory: " + e);
+                 System.exit(1);
+             }
+             //Now we print the string binding handle (the object's name
+             //plus its location) of the new Factory instance
+             System.out.println("Factory instance published");
+             System.out.println("Its SBH is '" + xerox.ilu.Ilu.sbhOfObject(factory) + "'");
+             //the program doesn't terminate because the server is still alive...
+         } //main
+     
+     } //Tutorial2Server
+
+
+File: @21339.3,  Node: simple4.java
+
+simple4.java
+************
+
+
+     /*
+      * A simple client program that finds the TapeCalculator-Factory,
+      * creates a calculator and executes the users input.
+      */
+     
+     /*
+      * Run this like
+      * java Tutorial2.simple4 serverId
+      */
+     
+     package Tutorial2;
+     
+     public class simple4 {
+     
+         /* We define a new routine, "Get_Tutorial_Calculator", which
+          * finds the tutorial factory, then creates a new TapeCalculator
+          * object for us.
+          */
+         public static Tutorial2.TapeCalculator
+         GetTutorialTapeCalculator(String serverId, String factoryId) {
+             Tutorial2.Factory factory = null;
+             Tutorial2.TapeCalculator calc = null;
+             System.out.println("Looking up factory");
+             try {
+                 /* We have to call lookup with the object ID of
+                  * the factory object, and the ``type'' of the object we're looking
+                  * for.
+                  */
+                 factory = (Tutorial2.Factory)
+                                 xerox.ilu.IluSimpleBinding.lookup(
+                         serverId,
+                         factoryId,
+                         Tutorial2.FactoryStub.iluClass()
+                         );
+             } catch (org.omg.CORBA.SystemException e) {
+                 System.err.println("Failed to get factory: " + e);
+                 System.exit(1);
+             }
+             if (factory==null) {
+                 System.err.println("Got null factory");
+                 System.exit(1);
+             }
+             System.out.println("Got factory " + factory);
+             System.out.println("Looking up TapeCalculator");
+             try {
+                 calc = factory.CreateTapeCalculator();
+             } catch (org.omg.CORBA.SystemException e) {
+                 System.err.println("Failed to get TapeCalculator: " + e);
+                 System.exit(1);
+             }
+             if (calc==null) {
+                 System.err.println("Got null TapeCalculator");
+                 System.exit(1);
+             }
+             System.out.println("Got TapeCalculator " + calc);
+             return calc;
+         } //GetTutorialTapeCalculator
+     
+     
+         static String opNames[]
+             = {"SetValue", "Add", "Subtract", "Multiply", "Divide"};
+     
+         static double argToDouble(String inputLine) {
+             return Double.valueOf(inputLine.substring(1)).doubleValue();
+         } //argToDouble
+     
+     
+         public static void main(String argv[]) {
+             Tutorial2.TapeCalculator calc;
+             Tutorial2.Operation[] tape;
+             boolean quitFlag = false;
+             double value = 0.0;
+             String line;
+             java.io.DataInputStream sysIn =
+                 new java.io.DataInputStream(System.in);
+     
+             if (argv.length < 1) {
+                 System.err.println("USAGE: java Tutorial2.simple4 serverid");
+                 System.exit(1);
+             }
+             //Find a calculator
+             String serverId = argv[0];
+             calc = GetTutorialTapeCalculator(serverId, "theFactory");
+             if (calc==null) {
+                 System.err.println("Didn't get a calculator");
+                 System.exit(1);
+             }
+             System.out.println("Got tape calculator");
+             try {
+                 //Clear the calculator before using it
+                 calc.SetValue(0.0);
+                 //Loop over user inputs and perform the requested operation
+                 while (!quitFlag) {
+                     value = calc.GetValue();
+                     System.out.print(value + "\n> "); System.out.flush();
+                     line = sysIn.readLine();
+                     if (line == null) line = "q";
+                     switch (line.charAt(0)) {
+                         case '\n':
+                             break;
+                         case '+':
+                             value = argToDouble(line);
+                             calc.Add(value);
+                             break;
+                         case '-':
+                             value = argToDouble(line);
+                             calc.Subtract(value);
+                             break;
+                         case '*':
+                             value = argToDouble(line);
+                             calc.Multiply(value);
+                             break;
+                         case '/':
+                             try {
+                                 value = argToDouble(line);
+                                 calc.Divide(value);
+                             } catch (Tutorial.DivideByZero e) {
+                                 System.out.println("** division by zero " + e);
+                             }
+                             break;
+                         case 'q':
+                             quitFlag = true;
+                             break;
+                         case 't':
+                             tape = calc.GetTape();
+                             for (int i = 0; i <  tape.length; i++) {
+                                System.out.println("  "
+                                        + opNames[tape[i].op.value()]
+                                        + "(" + tape[i].value + ") => "
+                                        + tape[i].accumulator
+                                        );
+                             }
+                             break;
+                         case 'c':
+                             calc.SetValue(0.0);
+                             break;
+                         default:
+                             System.out.println("Invalid Operation <" + line + ">");
+                             System.out.println("Valid ops are +, -, *, /, "
+                                 + "t (for tape),"
+                                 + "c (for clear),"
+                                 + "q (for quit),"
+                                 );
+                     }
+                 }
+             } catch (java.io.IOException e) {
+                 System.err.println("Example raised IOException: " + e);
+             } catch (org.omg.CORBA.SystemException e) {
+                 System.err.println("Example raised CORBA SystemException: " + e);
+             }
+         } //main
+     
+     } //simple4
+
+
+File: @21339.3,  Node: Tutorial.idl
+
+Tutorial.idl
+************
+
+     module Tutorial {
+     
+       exception DivideByZero {};
+     
+       interface Calculator {
+     
+         // Set the value of the calculator to `v'
+         void SetValue (in double v);
+         // Return the value of the calculator
+         double GetValue ();
+         // Adds `v' to the calculator's value
+         void Add (in double v);
+         // Subtracts `v' from the calculator's value
+         void Subtract (in double v);
+         // Multiplies the calculator's value by `v'
+         void Multiply (in double v);
+         // Divides the calculator's value by `v'
+         void Divide (in double v) raises (DivideByZero);
+       };
+     
+       interface Factory {
+     
+         // Create and return an instance of a Calculator object
+         Calculator CreateCalculator();
+       };
+     };
+
+
+File: @21339.3,  Node: Tutorial2.idl
+
+Tutorial2.idl
+*************
+
+     #include "Tutorial.idl"
+     
+     module Tutorial2 {
+     
+       enum OpType { SetValue, Add, Subtract, Multiply, Divide };
+     
+       struct Operation {
+         OpType op;
+         double value;
+         double accumulator;
+       };
+     
+       typedef sequence<Operation> RegisterTape;
+     
+       // A four function calculator with a register tape
+       interface TapeCalculator : Tutorial::Calculator {
+     
+         RegisterTape GetTape ();
+       };
+     
+       // A factory that produces TapeCalculators
+       interface Factory : Tutorial::Factory {
+     
+         TapeCalculator CreateTapeCalculator ();
+       };
+     };
+
+Index of Concepts
+*****************
+
+* Menu:
+
+* garbage collection:                   Top.
+
+
+
+Tag Table:
+Node: Top103
+Node: General ILU Info42039
+Node: Commandline mumbojumbo43655
+Node: Tutorial.isl44201
+Node: CalculatorImpl.java45116
+Node: simple1.java46341
+Node: simple2.java47522
+Node: TutorialServer.java49319
+Node: simple3.java52466
+Node: Tutorial2.isl59828
+Node: TapeCalculatorImpl.java60574
+Node: Tutorial2Server.java62917
+Node: simple4.java66073
+Node: Tutorial.idl72476
+Node: Tutorial2.idl73356
+
+End Tag Table

@@ -1,0 +1,143 @@
+/** $Id: runImakefile,v 1.13 1999/08/03 01:58:09 janssen Exp $
+ BeginILUCopyright
+
+ Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+ Unlimited use, reproduction, modification, and distribution of this
+ software and modified versions thereof is permitted.  Permission is
+ granted to make derivative works from this software or a modified
+ version thereof.  Any copy of this software, a modified version
+ thereof, or a derivative work must include both the above copyright
+ notice of Xerox Corporation and this paragraph.  Any distribution of
+ this software, a modified version thereof, or a derivative work must
+ comply with all applicable United States export control laws.  This
+ software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+ WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+ LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+ EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+ NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+ OF THE POSSIBILITY OF SUCH DAMAGES.
+
+ EndILUCopyright
+*/
+/* Last edited by Mike Spreitzer October 9, 1998 10:12 am PDT */
+
+NormalObjectRule()
+
+#ifdef ADD_KERNEL_SHARED_LIBRARY 
+#ifdef ADD_C_SHARED_LIBRARY
+ILUCLIBS = $(ILUHOME)/lib/libilu-c.so $(ILUHOME)/lib/libilu.so $(SECURITYLIBS)
+#endif
+#endif
+
+InterfaceTarget(ngrendering.isl)
+InterfaceTarget(ianacharsets.isl)
+InterfaceTarget(ngproperty.isl)
+InterfaceTarget(ngform.isl)
+InterfaceTarget(ngdocument.isl)
+InterfaceTarget(ngcache.isl)
+InterfaceTarget(ngbasic.isl)
+InterfaceTarget(iluhttp.isl)
+InterfaceTarget(ngstream.isl)
+
+InterfaceTarget(test-server.isl)
+
+###############################################################################
+# C from ISL
+
+# ianacharsets
+ILUCTarget(IANA_Charsets_Registry.h IANA_Charsets_Registry-true.c IANA_Charsets_Registry-surrogate.c IANA_Charsets_Registry-common.c, ianacharsets.isl)
+
+# iluhttp
+ILUCTarget(iluhttp.h iluhttp-true.c iluhttp-surrogate.c iluhttp-common.c, iluhttp.isl)
+
+# ngbasic
+ILUCTarget(NgBasic.h NgBasic-true.c NgBasic-surrogate.c NgBasic-common.c, ngbasic.isl)
+
+# ngcache
+ILUCTarget(NgCache.h NgCache-true.c NgCache-surrogate.c NgCache-common.c, ngcache.isl)
+    
+# ngdocument
+ILUCTarget(NgDocument.h NgDocument-true.c NgDocument-surrogate.c NgDocument-common.c, ngdocument.isl)
+
+# ngform
+ILUCTarget(NgFormProcessor.h NgFormProcessor-true.c NgFormProcessor-surrogate.c NgFormProcessor-common.c, ngform.isl)
+    
+# ngproperty
+ILUCTarget(NgProperty.h NgProperty-true.c NgProperty-surrogate.c NgProperty-common.c, ngproperty.isl)
+    
+# ngrendering
+ILUCTarget(NgRendering.h NgRendering-true.c NgRendering-surrogate.c NgRendering-common.c, ngrendering.isl )
+
+# ngstream
+ILUCTarget(NgStream.h NgStream-true.c NgStream-surrogate.c NgStream-common.c, ngstream.isl )
+    
+    
+###############################################################################
+# Python from ISL
+
+ILUPythonTarget(test_server.py test_server__skel.py, test-server.isl)
+all:: test_server.py test_server__skel.py
+    
+###############################################################################
+# object files
+
+# note: probably more dependencies expressed than need be
+    
+# nggetbot     
+
+DepObjectTarget(ngbasic_getbot_impl.o, ngbasic_getbot_impl.c nglib.h IANA_Charsets_Registry.h iluhttp.h NgBasic.h NgCache.h NgDocument.h NgFormProcessor.h NgProperty.h NgRendering.h NgStream.h $(ILUHOME)/include/iluxport.h $(ILUHOME)/include/iluchdrs.h)
+
+DepObjectTarget(nggetbot.o, nggetbot.c ngrendering_getbot_impl.h nggetbot.h nglib.h IANA_Charsets_Registry.h iluhttp.h NgBasic.h NgCache.h NgDocument.h NgFormProcessor.h NgProperty.h NgRendering.h NgStream.h $(ILUHOME)/include/iluxport.h $(ILUHOME)/include/iluchdrs.h)
+
+DepObjectTarget(ngrendering_getbot_impl.o, ngrendering_getbot_impl.c ngrendering_getbot_impl.h nggetbot.h nglib.h IANA_Charsets_Registry.h iluhttp.h NgBasic.h NgCache.h NgDocument.h NgFormProcessor.h NgProperty.h NgRendering.h NgStream.h $(ILUHOME)/include/iluxport.h $(ILUHOME)/include/iluchdrs.h)
+
+DepObjectTarget(ngstream_getbot_impl.o, ngstream_getbot_impl.c nggetbot.h nglib.h IANA_Charsets_Registry.h iluhttp.h NgBasic.h NgCache.h NgDocument.h NgFormProcessor.h NgProperty.h NgRendering.h NgStream.h $(ILUHOME)/include/iluxport.h $(ILUHOME)/include/iluchdrs.h)
+       
+       
+# ngwebserver
+
+DepObjectTarget(iluhttp_webserv_impl.o, iluhttp_webserv_impl.c ngwebserver.h nglib.h IANA_Charsets_Registry.h iluhttp.h NgBasic.h NgCache.h NgDocument.h NgFormProcessor.h NgProperty.h NgRendering.h NgStream.h $(ILUHOME)/include/iluxport.h $(ILUHOME)/include/iluchdrs.h)
+
+DepObjectTarget(ngbasic_webserv_impl.o, ngbasic_webserv_impl.c nglib.h IANA_Charsets_Registry.h iluhttp.h NgBasic.h NgCache.h NgDocument.h NgFormProcessor.h NgProperty.h NgRendering.h NgStream.h $(ILUHOME)/include/iluxport.h $(ILUHOME)/include/iluchdrs.h)
+
+DepObjectTarget(ngdocument_webserv_impl.o, ngdocument_webserv_impl.c ngwebserver.h nglib.h IANA_Charsets_Registry.h iluhttp.h NgBasic.h NgCache.h NgDocument.h NgFormProcessor.h NgProperty.h NgRendering.h NgStream.h $(ILUHOME)/include/iluxport.h $(ILUHOME)/include/iluchdrs.h)
+
+DepObjectTarget(ngformprocessor_webserv_impl.o, ngformprocessor_webserv_impl.c ngwebserver.h nglib.h IANA_Charsets_Registry.h iluhttp.h NgBasic.h NgCache.h NgDocument.h NgFormProcessor.h NgProperty.h NgRendering.h NgStream.h $(ILUHOME)/include/iluxport.h)
+
+DepObjectTarget(ngproperty_webserv_impl.o, ngproperty_webserv_impl.c ngwebserver.h nglib.h IANA_Charsets_Registry.h iluhttp.h NgBasic.h NgCache.h NgDocument.h NgFormProcessor.h NgProperty.h NgRendering.h NgStream.h $(ILUHOME)/include/iluxport.h)
+
+DepObjectTarget(ngrendering_webserv_impl.o, ngrendering_webserv_impl.c nglib.h IANA_Charsets_Registry.h iluhttp.h NgBasic.h NgCache.h NgDocument.h NgFormProcessor.h NgProperty.h NgRendering.h NgStream.h $(ILUHOME)/include/iluxport.h)
+
+DepObjectTarget(ngstream_webserv_impl.o, ngstream_webserv_impl.c ngstream_webserv_impl.h ngwebserver.h nglib.h IANA_Charsets_Registry.h iluhttp.h NgBasic.h NgCache.h NgDocument.h NgFormProcessor.h NgProperty.h NgRendering.h NgStream.h $(ILUHOME)/include/iluxport.h)
+
+DepObjectTarget(ngwebserver.o, ngwebserver.c ngwebserver.h nglib.h IANA_Charsets_Registry.h iluhttp.h NgBasic.h NgCache.h NgDocument.h NgFormProcessor.h NgProperty.h NgRendering.h NgStream.h $(ILUHOME)/include/iluxport.h $(ILUHOME)/include/iluchdrs.h)
+
+
+# shared    
+DepObjectTarget(nglib.o, nglib.c nglib.h IANA_Charsets_Registry.h iluhttp.h NgBasic.h NgCache.h NgDocument.h NgFormProcessor.h NgProperty.h NgRendering.h NgStream.h $(ILUHOME)/include/iluxport.h $(ILUHOME)/include/iluchdrs.h)
+    
+    
+###############################################################################
+# programs    
+
+#ifdef ILU_NEEDS_POSIX4_FOR_NANOSLEEP
+NANOSLEEP_LIB = -lposix4
+#else
+NANOSLEEP_LIB = 
+#endif
+
+ILUCProgramTarget(nggetbot, IANA_Charsets_Registry-common.o IANA_Charsets_Registry-surrogate.o iluhttp-common.o iluhttp-surrogate.o NgBasic-common.o NgBasic-surrogate.o NgBasic-true.o ngbasic_getbot_impl.o NgCache-common.o NgCache-surrogate.o NgDocument-common.o NgDocument-surrogate.o NgFormProcessor-common.o NgFormProcessor-surrogate.o nggetbot.o nglib.o NgProperty-common.o NgProperty-surrogate.o NgRendering-common.o NgRendering-surrogate.o NgRendering-true.o ngrendering_getbot_impl.o NgStream-common.o NgStream-surrogate.o NgStream-true.o ngstream_getbot_impl.o,,$(NANOSLEEP_LIB))
+
+ILUCProgramTarget(ngwebserver, IANA_Charsets_Registry-common.o IANA_Charsets_Registry-surrogate.o IANA_Charsets_Registry-true.o iluhttp-common.o iluhttp-true.o iluhttp_webserv_impl.o NgBasic-common.o NgBasic-surrogate.o NgBasic-true.o ngbasic_webserv_impl.o NgCache-common.o NgCache-surrogate.o NgCache-true.o NgDocument-common.o NgDocument-true.o ngdocument_webserv_impl.o NgFormProcessor-common.o NgFormProcessor-true.o ngformprocessor_webserv_impl.o nglib.o NgProperty-common.o NgProperty-true.o ngproperty_webserv_impl.o NgRendering-common.o NgRendering-surrogate.o NgRendering-true.o ngrendering_webserv_impl.o NgStream-common.o NgStream-surrogate.o NgStream-true.o ngstream_webserv_impl.o ngwebserver.o,,$(NANOSLEEP_LIB))
+
+PythonTestScript(Test.py, ngwebserver nggetbot)
+
+###############################################################################
+#ifdef ILU_TESTING_SCRIPTS
+test::
+	tclsh ./testreg.tcl
+#endif
+

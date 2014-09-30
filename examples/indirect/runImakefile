@@ -1,0 +1,53 @@
+/** $Id: runImakefile,v 1.4 1999/08/03 01:59:16 janssen Exp $
+ BeginILUCopyright
+
+ Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+ Unlimited use, reproduction, modification, and distribution of this
+ software and modified versions thereof is permitted.  Permission is
+ granted to make derivative works from this software or a modified
+ version thereof.  Any copy of this software, a modified version
+ thereof, or a derivative work must include both the above copyright
+ notice of Xerox Corporation and this paragraph.  Any distribution of
+ this software, a modified version thereof, or a derivative work must
+ comply with all applicable United States export control laws.  This
+ software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+ WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+ LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+ EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+ NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+ OF THE POSSIBILITY OF SUCH DAMAGES.
+
+ EndILUCopyright
+*/
+/* Last edited by Mike Spreitzer October 9, 1998 12:08 pm PDT */
+
+NormalObjectRule()
+
+InterfaceTarget(Indirect.isl)
+
+ILUCTarget(Indirect.h Indirect-true.c Indirect-surrogate.c Indirect-common.c, Indirect.isl)
+ObjectTarget(Indirect-common.o)
+ObjectTarget(Indirect-surrogate.o)
+ObjectTarget(Indirect-true.o)
+
+InterfaceTarget(Svc1.isl)
+
+ILUCTarget(Svc1.h Svc1-true.c Svc1-surrogate.c Svc1-common.c, Svc1.isl)
+ObjectTarget(Svc1-common.o)
+ObjectTarget(Svc1-surrogate.o)
+ObjectTarget(Svc1-true.o)
+
+c-indirecter.o: c-indirecter.c Indirect.h
+c-client.o: c-client.c Svc1.h
+c-server.o: c-server.c Indirect.h Svc1.h
+
+ObjectTarget(c-indirecter.o)
+ObjectTarget(c-server.o)
+ObjectTarget(c-client.o)
+
+ILUCProgramTarget(c-indirecter, c-indirecter.o Indirect-true.o Indirect-common.o,,)
+ILUCProgramTarget(c-server, c-server.o Indirect-surrogate.o Indirect-common.o Svc1-true.o Svc1-common.o,,)
+ILUCProgramTarget(c-client, c-client.o Svc1-surrogate.o Svc1-common.o,,)

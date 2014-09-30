@@ -1,0 +1,6 @@
+! ilujava.map
+! describes custom mapping for ilujava
+! syntax is:
+! ilu-interface   ilu-type   custom-java-class   holder-class   handler-class
+!
+ilujava  JavaObject  java.lang.Object  xerox.ilujava.Holder xerox.ilujava.IluOBV

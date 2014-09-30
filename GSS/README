@@ -1,0 +1,300 @@
+----------------------------------------------------------------------
+BeginILUCopyright
+
+Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+Unlimited use, reproduction, modification, and distribution of this
+software and modified versions thereof is permitted.  Permission is
+granted to make derivative works from this software or a modified
+version thereof.  Any copy of this software, a modified version
+thereof, or a derivative work must include both the above copyright
+notice of Xerox Corporation and this paragraph.  Any distribution of
+this software, a modified version thereof, or a derivative work must
+comply with all applicable United States export control laws.  This
+software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+OF THE POSSIBILITY OF SUCH DAMAGES.
+  
+EndILUCopyright
+----------------------------------------------------------------------
+
+This is an implementation of a "GSS shell"; that is, an implementation
+of the C API for the Generic Security System, or GSS, of the IETF's
+Common Authentication Technology Working Group.  This shell is built
+in such a way as to export two extension interfaces, one for
+namespaces, and the other for mechanisms.  Specific namespaces and
+mechanisms can be added to the shell by having them conform to the
+appropriate extension interface, and registering them with the shell.
+The shell acts as a portable API to specific namespaces or mechanisms.
+
+The subdirectory "kernel" contains the code for the GSS shell; the
+subdirectory "doc" contains various associated documents, such as the
+GSS Internet drafts specifying the API for the shell.
+
+The current implementation is for draft 1 of the GSS C API.
+
+Building
+
+1)  cd to the subdirectory "kernel"
+
+2)  Edit "ilugss_conf.h":
+
+    - If you are building on a little-endian architecture (x86, Alpha),
+      change the line reading
+
+	#define WORDS_BIGENDIAN 1
+
+      to
+
+	#undef WORDS_BIGENDIAN
+
+    - If the sizes of "char", "short", "int", and "long" are different
+      in your C compiler, adjust the values appropriately.
+
+3)  Copy the file "makefile.default" to "makefile".  Check "makefile"
+    to see that the various parameters are correct.  Note that the
+    C compiler must be an ANSI C compiler; old K&R C compilers will not
+    work.  Note that this means that the system must also have
+    ANSI-compliant libraries and header files.
+
+4)  Type "make" to build libgss.a.
+
+5)  Type "make test" to build and run some test programs.
+
+6)  Copy "libgss.a", "gssapi.h", "ilugssns_*.h", and "ilugssmech_*.h"
+    to their appropriate destinations.
+
+----------------------------------------------------------------------
+
+Adding Namespaces
+
+The file "kernel/ilugss_namespace.h" describes a `namespace object'
+structure.  To implement a new namespace, you must implement a value
+of type "struct gss_namespace_s".  See "kernel/ilugssns_rfc822.h" and
+"kernel/rfc822_ns.c" for an example of how to do this.  Note that
+gss_name_t values are reference counted.
+
+You should also provide an initialization function, with the name
+"ilugssns_<name>_initialize", where <name> is the name of your namespace.
+This routine should perform any namespace-specific initialization that
+is necessary, then call "ilugss_register_namespace (&ns, "<name>")",
+where "ns" is a value of type "struct gss_namespace_s", and "<name>" is
+the name of your namespace.  Again, see "kernel/rfc822_ns.c" for an
+example.
+
+Note that you must have an ISO OID assigned for your namespace.  The
+procedure for doing this varies from organization to organization;
+you must find out what it is for your organization.  The ILU project
+will be happy to assign OIDs for namespace implementations donated
+to ILU; contact ilu-core@parc.xerox.com for details of how to do that.
+
+----------------------------------------------------------------------
+
+Adding Security Mechanisms
+
+The file "kernel/ilugss_scheme.h" describes a `security mechanism
+object' structure.  To add a new security mechanism to the ILU GSS shell,
+you must implement a new value of this type.  See "kernel/ilugssmech_nil.h"
+and "kernel/nil_scheme.c" for an example of how to do this.
+
+You should also provide a scheme initialization function with the name
+"ilugssmech_<name>_initialize", where <name> is the name of your security
+mechanism.  This function should perform any mechanism-specific
+initialization, then call "ilugss_register_scheme(&scm, "<name>")",
+where scm is a value of type "struct gss_scheme_s", and <name> is the
+name of the scheme.
+
+Note that you must have an ISO OID assigned for your mechanism.  The
+procedure for doing this varies from organization to organization;
+you must find out what it is for your organization.  The ILU project
+will be happy to assign OIDs for mechanism implementations donated
+to ILU; contact ilu-core@parc.xerox.com for details of how to do that.
+
+----------------------------------------------------------------------
+
+Naming conventions for the ILU GSS shell
+
+- Symbols
+
+All symbols declared globally in the ILU GSS shell follow the
+following conventions, intended to prevent symbol clashes with other
+libraries used by an application.  We suggest that security schemes
+added to the shell or used with the shell follow them too.
+
+Symbols are prefixed with one of the following strings, depending on
+their usage:
+
+"gss_":		symbols defined by the GSS spec.  These are for the use
+		of application code or security mechanism code.
+
+"ilugss_":	symbols defined by the GSS shell for the use of other
+		functions in the GSS shell or security mechanism
+		implementations.  Application code should not call these
+		functions or reference these data items.
+
+"_ilugss_":	symbols used internally in the GSS shell.  They are only
+		for the use of the shell implementation and should never
+		be referenced by security mechanism implementations or
+		application code.
+
+"ilu_gssext_":	GSS extension functions.  These are for the use of
+		application code or security mechanism code.
+
+"ilugssmech_<name>_":	Functions exported from a specific
+		security mechanism or namespace implementation for
+		the use of app code.  For example, the SSL mechanism
+		exports symbols like "ilugssmech_ssl_OID", which is the
+		name of the OID for that mechanism, and
+		"ilugssmech_ssl_auth_name", which is the name of a
+		function to be used for authenticating a username.
+
+"_ilugssmech_<name>_":	Global functions used within an
+		implementation of a security mechanism or namespace.
+		Not to be used outside that implementation.
+
+- Files
+
+gssapi.h :	The file to be included by applications.  It in turn
+		#includes gss_conf.h.
+
+ilugss_<name>.h : files to be included by implementations of security
+		mechanisms or namespaces.
+
+ilugssmech_<name>.h : file to be included by users of a particular security
+		mechanism "name".	
+
+ilugssns_<name>.h : file to be included by users of a particular security
+		mechanism "name".
+
+Multiple Inclusion Protection
+
+All include files should contain protection against multiple inclusion
+by putting lines like the following at the beginning of the file:
+
+#ifndef ILUGSSMECH_<NAME>_H
+#define ILUGSSMECH_<NAME>_H 1
+
+and putting a line like the following line at the end of the file:
+
+#endif  /* ndef ILUGSSMECH_<NAME>_H */
+
+So, for example, the header file for the "nil" security mechanism begins:
+
+#ifndef ILUGSSMECH_NIL_H
+#define ILUGSSMECH_NIL_H
+
+and ends
+
+#endif /* ndef ILUGSSMECH_NIL_H */
+
+Of course, include files for namespaces should use ILUGSSNS_<NAME>_H
+instead of ILUGSSMECH_<NAME>_H.
+
+Object IDs
+
+All header files for security mechanisms and namespaces should document
+a symbol that exports the OID for the mechanism or namespace
+
+  extern gss_OID_desc ilugssmech_<name>_OID[];
+
+or
+
+  extern gss_OID_desc ilugssns_<name>_OID[];
+
+
+- Initialization functions
+
+Each security mechanism and namespace should export an initialization
+function called either
+
+  void ilugssmech_<name>_initialize(void);  /* for mechanism */
+
+or
+
+  void ilugssns_<name>_initialize(void);    /* for namespace */
+
+This function is responsible for registering the mechanism or namespace
+with the GSS shell, as well as initializing any local data elements,
+if necessary.  Applications are responsible for calling these functions
+before using the corresponding mechanism or namespace.
+
+----------------------------------------------------------------------
+
+Object IDs
+
+The GSS uses ISO object IDs to identify namespaces and security
+mechanisms.  The following object ids are used in the current
+implementation of the ILU GSS:
+
+joint-iso-ccitt(2).country(16).US(840).organizations(1).OpenVision(113687).security(1).nametypes(2).anonymous-name(1)
+(standard anonymous namespace  (ilugssns_anonymous))
+	2.16.840.1.113687.1.2.1
+
+ISO(1).member-body(2).US(840).Xerox(113550).ILU(9)
+	1.2.840.113550.9
+
+ISO(1).member-body(2).US(840).Xerox(113550).ILU(9).GSS(1)
+	1.2.840.113550.9.1
+
+ISO(1).member-body(2).US(840).Xerox(113550).ILU(9).GSS(1).SSL(1)
+(SSL mechanism (ilugssmech_ssl))
+	1.2.840.113550.9.1.1
+
+ISO(1).member-body(2).US(840).Xerox(113550).ILU(9).GSS(1).X500(2)
+(X.500 namespace (ilugssns_x509))
+	1.2.840.113550.9.1.2
+
+ISO(1).member-body(2).US(840).Xerox(113550).ILU(9).GSS(1).NIL(3)
+(nil-mechanism (ilugssmech_nil))
+	1.2.840.113550.9.1.3
+
+ISO(1).member-body(2).US(840).Xerox(113550).ILU(9).GSS(1).RFC822(4)
+rfc-822 namespace (ilugssns_rfc822)
+	1.2.840.113550.9.1.4
+
+These object IDs are from the Kerberos 5 distribution sources.  No idea
+if they are actually official yet.  I've just tucked them in here for
+convenience.
+
+``The OID of the krb5 mechanism, assigned by IETF, is''
+	1.3.5.1.5.2
+
+ISO(1).member-body(2).US(840).MIT(113554).infosys(1).gssapi(2).krb5(2).krb5_name(1)
+(krb5_name)
+	1.2.840.113554.2.1.2.1
+
+ISO(1).member-body(2).US(840).MIT(113554).infosys(1).gssapi(2).krb5(2).krb5_principal(2)
+(krb5_principal)
+	1.2.840.113554.2.1.2.2
+
+----------------------------------------------------------------------
+
+TODO -- Things which aren't done, but really should be:
+
+- modify gss_impl_cred_id_t data structure and routines to support
+multiple mechanisms per credential, rather than just a single
+mechanism
+
+- modify gss_impl_name_t data structure and routines to support
+multiple names per gss_name_t, rather than just a single
+name; implement gss_canonicalize_name()
+
+- go through gss_impl.c; there are a number of the more baroque
+entry points into the GSS API which are not properly implemented, and
+are flagged as such with comments.  Some of these functions need to 
+be call-throughs into our MOP (the entry points for which are in 
+gss_scheme.h), which means adding new function pointer members to
+gss_scheme_t (defined in gss_scheme.h).  As of 5/3/96, the unfinished
+routines are:
+
+	gss_canonicalize_name
+	gss_add_cred
+	gss_export_sec_context
+	gss_import_sec_context
+	gss_inquire_names_for_mech
+	gss_inquire_mechs_for_name

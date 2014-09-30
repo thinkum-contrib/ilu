@@ -1,0 +1,1612 @@
+<!-- This HTML file has been created by timdif2html 1.11
+     from manual.dif on 20 September 1999 -->
+
+<TITLE>ILU Reference Manual - Using ILU with CORBA 2.0 C++</TITLE>
+<BODY TEXT=#000000 BGCOLOR=#ffffff>
+<P>Go to the <A HREF="manual_4.html">previous</A>, <A HREF="manual_6.html">next</A> section.<P>
+<H1><A NAME="SEC161" HREF="manual_toc.html#SEC161">Using ILU with CORBA 2.0 C++</A></H1>
+<P>
+<BLOCKQUOTE>
+<I>We do understand the pressing desire for C++ support, and the work going
+on here, getting the actual CORBA mind-warped mapping implemented, is
+truly impressive.  Imagine a darkened roomful of programmers, twenty or
+perhaps thirty.  Each sits before a trio of screens.  On the left screen
+is a Visual C++ environment; in the middle, Emacs with g++; on the
+right, the SunPro tools with C++ mode enabled.  A communal coffee urn by
+the door feeds individual IV drips in each programmer's left arm;
+precious aged Jolt cola trickles into the right arm.  At the front of
+the room, a huge projected screen flashes an endless slide show
+emphasizing the differences between the underscore, nested-class, and
+namespace versions of the CORBA mapping (all mutually
+non-inter-portable); a garish neon sign on the left wall points up the
+non-inter-portable differences between compilers with exception support
+and those without; nasty muttered whispers from the programmers convey
+rumors about the differences between environments without RTTI and those
+having it.  On the right side of the room are two small shrines, with
+votive candles burning to light the images of Bjarne Stroustrup and
+Steve Vinoski.  Next to the projector screen in front, a pair of
+Makefile experts sit on stools, valiantly struggling to devise tests and
+configuration switches for the individual compiler defects detected and
+announced in a continuous stream by the mapping implementors.  Squeezed
+into the corner are another pair, visiting philosophers from a German
+university, attempting to devise a coherent metaphysical framework for
+the seemingly impossible memory management dicta in the mapping spec. 
+Smoke from their pipes mingles with that coming from the candles,
+drifting up to the low ceiling and almost obscuring the giant mechanized
+whip at the back of the room, connected directly to an SMTP server. 
+Each incoming query about the expected release date of free ILU C++
+support causes the lashes to crack down again, with horrible results...</I>
+<P>
+<I>Did I mention we're looking for more volunteers to help with the work?</I>
+<P>
+[mail sent to the ILU mailing list, 14 February 1997]
+</BLOCKQUOTE>
+<P>
+<H2><A NAME="SEC162" HREF="manual_toc.html#SEC162">Introduction</A></H2>
+<P>
+This chapter describes the use of ILU with C++ in a manner compliant with
+the CORBA 2.0 C++ language mapping specification. (see <A HREF="http://www.omg.org/corba/corbiiop.htm"><TT>http://www.omg.org/corba/corbiiop.htm</TT></A>)
+The use of ILU's original C++ support is deprecated.
+<P>
+Any function or type which is not part of the CORBA 2.0 specification has
+the prefix 'ilu'.  It should be understood that use of 'ilu' prefixed
+functionality is not portable to other (non-ILU) CORBA implementations.
+<P>
+Some arguments or return values of functions (e.g. char*) have storage
+management requirements.  Basically this revolves around whether the caller
+retains or gets ownership of the parameter and is therefore responsible for
+eventually releasing it, or if ILU takes or retains ownership, where it
+will be released at ILU's discretion.  Any function parameter that becomes
+owned by ILU is marked with the comment /* ILUowned */ Any return value (or
+'out' parameter) that remains under the ownership of ILU is similarly
+marked.  Anything not so marked is not ILU's responsibility.
+<P>
+Note that ILU support for C++ does rely on having
+argument prototypes, all C++ library functions, and the
+capabilities of the C++ pre-processor.
+<P>
+<H2><A NAME="SEC163" HREF="manual_toc.html#SEC163">Mapping ILU ISL to C++</A></H2>
+<P>
+The CORBA 2.0 C++ chapters 15 though 18 describes the mapping of OMG IDL
+to C++.  For those elements of ISL for which there is a direct counterpart
+in IDL, the ISL component is mapped just as the IDL component is.  Those
+ISL concepts with no IDL counterpart (marked with a '<CODE>-</CODE>' in the table below)
+have a mapping separately described in a following section.
+<P>
+<A NAME="IDX462"></A>
+<H3><A NAME="SEC164" HREF="manual_toc.html#SEC164">ISL to IDL Correspondences</A></H3>
+<P>
+<PRE>
+
+     ISL                    IDL
+     -------------------------------------
+     INTEGER                long
+     SHORT INTEGER          short
+     LONG INTEGER           -
+     CARDINAL               unsigned long
+     SHORT CARDINAL         unsigned short
+     LONG CARDINAL          -
+     BYTE                   octet
+     BOOLEAN                boolean
+     REAL                   double
+     SHORT REAL             float
+     LONG REAL              -
+     CHARACTER              -
+     SHORT CHARACTER        char
+     PICKLE                 Any
+     ARRAY                  array
+     SEQUENCE               sequence
+     RECORD                 struct
+     UNION                  union
+     OPTIONAL               -
+     ENUMERATION            enum
+     OBJECT                 object
+     CString                string
+     SEQUENCE OF CHARACTER  -
+     EXCEPTION              -, exception
+     INTERFACE              module
+
+</PRE>
+<P>
+<A NAME="IDX463"></A>
+<H3><A NAME="SEC165" HREF="manual_toc.html#SEC165">ISL Specific Mappings</A></H3>
+<P>
+The following table describes the mappings for ISL types that have no IDL counterparts.
+The C++ column gives the mapping modulo indirection and/or 'const' qualification dictated
+by parameter directionality (i.e., IN vs OUT vs INOUT vs return values).
+<P>
+<PRE>
+
+     ISL                    C++
+     --------------------------------------------------------------
+     LONG INTEGER           iluLongInteger
+     LONG CARDINAL          iluLongCardinal
+     LONG REAL              iluLongReal
+     CHARACTER              iluCharacter
+     OPTIONAL X             X* for operation parameters;
+                            'managed X*' for embedded types.
+     SEQUENCE OF CHARACTER  iluCharacter*
+     EXCEPTION              ISL exceptions map to a subclass of
+                            CORBA::UserException with a _value() 
+                            member function which returns a value of 
+                            the type associated with the exception.
+                            Exceptions defined in IDL and
+                            processed by the ILU idl translator 
+                            have the standard CORBA mapping.
+
+</PRE>
+<P>
+<A NAME="IDX464"></A>
+<H3><A NAME="SEC166" HREF="manual_toc.html#SEC166">Correspondence between C++ Types and Kernel Types</A></H3>
+<P>
+To provide a consistent naming scheme, in many cases, a type defined in 
+the ILU kernel has been typedeffed to appear in C++ 
+as the corresponding type name without the intervening underscore, and 
+with the following letter capitalized, e.g. typedef ilu_cardinal iluCardinal;
+<P>
+<A NAME="IDX465"></A>
+<H3><A NAME="SEC167" HREF="manual_toc.html#SEC167">C++ Classes Produced for an Object</A></H3>
+<P>
+The mapping for an ISL Object 'A' produces 3 C++ classes:
+<P>
+<OL>
+<LI>
+The A C++ class, which has pure virtual member function declarations for
+each of A's methods.  For each ISL Object supertype Si of ISL Object A, the
+C++ class A 'public virtual' inherits from the Si C++ class. If the ISL
+Object A has no supertypes, the A class 'public virtual' inherits from the
+iluObject class. [NOTE that an object described in IDL will implicity
+inherit from CORBA::Object (which in turn inherits from iluObject).  The ILU idl translator
+automatically adds ilu.CORBA-Object as a SUPERTYPE.]  This basically creates a 
+C++ class hierarchy that is isomorphic to the ISL object type hierarchy, 
+with each method being declared pure virtual.  We refer to this hierarchy as the 'abstract object
+hierarchy'.
+<P>
+<LI>
+The A_surrogate C++ class, which has virtual member function
+declarations for each of ISL Object A's non inherited methods. These member
+functions transfer requests to the true object. For each ISL Object
+supertype Si of ISL Object A, the C++ class A_surrogate 'public virtual'
+inherits from the Si_surrogate C++ class, and then 'public virtual'
+inherits from the C++ class A. (If the ISL Object A has no supertypes, the
+A_surrogate class 'public virtual' inherits only from the C++ class A.)
+This basically creates a C++ 'surrogate object hierarchy' that is
+isomorphic to the abstract object type hierarchy, with the addition that
+each X_surrogate class also inherits from its counterpart in the 'abstract
+object hierarchy'.
+<P>
+<LI>
+An A_var C++ class as prescribed by the CORBA C++ mapping.
+<P>
+</OL>
+<P>
+This mapping allows servers to be developed that do not contain surrogate
+stub code (if they don't need it), and also prevents the situation where a
+server method override is forgotten, resulting in surrogate stub code being
+called as it it were 'true' code.
+<P>
+For each ISL Object 'A' for which a true side implementation is to be
+developed, the true side implementer should define a class A_impl that
+inherits virtually from the C++ class A, and implements the actual true
+methods as member functions (in whatever manner is appropriate). The
+implementer is free to use delegation, implementation inheritance, whatever
+- the only restriction is that if a class B_impl inherits implementation
+from a class X, and class X inherits from a class in the abstract object
+hierarchy, (e.g. when X is A_impl), then X's inheritance from the abstract
+object hierarchy must be 'public virtual'.
+<P>
+Each produced C++ class e.g. A, will have a constructor 
+<A NAME="IDX466"></A>
+<U>C++:</U> constructor <B>A</B> <I>( char* <VAR>pc_instance_handle</VAR>, ilu_Server& <VAR>r_an_ilu_server</VAR> = iluServer::GetDefaultServer(), ILUCPP_BOOL <VAR>b_within_object_table</VAR> = ILUCPP_FALSE ) : iluObject ( <VAR>A::m_ILUClassRecord</VAR>, <VAR>pc_instance_handle</VAR>, <VAR>r_an_ilu_server</VAR>, <VAR>b_within_object_table</VAR>).</I><P>
+<P>
+<A NAME="IDX467"></A>
+<H3><A NAME="SEC168" HREF="manual_toc.html#SEC168">Misc. Mapping Details</A></H3>
+<P>
+<A NAME="IDX468"></A>
+<H4><A NAME="SEC169" HREF="manual_toc.html#SEC169">Unions</A></H4>
+<P>
+In IDL, Union arms all have names, in ISL, the names may not be specified.
+If a name isn't specified for an arm, the name the stubber produces is the 
+arm's typename, prefixed with '_', and suffixed with '_arm'.
+<P>
+For example, 
+<PRE>
+TYPE someuniontype = short cardinal UNION	
+        bar = 0, 1 END,   
+        integer = DEFAULT	
+END;
+</PRE>
+<P>
+would produce the C++ names _bar_arm, and _integer_arm to reference the
+bar and integer arms.
+<P>
+<A NAME="IDX469"></A>
+<H4><A NAME="SEC170" HREF="manual_toc.html#SEC170">Optionals</A></H4>
+For procedure parameters, an ISL <CODE>OPTIONAL</CODE> type maps either to the same C++ type as its base
+type, if that base type is represented with an C++ pointer type, or to a pointer to that base type,
+if it is not represented with a C++ pointer type.
+<P>
+Additionally, all <CODE>OPTIONAL</CODE> types <VAR>T</VAR> have an associated
+C++ <VAR>T</VAR>_var.
+<P>
+For non-parameters (i.e., <CODE>RECORD</CODE> members, <CODE>ARRAY</CODE> and <CODE>SEQUENCE</CODE> elements) an
+ISL <CODE>OPTIONAL</CODE> type maps to a 'managed pointer', analagous to the mapping
+for non-parameter ISL <CODE>OBJECT</CODE> (CORBA <CODE>interface</CODE>) and
+ISL <CODE>SEQUENCE OF SHORT CHARACTER</CODE> (CORBA <CODE>string</CODE>). (This
+'managed pointer' behaves similarly to <VAR>T</VAR>_var; however, CORBA does
+not allow compliant applications to use 'managed pointer' types directly, as the actual
+type is implementation-specific)
+<P>
+The following ISL and C++ code fragments illustrate:
+<P>
+<PRE>
+
+     ISL
+
+	TYPE SomeType   = <VAR>...</VAR>
+	TYPE MyOptional = OPTIONAL SomeType;
+
+	TYPE MyRec = RECORD
+	     member: MyOptional
+	END;
+
+	TYPE MyArray = ARRAY OF 10 MyOptional;
+
+
+     C++
+
+	 <VAR>...</VAR>
+
+     MyRec          myRec;
+	 MyArray        myArray;
+	 SomeType       st;
+	 SomeType*      stPtr;
+	 MyOptional     myOptional;  // MyOptional is equivalent to SomeType*
+	 MyOptional_var stVar;
+
+	 <VAR>...</VAR>
+
+	 myRec.member = myArray[0];        // free old myRec.member, deep copy
+	 myArray[1]   = stVar;             // free old myArray[1], deep copy
+	 myRec.member = stPtr;             // free old myRec.member, assume ownership
+	 myRec.member = myOptional;        // free old myRec.member, assume ownership
+
+	 myRec.member = &#38;st;               // ILLEGAL - can't free &#38;st
+	 myRec.member = new SomeType(st);  // OK; free old myRec.member, assume ownership
+
+	 stPtr = myArray[2];               // Simple pointer assignment, no copy
+	 stVar = myRec.member;             // free old stVar, deep copy
+
+</PRE>
+<P>
+The lifetime of <CODE>recA.member</CODE> and each <CODE>myArray[<VAR>n</VAR>]</CODE> are tied to recA
+and myArray, respectively; when an optional-containing variable goes out of scope
+or is destroyed, its optional members/elements are freed. Thus, the assignment
+<CODE>myRec.member = &#38;st</CODE> in the example above is illegal and can lead to calamitous
+results when an attempt is made to free &#38;st.
+<P>
+<A NAME="IDX470"></A>
+<H4><A NAME="SEC171" HREF="manual_toc.html#SEC171">Overloading problems for <VAR>T</VAR>_vars.</A></H4>
+<P>
+Some compilers diagnose overloading errors for client and server code
+using <VAR>T</VAR>_vars as method arguments, even if no such errors are
+present.  The ILU C++ mappings for structured types
+(unions, records, and sequences) provide a means of bypassing this
+problem if it occurs, using the form <VAR>T</VAR>_var-&#62;self(). 
+This usage should be avoided unless absolutely necessary, as continued
+support is not guaranteed. 
+<P>
+Similar problems for <VAR>T</VAR>_vars
+representing arrays can usually be avoided by references to the address of
+the first member of the array.  For example, if <CODE>A</CODE> is an array,
+and references to <CODE>A_var</CODE> give overloading problems, replacing those  
+references with ones to &#38;<CODE>A_var[0]</CODE> usually solves the problems.  
+If it does not, the methods <CODE>A_var.in()</CODE> and <CODE>A_var.out()</CODE>,
+returning, respectively, const <CODE>A_var_slice*</CODE> and <CODE>A_var_slice*</CODE>
+can also be used.
+<P>
+<A NAME="IDX471"></A>
+<H4><A NAME="SEC172" HREF="manual_toc.html#SEC172">Exceptions</A></H4>
+<P>
+An exception defined directly in ISL maps to a subclass of
+CORBA::UserException, that has a _value() member function which returns a value of the type associated with the exception.
+							
+							
+<A NAME="IDX472"></A>
+<H4><A NAME="SEC173" HREF="manual_toc.html#SEC173">ISL Asynchronous Methods</A></H4>
+<P>
+In IDL, methods may be <CODE>ASYCHRONOUS</CODE>.  Asynchronous methods cannot have 
+return values or raise exceptions.  Hence, they result in a C++ 
+member function declared to return void.
+<P>
+<A NAME="IDX473"></A>
+<H4><A NAME="SEC174" HREF="manual_toc.html#SEC174">ISL Functional Methods</A></H4>
+<P>
+In IDL, methods may be <CODE>FUNCTIONAL</CODE>.  In the C++ mapping,
+<CODE>FUNCTIONAL</CODE> is ignored.   The ability to create custom C++ surrogates allows
+the implementation to decide what and how caching may be implemented on any
+method, as well as perform any other sorts of message 'filtering'.
+<P>
+<A NAME="IDX474"></A>
+<H4><A NAME="SEC175" HREF="manual_toc.html#SEC175">ISL Collectible Objects</A></H4>
+<P>
+An ISL object being declared <CODE>COLLECTIBLE</CODE> has no effect on the
+mapping per-se.  It will however cause ILU to adjust an object's reference
+count based on interest or dis-interest from clients.
+<P>
+<A NAME="IDX475"></A>
+<H4><A NAME="SEC176" HREF="manual_toc.html#SEC176">Inheritance from CORBA::Object</A></H4>
+<P>
+If an ISL Object A has no supertypes, the A class 'public virtual' inherits 
+from the iluObject class.  An object described in IDL will implicity
+inherit from CORBA::Object (which in turn inherits from iluObject).  (The 
+ILU idl translator
+automatically adds ilu.CORBA-Object as a SUPERTYPE.)  So, if you define an object in 
+ISL, and do not explicitly declare ilu.CORBA-Object as a SUPERTYPE, you will
+not have the member functions of CORBA::Object available since you do not inherit from it.
+<P>
+<A NAME="IDX476"></A>
+<H4><A NAME="SEC177" HREF="manual_toc.html#SEC177">Portability and Mapping Variations</A></H4>
+<P>
+The CORBA 2.0 C++ mapping allows for variations in the mapping depending on
+the C++ compilers support for Name Spaces, Exception Handling, and Run-Time
+Type information.
+<P>
+The ILU CORBA 2.0 C++ mapping implementation assumes that the C++ compiler
+supports exceptions.  We also assume that the compiler supports RTTI should
+someone want to do narrowing within the exception hierarchy. [Given that
+ILU does not provide a Dynamic Invocation Interface, there's no real need to
+narrow exceptions anyway.]
+<P>
+During the configuration phase of ILU installation (or for Windows, per the
+definitions in <TT>`<VAR>ILUSRC</VAR>/runtime/kernel/iluwin.h'</TT>) a determination is made as to
+whether or not to use namespaces, nested classes or underscores for IDL
+modules, based on the C++ compiler in use.  This can also be
+explicitly set using the
+configuration option --with-cplusplus-mapping= switch to config, or on Windows, by manually editing
+<TT>`<VAR>ILUSRC</VAR>/runtime/kernel/iluwin.h'</TT> before building ILU.]  This
+results in a C++ runtime and  C++ stubber that is constructed with 
+one the selected approaches in mind.  
+<P>
+Based on our knowledge (as of the date of this writing), of the degree of support/bugs 
+for namespaces and nested classes, the following describes the IDL module mapping 
+based on compiler:
+<P>
+C++ Compiler	Module Mapping
+<PRE>
+
+     Compiler                 Mapping
+     ---------------------------------------
+     Microsoft Visual C++     underscores
+     SunPro                   nested classes
+     Gnu                      nested classes
+
+</PRE>
+<P>
+Because of possible variations in compiler support for Booleans, 
+CORBA(Boolean) is defined as ILUCPP_BOOL, where ILUCPP_BOOL is
+defined as either an int (with ILUCPP_TRUE and ILUCPP_FALSE #defined as
+1 and 0), or as a bool (with ILUCPP_TRUE and ILUCPP_FALSE #defined as
+true and false).  
+	
+<P>
+<H2><A NAME="SEC178" HREF="manual_toc.html#SEC178">Concepts</A></H2>
+<P>
+<A NAME="IDX477"></A>
+<H3><A NAME="SEC179" HREF="manual_toc.html#SEC179">Servers and Ports</A></H3>
+<P>
+In ILU there is a concept of an 'server object'.
+In the kernel this is the ilu_Server, which in the C++
+runtime is encapsulated asn an <CODE>iluServer</CODE> object.  This 'server'
+effectively forms a 'scope' in which true objects reside. This is why
+for example, and object lookup requires both the 'server' ID,
+and the object's instance handle - both are needed to uniquely
+denote an object.
+<P>
+Now a server has some number of 'ports'.  A port is basically a
+means of communicating with the objects inside a server, using a
+particular combination of protocol and transport.  For example, 
+when create an <CODE>iluServer</CODE>, the constructor for <CODE>iluServer</CODE> automatically
+adds a port for the communication protocol and transport specified
+as constructor arguments.  We can call <CODE>iluServer::iluAddPort</CODE> to have additional
+ports added.  For example we may want to be able to communicate
+with the objects using <CODE>sunrpc</CODE> over <CODE>tcp/ip</CODE>, as well as <CODE>http</CODE> over
+<CODE>tcp/ip</CODE>.  The iluServer has a notion of a default port.  This is initially
+one as specified during construction, but this can be changed 
+if when calling <CODE>iluServer::iluAddPort</CODE> we specify that this should become
+the default port.  The default port is the one used when we ask for
+contact information for an object - that is, if we get the string
+binding handle for an object, the contact information in that 
+string will reflect the default server port.
+<P>
+<A NAME="IDX478"></A>
+<H3><A NAME="SEC180" HREF="manual_toc.html#SEC180">Object Tables</A></H3>
+<P>
+True objects may either be created ahead of time, or on an 'as needed' basis, i.e. when 
+a call comes in involving them.  The 'as needed' situation is made possible by 'object tables'.  
+An <CODE>iluServer</CODE> may have associated with it (at construction time) an <CODE>iluObjectTable</CODE> object.
+When a call comes involving an object in that <CODE>iluServer</CODE> that the ILU doesn't already
+know about, the <CODE>iluObjectTable</CODE> object's  <CODE>iluObjectOfInstanceHandle</CODE> gets
+called.  It is the job of this function to create and return a new object 
+with that instance handle. How it does this is specific to your application - 
+it may read object state off a disk for example.  In any event, one thing this
+function must do is ensure that when it calls the true objects constructor, that
+it sets the constructor's b_within_object_table argument to true.  (Otherwise,
+internal locking constraints will be violated).  While in the <CODE>iluObjectOfInstanceHandle</CODE>
+function, the associated <CODE>iluServer</CODE>'s lock is held, and if the resulting object is expected to be 
+of a COLLECTIBLE type, the global kernel mutex "gcmu" is also held.  The fact that these locks
+are held somewhat restricts what an application can do inside this mapping procedure. 
+<P>
+<A NAME="IDX479"></A>
+<H3><A NAME="SEC181" HREF="manual_toc.html#SEC181">Threading</A></H3>
+<P>
+The ILU C++ support may be initialized to run in either
+threaded or non-threaded mode.  In non threaded mode, a call to <CODE>iluServer::iluRun</CODE>
+member function results in a call to ILU's 'mainloop'.  The mainloop
+basically sits waiting for an incoming request.  When one comes in, the request is
+invoked.  If the implementation of the invoked method makes a call to some other
+remote object, the mainloop is recursively entered while awaiting a reply.  This
+allows additional requeste to come in and get serviced, preventing deadlock.
+<P>
+When intialized to run in threaded mode,  ILU will run one thread
+for each incoming connection.  Note that there may be multiple connections
+for a particular port (either from different clients, or from the
+same client who needed another connection because all the ones it had
+so far were busy at the time). In the case of a non-concurrent protocol
+(sunrpc, http, courier), the connection thread receives an incoming
+request, processes it itself, and then waits for the next request.
+In the case of a concurrent protocol (csunrpc, iiop), the connnection
+thread receives an incoming request, spawns a worker thread to carry
+out the request, and immediately goes back to waiting for more incoming
+requests.
+<P>
+The ILU C++ provides no special concurrency control for
+methods in your objects (to do so would be presumptive on our part).
+The method implementor must put appropriate locking in place if it is possible
+that multiple threads (or recursive mainloop invocations) might be running 
+'in' an object simultaneously.
+<P>
+<A NAME="IDX480"></A>
+<H3><A NAME="SEC182" HREF="manual_toc.html#SEC182">Custom Surrogates</A></H3>
+<P>
+A surrogate is an object that is used to represent a remote object.  When a
+method is invoked on a surrogate, the methods implementation in the surrogate
+transfers the call to the true object, and returns the result of this call,
+thus providing location transparency.  There are times however when it is
+useful to have the surrogate's method implementation do more than just
+forward the call to the true object.  An application may want a surrogate 
+method implementation that caches the results of calls (potentially reducing 
+network overhead), perform transformations on arguments, output diagnostic 
+information, or whatever.
+<P>
+To facilitate this, the ILU C++ support allows an implementation
+to supply a function that is called when a surrogate for a particular object
+type is needed.  The function <CODE>iluCppRuntime::iluSetSurrogateCreator</CODE> 
+tells the C++ runtime what function to call when a surrogate for an
+object of the specified class is needed.  This allows an
+implementation to subclass off a surrogate class, and write a new
+surrogate creation function that creates an instance of this new
+subclass.  Call <CODE>iluCppRuntime::iluSetSurrogateCreator</CODE> after you've performed
+initialization, but before you do any operations which might create a
+surrogate of the specified class.  It basically overwrites the default
+surrogate creation function set up by the surrogate stubs. It returns
+the old surrogate creator function, or <CODE>NULL</CODE> if was previously no
+surrogate creator for that class.
+<P>
+A surrogate creator function should at the minimum create an instance of a surrogate, call
+the instances member function iluAssociateKernelObject passing the
+<CODE>iluKernelObject</CODE>, and then return a pointer to the new instance.
+<P>
+<A NAME="IDX481"></A>
+<H3><A NAME="SEC183" HREF="manual_toc.html#SEC183">String Binding Handle Manipulation</A></H3>
+<P>
+A String Binding Handle is a textual representation of an object reference.
+It contains the object's server id, instance id, information about how to
+contact the object, as well as other information.  ILU C++ provides
+the functions <CODE>iluCppRuntime::iluFormSBH</CODE>, <CODE>iluCppRuntime::iluFormSBHUsingContactInfo</CODE>, 
+and <CODE>iluCppRuntime::iluParseSBH</CODE> for constructing and parsing string binding handles.
+An object may be obtained from a string binding handle using <CODE>iluObject::iluStringToObject</CODE>
+and the string bindign handle of an object may be obtained by calling the <CODE>iluObjectToString</CODE>
+member function.
+<P>
+<A NAME="IDX482"></A>
+<H3><A NAME="SEC184" HREF="manual_toc.html#SEC184">Simple Binding</A></H3>
+<P>
+When creating a service, there needs to be some way for clients to find out
+about the service.  ILU C++ provides a simple mechanism
+to achieve this.  Objects may be published, looked up, and their publications 
+withdrawn using the appropriate member functions (<CODE>iluPublish</CODE>, <CODE>iluLookup</CODE>, 
+<CODE>iluWithdraw</CODE>).
+<P>
+<A NAME="IDX483"></A>
+<H3><A NAME="SEC185" HREF="manual_toc.html#SEC185">Object Activation</A></H3>
+<P>
+An true object is initially 'Active', which means that its ISL (or IDL
+as the case may be) defined methods may be invoked on it from outside its
+process (or from another language within that same process).  An object may be 
+made unavailable to outside calls, i.e. marked 'inactive'
+by calling its iluDeactivate member function. It may may be reactivated by
+calling its iluActivate member function.
+<P>
+An object is initially available from the outside until it is deactivated
+Objects that are involved in a call (i.e. sent or received as
+arguments, or the object the method is being invoked on) need to be
+protected from deletion for the duration of that involvement (for
+example, you don't want some thread deleting a true object when it's
+currently the target of a method call).  The C++ runtime keeps track
+of what objects are involved in a call, and will attempt to prevent
+them from being deleted until the call is completed.
+<P>
+The application programmer needs to assist in this by calling, in the
+most specific destructor, iluDeactivate (inherited virtually from
+<CODE>iluObject</CODE>).  iluDeactivate blocks any further incoming calls involving
+the object, and wait for any ongoing calls using the object to
+complete.  Next the destructor should perform any object specific
+cleanup.  Finally, the destructor in <CODE>iluObject</CODE> will break the
+association between the kernel object and this object, allowing the
+kernel object to be potentially freed.
+<P>
+ 
+<A NAME="IDX484"></A>
+<H3><A NAME="SEC186" HREF="manual_toc.html#SEC186">Security</A></H3>
+<P>
+A client may set the Passport to be used on outgoing calls by creating
+and setting up an <CODE>iluPassport,</CODE> and then passing the passport in a call
+to iluPassport::iluSetPassport.  This sets the passport to be used in
+the thread that made the call - i.e. <CODE>iluPassport</CODE> are on a per thread
+basis.  Note that before your thread exits, you should either call
+iluSetPassport(<CODE>NULL</CODE>), or delete the <CODE>iluPassport</CODE> in use (assuming it's
+only in use for a single thread).  The <CODE>iluPassport</CODE> (if any) currently
+setup for a thread can be retrieved by calling
+iluPassport::iluGetPassport.
+<P>
+A Server may obtain the <CODE>iluPassport</CODE> of the caller (if any) of a
+method by using the iluPassport::iluGetCallerPassport() function.
+<P>
+A <CODE>iluServer</CODE> may be constructed to use a particular identity by specifying a 
+<CODE>iluPassport</CODE> as a constructor argument.  This identity is used to identify
+the principal offering the service.
+ 
+<P>
+<A NAME="IDX485"></A>
+<H3><A NAME="SEC187" HREF="manual_toc.html#SEC187">Static Initialization</A></H3>
+<P>
+The C++ Runtime normally relies on the static initializers in the
+files that the stubber generates to place initialization functions onto internal lists
+so that they will be invoked when the application calls iluCppRuntime::Initialize.
+However, it is not guaranteed by the ANSI C++ that static initializers
+are called upon the loading of a compilation unit.  We have only had a
+report of one compiler that did not run the static initializers at load time
+(in fact, it was reported that it did not run them ever! - bug!?).  We have
+observed static initialization at load time in Visual C++, SunPro and GNU compilers.
+In the event that you end up using a compiler that does not call the static
+initializers at load time, you can use the stubber defined initialization 
+macros that are generated in the common header file for each interface.
+<P>
+(It should be pointed out that the CORBA 2.0 C++ Runtime 
+does not suffer from the static initializer issues that plagued ILU's
+original C++ support.  No ILU calls are actually made until 
+iluCppRuntime::iluInitialize is called, allowing one to set up different
+mainloops, etc.)
+<P>
+<A NAME="IDX486"></A>
+<H2><A NAME="SEC188" HREF="manual_toc.html#SEC188">Building an Application</A></H2>
+<P>
+<A NAME="IDX487"></A>
+<H3><A NAME="SEC189" HREF="manual_toc.html#SEC189">Running the Stubber</A></H3>
+<P>
+	
+To generate CORBA 2.0 C++ stubs from an ISL file, use the
+program cpp2-stubber.  The stubber has the following usage:
+<A NAME="IDX488"></A>
+<P>
+<PRE>
+
+     Usage: cpp2-stubber Islfile [ISLFILE ...]
+
+</PRE>
+<P>
+The stubber produces code using whatever the mapping (underscores, nexted classes, 
+or namespaces) that was found appropriate during the configuration phase 
+of ILU installation (see "Portability and Mapping Variations").
+<P>
+<A NAME="IDX489"></A>
+<H3><A NAME="SEC190" HREF="manual_toc.html#SEC190">Stubber Generated Files</A></H3>
+<P>
+For an interface <CODE>Foo</CODE> the stubber generates:
+<P>
+<TT>`Foo-cpp.hpp'</TT> which contains the classes for the abstract object hierarchy,
+as well as any other declarations needed by both client and server.
+<P>
+<TT>`Foo-cpp.cpp'</TT>, which contains any definitions needed by both client and
+server
+<P>
+<TT>`Foo-cppsurrogate.hpp'</TT> which contains the classes for the surrogate object
+hierarchy, as well as any other declarations needed just by a client. This
+file #includes Foo-cpp.hpp
+<P>
+<TT>`Foo-cppsurrogate.cpp'</TT>, which contains any definitions needed just by a
+client. This file #includes Foo-cppsurrogate.hpp
+<P>
+<TT>`Foo-cpptrue.hpp'</TT> which contains any declarations needed just by a
+server. This file #includes Foo-cpp.hpp
+<P>
+<TT>`Foo-cpptrue.cpp'</TT>, which contains any definitions needed just by a
+server. This file #includes Foo-cpptrue.hpp. All header files use the usual
+#ifdef method to prevent multiple inclusions.
+<P>
+A client only will #include Foo-cppsurrogate.hpp, and link with <TT>`Foo-cpp.o'</TT>
+and <TT>`Foo-cppsurrogate.o'</TT>
+<P>
+A server only will #include Foo-cpptrue.hpp, and link with <TT>`Foo-cpp.o'</TT> and
+<TT>`Foo-cpptrue.o'</TT>
+<P>
+A client and server will #include Foo-cpptrue.hpp, #include
+Foo-cppsurrogate.hpp, and and link with <TT>`Foo.o'</TT>, <TT>`Foo-cpptrue.o'</TT>, and
+<TT>`Foo-cppsurrogate.o'</TT>
+<P>
+<A NAME="IDX490"></A>
+<H3><A NAME="SEC191" HREF="manual_toc.html#SEC191">Server Basics</A></H3>
+<P>
+The basic steps in creating a simple server application are as follows
+(assuming we have a ISL file called  <TT>`foo.isl'</TT>, describing an interface 'foo'
+with an object type 'bar'):
+<P>
+<OL>
+<LI>
+Run the C++ stubber on <TT>`foo.isl'</TT>, e.g. cpp2-stubber foo.isl
+<P>
+<LI>
+In your implementation file, e.g.  <TT>`servermain.cpp'</TT>,
+include the true side header file, e.g. #include "foo-cpptrue.hpp".
+<P>
+<LI>
+Define an implementation class that inherits public virtual from foo::bar.
+e.g.  
+<PRE>
+	class foo_bar_impl : public virtual foo(bar) { ... };
+</PRE>
+<P>
+<LI>
+In the implementation class, provide a constructor that receives an instance
+handle and an <CODE>iluServer</CODE> as arguments, and calls the <CODE>iluObject</CODE> constructor
+appropriately, e.g.
+<P>
+<PRE>
+	foo_bar_impl::foo_bar_impl(char* pc_instance_handle, iluServer&#38; r_an_ilu_server) : 
+		iluObject(iluGetILUClassRecord(), pc_instance_handle, r_an_ilu_server) {}
+</PRE>
+<P>
+<LI>
+In the implementation class declaration, declare a virtual destructor.
+	e.g. virtual  foo_bar_impl::~foo_bar_impl();
+<P>
+<LI>
+Define the virtual destructor of the implementation class that (at the minimum) makes a 
+call to iluDeactivate as the first thing it does, e.g. 
+<P>
+<PRE>
+	  foo_bar_impl::~foo_bar_impl() {
+		  iluDeactivate();
+		  // other app specific things that may need to be done
+	  }
+</PRE>
+<P>
+<LI>
+In the implementation class declaration, declare the virtual member functions that
+will implement the method(s), e.g. 
+<P>
+<PRE>
+	virtual CORBA(Boolean) zap( CORBA(Long)  inarg, CORBA(Octet)&#38;  inoutarg, CORBA(Double)&#38; outarg ) 
+		throw (CORBA(SystemException), foo(zapexception));
+</PRE>
+	  
+<LI>
+Define the virtual member functions that implement the method(s), e.g. 
+<P>
+<PRE>
+	CORBA(Boolean) foo_bar_impl::zap( CORBA(Long)  inarg,
+		  CORBA(Octet)&#38;  inoutarg,
+		  CORBA(Double)&#38; outarg ) 
+		  throw (CORBA(SystemException), foo(zapexception)) {
+		  // do whatever must be done
+		  }
+</PRE>
+<P>
+<LI>
+In for example 'main()', Call the runtime initialization function, passing an argument specifying
+whether or not to set up for threaded operation, e.g. 
+<P>
+<PRE>
+		// Set up the runtime for threaded operation
+		iluCppRuntime::iluInitialize(ILUCPP_TRUE);
+</PRE>
+<P>
+<LI>
+Create an <CODE>iluServer</CODE>. e.g. 
+<P>
+<PRE>
+	iluServer server ("MyFooBarServerOnMyHost");
+</PRE>
+<P>
+<LI>
+Create a true object in that server, e.g. 
+<P>
+<PRE>
+	p_true_foo_bar = new foo_bar_impl("foo_bar_instance_0", server);		
+</PRE>
+<P>
+<LI>
+Publish the true foo::bar object, e.g. 
+<P>
+<PRE>
+	p_true_foo_bar-&#62;iluPublish() 
+</PRE>
+<P>
+<LI>
+Run the server, e.g. 
+<P>
+<PRE>
+ 	server.iluRun();
+</PRE>
+<P>
+<LI>
+Compile your server application code, <TT>`foo-cpp.cpp'</TT> and <TT>`foo-cpptrue.cpp'</TT>,
+and link the resulting object files with the C++ runtime library (<TT>`libilu-cpp2.a'</TT> 
+on UNIX, and <TT>`ilucpp2.lib'</TT> on Win32) and the
+ILU kernel library (<TT>`lib.a'</TT> 
+on UNIX, and <TT>`ilu32.lib'</TT> on Win32).
+<P>
+</OL>
+<P>
+<A NAME="IDX491"></A>
+<H3><A NAME="SEC192" HREF="manual_toc.html#SEC192">Client Basics</A></H3>
+<P>
+The basic steps in creating a simple client application are as follows
+(assuming we have a ISL file called <TT>`foo.isl'</TT>, describing an interface 'foo'
+with an object type 'bar'):
+<P>
+<OL>
+<LI>
+Run the C++ stubber on foo.isl, e.g.  cpp2-stubber foo.isl
+<P>
+<LI>
+In your implementation file, e.g.  <TT>`clientmain.cpp'</TT>,
+include the surrogate side header file, e.g. #include "foo-cppsurrogate.hpp".
+<P>
+<LI>
+In for example 'main()', call the runtime initialization function, passing an argument specifying
+whether or not to set up for threaded operation, e.g. 
+<P>
+<PRE>
+	// Set up the runtime for threaded operation
+	iluCppRuntime::iluInitialize(ILUCPP_TRUE);
+</PRE>
+<P>
+<LI>
+Lookup an object, e.g. 
+<P>
+<PRE>
+
+	foo(bar_var) mybar_var = foo(bar)::iluLookup ("foo_bar_instance_0", "MyFooBarServerOnMyHost");
+
+</PRE>
+<P>
+<LI>
+Invoke a method, e.g. 
+<P>
+<PRE>
+	try { 
+		bool_return_value = mybar_var-&#62;zap(inarg, inoutarg, outarg);
+	}
+	catch (const foo(zapexception)&#38; the_exception) { 
+		/* do whatever */ 
+	}
+	catch (const CORBA(SystemException)&#38; the_exception) { 
+		/* do whatever */ 
+	}
+	catch (...) { 
+		/* do whatever */ 
+	}
+	
+</PRE>
+<P>
+<LI>
+Compile your client application code, <TT>`foo-cpp.cpp'</TT> and <TT>`foo-cppsurrogate.cpp'</TT>,
+and link the resulting object files with the C++ runtime library (<TT>`libilu-cpp2.a'</TT> 
+on UNIX, and <TT>`ilucpp2.lib'</TT> on Win32) and the
+ILU kernel library (<TT>`lib.a'</TT> 
+on UNIX, and <TT>`ilu32.lib'</TT> on Win32).
+<P>
+</OL>
+<P>
+<A NAME="IDX492"></A>
+<H2><A NAME="SEC193" HREF="manual_toc.html#SEC193">Relevant examples</A></H2>
+<P>
+The ILU examples directory contains two examples that use the CORBA 2.0 C++ mapping.
+See cpp2foo, and test1.  The cpp2foo example illustrates a lot: object tables; collectible; custom surrogates;
+lookups; anys; return, in, inout, and out of most types; use of _vars; and more;
+<P>
+<A NAME="IDX493"></A>
+<H2><A NAME="SEC194" HREF="manual_toc.html#SEC194">Runtime Classes</A></H2>
+<P>
+<H3><A NAME="SEC195" HREF="manual_toc.html#SEC195">Overview</A></H3>
+<P>
+The classes of interest to the application programmer are listed
+below.  Nearly all non-static member functions are virtual to allow 
+creative overrides (at your own risk of course).
+<P>
+<CODE>iluCppRuntime</CODE> - Abstract class that provides various static member
+functions that the application can use to control the runtime's
+behavior.
+<P>
+<CODE>iluServer</CODE> - Provides the C++ view of a kernel server object.
+<P>
+<CODE>iluObject</CODE> - The most base class for all ILU C++ objects.  All objects inherit either 
+directly or indirectly from this class.
+<P>
+<CODE>iluObjectTable</CODE> - An abstract C++ class for developers to derive from
+to provide Object Tables.
+<P>
+<CODE>iluPassport</CODE> - encapsulates ilu_Passport functionality
+<P>
+<CODE>iluGSS</CODE> - encapsulates GSS functionality
+<P>
+<CODE>iluMainLoop</CODE> - An abstract base class for developers to derive from to
+create their own main loop.
+<P>
+<CODE>iluWString_var</CODE> Class - analog to CORBA(String_var) only for ILU Characters
+<P>
+(See <TT>`<VAR>ILUSRC</VAR>/runtime/cpp2/ilu.hpp'</TT> and <TT>`<VAR>ILUSRC</VAR>/runtime/cpp2/corba.hpp'</TT> for more complete descriptions.)
+<P>
+<A NAME="IDX494"></A>
+<H3><A NAME="SEC196" HREF="manual_toc.html#SEC196">iluCppRuntime</A></H3>
+<P>
+An Abstract class that provides various static member functions that
+the application can use to control the runtime's behavior.
+<CODE>iluCppRuntime</CODE> is not meant to ever be subclassed.
+<P>
+<A NAME="IDX495"></A>
+<H4><A NAME="SEC197" HREF="manual_toc.html#SEC197">iluCppRuntime - Initialization Related</A></H4>
+<P>
+<A NAME="IDX496"></A>
+<U>C++:</U> static void <B>iluCppRuntime::iluInitialize</B> <I>( ILUCPP_BOOL <VAR>b_use_native_threads</VAR> = <CODE>ILUCPP_FALSE</CODE> )</I><P>
+<P>
+Initializes the C++ runtime for use.  Also calls all the functions 
+(typically interface initialization functions in generated stubs) that are on the 
+C++ Runtime's initialization function list (see iluCppRuntime::iluAddInitializationFunction).
+<P>
+iluCppRuntime::iluInitialize's use depends on your use of threading:
+<P>
+<OL>
+	
+<LI>
+No threading at all - just call iluCppRuntime::iluInitialize().
+<P>
+<LI>
+Using ILU's native operating system (OS) thread support - call 
+iluCppRuntime::iluInitialize(ILUCPP_TRUE).
+<P>
+<LI>
+Your own thread package - call iluCppRuntime::iluSetForkProcedure, 
+iluCppRuntime::iluSetNonNativeThreadIDFunction
+then call the ILU kernel functions ilu_SetWaitTech, and ilu_SetLockTech
+appropriately, call iluMainLoop::iluSetMainLoop, then call iluCppRuntime::iluInitialize().
+<P>
+</OL>
+<P>
+<A NAME="IDX497"></A>
+<U>C++:</U> static void <B>iluCppRuntime::iluAddInitializationFunction</B> <I>( iluPFunctionInitializer <VAR>pf_initialize</VAR> )</I><P>
+<P>
+Adds an initialization function onto the runtime's list of (typically
+interface initialization) functions to call when
+iluCppRuntime::iluInitialize is called.   iluPFunctionInitializer is
+typedeffed as 
+<P>
+<A NAME="IDX498"></A>
+<U>C++:</U> void (* <B>iluPFunctionInitializer</B> <I>) ( )</I><P>
+<P>
+<A NAME="IDX499"></A>
+<U>C++:</U> static void <B>iluCppRuntime::iluSetNonNativeThreadIDFunction</B> <I>( iluNonNativeThreadIDFunction <VAR>p_thread_id_function</VAR> )</I><P>
+<P>
+When running non-native threaded, this should be called (before
+initialization) set to the function that will return a thread unique
+<CODE>iluCardinal</CODE> id of the current thread.  iluNonNativeThreadIDFunction is
+typedeffed as 
+<P>
+<A NAME="IDX500"></A>
+<U>C++:</U> iluCardinal (* <B>iluNonNativeThreadIDFunction</B> <I>)( )</I><P>
+<P>
+<A NAME="IDX501"></A>
+<U>C++:</U> static iluPFunctionSurrogateCreator <B>iluCppRuntime::iluSetSurrogateCreator</B> <I>( iluClass <VAR>surrogate_class</VAR>, iluPFunctionSurrogateCreator <VAR>pfunction_surrogate_creator</VAR> )</I><P>
+<P>
+Tells the C++ runtime what function to call when a surrogate for an
+object of the specified class is needed.  This allows an
+implementation to subclass off a surrogate class, and write a new
+surrogate creation function that creates an instance of this new
+subclass.  This more specialized surrogate might do message filtering,
+caching, monitoring, etc. Call this function after you've performed
+initialization, but before you do any operations which might create a
+surrogate of the specified class.  It basically overwrites the default
+surrogate creation function set up by the surrogate stubs. It returns
+the old surrogate creator function, or <CODE>NULL</CODE> if was previously no
+surrogate creator for that class (note: <CODE>NULL</CODE> return should not really
+happen unless a mistake or something clever is being done - this means
+you've added a new node to the surrogate creator function list).
+iluPFunctionSurrogateCreator is typedeffed as 
+<P>
+<A NAME="IDX502"></A>
+<U>C++:</U> iluObject* (* <B>iluPFunctionSurrogateCreator</B> <I>) ( iluKernelObject).</I><P>
+<P>
+A surrogate creator function should at the minimum create an instance of a surrogate, call
+the instances member function iluAssociateKernelObject passing the
+<CODE>iluKernelObject,</CODE> and then return a pointer to the new instance.
+<P>
+<A NAME="IDX503"></A>
+<U>C++:</U> static void <B>iluCppRuntime::iluSetForkProcedure</B> <I>( iluForkProc <VAR>pfunction_fork_procedure</VAR> )</I><P>
+<P>
+If your using your own threads package call this before calling the
+ILU kernel functions ilu_SetWaitTech, etc. and pass a pointer to
+your function that forks a thread.  iluForkProc is typedeffed as
+<P>
+<A NAME="IDX504"></A>
+<U>C++:</U> iluBoolean (* <B>iluForkProc</B> <I>) ( void (*pfunction_procedure) (void* <VAR>pv_argument</VAR>), void* <VAR>pv_argument</VAR>, ILU_ERRS((no_memory, no_resources, internal)) * <VAR>p_error</VAR> )</I><P>
+<P>
+<A NAME="IDX505"></A>
+<H4><A NAME="SEC198" HREF="manual_toc.html#SEC198">iluCppRuntime - Character Utilities</A></H4>
+<P>
+<A NAME="IDX506"></A>
+<U>C++:</U> static iluCardinal <B>iluCppRuntime::iluCharacterStringLength</B> <I>( const iluCharacter* <VAR>p_chars</VAR> )</I><P>
+<P>
+Returns the length of the <CODE>iluCharacter</CODE> string
+<P>
+<A NAME="IDX507"></A>
+<U>C++:</U> static iluCharacter* <B>iluCppRuntime::iluCharacterStringCopy</B> <I>( iluCharacter* <VAR>p_chars_destination</VAR>, const iluCharacter* <VAR>p_chars_source</VAR> )</I><P>
+<P>
+Copies the source <CODE>iluCharacter</CODE> string to the destination, returns the
+destination.
+<P>
+<A NAME="IDX508"></A>
+<U>C++:</U> static iluCharacter* <B>iluCppRuntime::iluCharacterStringDuplicate</B> <I>( const iluCharacter* <VAR>p_chars_source</VAR> )</I><P>
+<P>
+Returns a duplicate of the source <CODE>iluCharacter</CODE> string
+	
+<P>
+<A NAME="IDX509"></A>
+<U>C++:</U> static ILUCPP_BOOL <B>iluCppRuntime::iluCharacterStringEqual</B> <I>( const iluCharacter* <VAR>p_chars_one</VAR>, const iluCharacter* <VAR>p_chars_two</VAR> )</I><P>
+<P>
+Returns true if strings are the same, else false.
+<P>
+<A NAME="IDX510"></A>
+<U>C++:</U> static iluCharacter* <B>iluCppRuntime::iluCharStringFromShortCharString</B> <I>( const iluShortCharacter* <VAR>pc_shortchars</VAR> )</I><P>
+<P>
+Returns a new <CODE>iluCharacter</CODE> string filled in from the <CODE>iluShortCharacter</CODE> 
+string.
+<P>
+<A NAME="IDX511"></A>
+<U>C++:</U> static ILUCPP_BOOL <B>iluCppRuntime::iluCharStringShortCharStringEqual</B> <I>( const iluCharacter* <VAR>pc_chars</VAR>, const iluShortCharacter* <VAR>pc_shortchars</VAR> )</I><P>
+<P>
+Returns true if the <CODE>iluCharacter</CODE> string matches the <CODE>iluShortCharacter</CODE> 
+string.
+<P>
+<A NAME="IDX512"></A>
+<H4><A NAME="SEC199" HREF="manual_toc.html#SEC199">iluCppRuntime - String Binding Handle Utilities</A></H4>
+<P>
+<A NAME="IDX513"></A>
+<U>C++:</U> static char* <B>iluCppRuntime::iluFormSBH</B> <I>( const char* <VAR>pc_serverid</VAR>, const char* <VAR>pc_instance_handle</VAR>, iluClass <VAR>the_ilu_class</VAR>, iluProtocolInfo <VAR>pc_protocol_type</VAR> = ((iluProtocolInfo) NULL), iluTransportInfo <VAR>transport_info</VAR> = ((iluTransportInfo) NULL) )</I><P>
+<P>
+<A NAME="IDX514"></A>
+<U>C++:</U> static char* <B>iluCppRuntime::iluFormSBHUsingContactInfo</B> <I>( const char* <VAR>pc_serverid</VAR>, const char* <VAR>pc_instance_handle</VAR>, iluClass <VAR>the_ilu_class</VAR>, const char* <VAR>p_str_encodedContactInfo</VAR> = NULL )</I><P>
+<P>
+Use these to form a string binding handle from relevant parts, if protocol and/or transport info 
+are NULL, current defaults are used. For iluFormSBHUsingContactInfo, p_str_encodedContactInfo is 
+as would be obtained from iluParseSBH.
+<P>
+<A NAME="IDX515"></A>
+<U>C++:</U> static ILUCPP_BOOL <B>iluCppRuntime::iluParseSBH</B> <I>( iluCString <VAR>str_encodedSBH</VAR>, iluCString* <VAR>p_str_plainInstanceHandle</VAR> = NULL, iluCString* <VAR>p_str_plainServerID</VAR> = NULL, iluCString* <VAR>p_str_plainMstid</VAR> = NULL, iluCString* <VAR>p_str_encodedContactInfo</VAR> = NULL, iluCardinal* <VAR>p_card_encodedContactInfoLen</VAR> = NULL, ILUCPP_BOOL* <VAR>p_b_malloced_contact_info</VAR> = NULL) )</I><P>
+<P>
+Parse a string binding handle, returning whichever elements are
+specified by passing in non-NIL pointers.  Caller retains ownership of URL 
+argument.  If p_str_plainInstanceHandle != NIL, ownership of
+*p_str_plainInstanceHandle is passed to caller iff successful.  Similarly for
+p_str_plainServerID and p_str_plainMstid. *p_str_encodedContactInfo is set to point
+into the given URL (The whole sequence of contact info is returned in 
+*p_str_encodedContactInfo) , and *p_card_encodedContactInfoLen is set to the
+length of the contact info substring; the next character is left unmolested.
+If the p_b_malloced_contact_info out parameter is true, then caller must arrange to free it.
+<P>
+<A NAME="IDX516"></A>
+<H4><A NAME="SEC200" HREF="manual_toc.html#SEC200">iluCppRuntime - File Descriptor Budget</A></H4>
+<P>
+<A NAME="IDX517"></A>
+<U>C++:</U> static iluCardinal <B>iluCppRuntime::iluGetFDBudget</B> <I>( )</I><P>
+<P>
+<A NAME="IDX518"></A>
+<U>C++:</U> static iluCardinal <B>iluCppRuntime::iluSetFDBudget</B> <I>( iluCardinal <VAR>card_size</VAR> )</I><P>
+<P>
+Get and set ILU file descriptor budget. iluSetFDBudget returns the
+new budget. Because ILU may open multiple connections to a server,
+we need some policy for when to close them.  That policy is this: the
+application gives the ILU kernel a "File Descriptor Budget" (initally 16).
+The ILU kernel promises to use no more than this many File Descriptors at
+once.Off the top of this budget we take FDs needed for serving (one per
+listening socket and one per accept).  The remainder is allocated to
+outgoing connections (over transports that use FDs -- ie, not inmemory).
+When we want to consume a new FD, and there's no room left in the budget,
+we go looking for an idle outgoing connection (one with no outstanding
+calls) to close.  All idle outgoing connections are kept in a doubly-linked
+list, ordered by when the connection went idle (most recently at the
+front).
+<P>
+<A NAME="IDX519"></A>
+<H4><A NAME="SEC201" HREF="manual_toc.html#SEC201">iluCppRuntime - Memory  Management</A></H4>
+<P>
+<A NAME="IDX520"></A>
+<U>C++:</U> static void <B>iluCppRuntime::iluFree</B> <I>( void* <VAR>pv</VAR> /* ILUowned */ )</I><P>
+<P>
+Use this to free things returned by ILU
+<P>
+<A NAME="IDX521"></A>
+<U>C++:</U> static void* <B>iluCppRuntime::iluMalloc</B> <I>( iluCardinal <VAR>card_size</VAR> )</I><P>
+<P>
+You can use this to malloc things from ILU.
+<P>
+<A NAME="IDX522"></A>
+<H3><A NAME="SEC202" HREF="manual_toc.html#SEC202">iluServer</A></H3>
+<P>
+<CODE>iluServer</CODE> provides a the C++ view of a kernel server object.
+<CODE>iluServers</CODE> cannot be copied or assigned. 
+<P>
+<A NAME="IDX523"></A>
+<H4><A NAME="SEC203" HREF="manual_toc.html#SEC203">iluServer - Setup and Destruction</A></H4>
+<P>
+	
+<A NAME="IDX524"></A>
+<U>C++:</U> constructor <B>iluServer::iluServer</B> <I>( char* <VAR>pc_server_id</VAR> = <CODE>NULL</CODE>, iluObjectTable* <VAR>p_object_table</VAR> = <CODE>NULL</CODE> /* ILUowned */ , char * <VAR>pc_protocol_type</VAR> = <CODE>NULL</CODE>, iluTransportInfo <VAR>transport_info</VAR> = <CODE>NULL</CODE>, iluPassport* <VAR>p_passport</VAR> = <CODE>NULL</CODE>, ILUCPP_BOOL <VAR>b_addport</VAR> = <CODE>ILUCPP_TRUE</CODE>)</I><P>
+<P>
+	
+Constructor - If no pc_server_id is specified, one is automatically created based on
+based on time, hostname, and process id.  If p_object_table is <CODE>NULL</CODE>, a default
+object table implementation is used.  If <VAR>b_addport</VAR> is <CODE>ILUCPP_TRUE</CODE>, a port is created and added to the 
+server using the specified protocol and transport, and becomes the default
+port of the server.  pc_protocol_type and transport_info default to whatever 
+the default protocol and transport are currently set to. Caller owns pc_server_id
+p_object_table, pc_protocol_type, transport_info, and p_passport. p_passport points 
+to an <CODE>iluPassport,</CODE> defaulted to <CODE>NULL</CODE> -  this passport containing an ILU GSS identity, 
+which is used as the identity of the principal offering the service, and put into the 
+connection information in the string binding handle of objects on that server.
+<P>
+	
+<P>
+<A NAME="IDX525"></A>
+<U>C++:</U> virtual <B>iluServer::~iluServer</B> <I>( )</I><P>
+<P>
+Destructor - basically destroys the kernel server and breaks
+all associations between kernel objects in this server and 
+their language specific objects.  Indirectly also deletes any
+<CODE>iluObjectTable</CODE> used with this iluServer.
+	
+	
+<P>
+<A NAME="IDX526"></A>
+<U>C++:</U> virtual void <B>iluServer::iluAddPort</B> <I>(char* <VAR>pc_protocol_type</VAR>, iluTransportInfo <VAR>transport_info</VAR>, ILUCPP_BOOL <VAR>b_become_default_port</VAR> = <CODE>ILUCPP_FALSE</CODE>, iluPassport* <VAR>p_passport</VAR> = <CODE>NULL</CODE>, ILUCPP_BOOL <VAR>b_public</VAR> = <CODE>ILUCPP_TRUE</CODE> )</I><P>
+	
+Adds another port to an existing server If b_become_default_port is 
+<CODE>ILUCPP_TRUE</CODE> the new port will become the default port for this server.
+p_passport points to an <CODE>iluPassport,</CODE> defaulted to <CODE>NULL</CODE>. this passport containing 
+an ILU GSS identity, which is used as the identity of the principal offering the 
+service, and put into the connection information in the string binding handle 
+of objects on that server.   If <VAR>b_public</VAR> is <CODE>ILUCPP_TRUE</CODE>, 
+the cinfo of the port will be included in string binding handles for objects of this
+server; if <CODE>ILUCPP_FALSE</CODE>, the cinfo will not be included.  Caller owns the arguments.
+<P>
+<A NAME="IDX527"></A>
+<U>C++:</U> virtual void <B>iluServer::iluRun</B> <I>( int* <VAR>p_i_stop_on_non_zero</VAR> = <CODE>NULL</CODE> )</I><P>
+<P>
+This runs the main, outer loop of an iluServer. It never returns
+if p_i_stop_on_non_zero isn't supplied, else it returns when 
+*p_i_stop_on_non_zero is non zero. If you're running threaded
+this routine simply goes into a sleep loop,
+<P>
+<A NAME="IDX528"></A>
+<H4><A NAME="SEC204" HREF="manual_toc.html#SEC204">iluServer - Controlling Cinfo</A></H4>
+<P>
+The Cinfo of a server is the information about protocols and transports that are added
+to the string binding handle of an object.  This can be controlled with the <VAR>b_public</VAR>
+parameter to <CODE>iluAddPort</CODE>, and also with the two methods <CODE>iluGetCInfo</CODE> and
+<CODE>iluAddCInfo</CODE>.  This can be used to implement a scheme in which a dummy server process
+exports a server, but relocates connection requests to that server to another server process.
+The first server (call it the <I>manager</I>) creates a server with a relocate procedure (this server
+must be written in C or Python; the CORBA C++ runtime does not yet support relocate procedures).
+When it receives a connection request, it starts the real server (call it the worker), or finds
+an already started one.  The worker
+creates a server with the same server id as that started by the manager, but with no ports.
+It calls <CODE>iluAddCInfo</CODE> using the manager's cinfo, so that objects exported by the worker
+will have the same cinfo as the manager.
+The worker then adds a private port, and calls <CODE>iluGetCInfo</CODE> to find the cinfo of this
+port.  It sends the cinfo back to the manager, which in turn sends it back to the client, which
+re-connects to the worker.  Any objects the worker creates and sends back to the client will have
+the manager's cinfo, so any re-connects later will go through the same dance.
+<P>
+<A NAME="IDX529"></A>
+<U>C++:</U> virtual ILUCPP_BOOL <B>iluServer::iluGetCInfo</B> <I>( {iluProtocolInfo *} <VAR>pp_pinfo</VAR>, {iluTransportInfo *} <VAR>pp_tinfo</VAR>, ILUCPP_BOOL b_public = <CODE>ILUCPP_FALSE</CODE>)</I><P>
+<P>
+<CODE>iluGetCInfo</CODE> returns the native cinfo of one of the server's ports.  If <VAR>b_public</VAR>
+is <CODE>ILUCPP_TRUE</CODE>, it will return the cinfo of the first public port; otherwise it will
+return the cinfo of the first private port.  It returns <CODE>ILUCPP_TRUE</CODE> if a port of
+the specified type was found, <CODE>ILUCPP_FALSE</CODE> if not.  The caller owns the returned
+pinfo and tinfo, and is responsible for freeing them.
+<P>
+<A NAME="IDX530"></A>
+<U>C++:</U> virtual void <B>iluServer::iluAddCInfo</B> <I>( {const iluProtocolInfo} <VAR>p_pinfo</VAR>, {const iluTransportInfo} <VAR>p_tinfo</VAR> )</I><P>
+<P>
+<CODE>iluAddCInfo</CODE> adds the specified pinfo and tinfo to the cinfo which will be
+used for any string binding handles of objects exported through this server.
+The caller retains ownership of the arguments.
+<P>
+<A NAME="IDX531"></A>
+<H4><A NAME="SEC205" HREF="manual_toc.html#SEC205">iluServer - Default Accessors</A></H4>
+<P>
+<A NAME="IDX532"></A>
+<U>C++:</U> static char* <B>iluServer::iluGetDefaultProtocol</B> <I>( )</I><P>
+<P>
+<A NAME="IDX533"></A>
+<U>C++:</U> static void <B>iluServer::iluSetDefaultProtocol</B> <I>( char* <VAR>pc_new_default_protocol</VAR> )</I><P>
+<P>
+Get and set the default protocol used when adding a port on a 
+<CODE>iluServer</CODE> - initialized to whatever is set to be the default
+in the kernel (found in <TT>`<VAR>ILUSRC</VAR>/runtime/kernel/iluconf.h'</TT>
+ or <TT>`<VAR>ILUSRC</VAR>/runtime/kernel/iluwin.h'</TT>)
+	
+	
+	
+	
+<A NAME="IDX534"></A>
+<U>C++:</U> static const iluTransportInfo <B>iluServer::iluGetDefaultTransport</B> <I>( )</I><P>
+<P>
+<A NAME="IDX535"></A>
+<U>C++:</U> static void <B>iluServer::iluSetDefaultTransport</B> <I>( iluTransportInfo <VAR>ppc_new_default_transport_info</VAR> )</I><P>
+<P>
+Get and set the default transports used when adding a port on a 
+<CODE>iluServer</CODE>  - initialized to whatever is set to be the default
+in the kernel (found in <TT>`<VAR>ILUSRC</VAR>/runtime/kernel/iluconf.h'</TT>
+or <TT>`<VAR>ILUSRC</VAR>/runtime/kernel/iluwin.h'</TT>)
+Callee owns pc_new_default_transport_info.
+	
+	
+<P>
+<A NAME="IDX536"></A>
+<U>C++:</U> {static <B>iluServer@ampnr{}}</B> <I>iluServer::iluGetDefaultServer ( )</I><P>
+Returns the default <CODE>iluServer</CODE>, creating one if need be.
+<P>
+<A NAME="IDX537"></A>
+<U>C++:</U> static iluServer* <B>iluServer::iluSetDefaultServer</B> <I>( iluServer& <VAR>new_default_server</VAR> )</I><P>
+Sets the default <CODE>iluServer,</CODE> returns old default, which is <CODE>NULL</CODE> if no default currently is set.
+<P>
+	
+<P>
+<A NAME="IDX538"></A>
+<H3><A NAME="SEC206" HREF="manual_toc.html#SEC206">iluObject</A></H3>
+<P>
+The most base class for all ILU C++ objects.  All objects inherit either 
+directly or indirectly from  <CODE>iluObject</CODE>.  All non-static member functions are virtual
+to allow creative overrides (at your own risk of course).  <CODE>iluObjects</CODE>
+cannot be copied or assigned.
+<P>
+<A NAME="IDX539"></A>
+<H4><A NAME="SEC207" HREF="manual_toc.html#SEC207">iluObject - Creation and Destruction</A></H4>
+<P>
+<A NAME="IDX540"></A>
+<U>C++:</U> constructor <B>iluObject::iluObject</B> <I>( iluClass <VAR>the_Class</VAR>, char* <VAR>pc_instance_handle</VAR> = <CODE>NULL</CODE>, iluServer& <VAR>the_server</VAR> = iluServer::iluGetDefaultServer(), ILUCPP_BOOL <VAR>b_within_object_table</VAR> = ILUCPP_FALSE )</I><P>
+<P>
+ Constructor - This constructor must be called (only) from the constructors
+ for true objects.  
+ 
+ For example, in an implementation of a foo::bar :
+<P>
+<PRE>
+ foo_bar_impl(char* <VAR>pc_instance_handle</VAR>, iluServer&#38; r_an_ilu_server, CORBA(Boolean) b_within_object_table = ILUCPP_FALSE :
+          iluObject(iluGetILUClassRecord(), pc_instance_handle, r_an_ilu_server, b_within_object_table) {}	
+</PRE>
+<P>
+If no instance handle is specified, then the value of a monotonicaly
+increasing, <CODE>iluServer</CODE> specific counter will be used to generate one.  
+If no server is specified, then the default server will be used. 
+(The default server is generated automatically if needed, and has the
+an id based on time, hostname, and process id.)  Caller owns pc_instance_handle.
+The new object has a reference count of 1.  If b_within_object_table is true, 
+then it is assumed the object is being created inside an iluObjectTable's 
+iluObjectOfInstanceHandle function, meaning that the locks on the server should 
+not be modified.
+<P>
+<A NAME="IDX541"></A>
+<U>C++:</U> static iluObject* <B>iluObject::iluStringToObject</B> <I>( char* <VAR>pc_string_binding_handle</VAR> )</I><P>
+Given a string binding handle (e.g. as obtained from iluObjectToString)
+returns an iluObject* for that object, with the reference count incremented.
+<P>
+<A NAME="IDX542"></A>
+<U>C++:</U> virtual <B>iluObject::~iluObject</B> <I>( )</I><P>
+Destructor ensures that this object is completely disassociated from the ILU kernel 
+The most specific destructor of an object should call iluDeactivate
+on the object to block any further incoming calls, and wait for any 
+ongoing calls to complete.  Next it should perform any object specific
+cleanup.  Finally, the destructor in <CODE>iluObject</CODE> will break the association
+between the kernel object and this object, allowing the kernel object
+to be potentially freed.
+<P>
+<A NAME="IDX543"></A>
+<U>C++:</U> virtual void <B>iluObject::iluDeactivate</B> <I>( )</I><P>
+Ensures this object is not available from the outside. This must
+be the first thing called by the most specific destructor of an 
+object. If if isn't, then the potential exists (in multithread case) 
+for a call to come in for an object that's in the middle of
+destruction - a bad thing!  This function blocks until there are
+zero ongoing calls.
+<P>
+<A NAME="IDX544"></A>
+<U>C++:</U> virtual void <B>iluObject::iluKernelObjectUnlinked</B> <I>( )</I><P>
+Called by iluUnlinkKernelObject - you can override this virtual 
+function in your objects to do whatever you like when the association
+between your object and the kernel object is broken - e.g. delete yourself
+The implementation in <CODE>iluObject</CODE> deletes this.
+<P>
+<A NAME="IDX545"></A>
+<H4><A NAME="SEC208" HREF="manual_toc.html#SEC208">iluObject - Object Publication</A></H4>
+<P>
+<A NAME="IDX546"></A>
+<U>C++:</U> virtual ILUCPP_BOOL <B>iluObject::iluPublish</B> <I>( )</I><P>
+Publishes binding information for this object in the binding service
+Has no effect on object reference count.
+<P>
+<A NAME="IDX547"></A>
+<U>C++:</U> virtual ILUCPP_BOOL <B>iluObject::iluWithdraw</B> <I>( )</I><P>
+<P>
+Removes binding information for this object from the binding service
+Has no effect on object reference count.
+<P>
+<A NAME="IDX548"></A>
+<U>C++:</U> static void* <B>iluObject::iluLookup</B> <I>(char* <VAR>pc_instance_handle</VAR>, char* <VAR>pc_server_id</VAR>, iluClass <VAR>the_class</VAR> )</I><P>
+<P>
+Used by stubber generated iluLookup functions in derived classes to 
+lookup an object in the binding service based on its instance and server id
+and class. Increments reference count of object.  To Lookup objects
+of type T, use the T::iluLookup(char* <VAR>pc_instance_handle</VAR>, char* pc_server_id;
+function produced by the stubber. 
+For example:
+<P>
+<PRE>
+mybar_var =  foo(bar)::iluLookup("foo_instance_0", pc_serverid )
+</PRE>
+<P>
+<A NAME="IDX549"></A>
+<H4><A NAME="SEC209" HREF="manual_toc.html#SEC209">iluObject - Accessors</A></H4>
+<P>
+<A NAME="IDX550"></A>
+<U>C++:</U> virtual iluServer* <B>iluObject::iluGetServer</B> <I>( )</I><P>
+Returns pointer to the iluServer that this object resides in.
+<P>
+<A NAME="IDX551"></A>
+<U>C++:</U> virtual const char* /* ILUowned */ <B>iluObject::iluId</B> <I>( )</I><P>
+Returns the objects instance id.
+<P>
+<A NAME="IDX552"></A>
+<U>C++:</U> virtual const char* /* ILUowned */ <B>iluObject::iluServerId</B> <I>( )</I><P>
+Returns the id of the objects ILU Server.
+<P>
+<A NAME="IDX553"></A>
+<H4><A NAME="SEC210" HREF="manual_toc.html#SEC210">iluObject - Informational</A></H4>
+<P>
+<A NAME="IDX554"></A>
+<U>C++:</U> virtual iluCString <B>iluObject::iluObjectToString</B> <I>( )</I><P>
+<P>
+Returns the ILU string binding handle for the object.
+Caller get ownership of the string
+<P>
+<A NAME="IDX555"></A>
+<U>C++:</U> ILUCPP_BOOL <B>iluObject::iluIsCollectibleObject</B> <I>( )</I><P>
+<P>
+Returns true if the object is of a collectible class.
+<P>
+<A NAME="IDX556"></A>
+<U>C++:</U> virtual iluCString <B>iluObject::iluObjectToIORString</B> <I>( )</I><P>
+<P>
+Returns a string which is the object's name and contact information
+as specified by the CORBA IIOP spec - caller gets ownership of the string.
+May return NULL if the object is not exported through an <CODE>IIOP</CODE> ilu_Port.
+(Available only when  <CODE>IIOP</CODE> support is configured into ILU.)
+<P>
+<A NAME="IDX557"></A>
+<U>C++:</U> virtual iluCString <B>iluObject::iluObjectToURLString</B> <I>( )</I><P>
+<P>
+Returns a string which is the object's name and contact information
+as specified by an  <CODE>HTTP</CODE> URL - caller gets ownership of the string.
+May return NULL if the object is not exported through an <CODE>HTTP</CODE> ilu_Port
+(Available only when  <CODE>HTTP</CODE> support is configured into ILU.)
+<P>
+<A NAME="IDX558"></A>
+<U>C++:</U> ILUCPP_BOOL <B>iluObject::iluPing</B> <I>()</I><P>
+<P>
+Returns <CODE>ILUCPP_TRUE</CODE> if the true object exists, and the process
+serving it can be contacted, otherwise  <CODE>ILUCPP_FALSE</CODE>.
+<P>
+<A NAME="IDX559"></A>
+<U>C++:</U> ILUCPP_BOOL <B>iluObject::_is_equivalent</B> <I>(iluObject* p_obj)</I><P>
+Returns <CODE>ILUCPP_TRUE</CODE> if the two objects denote the same thing.
+<P>
+<A NAME="IDX560"></A>
+<U>C++:</U> ILUCPP_BOOL <B>iluObject::iluInSameServer</B> <I>(iluObject* p_obj)</I><P>
+<P>
+Returns <CODE>ILUCPP_TRUE</CODE> if the two objects are in the same ILU server.
+Used, for example, to determine if objects are SIBLINGS.
+<P>
+<A NAME="IDX561"></A>
+<U>C++:</U> virtual const char* /* ILUowned */ <B>iluObject::iluClassName</B> <I>( )</I><P>
+<P>
+<A NAME="IDX562"></A>
+<U>C++:</U> virtual const char* /* ILUowned */ <B>iluObject::iluClassId</B> <I>( )</I><P>
+<P>
+Return the ILU class name and type id - primarily informational use.
+<P>
+<A NAME="IDX563"></A>
+<H4><A NAME="SEC211" HREF="manual_toc.html#SEC211">iluObject - Reference Counting</A></H4>
+<P>
+<A NAME="IDX564"></A>
+<U>C++:</U> virtual void <B>iluObject::iluIncrementReferenceCount</B> <I>( )</I><P>
+<P>
+<A NAME="IDX565"></A>
+<U>C++:</U> virtual void <B>iluObject::iluDecrementReferenceCount</B> <I>( )</I><P>
+<P>
+Reference count operations - when an object is first created, it has
+a reference count of one.  If the reference count ever goes to zero,
+delete is called on this.  CORBA compliant apps (where objects derive
+from CORBA::Object) should use the duplicate and release functionality
+defined in the CORBA specification.
+<P>
+<A NAME="IDX566"></A>
+<U>C++:</U> virtual iluCardinal <B>iluObject::iluGetReferenceCount</B> <I>( )</I><P>
+<P>
+Returns what the current reference count is.
+<P>
+<A NAME="IDX567"></A>
+<U>C++:</U> static iluObject* <B>iluObject::_duplicate</B> <I>(iluObject* <VAR>p_obj</VAR>)</I><P>
+<P>
+Increments the reference count on the object and returns it.  Returns NULL if
+passed NULL.
+<P>
+<A NAME="IDX568"></A>
+<U>C++:</U> static iluObject* <B>iluObject::_narrow</B> <I>(iluObject* <VAR>p_obj</VAR>)</I><P>
+<P>
+Effectively casts the object pointer to an iluObject*.
+<P>
+<A NAME="IDX569"></A>
+<H3><A NAME="SEC212" HREF="manual_toc.html#SEC212">iluObjectTable</A></H3>
+<P>
+An abstract C++ class for developers to derive from to
+provide Object Tables.  Object tables cannot be copied or assigned.  
+Besides doing whatever application specific things might need to be 
+done in the constructor and destructor, a class derived from <CODE>iluObjectTable</CODE> 
+must provide the iluObjectOfInstanceHandle virtual member function.
+<P>
+<A NAME="IDX570"></A>
+<U>C++:</U> virtual iluObject* <B>iluObjectTable::iluObjectOfInstanceHandle</B> <I>(iluCString <VAR>pc_instance_handle</VAR> /* ILUowned */) = 0;</I><P>
+<P>
+Called by ILU to create and return a new <CODE>iluObject</CODE>* with the specified instance 
+handle.  ILU retains ownership of pc_instance_handle - i.e. copy it if you need
+want to hang on to it. Note that when in this function, you are 'inside'  the object's server - 
+i.e. you hold the locks on the server - this means that when you create the object, you must 
+specify the 3rd argument to the object's constructor (b_within_object_table) as true.
+<P>
+<A NAME="IDX571"></A>
+<U>C++:</U> virtual iluServer* <B>iluObjectTable::iluGetServer</B> <I>();</I><P>
+<P>
+Returns the pointer to the iluServer this object table is associated with.
+<P>
+<A NAME="IDX572"></A>
+<U>C++:</U> virtual <B>iluObjectTable::~iluObjectTable</B> <I>( )</I><P>
+<P>
+Do whatever destroying the Object Table needs to do to free up resources, etc.
+It gets called when the <CODE>iluServer</CODE> it's associated with it is shut down.
+<P>
+	
+<P>
+<A NAME="IDX573"></A>
+<H3><A NAME="SEC213" HREF="manual_toc.html#SEC213">iluPassport</A></H3>
+<P>
+Encapsulates <CODE>ilu_Passport</CODE> functionality
+<P>
+<A NAME="IDX574"></A>
+<U>C++:</U> constructor <B>iluPassport::iluPassport</B> <I>( iluIdentityInfo <VAR>p_identity_info</VAR> = <CODE>NULL</CODE> )</I><P>
+<P>
+Constructor - creates and returns a passport, optionally containing the specified identity.
+<P>
+<A NAME="IDX575"></A>
+<U>C++:</U> virtual <B>iluPassport::~iluPassport</B> <I>( )</I><P>
+<P>
+Destructor - frees any associated identities in addition to freeing the passport
+<P>
+<A NAME="IDX576"></A>
+<U>C++:</U> static iluPassport* <B>iluPassport::iluGetPassport</B> <I>( )</I><P>
+<P>
+<A NAME="IDX577"></A>
+<U>C++:</U> static iluPassport* <B>iluPassport::iluSetPassport</B> <I>(iluPassport* <VAR>p_passport</VAR> )</I><P>
+<P>
+Get and set the passport being used for outgoing calls - in the multi-threaded case, this is per-thread
+Set returns the old <CODE>iluPassport</CODE>.  Note that before your thread exits, you should either call 
+iluSetPassport(<CODE>NULL</CODE>), or delete the <CODE>iluPassport</CODE> in use (assuming it's only in use for a single thread).
+<P>
+<A NAME="IDX578"></A>
+<U>C++:</U> static iluPassport* /* ILUowned */ <B>iluPassport::iluGetCallerPassport</B> <I>( )</I><P>
+<P>
+Get the passport of the caller.
+<P>
+<A NAME="IDX579"></A>
+<U>C++:</U> virtual void <B>iluPassport::iluAddIdentity</B> <I>( iluIdentityInfo <VAR>p_identity_info</VAR> /* ILUowned */ )</I><P>
+<P>
+Adds identity to Passport.  Only one identity of each type is allowed.
+<P>
+<A NAME="IDX580"></A>
+<U>C++:</U> virtual iluIdentityInfo /* ILUowned */ <B>iluPassport::iluFindIdentity</B> <I>( iluIdentityType <VAR>p_identity_type</VAR> )</I><P>
+<P>
+Returns identity of specified type, if present else <CODE>NULL</CODE>
+<P>
+<A NAME="IDX581"></A>
+<U>C++:</U> static iluIdentityInfo <B>iluPassport::iluCopyIdentity</B> <I>( iluIdentityInfo <VAR>p_identity_info</VAR> )</I><P>
+<P>
+Returns a copy of the passed identity
+<P>
+<A NAME="IDX582"></A>
+<U>C++:</U> ilu_Passport /* ILUowned */ <B>iluPassport::iluGetIluPassport</B> <I>()</I><P>
+<P>
+Returns the (kernel) ilu_Passport
+<P>
+<A NAME="IDX583"></A>
+<H3><A NAME="SEC214" HREF="manual_toc.html#SEC214">iluGSS</A></H3>
+<P>
+Encapsulates GSS functionality - only defined when ILU is configured
+with secure transport.
+<P>
+<A NAME="IDX584"></A>
+<U>C++:</U> static iluIdentityInfo <B>iluGSS::iluAcquireGSSIdentity</B> <I>( gss_cred_id_t <VAR>gss_credential</VAR> )</I><P>
+<P>
+<A NAME="IDX585"></A>
+<U>C++:</U> static ILUCPP_BOOL <B>iluGSS::iluDecodeGSSIdentity</B> <I>( iluIdentityInfo <VAR>p_identity_info</VAR>, gss_name_t* <VAR>p_name</VAR>, iluFineTime* <VAR>p_good_till_time</VAR>,gss_OID <VAR>mechanism</VAR>, ILUCPP_BOOL* <VAR>p_b_local</VAR>, iluCardinal* <VAR>p_card_flags</VAR> )</I><P>
+<P>
+<VAR>p_identity_info</VAR> - input; retain; info to decode 
+<VAR>p_name</VAR> - output; name in identity 
+<VAR>p_good_till_time</VAR> - output; good-till
+<VAR>mechanism</VAR> - input; actual mechanism desired; optional 
+<VAR>p_b_local</VAR> - if TRUE, local; otherwise remote 
+<VAR>p_card_flags</VAR> - connection flags, as in gss_inquire_context 
+<P>
+<A NAME="IDX586"></A>
+<U>C++:</U> static gss_cred_id_t <B>iluGSS::iluAcquireGSSCredForName</B> <I>( char* <VAR>pc_name</VAR>, iluCardinal <VAR>card_lifetime</VAR>, gss_OID <VAR>mechanism</VAR>, ILUCPP_BOOL <VAR>b_accept_only</VAR> )</I><P>
+<P>
+<A NAME="IDX587"></A>
+<U>C++:</U> static iluCString <B>iluGSS::iluGSSNameToString</B> <I>( gss_name_t <VAR>name</VAR> )</I><P>
+<P>
+<A NAME="IDX588"></A>
+<H3><A NAME="SEC215" HREF="manual_toc.html#SEC215">iluMainLoop</A></H3>
+<P>
+Subclass from the <CODE>iluMainLoop</CODE> class if you want to have your
+own version of the main loop. <CODE>iluMainLoops</CODE> cannot be copied or assigned. 
+A single threaded application should supply all functions.  
+An application making use of ILU's OS multi-threaded
+operation should not use a different mainloop.  If you're using your
+own thread package, you must supply all functions, and see the comment
+for iluCppRuntime::iluInitialize
+<P>
+<A NAME="IDX589"></A>
+<U>C++:</U> virtual void <B>iluMainLoop::iluRun</B> <I>( int* <VAR>p_i_stop_on_non_zero</VAR> ) = 0;</I><P>
+<P>
+Runs the main loop until *p_i_stop_on_non_zero is non-zero.
+<P>
+<A NAME="IDX590"></A>
+<U>C++:</U> virtual void <B>iluMainLoop::iluExit</B> <I>( int* <VAR>p_i_stop_on_non_zero</VAR> ) = 0;</I><P>
+<P>
+Causes the main loop to exit
+<P>
+<A NAME="IDX591"></A>
+<U>C++:</U> virtual ILUCPP_BOOL <B>iluMainLoop::iluRegisterInputHandler</B> <I>(int <VAR>i_fd</VAR>, void (* <VAR>pfunction_input_handler</VAR> )(int <VAR>i_fd</VAR>, void* <VAR>pv_input_handler_arg</VAR> ), void* <VAR>pv_input_handler_arg</VAR> ) = 0;</I><P>
+<P>
+		
+Input Handlers - When there is input activity on the file descriptor 
+i_fd, the mainloop will call the registered handler procedure
+pfunction_input_handler, passing it i_fd and pv_input_handler_arg as arguments.
+Returns <CODE>ILUCPP_FALSE</CODE> if it can't do it's job due to some resource limitation.
+<P>
+<A NAME="IDX592"></A>
+<U>C++:</U> virtual ILUCPP_BOOL <B>iluMainLoop::iluUnregisterInputHandler</B> <I>( int <VAR>i_fd</VAR>, void (** <VAR>ppfunction_input_handler</VAR> )(int <VAR>i_fd</VAR>, void* <VAR>pv_input_handler_arg</VAR> ), void** <VAR>ppv_input_handler_arg</VAR> ) = 0;</I><P>
+<P>
+	
+Returns <CODE>ILUCPP_FALSE</CODE> if input on i_fd was being handled, else <CODE>ILUCPP_TRUE</CODE>.
+Sets function and arg ptrs to what they were if anything.
+<P>
+<A NAME="IDX593"></A>
+<U>C++:</U> virtual ILUCPP_BOOL <B>iluMainLoop::iluRegisterOutputHandler</B> <I>(int <VAR>i_fd</VAR>, void (* <VAR>pfunction_output_handler</VAR> )(int <VAR>i_fd</VAR>, void* <VAR>pv_output_handler_arg</VAR> ), void* <VAR>pv_output_handler_arg</VAR> ) = 0;</I><P>
+<P>
+	
+Output Handlers - When it is possible to perform output on the file descriptor 
+i_fd, the mainloop will call the registered handler procedure
+pfunction_output_handler, passing it i_fd and pv_output_handler_arg as arguments.
+<P>
+<A NAME="IDX594"></A>
+<U>C++:</U> virtual ILUCPP_BOOL <B>iluMainLoop::iluUnregisterOutputHandler</B> <I>(int <VAR>i_fd</VAR>, void (** <VAR>ppfunction_output_handler</VAR> )(int <VAR>i_fd</VAR>, void* <VAR>pv_output_handler_arg</VAR> ), void** <VAR>ppv_output_handler_arg</VAR> ) = 0;</I><P>
+<P>
+Returns <CODE>ILUCPP_FALSE</CODE> if output on i_fd had a handler, else <CODE>ILUCPP_TRUE</CODE>
+Sets function and arg ptrs to what they were if anything.
+<P>
+<A NAME="IDX595"></A>
+<U>C++:</U> virtual iluAlarm <B>iluMainLoop::iluCreateAlarm</B> <I>( ) = 0;</I><P>
+<P>
+Creates an alarm.  An alarm is an active object which can be set to 
+asynchronously invoke a procedure with an argument at a specified time.
+An alarm may be something like a pointer to a
+structure that has some internal structure, but from the point of
+view of an alarm user, it's just a handle that is used to specify
+a particular alarm to be set or cleared.
+<P>
+ 
+<A NAME="IDX596"></A>
+<U>C++:</U> virtual void <B>iluMainLoop::iluSetAlarm</B> <I>(iluAlarm <VAR>the_alarm</VAR>, iluFineTime <VAR>alarm_time</VAR>, void (*<VAR>pfunction_alarm_handler</VAR>)(void* <VAR>pv_alarm_handler_arg</VAR>), void* <VAR>pv_alarm_handler_arg</VAR> ) = 0;</I><P>
+<P>
+	
+Sets up an alarm to call the handler procedure pfunction_alarm_handler,
+passing it pv_alarm_handler_arg as an argument, when the alarm_time
+occurs.
+	
+	
+	
+<A NAME="IDX597"></A>
+<U>C++:</U> virtual void <B>iluMainLoop::iluClearAlarm</B> <I>( iluAlarm <VAR>the_alarm</VAR> ) = 0;</I><P>
+<P>
+Cancels the alarm (effectively sets the alarm time to infinity).
+<P>
+<A NAME="IDX598"></A>
+<U>C++:</U> virtual void <B>iluMainLoop::iluDestroyAlarm</B> <I>( iluAlarm <VAR>the_alarm</VAR> ) = 0;</I><P>
+<P>
+	
+Destroys the alarm (if alarm is set, does not invoke).
+<P>
+<A NAME="IDX599"></A>
+<U>C++:</U> static void <B>iluMainLoop::iluSetFineTimeFromNow</B> <I>( ilu_FineTime* <VAR>p_finetime</VAR>, ilu_integer <VAR>i_secs</VAR>, ilu_cardinal <VAR>i_msecs</VAR> )</I><P>
+<P>
+Utility function to set the pointed to ilu_FineTime to a time i_secs + i_msecs in the future
+<P>
+<A NAME="IDX600"></A>
+<U>C++:</U> static void <B>iluMainLoop::iluSetMainLoop</B> <I>( iluMainLoop* <VAR>p_mainloop_instance</VAR> )</I><P>
+<P>
+<A NAME="IDX601"></A>
+<U>C++:</U> static iluMainLoop* <B>iluMainLoop::iluGetMainLoop</B> <I>( )</I><P>
+<P>
+Setting the Main Loop to be used - Call iluSetMainLoop set your mainloop as the one for ILU to use.
+It should called before any ILU initialization.
+<P>
+<A NAME="IDX602"></A>
+<U>C++:</U> static iluAlarm <B>iluMainLoop::iluDefaultLoopCreateAlarm</B> <I>( )</I><P>
+<P>
+<A NAME="IDX603"></A>
+<U>C++:</U> static void <B>iluMainLoop::iluDefaultLoopSetAlarm</B> <I>( iluAlarm <VAR>the_alarm</VAR>, iluFineTime <VAR>alarm_time</VAR>, void (* <VAR>pfunction_alarm_handler</VAR> )(void* <VAR>pv_alarm_handler_arg</VAR> ), void* <VAR>pv_alarm_handler_arg</VAR> )</I><P>
+<P>
+<A NAME="IDX604"></A>
+<U>C++:</U> static void <B>iluMainLoop::iluDefaultLoopClearAlarm</B> <I>( iluAlarm <VAR>the_alarm</VAR> )</I><P>
+<P>
+<A NAME="IDX605"></A>
+<U>C++:</U> static void <B>iluMainLoop::iluDefaultLoopDestroyAlarm</B> <I>( iluAlarm <VAR>the_alarm</VAR> )</I><P>
+<P>
+	
+When you haven't set the main loop (i.e. you're using ILU's default
+loop), you can call these functions to create, set and unset alarms.
+(If you set your own main loop, just call its alarm functions.)
+<P>
+<A NAME="IDX606"></A>
+<H2><A NAME="SEC216" HREF="manual_toc.html#SEC216">CORBA 2.0 C++ Considerations</A></H2>
+<P>
+<H3><A NAME="SEC217" HREF="manual_toc.html#SEC217">ORB_init</A></H3>
+<P>
+The CORBA <CODE>ORB_init</CODE> function may be called instead of <CODE>iluCppRuntime::iluInitialize</CODE> 
+(which <CODE>ORB_init</CODE> calls internally).  The orb identifier passed to <CODE>ORB_init</CODE> should be 
+<CODE>"ilu"</CODE>.  If the command line argument  <CODE>-iluthreaded</CODE> is present in the command 
+line arguments passed to <CODE>ORB_init</CODE>, then ILU will be run in threaded mode, otherwise 
+ILU will run single-threaded.
+<P>
+<P>Go to the <A HREF="manual_4.html">previous</A>, <A HREF="manual_6.html">next</A> section.<P>

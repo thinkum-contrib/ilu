@@ -1,0 +1,61 @@
+README for the "excn" example directory.
+[$Id: README,v 1.2 1999/08/03 01:59:13 janssen Exp $
+ BeginILUCopyright
+
+ Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+ Unlimited use, reproduction, modification, and distribution of this
+ software and modified versions thereof is permitted.  Permission is
+ granted to make derivative works from this software or a modified
+ version thereof.  Any copy of this software, a modified version
+ thereof, or a derivative work must include both the above copyright
+ notice of Xerox Corporation and this paragraph.  Any distribution of
+ this software, a modified version thereof, or a derivative work must
+ comply with all applicable United States export control laws.  This
+ software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+ WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+ LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+ EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+ NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+ OF THE POSSIBILITY OF SUCH DAMAGES.
+
+ EndILUCopyright ]
+
+
+This directory contains a simple example which tests CosNaming name
+binding and resolution.  The server will register an object with the CosNaming
+server, using "NamingTest/T" as the path.  The client will look it up,
+invoke the "print-hello" method on it (which will cause the server to
+print out "hello"), and the client will then print the count returned from
+the server (the number of times that object has had its "print-hello" method
+invoked.
+
+Here's how to run it.  First, set the ILU environment variable
+ILU_COS_NAMING_IOR to the IOR or URL or SBH for the root NamingContext
+of your CosNaming service.  Then do:
+
+  % ilumkmf
+  % make
+  <various make operations omitted here...>
+  % python server.py &
+  exported ilu:ExcnTest.server.YOURDOMAIN/T;ilutypeuid2%3AgjavqS5swqAdXCThn2hEDQ++8uV;w3ng@sunrpcrm=tcp_13.1.101.26_39373
+
+And here's what you should see when you run the client:
+
+  % python client.py
+  handle is <NamingTest.O:NamingTest.server.parc.xerox.com/T>
+  hello
+  print_hello() returns 1L
+  %
+
+(The line "hello" is from the server; if you run the server in a
+different shell, it will not be intermixed with the client's output.)
+The client will exit with status 0 if everything is as expected, or
+with status 1 if it finds any anomalies.
+
+There are a number of command line arguments that can be specified
+both to the server and the client, to force it to use a particular
+NamingContext or name service, or to force it to use a different path
+for the binding.  See the code for details.

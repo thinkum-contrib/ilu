@@ -1,0 +1,228 @@
+$Id: README,v 1.11 1999/08/03 01:58:30 janssen Exp $
+ BeginILUCopyright
+
+ Copyright (c) 1991-1999 Xerox Corporation.  All Rights Reserved.
+
+ Unlimited use, reproduction, modification, and distribution of this
+ software and modified versions thereof is permitted.  Permission is
+ granted to make derivative works from this software or a modified
+ version thereof.  Any copy of this software, a modified version
+ thereof, or a derivative work must include both the above copyright
+ notice of Xerox Corporation and this paragraph.  Any distribution of
+ this software, a modified version thereof, or a derivative work must
+ comply with all applicable United States export control laws.  This
+ software is made available AS IS, and XEROX CORPORATION DISCLAIMS ALL
+ WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ PURPOSE, AND NOTWITHSTANDING ANY OTHER PROVISION CONTAINED HEREIN, ANY
+ LIABILITY FOR DAMAGES RESULTING FROM THE SOFTWARE OR ITS USE IS
+ EXPRESSLY DISCLAIMED, WHETHER ARISING IN CONTRACT, TORT (INCLUDING
+ NEGLIGENCE) OR STRICT LIABILITY, EVEN IF XEROX CORPORATION IS ADVISED
+ OF THE POSSIBILITY OF SUCH DAMAGES.
+
+ EndILUCopyright
+
+This example is modeled after the VisiBroker for Java "bank" example with
+the following IDL:
+
+// Bank.idl
+
+module Bank {
+  interface Account {
+    float balance();
+  };
+  interface AccountManager {
+    Account open(in string name);
+  };
+};
+		  
+Or, in ISL:
+
+INTERFACE Bank;
+
+TYPE Account = OBJECT
+  METHODS
+    balance () : SHORT REAL
+  END;
+
+TYPE AccountManager = OBJECT
+  METHODS
+    open (name : ilu.CString) : Account
+  END;
+
+To use, first stub the ISL file with the Python stubber:
+
+    % python-stubber Bank.isl
+    client stubs for interface "Bank" to Bank.py ...
+    server stubs for interface "Bank" to Bank__skel.py ...
+    % 
+
+Then run the server:
+
+    % python bankServer.py &
+    [2] 15873
+    % IOR:000000000000001C49444...6E6B2F00
+    %
+
+To try it, run the client:
+
+    % python bankClient.py IOR:000000000000001C49444...6E6B2F00 myname
+    The balance for <Bank.Account:bankserver.somedept.somecompany.com/Post-Modern Bank - myname> is $865.81.
+    %
+
+Also provided for your convenience are the two files ServerVisi.java and
+ClientVisi.java, which are versions of the Client.java and Server.java
+programs in the VisiBroker for Java 1.2.0 example "bank".  The are
+different in that ServerVisi.java prints out an IOR when it's
+initialized, and ClientVisi.java will accept two arguments: the IOR of
+the server, and the name of an account to check the balance of (just
+like the Python client).  To compile and use these files with
+VisiBroker for Java, do the following:
+
+1)  Set up your environment as directed for Visibroker for Java.
+2)  Run the Visibroker for Java stubber on the Bank.idl file:
+
+    % idl2java Bank.idl
+    Creating: Bank
+    Creating: Bank/Account.java
+    Creating: Bank/Account_var.java
+    Creating: Bank/_st_Account.java
+    Creating: Bank/_sk_Account.java
+    Creating: Bank/AccountOperations.java
+    Creating: Bank/_tie_Account.java
+    Creating: Bank/_example_Account.java
+    Creating: Bank/AccountManager.java
+    Creating: Bank/AccountManager_var.java
+    Creating: Bank/_st_AccountManager.java
+    Creating: Bank/_sk_AccountManager.java
+    Creating: Bank/AccountManagerOperations.java
+    Creating: Bank/_tie_AccountManager.java
+    Creating: Bank/_example_AccountManager.java
+    % 
+
+3)  Compile the two Java programs:
+
+    % javac ClientVisi.java
+    % javac ServerVisi.java
+
+4)  Run the server:
+
+    % java ServerVisi.java
+    IOR:000000000000001c49444c...B00
+
+Now you can either run the VisiBroker for Java client, or the ILU
+Python client.
+
+
+
+--------------
+
+To run a Netscape Communicator 4.0 applet that talks to an ILU server:
+
+1)  Set up your environment as directed for Visibroker for Java.
+2)  Run the Visibroker for Java stubber on the Bank.idl file:
+
+    % idl2java Bank.idl
+    Creating: Bank
+    Creating: Bank/Account.java
+    Creating: Bank/Account_var.java
+    Creating: Bank/_st_Account.java
+    Creating: Bank/_sk_Account.java
+    Creating: Bank/AccountOperations.java
+    Creating: Bank/_tie_Account.java
+    Creating: Bank/_example_Account.java
+    Creating: Bank/AccountManager.java
+    Creating: Bank/AccountManager_var.java
+    Creating: Bank/_st_AccountManager.java
+    Creating: Bank/_sk_AccountManager.java
+    Creating: Bank/AccountManagerOperations.java
+    Creating: Bank/_tie_AccountManager.java
+    Creating: Bank/_example_AccountManager.java
+    % 
+
+3)  Compile the applet
+
+    % javac BankAppletVisi.java
+    %
+
+4)  Run the VisiBroker GateKeeper (see the VisiBroker manual).  This
+step seems to necessary, as the VisiBroker code in Netscape seems to
+call out to the GateKeeper when doing XXX...
+
+    % java pomoco.iiop.GateKeeper &
+    VisiBroker for Java Release 1.2 (Oct 20, 1996) IIOP GateKeeper started: Fri May 09 21:22:07 PDT 1997
+    Java: Version 1.0.2 from Sun Microsystems Inc.
+    OS:   Solaris version 2.x; CPU: sparc
+    Adding search path: .
+    Adding search path: /visigenic/classes
+    Adding search path: /jdk-1.0.2/bin/../classes
+    %
+
+5)  Start your ILU server:
+
+    % python bankServer.py &
+    IOR:000000000000001C49444...E6B00
+    %
+
+6)  Tell Netscape to visit "BankAppletVisi.html".
+
+7)  With cut and paste, store the IOR into the appropriate field on the applet
+
+8)  Now the applet ought be ready to click "Check Balance"
+
+
+----------------------------
+
+There are also two versions of this example which work with ILU for Java
+The first is called ClientILU.java/ServerILU.java which use ilu specific code.  
+The other is called ClientOMG.java/ServerOMG.java and uses only standard
+CORBA features.
+
+When running different examples, make sure that you don't mix the 
+stub classes; either use use the visigenics stubber, the JavaIDL stubber 
+or the ILU stubber and compile all stubs so the loader will not attempt 
+to link in incompatible stubs.  Maybe work in different directories...
+
+(The sources classes have names which will make it unlikely that
+you will confuse the generated class files.  The java stubs however 
+have naming schemes which do not help the user preventing confusion) 
+
+To java stub for running with JavaIDL:  
+	Follow Suns directions... 
+	
+To java stub for running with ILU for Java (independent whether you use 
+the ...ILU or the ...OMG versions of the sources; be aware that the isl file
+does not generate corba compatible classes as it doesn't extend CORBA::Object)  
+	java-stubber Bank.idl
+
+To compile for running with JavaIDL:  
+	Follow Suns directions... 
+	
+To compile for running with ILU for Java
+javac -d classes javastubs/Bank/*java ClientILU.java ServerILU.java ClientOMG.java ServerOMG.java
+
+To run 
+	(add ILUHOME/lib/javaclasses to your CLASSPATH)
+
+
+Running the OMG standard server on JavaIDL
+	java -Djava.compiler=NONE ServerOMG
+
+Running the OMG standard server on ILU
+	java -Dorg.omg.CORBA.ORBClass=xerox.ilu.IluORB -Djava.compiler=NONE -Dilu.load=Bank._allJavaStubs ServerOMG
+
+Running the ILU specific server on ILU
+	java -Djava.compiler=NONE -Dilu.load=Bank._allJavaStubs ServerILU
+
+
+
+Running the OMG standard client on JavaIDL
+	java -Djava.compiler=NONE ClientOMG "IOR:0000001c49..." 
+
+Running the OMG standard client on ILU
+	java -Dorg.omg.CORBA.ORBClass=xerox.ilu.IluORB -Djava.compiler=NONE -Dilu.load=Bank._allJavaStubs ClientOMG "IOR:0000001c49..." 
+
+Running the ILU specific client on ILU
+	java -Djava.compiler=NONE -Dilu.load=Bank._allJavaStubs ClientILU "IOR:0000001c49..." 
+
+----
